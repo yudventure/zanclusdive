@@ -8,6 +8,17 @@ Di hPanel, buka pengelolaan database MySQL pada layanan hosting yang mendukung d
 
 Gunakan hostname MySQL yang diberikan layanan hosting; jangan mengasumsikan `localhost`. Jika database berada pada layanan berbeda, pastikan koneksi dari Node.js Web App diizinkan melalui pengaturan akses database. Detail akses/hostname bergantung pada layanan Hostinger pengguna.
 
+**Struktur database sudah disiapkan.** Kamu hanya perlu membuat database kosong dan user di hPanel, lalu mengisi kredensial pada langkah 2. Aplikasi otomatis membuat tiga tabel beserta konten awal saat pertama terhubung; tidak perlu impor SQL. Pembuatan database dan user di akun Hostinger tetap harus dilakukan melalui hPanel.
+
+Jika ingin menyiapkan tabel lebih dulu melalui phpMyAdmin, gunakan [file SQL siap impor](database/zanclus-cms.sql):
+
+1. Buka file tersebut di GitHub, lalu unduh menggunakan tombol **Download raw file**.
+2. Di hPanel, buka phpMyAdmin untuk database Zanclus yang baru dibuat.
+3. Pilih database tersebut, buka tab **Import**, pilih `zanclus-cms.sql`, lalu jalankan impor.
+4. Lanjutkan pengisian environment variable pada langkah 2 dan deploy ulang.
+
+SQL membuat `zanclus_records`, `zanclus_media`, dan `zanclus_login_attempts`, serta mengisi konten awal website. Tidak berisi password atau reservasi contoh. Impor ulang tidak menghapus tabel, tidak menimpa konten yang sudah ada, dan tidak mengubah reservasi. File tidak memakai `CREATE DATABASE` atau `CREATE USER`, sehingga mengikuti nama database/user berprefix yang dibuat Hostinger. Akun admin berasal dari environment variable, bukan dari tabel database.
+
 ## 2. Isi environment variable aplikasi Node.js
 
 | Nama | Isi |
