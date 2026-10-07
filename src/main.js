@@ -1,12 +1,17 @@
 import {
-  experiences,
+  experiences as defaultExperiences,
   monthCells,
   dateKey,
   recommendation,
-  planSummary,
+  planSummary as formatPlanSummary,
 } from "./domain.js";
-import { WHATSAPP_NUMBER } from "./config.js";
-export function initializeWebsite() {
+export function initializeWebsite(content) {
+  const experiences = content?.experiences || defaultExperiences;
+  const WHATSAPP_NUMBER = content?.contact.whatsapp || "6285190849237";
+  const activeKeys = Object.keys(experiences).filter(
+    (key) => experiences[key].enabled !== false,
+  );
+  const planSummary = (plan) => formatPlanSummary(plan, experiences);
   const controller = new AbortController();
   const timeouts = [];
   const objectURLs = [];
@@ -24,7 +29,7 @@ export function initializeWebsite() {
   let year = today.getFullYear(),
     month = today.getMonth(),
     selectedDate = null,
-    currentCourse = "beginner",
+    currentCourse = activeKeys[0] || "beginner",
     lastPlan = null;
   $("#year").textContent = year;
   const todayKey = dateKey(year, month, today.getDate());
@@ -207,7 +212,10 @@ export function initializeWebsite() {
       );
       content.append(options);
     } else {
-      const choice = recommendation(answers.level, answers.interest);
+      const recommended = recommendation(answers.level, answers.interest);
+      const choice = activeKeys.includes(recommended)
+        ? recommended
+        : activeKeys[0];
       title.textContent = experiences[choice].title;
       const desc = document.createElement("p");
       desc.className = "muted";
