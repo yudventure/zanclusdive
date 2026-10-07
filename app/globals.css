@@ -113,9 +113,18 @@ img {
   z-index: 10;
   width: 100%;
   color: white;
-  background: rgba(3, 27, 41, 0.78);
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    backdrop-filter 0.25s ease;
+}
+.site-header.is-scrolled {
+  background: rgba(3, 27, 41, 0.65);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid #b3d8e51a;
+  border-bottom-color: #b3d8e51a;
 }
 .quick-service {
   background: #bef4a5;
@@ -290,8 +299,27 @@ nav a.active {
 }
 .course-grid {
   display: grid;
-  grid-template-columns: 1.25fr 1.12fr 0.85fr 0.85fr;
+  grid-template-columns: 2.37fr 0.85fr 0.85fr;
   gap: 10px;
+}
+.beginner-calendar {
+  display: grid;
+  grid-template-columns: 1.25fr 1.12fr;
+  min-width: 0;
+  border-radius: 27px;
+  overflow: hidden;
+  background: #e9f2f8;
+}
+.beginner-calendar .course-card,
+.beginner-calendar .calendar-card {
+  border-radius: 0;
+  min-width: 0;
+}
+.beginner-calendar .course-card:hover {
+  transform: none;
+}
+.beginner-calendar .course-card:hover .round-arrow {
+  background: #fff3;
 }
 .course-card {
   position: relative;
@@ -613,6 +641,9 @@ footer > span {
   display: none;
 }
 .modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
   border: 0;
   border-radius: 28px;
   padding: 42px;
@@ -769,6 +800,9 @@ footer > span {
   .course-grid {
     grid-template-columns: 1fr 1fr;
   }
+  .beginner-calendar {
+    grid-column: 1 / -1;
+  }
   .course-card {
     height: 300px;
   }
@@ -924,6 +958,9 @@ footer > span {
   }
   .course-grid {
     gap: 8px;
+  }
+  .beginner-calendar {
+    border-radius: 21px;
   }
   .course-card {
     height: 280px;

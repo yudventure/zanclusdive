@@ -11,6 +11,14 @@ export function initializeWebsite() {
   const timeouts = [];
   const objectURLs = [];
   const $ = (selector) => document.querySelector(selector);
+  const header = $(".site-header");
+  const syncHeader = () =>
+    header.classList.toggle("is-scrolled", window.scrollY > 0);
+  syncHeader();
+  window.addEventListener("scroll", syncHeader, {
+    passive: true,
+    signal: controller.signal,
+  });
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   let year = today.getFullYear(),

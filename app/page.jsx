@@ -113,52 +113,59 @@ export default function HomePage() {
               </button>
             </div>
             <div className="course-grid">
-              <button className="course-card beginner" data-course="beginner">
-                <span className="round-arrow">{"↗"}</span>
-                <div>
-                  <span className="card-kicker">{"LANGKAH PERTAMA"}</span>
-                  <h3>{"Mulai menyelam"}</h3>
-                  <p>
-                    {"Kenali peralatan, persiapan,"}
-                    <br />
-                    {"dan dunia di bawah permukaan."}
+              <article
+                className="beginner-calendar"
+                aria-label="Mulai menyelam dan pilih tanggal rencana"
+              >
+                <button className="course-card beginner" data-course="beginner">
+                  <span className="round-arrow">{"↗"}</span>
+                  <div>
+                    <span className="card-kicker">{"LANGKAH PERTAMA"}</span>
+                    <h3>{"Mulai menyelam"}</h3>
+                    <p>
+                      {"Kenali peralatan, persiapan,"}
+                      <br />
+                      {"dan dunia di bawah permukaan."}
+                    </p>
+                  </div>
+                </button>
+                <div className="calendar-card" id="calendar">
+                  <div className="calendar-heading">
+                    <button id="prev-month" aria-label="Bulan sebelumnya">
+                      {"‹"}
+                    </button>
+                    <h3 id="month-label"></h3>
+                    <button id="next-month" aria-label="Bulan berikutnya">
+                      {"›"}
+                    </button>
+                  </div>
+                  <div className="weekday-row" aria-hidden="true">
+                    <span>{"S"}</span>
+                    <span>{"S"}</span>
+                    <span>{"R"}</span>
+                    <span>{"K"}</span>
+                    <span>{"J"}</span>
+                    <span>{"S"}</span>
+                    <span>{"M"}</span>
+                  </div>
+                  <div
+                    id="calendar-grid"
+                    className="calendar-grid"
+                    role="group"
+                    aria-label="Pilih tanggal rencana diving"
+                  ></div>
+                  <p
+                    className="calendar-note"
+                    id="calendar-note"
+                    aria-live="polite"
+                  >
+                    {"Pilih tanggal petualanganmu."}
                   </p>
+                  <small>
+                    {"Kalender rencana, bukan ketersediaan booking."}
+                  </small>
                 </div>
-              </button>
-              <div className="calendar-card" id="calendar">
-                <div className="calendar-heading">
-                  <button id="prev-month" aria-label="Bulan sebelumnya">
-                    {"‹"}
-                  </button>
-                  <h3 id="month-label"></h3>
-                  <button id="next-month" aria-label="Bulan berikutnya">
-                    {"›"}
-                  </button>
-                </div>
-                <div className="weekday-row" aria-hidden="true">
-                  <span>{"S"}</span>
-                  <span>{"S"}</span>
-                  <span>{"R"}</span>
-                  <span>{"K"}</span>
-                  <span>{"J"}</span>
-                  <span>{"S"}</span>
-                  <span>{"M"}</span>
-                </div>
-                <div
-                  id="calendar-grid"
-                  className="calendar-grid"
-                  role="group"
-                  aria-label="Pilih tanggal rencana diving"
-                ></div>
-                <p
-                  className="calendar-note"
-                  id="calendar-note"
-                  aria-live="polite"
-                >
-                  {"Pilih tanggal petualanganmu."}
-                </p>
-                <small>{"Kalender rencana, bukan ketersediaan booking."}</small>
-              </div>
+              </article>
               <button className="course-card advanced" data-course="explorer">
                 <span className="round-arrow">{"↗"}</span>
                 <div>
