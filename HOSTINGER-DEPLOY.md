@@ -47,6 +47,10 @@ Jika memilih GitHub sebagai sumber, proyek harus lebih dulu dipush ke repository
 
 Variabel `NEXT_PUBLIC_*` ditanam ke bundle pada waktu build. Perubahan memerlukan build/deployment ulang. Nomor harus berupa kode negara dan angka saja, misalnya `6285190849237`, tanpa `+`, spasi, atau angka 0 di depan.
 
+## Kompatibilitas build Hostinger
+
+Script `npm run build` memakai `next build --webpack`. Turbopack default Next.js 16 dapat gagal pada host Linux yang tidak memenuhi versi GLIBC native compiler. Webpack dipilih melalui flag CLI resmi; tidak perlu menambahkan `webpack: true` atau `turbopack: false` ke konfigurasi Next.js. Jika build command pada hPanel diatur manual ke `next build`, ganti menjadi `npm run build` atau `next build --webpack`.
+
 ## Diagnosis singkat
 
 - Build gagal: pastikan Node 22/24, root proyek benar, dan `package-lock.json` ikut diunggah. Lihat error pertama pada log.
