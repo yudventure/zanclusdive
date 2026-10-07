@@ -41,10 +41,29 @@ export default function HomePage() {
             <a href="#calendar">{"Rencana"}</a>
             <a href="#contact">{"Kontak"}</a>
           </nav>
-          <button className="button nav-book" data-book>
-            {"Rencanakan dive "}
-            <span>{"↗"}</span>
-          </button>
+          <a
+            className="button quick-service"
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Chat WhatsApp untuk bantuan cepat"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 11.6a8.5 8.5 0 0 1-12.7 7.4L3 20.5l1.5-4.7A8.5 8.5 0 1 1 20.5 11.6Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8.3 7.5c-.6.3-.8 1.1-.5 2 .8 2.3 2.5 4 4.8 4.9.9.3 1.7.1 2-.5l.6-1.1-2-1-.8.9a6.2 6.2 0 0 1-2.8-2.8l.9-.8-1-2-1.2.4Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span className="quick-label">
+              <span className="quick-prefix">Chat </span>WhatsApp
+            </span>
+          </a>
         </header>
         <main id="main">
           <section className="hero" aria-labelledby="hero-title">
@@ -251,7 +270,8 @@ export default function HomePage() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {WHATSAPP_DISPLAY}{" ↗"}
+                {WHATSAPP_DISPLAY}
+                {" ↗"}
               </a>
               <br />
               {

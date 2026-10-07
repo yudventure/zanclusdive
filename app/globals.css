@@ -31,14 +31,12 @@
 }
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 25px;
+  scroll-padding-top: 110px;
 }
 body {
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(2, 22, 35, 0.6), rgba(2, 22, 35, 0.94)),
-    url("/assets/hero.webp") center top/cover fixed;
-  padding: 65px 32px 35px;
+  background: #052130;
+  padding: 0;
 }
 button,
 input,
@@ -99,33 +97,53 @@ img {
   top: 10px;
 }
 .page-shell {
-  max-width: 1240px;
-  margin: auto;
-  border: 1px solid #9ab7c385;
-  border-radius: 38px;
-  overflow: hidden;
+  width: 100%;
+  overflow: clip;
   background: #052130;
-  box-shadow: 0 25px 100px #00121f60;
 }
 .site-header {
-  height: 100px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 42px;
-  position: absolute;
-  z-index: 3;
-  width: calc(100% - 64px);
-  max-width: 1238px;
+  gap: 24px;
+  padding: 0 max(40px, calc((100vw - 1280px) / 2));
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 10;
+  width: 100%;
   color: white;
+  background: rgba(3, 27, 41, 0.78);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid #b3d8e51a;
+}
+.quick-service {
+  background: #bef4a5;
+  color: #062b3b;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 44px;
+  box-shadow: 0 5px 24px #0002;
+}
+.quick-service:hover {
+  background: #d4ffc1;
+}
+.quick-service svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.button.quick-service span {
+  font-size: inherit;
 }
 .brand {
   display: inline-flex;
   flex-shrink: 0;
 }
 .brand img {
-  width: 156px;
-  height: 39px;
+  width: 176px;
+  height: 44px;
 }
 nav {
   display: flex;
@@ -167,11 +185,6 @@ nav a.active {
 .button span {
   font-size: 17px;
 }
-.nav-book {
-  background: #052b3a80;
-  color: white;
-  border: 1px solid #a2d3dd30;
-}
 .primary {
   background: linear-gradient(110deg, #f4ffff 0%, #aee9d4 65%, #a7d8ef 100%);
   color: #062b3b;
@@ -189,13 +202,13 @@ nav a.active {
 }
 .hero {
   position: relative;
-  min-height: 760px;
+  min-height: min(920px, 100svh);
   background:
     linear-gradient(90deg, #021b2b8c, transparent 80%),
     linear-gradient(0deg, #031b2cec, transparent 55%),
     url("/assets/hero.webp") center 48% / cover;
   color: white;
-  padding: 145px 74px 38px;
+  padding: 180px max(40px, calc((100vw - 1280px) / 2)) 48px;
   display: flex;
   flex-direction: column;
 }
@@ -219,20 +232,20 @@ nav a.active {
   line-height: 1.09;
   font-weight: 400;
   letter-spacing: -5px;
-  margin-top: 96px;
+  margin-top: clamp(55px, 9vh, 110px);
   color: #bdeef6;
 }
 .hero h1 span {
   display: block;
-  margin-left: 19%;
+  margin-left: 12%;
   background: linear-gradient(90deg, #d7fcff, #76c8df);
   background-clip: text;
   color: transparent;
 }
 .hero-bottom {
-  margin-top: 70px;
-  text-align: center;
-  align-self: center;
+  margin-top: 36px;
+  text-align: left;
+  align-self: flex-start;
 }
 .hero-bottom p {
   font-size: 13px;
@@ -256,10 +269,10 @@ nav a.active {
 }
 .light-panel {
   position: relative;
-  border-radius: 36px 36px 0 0;
+  border-radius: 0;
   background: #fff;
-  padding: 48px 46px 40px;
-  margin-top: -27px;
+  padding: 80px max(40px, calc((100vw - 1280px) / 2)) 72px;
+  margin-top: 0;
   z-index: 2;
 }
 .section-heading {
@@ -509,7 +522,7 @@ nav a.active {
   line-height: 1.7;
 }
 .ocean-section {
-  padding: 65px 46px;
+  padding: 88px max(40px, calc((100vw - 1280px) / 2));
   color: #e8f5f5;
 }
 .ocean-section .eyebrow {
@@ -558,7 +571,7 @@ nav a.active {
 }
 .contact-section {
   text-align: center;
-  padding: 32px 40px 72px;
+  padding: 30px 40px 90px;
   color: white;
 }
 .contact-section .eyebrow {
@@ -580,7 +593,7 @@ nav a.active {
 }
 footer {
   border-top: 1px solid #9ac6d222;
-  padding: 30px 44px;
+  padding: 36px max(40px, calc((100vw - 1280px) / 2));
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -719,23 +732,17 @@ footer > span {
   display: none !important;
 }
 @media (min-width: 1450px) {
-  body {
-    padding-top: 85px;
-  }
   .hero {
-    min-height: 800px;
+    min-height: min(980px, 100svh);
   }
   .hero h1 {
     font-size: 100px;
   }
 }
 @media (max-width: 1050px) {
-  body {
-    padding: 30px 20px;
-  }
   .site-header {
-    width: calc(100% - 40px);
-    padding: 0 25px;
+    padding: 0 28px;
+    gap: 14px;
   }
   .brand img {
     width: 132px;
@@ -743,11 +750,6 @@ footer > span {
   nav a {
     padding: 9px 10px;
     font-size: 10px;
-  }
-  .nav-book {
-    padding: 12px 14px;
-    font-size: 10px;
-    gap: 10px;
   }
   .hero {
     padding-left: 45px;
@@ -799,26 +801,36 @@ footer > span {
   }
 }
 @media (max-width: 700px) {
-  body {
-    padding: 12px 10px 18px;
-    background-attachment: scroll;
-  }
-  .page-shell {
-    border-radius: 25px;
+  html {
+    scroll-padding-top: 90px;
   }
   .site-header {
-    height: 83px;
-    padding: 0 22px;
-    width: calc(100% - 20px);
+    height: 76px;
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .site-header .brand {
+    margin-right: auto;
   }
   .brand img {
-    width: 144px;
-    height: 36px;
+    width: 132px;
+    height: 33px;
   }
-  .nav-book {
+  .quick-service {
+    padding: 10px 12px;
+    gap: 7px;
+    font-size: 11px;
+  }
+  .quick-service svg {
+    width: 17px;
+    height: 17px;
+  }
+  .quick-prefix {
     display: none;
   }
   .menu-toggle {
+    order: 3;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -840,7 +852,7 @@ footer > span {
     position: absolute;
     right: 20px;
     left: 20px;
-    top: 73px;
+    top: 70px;
     border-radius: 18px;
     background: #042a3cef;
     padding: 12px;
@@ -856,7 +868,7 @@ footer > span {
   }
   .hero {
     padding: 120px 24px 32px;
-    min-height: 680px;
+    min-height: 740px;
     background-position: 65% center;
   }
   .hero-topline {
@@ -887,7 +899,7 @@ footer > span {
   }
   .light-panel {
     padding: 32px 18px 25px;
-    border-radius: 26px 26px 0 0;
+    border-radius: 0;
   }
   .section-heading {
     align-items: flex-start;
@@ -1055,5 +1067,23 @@ footer > span {
   *:before,
   *:after {
     transition: none !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .site-header {
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .site-header .brand img {
+    width: 116px;
+    height: 29px;
+  }
+  .quick-service {
+    padding: 9px 10px;
+  }
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
   }
 }

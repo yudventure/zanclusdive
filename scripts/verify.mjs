@@ -22,6 +22,26 @@ page.on("response", (r) => {
   if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`);
 });
 await page.goto(baseURL, { waitUntil: "networkidle" });
+const fullWidth = await page.locator('.page-shell').evaluate(el => {
+  const rect = el.getBoundingClientRect();
+  return rect.left === 0 && rect.width === innerWidth && getComputedStyle(el).borderRadius === '0px';
+});
+assert.equal(fullWidth, true, 'Website fills viewport without outer frame');
+const quickChat = page.getByRole('link', {name: 'Chat WhatsApp untuk bantuan cepat'});
+assert.equal(await quickChat.isVisible(), true);
+const quickURL = await quickChat.getAttribute('href');
+assert.ok(quickURL.startsWith('https://wa.me/6285190849237?text='));
+assert.match(decodeURIComponent(quickURL), /mendapat bantuan/);
+await context.route('https://wa.me/**', route => route.fulfill({status: 200, contentType: 'text/html', body: 'WhatsApp test destination'}));
+const popupPromise = page.waitForEvent('popup');
+await quickChat.click();
+const popup = await popupPromise;
+await popup.waitForLoadState();
+assert.equal(popup.url(), quickURL);
+await popup.close();
+await page.evaluate(() => scrollTo(0, 600));
+assert.equal(await page.locator('.site-header').evaluate(el => el.getBoundingClientRect().top), 0, 'Quick service remains accessible when scrolling');
+await page.evaluate(() => scrollTo({top:0,behavior:'instant'}));
 await page.screenshot({ path: "artifacts/desktop.png", fullPage: true });
 assert.equal(
   await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
@@ -82,6 +102,7 @@ await page.locator("#see-all").click();
 assert.equal(await page.locator("#more-courses").isVisible(), false);
 await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(baseURL, { waitUntil: "networkidle" });
+assert.equal(await quickChat.isVisible(), true, 'Mobile quick service visible');
 await page.screenshot({ path: "artifacts/mobile.png", fullPage: true });
 assert.equal(
   await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
@@ -99,6 +120,6 @@ await page.keyboard.press("Escape");
 assert.equal(await page.locator("#booking-dialog").isVisible(), false);
 assert.deepEqual(errors, []);
 console.log(
-  "PASS: desktop/mobile, no overflow, calendar, details, quiz, booking, WhatsApp URL, download, mobile menu, dialog keyboard, no runtime/network errors.",
+  "PASS: full-width desktop/mobile, sticky header, quick WhatsApp popup, no overflow, calendar, details, quiz, booking, WhatsApp URL, download, mobile menu, dialog keyboard, no runtime/network errors.",
 );
 await browser.close();

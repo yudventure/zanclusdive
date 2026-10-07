@@ -29,7 +29,7 @@ Salin `.env.example` menjadi `.env.local` untuk konfigurasi lokal. `NEXT_PUBLIC_
 
 ## Fitur & status
 
-Hero imersif, menu mobile, kartu pengalaman, kalender rencana, kuis, dialog, formulir, pesan WhatsApp, serta unduhan TXT. Formulir tidak mengirim pesan otomatis dan tidak menyimpan data ke server. Jadwal/biaya dikonfirmasi lewat tim. Nomor uji coba pengguna: 085190849237.
+Layout memenuhi lebar layar tanpa bingkai luar, hero imersif, header tetap terlihat, tombol layanan cepat WhatsApp langsung, menu mobile, kartu pengalaman, kalender rencana, kuis, dialog, formulir, pesan WhatsApp, serta unduhan TXT. Formulir tidak mengirim pesan otomatis dan tidak menyimpan data ke server. Jadwal/biaya dikonfirmasi lewat tim. Nomor uji coba pengguna: 085190849237.
 
 Gambar generatif bukan dokumentasi lokasi. Logo adalah adaptasi vektor dari aset brand sebelumnya. Font Inter dan Montserrat berlisensi SIL OFL; lisensi ada di `public/licenses`.
 
