@@ -54,6 +54,8 @@ Jika penyedia database mensyaratkan TLS, atur `MYSQL_SSL=true`. Sertifikat tetap
 
 Jika halaman menunjukkan **CMS perlu dikonfigurasi**, lengkapi variabel yang diwajibkan. Jika login menampilkan database tidak dapat diakses, periksa hostname, user, password, izin, dan akses jaringan MySQL di hPanel. Menambah nilai environment biasanya membutuhkan restart/redeploy aplikasi mengikuti alur hPanel.
 
+Halaman admin kini menampilkan nama variabel yang belum terbaca dan syarat panjang yang belum terpenuhi, tanpa menampilkan nilai kredensial. Jika masih muncul **Konfigurasi CMS belum lengkap** setelah redeploy, periksa hanya nama yang tercantum: gunakan nama variabel persis seperti tabel di atas, isi nilai tanpa tanda kutip pembungkus, pastikan variabel dipasang pada aplikasi `zanclusdive.com` yang sedang dijalankan, lalu simpan dan deploy ulang. File `.env` lokal atau `.env.example` di GitHub tidak otomatis mengisi variabel runtime Hostinger. Pesan konfigurasi tersebut belum merupakan hasil pengecekan koneksi database; error koneksi baru diperiksa ketika konfigurasi lengkap dan aplikasi mengakses MySQL.
+
 ## Menu yang tersedia
 
 - **Overview:** ringkasan catatan reservasi, pengalaman aktif, nilai terkonfirmasi, dan reservasi terbaru. Nilai bukan bukti pembayaran masuk.

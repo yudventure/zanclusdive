@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { currentAdmin, authConfigured } from "../../../src/server/auth.js";
+import { currentAdmin } from "../../../src/server/auth.js";
+import { configurationIssues } from "../../../src/cms-config.js";
 import Login from "../../../src/admin/Login.jsx";
 import Dashboard from "../../../src/admin/Dashboard.jsx";
 import "../admin.css";
@@ -26,7 +27,10 @@ export default async function AdminPage({ params }) {
   )
     notFound();
   const admin = await currentAdmin();
-  if (!admin) return <Login configured={authConfigured()} />;
+  if (!admin) {
+    const issues = configurationIssues();
+    return <Login configured={issues.length === 0} issues={issues} />;
+  }
   return (
     <Dashboard
       section={active}

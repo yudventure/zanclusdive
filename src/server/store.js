@@ -2,10 +2,9 @@ import "server-only";
 import mysql from "mysql2/promise";
 import { randomUUID } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
+import { databaseIssues } from "../cms-config.js";
 export function databaseConfigured() {
-  return ["MYSQL_HOST", "MYSQL_DATABASE", "MYSQL_USER", "MYSQL_PASSWORD"].every(
-    (k) => Boolean(process.env[k]),
-  );
+  return databaseIssues().length === 0;
 }
 async function db() {
   if (!databaseConfigured()) throw new Error("DATABASE_NOT_CONFIGURED");

@@ -1,15 +1,10 @@
 import "server-only";
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
-import { databaseConfigured } from "./store.js";
+import { configurationIssues } from "../cms-config.js";
 export const COOKIE = "zanclus_admin_session";
 export function authConfigured() {
-  return Boolean(
-    process.env.ADMIN_EMAIL &&
-    process.env.ADMIN_PASSWORD?.length >= 12 &&
-    process.env.SESSION_SECRET?.length >= 32 &&
-    databaseConfigured(),
-  );
+  return configurationIssues().length === 0;
 }
 function sign(value) {
   return createHmac("sha256", process.env.SESSION_SECRET)

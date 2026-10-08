@@ -1,3 +1,15 @@
+.admin-setup ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 16px 0;
+}
+.admin-setup li {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.admin-setup code {
+  font-weight: 600;
+}
 .admin-root {
   --admin-blue: #244c68;
   --admin-muted: #718394;

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-export default function Login({ configured }) {
+export default function Login({ configured, issues = [] }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   async function login(event) {
@@ -71,11 +71,20 @@ export default function Login({ configured }) {
           </form>
         ) : (
           <div className="admin-setup">
-            <h2>CMS perlu dikonfigurasi.</h2>
+            <h2>Konfigurasi CMS belum lengkap.</h2>
             <p>
-              Buat database MySQL, lalu isi MYSQL_HOST, MYSQL_DATABASE,
-              MYSQL_USER, MYSQL_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD, dan
-              SESSION_SECRET di environment variable Hostinger.
+              Aplikasi belum dapat memakai variabel berikut:
+            </p>
+            <ul>
+              {issues.map(({ name, reason }) => (
+                <li key={name}><code>{name}</code>: {reason}</li>
+              ))}
+            </ul>
+            <p>
+              Buka hPanel → Variabel environment, isi atau perbaiki variabel di
+              atas, simpan, lalu deploy ulang aplikasi. Mengunduh file .env
+              saja belum mengisi variabel di Hostinger. Jangan upload file
+              berisi password ke GitHub.
             </p>
             <a
               href="https://github.com/yudventure/zanclusdive/blob/main/CMS-HOSTINGER.md"
