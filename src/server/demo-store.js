@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { demoSeed } from "../demo-data.js";
 import { demoShop, withShop } from "../shop-model.js";
+import { demoSocials, withContactFields } from "../contact-model.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -41,6 +42,15 @@ function store() {
         throw new Error("DEMO_DATA_INVALID");
       if (!state.content.shop) {
         state.content = withShop(state.content, demoShop());
+        state.version++;
+        await writeState(directory, state);
+      }
+      if (!state.contactDefaultsVersion) {
+        state.content = withContactFields(state.content);
+        for (const [key, value] of Object.entries(demoSocials)) {
+          if (!state.content.contact[key]) state.content.contact[key] = value;
+        }
+        state.contactDefaultsVersion = 1;
         state.version++;
         await writeState(directory, state);
       }

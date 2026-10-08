@@ -1,5 +1,6 @@
 import { experiences } from "./domain.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
+import { blankSocials, socialPlatforms } from "./contact-model.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 export const defaultContent = {
   shop: structuredClone(emptyShop),
@@ -23,8 +24,9 @@ export const defaultContent = {
       "Ceritakan pengalamanmu, pilih tanggal, dan susun rencana penyelaman.",
   },
   contact: {
+    ...blankSocials,
     whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190849237",
-    email: "",
+    email: "halo@zanclusdive.com",
     location: "",
     instagram: "",
   },
@@ -116,19 +118,36 @@ export function validateContent(input) {
   const email = plain(c.email, "Email", 200, false);
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new Error("Email kontak tidak valid.");
-  const instagram = plain(c.instagram, "Instagram", 500, false);
-  if (instagram) {
-    const u = new URL(instagram);
-    if (
-      u.protocol !== "https:" ||
-      !["instagram.com", "www.instagram.com"].includes(u.hostname)
-    )
-      throw new Error("Masukkan tautan Instagram HTTPS.");
-  }
+  const socials = Object.fromEntries(
+    Object.entries(socialPlatforms).map(([key, platform]) => {
+      const value = plain(c[key] ?? "", platform.label, 500, false);
+      if (value) {
+        let url;
+        try {
+          url = new URL(value);
+        } catch {
+          throw new Error(
+            `Masukkan tautan ${platform.label} HTTPS yang valid.`,
+          );
+        }
+        if (
+          url.protocol !== "https:" ||
+          !platform.hosts.includes(url.hostname) ||
+          url.username ||
+          url.password ||
+          url.port
+        )
+          throw new Error(
+            `Masukkan tautan ${platform.label} HTTPS yang valid.`,
+          );
+      }
+      return [key, value];
+    }),
+  );
   const contact = {
     whatsapp,
     email,
-    instagram,
+    ...socials,
     location: plain(c.location, "Lokasi", 500, false),
   };
   const images = Object.fromEntries(

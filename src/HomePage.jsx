@@ -2,6 +2,8 @@
 import { useEffect } from "react";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
+import SiteFooter from "./components/SiteFooter.jsx";
+import ContactIcon from "./components/ContactIcon.jsx";
 export default function HomePage({ content, demo = false }) {
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
@@ -305,81 +307,96 @@ export default function HomePage({ content, demo = false }) {
             </div>
           </section>
           <ShopTeaser shop={content.shop} demo={demo} />
-          <section className="contact-section" id="contact">
-            <p className="eyebrow">{"MAKE ROOM FOR A NEW STORY"}</p>
-            <h2>
-              {content.text.contactTitle1}
-              <br />
-              {content.text.contactTitle2}
-            </h2>
-            <p>{content.text.contactDescription}</p>
-            <button className="button primary" data-book>
-              {"Rencanakan bersama Zanclus "}
-              <span>{"↗"}</span>
-            </button>
-            <p className="contact-note">
-              {"WhatsApp: "}
+          <section
+            className="contact-section"
+            id="contact"
+            aria-labelledby="contact-title"
+          >
+            <div className="contact-copy">
+              <p className="eyebrow">{"MAKE ROOM FOR A NEW STORY"}</p>
+              <h2 id="contact-title">
+                {content.text.contactTitle1}
+                <br />
+                {content.text.contactTitle2}
+              </h2>
+              <p className="contact-description">
+                {content.text.contactDescription}
+              </p>
+              <div className="contact-actions">
+                <button className="button dark" data-book>
+                  {"Rencanakan bersama Zanclus "}
+                  <span>{"↗"}</span>
+                </button>
+                <a
+                  className="contact-chat"
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin berdiskusi tentang rencana diving saya.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Chat dulu dengan tim <span aria-hidden="true">↗</span>
+                </a>
+              </div>
+              <p className="contact-note">
+                {
+                  "Tanggal dan program perlu dikonfirmasi dengan tim sebelum perjalanan."
+                }
+              </p>
+            </div>
+            <div className="contact-panel">
+              <p className="contact-panel-label">
+                <span /> LET'S TALK ABOUT YOUR NEXT DIVE
+              </p>
+              <h3>Tim Zanclus siap membantu.</h3>
+              <p>
+                Mulai dari pertanyaan sederhana. Kita susun rencana yang sesuai
+                denganmu.
+              </p>
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                className="contact-channel"
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving dan perlengkapan.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                {WHATSAPP_DISPLAY}
-                {" ↗"}
+                <span className="contact-channel-icon">
+                  <ContactIcon name="whatsapp" />
+                </span>
+                <span>
+                  <small>WHATSAPP</small>
+                  <strong>{WHATSAPP_DISPLAY}</strong>
+                </span>
+                <span className="contact-channel-arrow" aria-hidden="true">
+                  ↗
+                </span>
               </a>
-              <br />
-              {
-                "Tanggal dan program perlu dikonfirmasi dengan tim sebelum perjalanan."
-              }
-            </p>
-            {(content.contact.location ||
-              content.contact.email ||
-              content.contact.instagram) && (
-              <div className="contact-extra">
-                {content.contact.location && <p>{content.contact.location}</p>}
-                {content.contact.email && (
-                  <a href={`mailto:${content.contact.email}`}>
-                    {content.contact.email}
-                  </a>
-                )}
-                {content.contact.instagram && (
-                  <a
-                    href={content.contact.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Instagram ↗
-                  </a>
-                )}
-              </div>
-            )}
+              {content.contact.email && (
+                <a
+                  className="contact-channel"
+                  href={`mailto:${content.contact.email}`}
+                >
+                  <span className="contact-channel-icon">
+                    <ContactIcon name="email" />
+                  </span>
+                  <span>
+                    <small>EMAIL</small>
+                    <strong>{content.contact.email}</strong>
+                  </span>
+                  <span className="contact-channel-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </a>
+              )}
+              <p className="contact-panel-note">
+                Diving · Perlengkapan · Rental alat
+              </p>
+            </div>
           </section>
         </main>
-        <footer>
-          {demo && (
-            <p>
-              <a href="/admin">
-                Demo website & CMS · harga dan reservasi contoh ↗
-              </a>
-            </p>
-          )}
-          <a className="brand" href="#">
-            <img
-              src="/assets/logo-header-dark.svg"
-              alt="Zanclus Dive Center"
-              width="160"
-              height="40"
-            />
-          </a>
-          <p>{content.text.tagline}</p>
-          <a href="/dive-shop">Dive Shop ↗</a>
-          <a href="#main">{"Kembali ke atas ↑"}</a>
-          <span>
-            {"© "}
-            <span id="year"></span>
-            {" Zanclus Dive Center"}
-          </span>
-        </footer>
+        <SiteFooter
+          contact={content.contact}
+          tagline={content.text.tagline}
+          demo={demo}
+          home
+        />
       </div>
       <dialog id="detail-dialog" className="modal">
         <button className="close-modal" aria-label="Tutup detail">

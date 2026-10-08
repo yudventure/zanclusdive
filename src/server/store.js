@@ -7,6 +7,7 @@ import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import * as demo from "./demo-store.js";
 import { withShop } from "../shop-model.js";
+import { withContactFields } from "../contact-model.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -51,7 +52,7 @@ export async function getContent() {
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withShop(JSON.parse(rows[0].payload)),
+    content: withContactFields(withShop(JSON.parse(rows[0].payload))),
     version: rows[0].version,
   };
 }

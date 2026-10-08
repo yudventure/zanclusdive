@@ -2,6 +2,7 @@
 import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
+import { socialPlatforms } from "../contact-model.js";
 import {
   experienceKeys,
   textFields,
@@ -1042,24 +1043,28 @@ export default function Dashboard({ section, email, today, demo = false }) {
                           }
                         />
                       </Field>
-                      <Field label="Tautan Instagram">
-                        <input
-                          type="url"
-                          placeholder="https://www.instagram.com/…"
-                          value={content.contact.instagram}
-                          onChange={(e) =>
-                            mutateContent(
-                              "contact",
-                              "instagram",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </Field>
+                      {Object.entries(socialPlatforms).map(
+                        ([key, platform]) => (
+                          <Field key={key} label={"Tautan " + platform.label}>
+                            <input
+                              type="url"
+                              placeholder={platform.url + "…"}
+                              maxLength={500}
+                              value={content.contact[key] ?? ""}
+                              onChange={(e) =>
+                                mutateContent("contact", key, e.target.value)
+                              }
+                            />
+                          </Field>
+                        ),
+                      )}
                     </div>
                     <p className="admin-subtle">
                       Nomor WhatsApp CMS menggantikan nomor default website
-                      tanpa rebuild. Field kosong tidak ditampilkan.
+                      tanpa rebuild. WhatsApp, email, dan sosial media tampil di
+                      footer seluruh website. Isi tautan akun resmi dengan
+                      HTTPS; kosongkan tautan sosial untuk menyembunyikan
+                      ikonnya. Tautan platform pada demo hanya contoh.
                     </p>
                     <button className="admin-button" disabled={busy}>
                       {busy ? "Menyimpan…" : "Simpan kontak"}

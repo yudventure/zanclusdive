@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
+import SiteFooter from "../components/SiteFooter.jsx";
 import {
   shopCategories,
   availabilityLabels,
@@ -535,21 +536,7 @@ export default function DiveShop({ shop, contact, demo, initialMode, today }) {
           </div>
         </section>
       </main>
-      <footer>
-        <a className="brand" href="/">
-          <img
-            src="/assets/logo-header-dark.svg"
-            width="176"
-            height="44"
-            alt="Zanclus Dive Center"
-          />
-        </a>
-        <p>Jelajahi laut. Temukan cerita.</p>
-        <a href={helpURL} target="_blank" rel="noopener noreferrer">
-          Hubungi tim ↗
-        </a>
-        <span>© {new Date().getFullYear()} Zanclus Dive Center</span>
-      </footer>
+      <SiteFooter contact={contact} demo={demo} />
       {count > 0 && (
         <a className="shop-mobile-order" href="#order">
           Lihat pesanan · {count} alat{" "}

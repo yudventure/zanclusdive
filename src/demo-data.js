@@ -1,5 +1,6 @@
 import { defaultContent } from "./cms-model.js";
 import { demoShop } from "./shop-model.js";
+import { demoSocials } from "./contact-model.js";
 // Public demo credentials, never used in MySQL mode.
 export const demoAccount = {
   email: "demo@zanclusdive.com",
@@ -10,6 +11,7 @@ export function demoSeed(now = new Date()) {
   const today = now.toLocaleDateString("en-CA", { timeZone: "Asia/Jayapura" });
   const content = structuredClone(defaultContent);
   content.shop = demoShop();
+  Object.assign(content.contact, demoSocials);
   content.contact.email = "halo@zanclusdive.com";
   content.contact.location =
     "Raja Ampat, Papua Barat Daya — lokasi contoh demo";
@@ -20,6 +22,7 @@ export function demoSeed(now = new Date()) {
   content.experiences.specialty.price = 1800000;
   content.experiences.specialty.duration = "1 hari · contoh demo";
   return {
+    contactDefaultsVersion: 1,
     content,
     version: 1,
     media: [],

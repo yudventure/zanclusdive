@@ -599,46 +599,6 @@ nav a.active {
   font-size: 34px;
   letter-spacing: -1px;
 }
-.contact-section {
-  text-align: center;
-  padding: 30px 40px 90px;
-  color: white;
-}
-.contact-section .eyebrow {
-  color: #92c2c8;
-}
-.contact-section h2 {
-  font-size: 46px;
-}
-.contact-section > p:not(.eyebrow) {
-  margin: 20px auto;
-  font-size: 13px;
-  color: #b0c7d0;
-  line-height: 1.7;
-}
-.contact-section .contact-note {
-  font-size: 9px !important;
-  margin-top: 18px !important;
-  color: #769aa7 !important;
-}
-footer {
-  border-top: 1px solid #9ac6d222;
-  padding: 36px max(40px, calc((100vw - 1280px) / 2));
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 25px;
-  color: #a4c3cd;
-  font-size: 10px;
-}
-footer p {
-  margin-right: auto;
-}
-footer > span {
-  width: 100%;
-  font-size: 9px;
-  color: #7296a3;
-}
 .menu-toggle {
   display: none;
 }
@@ -1062,30 +1022,6 @@ footer > span {
     font-size: 6px;
     letter-spacing: 0.8px;
   }
-  .contact-section {
-    padding: 20px 22px 48px;
-  }
-  .contact-section h2 {
-    font-size: 32px;
-    letter-spacing: -1px;
-  }
-  .contact-section > p:not(.eyebrow) {
-    font-size: 11px;
-  }
-  .contact-section .button {
-    font-size: 10px;
-    gap: 15px;
-  }
-  footer {
-    padding: 25px 22px;
-    gap: 18px;
-  }
-  footer p {
-    font-size: 9px;
-  }
-  footer > a:last-of-type {
-    font-size: 9px;
-  }
   .modal {
     padding: 34px 24px;
   }
@@ -1133,18 +1069,6 @@ footer > span {
   font-size: 10px;
   line-height: 1.6;
   margin-top: 3px;
-}
-.contact-extra {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
-  color: #b0c7d0;
-  font-size: 12px;
-}
-.contact-extra p {
-  width: 100%;
 }
 .course-grid:has(> [hidden]) {
   grid-template-columns: 2.37fr 0.85fr;
