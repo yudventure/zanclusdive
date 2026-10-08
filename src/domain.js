@@ -46,5 +46,5 @@ export function recommendation(level, interest) {
   return interest === "creative" ? "specialty" : "explorer";
 }
 export function planSummary(plan, catalog = experiences) {
-  return `Nama: ${plan.name}\nTanggal rencana: ${plan.date}\nPeserta: ${plan.people}\nPengalaman: ${catalog[plan.experience].title}\nCatatan: ${plan.notes || "—"}`;
+  return `Nama: ${plan.name}${plan.phone ? "\nWhatsApp: " + plan.phone : ""}\nTanggal rencana: ${plan.date}\nPeserta: ${plan.people}\nPengalaman: ${catalog[plan.experience].title}\nCatatan: ${plan.notes || "—"}`;
 }

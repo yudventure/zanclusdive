@@ -10,6 +10,11 @@ import { withShop } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
+import {
+  assertBookable,
+  bookingReceipt,
+  BookingError,
+} from "../booking-model.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -111,6 +116,63 @@ export async function saveBooking(payload, id) {
     [newID, JSON.stringify(payload)],
   );
   return { id: newID, ...payload };
+}
+export async function createBookingRequest(payload, requestId, fingerprint) {
+  if (isDemo())
+    return demo.createBookingRequest(payload, requestId, fingerprint);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const requestKey = "request:" + requestId;
+    await connection.execute(
+      // Acquire an exclusive row lock for retries. INSERT IGNORE can acquire
+      // shared duplicate-key locks and deadlock with simultaneous retries.
+      "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'booking-request',?) ON DUPLICATE KEY UPDATE id=id",
+      [requestKey, JSON.stringify({ fingerprint })],
+    );
+    const [requests] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='booking-request' FOR UPDATE",
+      [requestKey],
+    );
+    const previous = JSON.parse(requests[0].payload);
+    if (previous.fingerprint !== fingerprint)
+      throw new BookingError(
+        "Permintaan ini sudah dikirim. Buat booking baru untuk data berbeda.",
+        409,
+      );
+    if (previous.receipt) {
+      await connection.commit();
+      return { receipt: previous.receipt, created: false };
+    }
+    const [contentRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id='site'",
+    );
+    const [bookingRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE kind='booking'",
+    );
+    assertBookable(
+      JSON.parse(contentRows[0].payload),
+      bookingRows.map((r) => JSON.parse(r.payload)),
+      payload,
+    );
+    const id = randomUUID(),
+      receipt = bookingReceipt({ id, ...payload }, false);
+    await connection.execute(
+      "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'booking',?)",
+      [id, JSON.stringify(payload)],
+    );
+    await connection.execute(
+      "UPDATE zanclus_records SET payload=? WHERE id=?",
+      [JSON.stringify({ fingerprint, receipt }), requestKey],
+    );
+    await connection.commit();
+    return { receipt, created: true };
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 export async function deleteBooking(id) {
   if (isDemo()) return demo.deleteBooking(id);

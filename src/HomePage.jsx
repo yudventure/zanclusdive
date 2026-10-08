@@ -208,7 +208,7 @@ export default function HomePage({ content, demo = false }) {
             >
               <article
                 className="beginner-calendar"
-                aria-label="Diving dan kalender rencana"
+                aria-label="Diving dan kalender booking"
                 data-reveal
               >
                 <ExperienceCard
@@ -240,18 +240,56 @@ export default function HomePage({ content, demo = false }) {
                     id="calendar-grid"
                     className="calendar-grid"
                     role="group"
-                    aria-label="Pilih tanggal rencana diving"
+                    aria-label="Pilih tanggal booking diving"
                   ></div>
+                  <label
+                    className="calendar-program"
+                    htmlFor="calendar-experience"
+                  >
+                    Program diving
+                    <select id="calendar-experience">
+                      {Object.entries(content.experiences)
+                        .filter(([, e]) => e.enabled)
+                        .map(([key, e]) => (
+                          <option key={key} value={key}>
+                            {e.title}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
                   <p
                     className="calendar-note"
                     id="calendar-note"
                     aria-live="polite"
                   >
-                    {"Pilih tanggal petualanganmu."}
+                    {"Pilih tanggal untuk booking."}
                   </p>
-                  <small>
-                    {"Kalender rencana, bukan ketersediaan booking."}
+                  <button
+                    className="button dark calendar-book-button"
+                    id="calendar-book"
+                    type="button"
+                    disabled
+                    aria-describedby="calendar-note calendar-book-help"
+                  >
+                    Booking tanggal ini <span aria-hidden="true">↗</span>
+                  </button>
+                  <button
+                    className="text-button"
+                    id="calendar-retry"
+                    type="button"
+                    hidden
+                  >
+                    Muat ulang jadwal
+                  </button>
+                  <small id="calendar-book-help">
+                    Jadwal WIT · Booking dikonfirmasi oleh tim.
                   </small>
+                  <noscript>
+                    <small>
+                      Aktifkan JavaScript untuk memilih tanggal, atau hubungi
+                      WhatsApp di bawah.
+                    </small>
+                  </noscript>
                 </div>
               </article>
               <ExperienceCard
@@ -475,13 +513,20 @@ export default function HomePage({ content, demo = false }) {
           {"×"}
         </button>
         <p className="eyebrow">{"LET'S PLAN SOMETHING GOOD"}</p>
-        <h2>{"Rencana penyelamanmu."}</h2>
+        <h2>{"Booking penyelamanmu."}</h2>
         <p className="muted">
           {
-            "Isi rencana diving, lalu lanjutkan ke WhatsApp untuk mendiskusikannya dengan tim Zanclus."
+            "Pilih program dan tanggal, lalu isi data peserta. Tim Zanclus akan menghubungimu untuk konfirmasi jadwal dan biaya."
           }
         </p>
         <form id="booking-form">
+          <input
+            name="website"
+            hidden
+            tabIndex="-1"
+            autoComplete="off"
+            aria-hidden="true"
+          />
           <label>
             {"Nama"}
             <input
@@ -492,9 +537,22 @@ export default function HomePage({ content, demo = false }) {
               placeholder="Nama kamu"
             />
           </label>
+          <label>
+            Nomor WhatsApp peserta
+            <input
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              required
+              minLength="8"
+              maxLength="30"
+              placeholder="Contoh: +62 851 9084 9237"
+            />
+          </label>
           <div className="form-row grid grid-cols-2 gap-4">
             <label>
-              {"Tanggal rencana"}
+              {"Tanggal booking (WIT)"}
               <input type="date" name="date" required />
             </label>
             <label>
@@ -530,17 +588,33 @@ export default function HomePage({ content, demo = false }) {
               placeholder="Pengalaman diving, pertanyaan, atau kebutuhan lainnya"
             ></textarea>
           </label>
+          <p
+            className="booking-error"
+            id="booking-error"
+            role="alert"
+            tabIndex="-1"
+            hidden
+          ></p>
+          <p className="booking-privacy">
+            {demo ? "Mode demo: gunakan data contoh. " : ""}Data ini digunakan
+            tim untuk menghubungimu terkait booking. Pengajuan belum merupakan
+            konfirmasi atau pembayaran.
+          </p>
           <button className="button dark" type="submit">
-            {"Siapkan pesan WhatsApp "}
+            {"Kirim permintaan booking "}
             <span>{"↗"}</span>
           </button>
         </form>
         <div id="booking-result" hidden aria-live="polite">
-          <h3>{"Rencanamu sudah siap."}</h3>
+          <h3 tabIndex="-1" id="booking-success-title">
+            {"Permintaan booking tersimpan."}
+          </h3>
+          <p className="booking-status">Menunggu konfirmasi tim</p>
+          <p className="booking-reference" id="booking-reference"></p>
           <p id="booking-summary"></p>
           <p className="muted">
             {
-              "Kirim rencana melalui WhatsApp untuk konfirmasi jadwal dan program. Pesan baru dikirim setelah kamu menekan kirim di WhatsApp."
+              "Tim akan menghubungimu melalui nomor yang diisi. Untuk bantuan lebih cepat, lanjutkan ke WhatsApp dengan nomor referensi booking ini."
             }
           </p>
           <a
@@ -552,10 +626,10 @@ export default function HomePage({ content, demo = false }) {
             {"Lanjut ke WhatsApp ↗"}
           </a>
           <button className="button primary" id="download-plan">
-            {"Unduh rencana ↓"}
+            {"Unduh ringkasan booking ↓"}
           </button>
           <button className="text-button" id="edit-plan">
-            {"Ubah rencana"}
+            {"Buat booking lain"}
           </button>
         </div>
       </dialog>

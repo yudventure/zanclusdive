@@ -112,7 +112,14 @@ assert.notEqual(await page.locator("#month-label").textContent(), oldLabel);
 await page.locator("#calendar-grid button:not([disabled])").first().click();
 const selected = await page.locator('input[name="date"]').inputValue();
 assert.ok(selected);
-assert.match(await page.locator("#calendar-note").textContent(), /Rencana:/);
+assert.match(
+  await page.locator("#calendar-note").textContent(),
+  /Tanggal booking:/,
+);
+await page.locator("#calendar-book").click();
+await assertCentered("#booking-dialog");
+assert.equal(await page.locator('input[name="date"]').inputValue(), selected);
+await page.locator("#booking-dialog .close-modal").click();
 await page.locator("#open-quiz").click();
 await assertCentered("#quiz-dialog");
 await page
@@ -127,6 +134,7 @@ assert.equal(
 );
 await page.locator("#quiz-content .button").click();
 await page.locator('input[name="name"]').fill("Ayu <script>");
+await page.locator('input[name="phone"]').fill("+62 851 9084 9237");
 await page.locator('input[name="people"]').fill("2");
 await page.locator("textarea").fill("Saya ingin info diving.");
 await page.locator('#booking-form button[type="submit"]').click();

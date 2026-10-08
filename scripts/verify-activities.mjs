@@ -376,7 +376,7 @@ try {
     await page.locator("#calendar-grid button:not([disabled])").first().click();
     assert.match(
       await page.locator("#calendar-note").textContent(),
-      /Rencana:/,
+      /Tanggal booking:/,
     );
   }
   current = await state();

@@ -5,6 +5,7 @@ import {
   recommendation,
   planSummary as formatPlanSummary,
 } from "./domain.js";
+import { bookingDates } from "./booking-model.js";
 export function initializeWebsite(content) {
   const experiences = content?.experiences || defaultExperiences;
   const WHATSAPP_NUMBER = content?.contact.whatsapp || "6285190849237";
@@ -24,16 +25,25 @@ export function initializeWebsite(content) {
     passive: true,
     signal: controller.signal,
   });
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const dateBounds = bookingDates();
+  const today = new Date(dateBounds.today + "T12:00:00");
   let year = today.getFullYear(),
     month = today.getMonth(),
     selectedDate = null,
     currentCourse = activeKeys[0] || "beginner",
-    lastPlan = null;
+    lastPlan = null,
+    receipt = null,
+    requestAttempt = null,
+    submitting = false,
+    calendarLoading = true,
+    calendarError = false,
+    calendarEnabled = true,
+    calendarSequence = 0,
+    closedDates = [];
   $("#year").textContent = year;
-  const todayKey = dateKey(year, month, today.getDate());
+  const todayKey = dateBounds.today;
   $('input[name="date"]').min = todayKey;
+  $('input[name="date"]').max = dateBounds.last;
   const formatDate = (key) =>
     new Date(`${key}T12:00:00`).toLocaleDateString("id-ID", {
       day: "numeric",
@@ -46,6 +56,9 @@ export function initializeWebsite(content) {
       { month: "long", year: "numeric" },
     );
     const grid = $("#calendar-grid");
+    const focusedDate = grid.contains(document.activeElement)
+      ? document.activeElement.dataset.date
+      : null;
     grid.replaceChildren();
     for (const day of monthCells(year, month)) {
       if (!day) {
@@ -56,35 +69,117 @@ export function initializeWebsite(content) {
         btn = document.createElement("button");
       btn.textContent = day;
       btn.type = "button";
-      btn.disabled = key < todayKey;
-      btn.setAttribute("aria-label", formatDate(key));
+      btn.dataset.date = key;
+      const closed = closedDates.some(
+        (range) => range.startDate <= key && key <= range.endDate,
+      );
+      btn.disabled =
+        calendarLoading ||
+        calendarError ||
+        !calendarEnabled ||
+        key < todayKey ||
+        key > dateBounds.last ||
+        closed;
+      btn.setAttribute(
+        "aria-label",
+        formatDate(key) + (closed ? " — ditutup" : ""),
+      );
+      if (closed) btn.classList.add("closed");
       btn.setAttribute("aria-pressed", String(key === selectedDate));
       if (key === todayKey) btn.classList.add("today");
       if (key === selectedDate) btn.classList.add("selected");
       btn.onclick = () => {
         selectedDate = key;
         $('input[name="date"]').value = key;
-        $("#calendar-note").textContent = `Rencana: ${formatDate(key)}`;
+        receipt = null;
         renderCalendar();
       };
       grid.append(btn);
     }
+    if (focusedDate) {
+      const focusedButton = grid.querySelector(`[data-date="${focusedDate}"]`);
+      if (focusedButton && !focusedButton.disabled)
+        focusedButton.focus({ preventScroll: true });
+    }
+    $("#calendar-grid").setAttribute("aria-busy", String(calendarLoading));
+    const monthKey = dateKey(year, month, 1).slice(0, 7);
+    $("#prev-month").disabled = monthKey <= todayKey.slice(0, 7);
+    $("#next-month").disabled = monthKey >= dateBounds.last.slice(0, 7);
+    $("#calendar-book").disabled =
+      !selectedDate || calendarLoading || calendarError || !calendarEnabled;
+    $("#calendar-retry").hidden = !calendarError;
+    $("#calendar-note").textContent = calendarLoading
+      ? "Memuat jadwal…"
+      : calendarError
+        ? "Jadwal belum dapat dimuat."
+        : !calendarEnabled
+          ? "Program ini belum menerima booking."
+          : selectedDate
+            ? `Tanggal booking: ${formatDate(selectedDate)}`
+            : "Pilih tanggal untuk booking.";
+  }
+  async function refreshCalendar() {
+    const sequence = ++calendarSequence;
+    calendarLoading = true;
+    calendarError = false;
+    renderCalendar();
+    try {
+      const query = new URLSearchParams({
+        month: dateKey(year, month, 1).slice(0, 7),
+        experience: currentCourse,
+      });
+      const response = await fetch("/api/bookings?" + query, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("CALENDAR_UNAVAILABLE");
+      const availability = await response.json();
+      if (sequence !== calendarSequence || controller.signal.aborted) return;
+      closedDates = availability.closed;
+      calendarEnabled = availability.enabled;
+      if (
+        selectedDate &&
+        closedDates.some(
+          (range) =>
+            range.startDate <= selectedDate && selectedDate <= range.endDate,
+        )
+      )
+        selectedDate = null;
+    } catch (error) {
+      if (sequence !== calendarSequence || controller.signal.aborted) return;
+      calendarError = true;
+    }
+    calendarLoading = false;
+    renderCalendar();
   }
   $("#prev-month").onclick = () => {
     if (--month < 0) {
       month = 11;
       year--;
     }
-    renderCalendar();
+    selectedDate = null;
+    refreshCalendar();
   };
   $("#next-month").onclick = () => {
     if (++month > 11) {
       month = 0;
       year++;
     }
-    renderCalendar();
+    selectedDate = null;
+    refreshCalendar();
   };
-  renderCalendar();
+  $("#calendar-experience").addEventListener(
+    "change",
+    (event) => {
+      currentCourse = event.target.value;
+      $('select[name="experience"]').value = currentCourse;
+      receipt = null;
+      refreshCalendar();
+    },
+    { signal: controller.signal },
+  );
+  $("#calendar-retry").onclick = refreshCalendar;
+  refreshCalendar();
   $(".menu-toggle").onclick = () => {
     const opened = $("#navigation").classList.toggle("open");
     $(".menu-toggle").setAttribute("aria-expanded", opened);
@@ -104,13 +199,33 @@ export function initializeWebsite(content) {
       }),
   );
   function openBooking(course = currentCourse) {
-    $("#booking-form").hidden = false;
-    $("#booking-result").hidden = true;
+    const showReceipt =
+      receipt &&
+      lastPlan?.date === selectedDate &&
+      lastPlan?.experience === course;
+    $("#booking-form").hidden = Boolean(showReceipt);
+    $("#booking-result").hidden = !showReceipt;
+    $("#booking-error").hidden = true;
+    if (course !== currentCourse) {
+      $("#calendar-experience").value = course;
+      currentCourse = course;
+      refreshCalendar();
+    }
     currentCourse = course;
     $('select[name="experience"]').value = course;
     if (selectedDate) $('input[name="date"]').value = selectedDate;
     $("#booking-dialog").showModal();
   }
+  $("#calendar-book").onclick = () => openBooking(currentCourse);
+  $('select[name="experience"]').addEventListener(
+    "change",
+    (event) => {
+      currentCourse = event.target.value;
+      $("#calendar-experience").value = currentCourse;
+      refreshCalendar();
+    },
+    { signal: controller.signal },
+  );
   document
     .querySelectorAll("[data-book]")
     .forEach((button) => (button.onclick = () => openBooking()));
@@ -226,16 +341,67 @@ export function initializeWebsite(content) {
     renderQuiz();
     $("#quiz-dialog").showModal();
   };
-  $("#booking-form").onsubmit = (event) => {
+  $("#booking-form").onsubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return;
     if (!event.currentTarget.reportValidity()) return;
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    lastPlan = { ...data, name: data.name.trim(), notes: data.notes.trim() };
-    if (!lastPlan.name) {
+    const plan = {
+      ...data,
+      name: data.name.trim(),
+      phone: data.phone.trim(),
+      notes: data.notes.trim(),
+    };
+    if (!plan.name) {
       $('input[name="name"]').setCustomValidity("Tuliskan nama kamu.");
       $('input[name="name"]').reportValidity();
       return;
     }
+    const signature = JSON.stringify(plan);
+    if (requestAttempt?.signature !== signature)
+      requestAttempt = { signature, id: crypto.randomUUID() };
+    const submit = $('#booking-form button[type="submit"]');
+    submitting = true;
+    submit.disabled = true;
+    submit.textContent = "Menyimpan booking…";
+    $("#booking-form").setAttribute("aria-busy", "true");
+    $("#booking-error").hidden = true;
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...plan, requestId: requestAttempt.id }),
+        signal: controller.signal,
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(result.error || "Booking belum dapat disimpan.");
+      lastPlan = plan;
+      receipt = result;
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      $("#booking-error").textContent =
+        error.message === "Failed to fetch"
+          ? "Koneksi terputus. Periksa internet lalu kirim ulang; booking yang sama tidak akan dibuat dua kali."
+          : error.message;
+      $("#booking-error").hidden = false;
+      $("#booking-error").focus();
+      refreshCalendar();
+      return;
+    } finally {
+      submitting = false;
+      submit.disabled = false;
+      submit.textContent = "Kirim permintaan booking ↗";
+      $("#booking-form").setAttribute("aria-busy", "false");
+    }
+    if (controller.signal.aborted) return;
+    selectedDate = lastPlan.date;
+    [year, month] = [
+      Number(selectedDate.slice(0, 4)),
+      Number(selectedDate.slice(5, 7)) - 1,
+    ];
+    $("#booking-reference").textContent =
+      `Referensi: ${receipt.reference}${receipt.demo ? " · DEMO" : ""}`;
     $("#booking-summary").textContent = planSummary({
       ...lastPlan,
       date: formatDate(lastPlan.date),
@@ -245,21 +411,29 @@ export function initializeWebsite(content) {
       WHATSAPP_NUMBER +
       "?text=" +
       encodeURIComponent(
-        "Halo Zanclus! Saya ingin mendiskusikan rencana diving.\n\n" +
+        `Halo Zanclus! Saya ingin konfirmasi booking ${receipt.reference}.\nStatus: menunggu konfirmasi tim.\n\n` +
           planSummary({ ...lastPlan, date: formatDate(lastPlan.date) }),
       );
     $("#booking-form").hidden = true;
     $("#booking-result").hidden = false;
+    $("#booking-success-title").focus();
+    refreshCalendar();
   };
   $('input[name="name"]').oninput = (event) =>
     event.target.setCustomValidity("");
   $("#edit-plan").onclick = () => {
+    receipt = null;
+    lastPlan = null;
+    requestAttempt = null;
+    $("#booking-form").reset();
+    $('select[name="experience"]').value = currentCourse;
+    if (selectedDate) $('input[name="date"]').value = selectedDate;
     $("#booking-form").hidden = false;
     $("#booking-result").hidden = true;
   };
   $("#download-plan").onclick = () => {
     if (!lastPlan) return;
-    const text = `ZANCLUS DIVE CENTER\nRENCANA PENYELAMAN\n\n${planSummary(lastPlan)}\n\nRingkasan ini bukan konfirmasi reservasi. Jadwal, biaya, dan program perlu dikonfirmasi dengan tim Zanclus.\n`;
+    const text = `ZANCLUS DIVE CENTER\nPERMINTAAN BOOKING${receipt.demo ? " DEMO" : ""}\nReferensi: ${receipt.reference}\nStatus: menunggu konfirmasi tim\n\n${planSummary(lastPlan)}\n\nJadwal, biaya, dan program perlu dikonfirmasi dengan tim Zanclus. Belum ada pembayaran.\n`;
     const url = URL.createObjectURL(
       new Blob([text], { type: "text/plain;charset=utf-8" }),
     );

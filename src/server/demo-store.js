@@ -7,6 +7,11 @@ import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
+import {
+  assertBookable,
+  bookingReceipt,
+  BookingError,
+} from "../booking-model.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -121,6 +126,30 @@ export async function saveBooking(payload, id) {
     if (id) state.bookings[index] = booking;
     else state.bookings.push(booking);
     return booking;
+  });
+}
+export async function createBookingRequest(payload, requestId, fingerprint) {
+  return mutate((state) => {
+    state.bookingRequests ||= {};
+    const previous = state.bookingRequests[requestId];
+    if (previous) {
+      if (previous.fingerprint !== fingerprint)
+        throw new BookingError(
+          "Permintaan ini sudah dikirim. Buat booking baru untuk data berbeda.",
+          409,
+        );
+      return { receipt: previous.receipt, created: false };
+    }
+    assertBookable(state.content, state.bookings, payload);
+    const booking = {
+      ...payload,
+      id: randomUUID(),
+      updatedAt: new Date().toISOString(),
+    };
+    const receipt = bookingReceipt(booking, true);
+    state.bookings.push(booking);
+    state.bookingRequests[requestId] = { fingerprint, receipt };
+    return { receipt, created: true };
   });
 }
 export async function deleteBooking(id) {

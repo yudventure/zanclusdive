@@ -4,6 +4,7 @@ import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import { socialPlatforms } from "../contact-model.js";
+import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
 import {
   experienceKeys,
@@ -435,6 +436,9 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   {sources[b.source]}
                   {b.phone ? " · " + b.phone : ""}
                 </small>
+                {b.source === "website" && (
+                  <small>{bookingReference(b.id)}</small>
+                )}
               </td>
               <td>{content.experiences[b.experience].title}</td>
               <td>
