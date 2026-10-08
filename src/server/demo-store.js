@@ -6,6 +6,7 @@ import { demoSeed } from "../demo-data.js";
 import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
+import { withPhotography, photographyVersion } from "../photography.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -56,7 +57,12 @@ function store() {
         await writeState(directory, state);
       }
       if (activityKeys.some((key) => !state.content.activities?.[key])) {
-        state.content = withActivities(state.content);
+        state.content = withActivities(withPhotography(state.content));
+        state.version++;
+        await writeState(directory, state);
+      }
+      if (state.content.photographyVersion !== photographyVersion) {
+        state.content = withActivities(withPhotography(state.content));
         state.version++;
         await writeState(directory, state);
       }

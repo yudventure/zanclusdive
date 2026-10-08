@@ -1,10 +1,12 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
 import { activityLabels } from "./activity-model.js";
+import ScrollEffects from "./components/ScrollEffects.jsx";
+import { photoSrcSet } from "./photography.js";
 
 function ExperienceCard({ activityKey, activity, className, kicker }) {
   return (
@@ -14,8 +16,23 @@ function ExperienceCard({ activityKey, activity, className, kicker }) {
       href={`/${activityKey}`}
       hidden={!activity.enabled}
       aria-label={`Lihat detail ${activityLabels[activityKey]}`}
-      style={{ backgroundImage: `url(${JSON.stringify(activity.image)})` }}
+      data-reveal={activityKey === "diving" ? undefined : true}
+      style={{ "--reveal-delay": activityKey === "trip" ? "160ms" : "80ms" }}
     >
+      <img
+        className="course-photo"
+        src={activity.cardImage}
+        srcSet={photoSrcSet(activity.cardImage)}
+        sizes={
+          activityKey === "diving"
+            ? "(max-width: 700px) 90vw, 35vw"
+            : "(max-width: 700px) 45vw, 24vw"
+        }
+        alt={activity.cardImageAlt}
+        width="900"
+        height="600"
+        loading="lazy"
+      />
       <span className="round-arrow" aria-hidden="true">
         ↗
       </span>
@@ -39,6 +56,7 @@ function ExperienceCard({ activityKey, activity, className, kicker }) {
   );
 }
 export default function HomePage({ content, demo = false }) {
+  const motionRoot = useRef(null);
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
@@ -51,12 +69,14 @@ export default function HomePage({ content, demo = false }) {
       </a>
       <div
         className="page-shell"
+        ref={motionRoot}
         style={{
           "--hero-image": `url(${JSON.stringify(content.images.hero)})`,
           "--reef-image": `url(${JSON.stringify(content.images.reef)})`,
           "--ocean-image": `url(${JSON.stringify(content.images.ocean)})`,
         }}
       >
+        <ScrollEffects rootRef={motionRoot} />
         <header className="site-header">
           <a
             className="brand"
@@ -114,7 +134,15 @@ export default function HomePage({ content, demo = false }) {
           </a>
         </header>
         <main id="main">
-          <section className="hero" aria-labelledby="hero-title">
+          <section className="hero" aria-labelledby="hero-title" data-parallax>
+            <img
+              className="hero-photo"
+              src={content.images.hero}
+              alt="Visual konsep petualangan scuba diving di bawah laut"
+              width="1672"
+              height="941"
+              fetchPriority="high"
+            />
             <div className="hero-topline">
               <span className="tiny-dot"></span>
               {content.text.heroEyebrow}
@@ -148,7 +176,10 @@ export default function HomePage({ content, demo = false }) {
             id="experiences"
             aria-labelledby="experiences-title"
           >
-            <div className="section-heading flex items-center justify-between gap-5">
+            <div
+              className="section-heading flex items-center justify-between gap-5"
+              data-reveal
+            >
               <div>
                 <p className="eyebrow">{"FIND YOUR KIND OF ADVENTURE"}</p>
                 <h2 id="experiences-title">
@@ -178,6 +209,7 @@ export default function HomePage({ content, demo = false }) {
               <article
                 className="beginner-calendar"
                 aria-label="Diving dan kalender rencana"
+                data-reveal
               >
                 <ExperienceCard
                   activityKey="diving"
@@ -235,7 +267,7 @@ export default function HomePage({ content, demo = false }) {
                 kicker="JELAJAH BERSAMA"
               />
             </div>
-            <div className="quiz-panel">
+            <div className="quiz-panel" data-reveal>
               <p className="eyebrow">{"LET'S FIND YOUR NEXT DIVE"}</p>
               <h2>{content.text.quizTitle}</h2>
               <p>{content.text.quizDescription}</p>
@@ -244,11 +276,26 @@ export default function HomePage({ content, demo = false }) {
                 <span>{"↗"}</span>
               </button>
               <div className="photo-fan" aria-hidden="true">
-                <div className="fan-photo photo-one"></div>
-                <div className="fan-photo photo-two"></div>
-                <div className="fan-photo photo-three"></div>
-                <div className="fan-photo photo-four"></div>
-                <div className="fan-photo photo-five"></div>
+                {[
+                  "galleryDive",
+                  "galleryFreedive",
+                  "galleryCoral",
+                  "galleryTurtle",
+                  "galleryIsland",
+                ].map((key, index) => (
+                  <div
+                    className={`fan-photo photo-${["one", "two", "three", "four", "five"][index]}`}
+                    key={key}
+                  >
+                    <img
+                      src={content.images[key]}
+                      alt=""
+                      width="640"
+                      height="426"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
             <div id="more-courses" className="more-courses" hidden>
@@ -264,7 +311,10 @@ export default function HomePage({ content, demo = false }) {
             </div>
           </section>
           <section className="ocean-section" id="ocean">
-            <div className="section-heading flex items-center justify-between gap-5">
+            <div
+              className="section-heading flex items-center justify-between gap-5"
+              data-reveal
+            >
               <div>
                 <p className="eyebrow">{"A DIFFERENT WORLD, JUST BELOW"}</p>
                 <h2>
@@ -276,7 +326,15 @@ export default function HomePage({ content, demo = false }) {
               <p className="section-intro">{content.text.oceanDescription}</p>
             </div>
             <div className="ocean-grid">
-              <article className="ocean-card reef-card">
+              <article className="ocean-card reef-card" data-reveal>
+                <img
+                  className="ocean-photo"
+                  src={content.images.reef}
+                  alt="Visual konsep penyu dan kehidupan terumbu"
+                  width="1200"
+                  height="800"
+                  loading="lazy"
+                />
                 <span>{"01 / KEHIDUPAN LAUT"}</span>
                 <h3>
                   {"Warna yang"}
@@ -284,7 +342,21 @@ export default function HomePage({ content, demo = false }) {
                   {"tak pernah biasa."}
                 </h3>
               </article>
-              <article className="ocean-card open-card">
+              <article
+                className="ocean-card open-card"
+                data-reveal
+                style={{ "--reveal-delay": "100ms" }}
+              >
+                <img
+                  className="ocean-photo"
+                  src={content.images.ocean}
+                  srcSet={photoSrcSet(content.images.ocean)}
+                  sizes="(max-width: 700px) 90vw, 45vw"
+                  alt="Visual konsep manta di laut terbuka"
+                  width="1200"
+                  height="800"
+                  loading="lazy"
+                />
                 <span>{"02 / RUANG UNTUK MENJELAJAH"}</span>
                 <h3>
                   {"Lebih dekat"}
@@ -300,7 +372,7 @@ export default function HomePage({ content, demo = false }) {
             id="contact"
             aria-labelledby="contact-title"
           >
-            <div className="contact-copy">
+            <div className="contact-copy" data-reveal>
               <p className="eyebrow">{"MAKE ROOM FOR A NEW STORY"}</p>
               <h2 id="contact-title">
                 {content.text.contactTitle1}
@@ -330,7 +402,11 @@ export default function HomePage({ content, demo = false }) {
                 }
               </p>
             </div>
-            <div className="contact-panel">
+            <div
+              className="contact-panel"
+              data-reveal
+              style={{ "--reveal-delay": "100ms" }}
+            >
               <p className="contact-panel-label">
                 <span /> LET'S TALK ABOUT YOUR NEXT DIVE
               </p>

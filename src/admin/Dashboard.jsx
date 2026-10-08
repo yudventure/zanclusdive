@@ -4,6 +4,7 @@ import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import { socialPlatforms } from "../contact-model.js";
+import { siteImageFields, builtInPhotos } from "../photography.js";
 import {
   experienceKeys,
   textFields,
@@ -1213,21 +1214,13 @@ export default function Dashboard({ section, email, today, demo = false }) {
                         Pakai URL HTTPS atau pilih gambar yang sudah diunggah.
                       </p>
                       <div className="admin-image-grid">
-                        {["hero", "reef", "ocean"].map((key) => (
+                        {siteImageFields.map(([key, label]) => (
                           <div key={key}>
                             <img
                               src={content.images[key]}
                               alt={"Preview " + key}
                             />
-                            <Field
-                              label={
-                                {
-                                  hero: "Hero & pengalaman pemula",
-                                  reef: "Terumbu & jelajah laut",
-                                  ocean: "Pengalaman spesial",
-                                }[key]
-                              }
-                            >
+                            <Field label={label}>
                               <input
                                 required
                                 value={content.images[key]}
@@ -1244,7 +1237,14 @@ export default function Dashboard({ section, email, today, demo = false }) {
                                 mutateContent("images", key, e.target.value)
                               }
                             >
-                              <option value="">Pilih dari media…</option>
+                              <option value="">Pilih foto…</option>
+                              <optgroup label="Visual konsep bawaan">
+                                {builtInPhotos.map(([url, title]) => (
+                                  <option value={url} key={url}>
+                                    {title}
+                                  </option>
+                                ))}
+                              </optgroup>
                               {data.media.map((m) => (
                                 <option value={m.url} key={m.id}>
                                   {m.name}

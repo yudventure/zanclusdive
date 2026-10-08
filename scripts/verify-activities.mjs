@@ -235,7 +235,12 @@ try {
     .fill("Titik temu contoh dari CMS");
   await page
     .getByLabel("Pilih dari media atau aset website", { exact: true })
-    .selectOption("/assets/ocean.webp");
+    .selectOption("/assets/photos/fan-beach.webp");
+  await page
+    .getByLabel("Pilih foto kartu dari media atau aset website", {
+      exact: true,
+    })
+    .selectOption("/assets/reef.webp");
   await page
     .getByLabel("Deskripsi foto / caption", { exact: true })
     .fill("Caption konsep yang diedit dari CMS");
@@ -282,7 +287,7 @@ try {
   );
   assert.equal(
     await page.locator(".activity-hero-photo").getAttribute("src"),
-    "/assets/ocean.webp",
+    "/assets/photos/fan-beach.webp",
   );
   assert.equal(
     await page.locator(".activity-timeline h3").first().textContent(),
@@ -309,12 +314,11 @@ try {
       .textContent(),
     /450\.000/,
   );
-  assert.ok(
-    (
-      await page
-        .locator('#experiences [data-activity="snorkeling"]')
-        .getAttribute("style")
-    ).includes("/assets/ocean.webp"),
+  assert.equal(
+    await page
+      .locator('#experiences [data-activity="snorkeling"] img')
+      .getAttribute("src"),
+    "/assets/reef.webp",
   );
   let current = await state();
   assert.deepEqual(

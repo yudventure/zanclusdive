@@ -1,6 +1,7 @@
 "use client";
 import { cloneElement, useId, useState } from "react";
 import { activityKeys, activityLabels } from "../activity-model.js";
+import { builtInPhotos } from "../photography.js";
 
 function Field({ label, children }) {
   const id = useId();
@@ -159,7 +160,7 @@ export default function ActivitiesEditor({
         </div>
       </section>
       <section className="admin-card">
-        <h2>Foto halaman & kartu</h2>
+        <h2>Sampul halaman detail</h2>
         <div className="admin-form">
           <Field label="URL foto">
             <input
@@ -177,9 +178,11 @@ export default function ActivitiesEditor({
               }
             >
               <option value="">Pilih foto…</option>
-              <option value="/assets/hero.webp">Konsep diving</option>
-              <option value="/assets/reef.webp">Konsep kehidupan laut</option>
-              <option value="/assets/ocean.webp">Konsep laut</option>
+              {builtInPhotos.map(([url, label]) => (
+                <option value={url} key={url}>
+                  {label}
+                </option>
+              ))}
               {media.map((item) => (
                 <option value={item.url} key={item.id}>
                   {item.name}
@@ -199,6 +202,51 @@ export default function ActivitiesEditor({
             Unggah foto di Foto & media terlebih dahulu, lalu pilih di sini.
             Deskripsi foto tampil sebagai caption dan teks alternatif gambar.
           </p>
+        </div>
+      </section>
+      <section className="admin-card">
+        <h2>Foto kartu pengalaman</h2>
+        <p className="admin-subtle">
+          Foto kartu dapat berbeda dari sampul halaman. Tampil di beranda dan
+          rekomendasi aktivitas.
+        </p>
+        <div className="admin-form">
+          <Field label="URL foto kartu">
+            <input
+              required
+              maxLength={1200}
+              value={activity.cardImage}
+              onChange={(e) => change("cardImage", e.target.value)}
+            />
+          </Field>
+          <Field label="Pilih foto kartu dari media atau aset website">
+            <select
+              value=""
+              onChange={(e) =>
+                e.target.value && change("cardImage", e.target.value)
+              }
+            >
+              <option value="">Pilih foto…</option>
+              {builtInPhotos.map(([url, label]) => (
+                <option value={url} key={url}>
+                  {label}
+                </option>
+              ))}
+              {media.map((item) => (
+                <option value={item.url} key={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Deskripsi foto kartu">
+            <input
+              required
+              maxLength={250}
+              value={activity.cardImageAlt}
+              onChange={(e) => change("cardImageAlt", e.target.value)}
+            />
+          </Field>
         </div>
       </section>
       <section className="admin-card">

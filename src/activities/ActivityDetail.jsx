@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import ScrollEffects from "../components/ScrollEffects.jsx";
+import { photoSrcSet } from "../photography.js";
 import {
   activityInquiry,
   activityKeys,
@@ -158,6 +160,7 @@ function Inquiry({ activityKey, activity, contact, demo }) {
 }
 
 export default function ActivityDetail({ activityKey, content, demo }) {
+  const motionRoot = useRef(null);
   const activity = content.activities[activityKey];
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -169,7 +172,8 @@ export default function ActivityDetail({ activityKey, content, demo }) {
   }, []);
   const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(`Halo Zanclus! Saya ingin bantuan untuk merencanakan ${activityLabels[activityKey]}.`)}`;
   return (
-    <div className="activity-page">
+    <div className="activity-page" ref={motionRoot}>
+      <ScrollEffects rootRef={motionRoot} />
       <a className="skip-link" href="#activity-main">
         Lewati ke detail aktivitas
       </a>
@@ -232,10 +236,16 @@ export default function ActivityDetail({ activityKey, content, demo }) {
         </a>
       </header>
       <main id="activity-main">
-        <section className="activity-hero" aria-labelledby="activity-title">
+        <section
+          className="activity-hero"
+          aria-labelledby="activity-title"
+          data-parallax
+        >
           <img
             className="activity-hero-photo"
             src={activity.image}
+            srcSet={photoSrcSet(activity.image)}
+            sizes="100vw"
             alt={activity.imageAlt}
             width="1672"
             height="941"
@@ -286,7 +296,11 @@ export default function ActivityDetail({ activityKey, content, demo }) {
             )}
             <div className="activity-layout">
               <div className="activity-details">
-                <section className="activity-overview" id="overview">
+                <section
+                  className="activity-overview"
+                  id="overview"
+                  data-reveal
+                >
                   <p className="eyebrow">A LITTLE CLOSER TO THE OCEAN</p>
                   <h2>Kenali pengalamanmu.</h2>
                   <p className="activity-description">{activity.description}</p>
@@ -324,7 +338,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                   </p>
                   <ol className="activity-timeline">
                     {activity.itinerary.map((step, index) => (
-                      <li key={index}>
+                      <li key={index} data-reveal>
                         <span
                           className="activity-step-number"
                           aria-hidden="true"
@@ -339,7 +353,11 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                     ))}
                   </ol>
                 </section>
-                <section className="activity-content-section" id="preparation">
+                <section
+                  className="activity-content-section"
+                  id="preparation"
+                  data-reveal
+                >
                   <p className="eyebrow">COME PREPARED, ENJOY MORE</p>
                   <h2>Persiapan sebelum berangkat.</h2>
                   <ul className="activity-preparations">
@@ -361,7 +379,11 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                     <span aria-hidden="true">↗</span>
                   </a>
                 </section>
-                <section className="activity-content-section" id="faq">
+                <section
+                  className="activity-content-section"
+                  id="faq"
+                  data-reveal
+                >
                   <p className="eyebrow">GOOD TO KNOW</p>
                   <h2>Sebelum kamu bertanya.</h2>
                   <div className="activity-faqs">

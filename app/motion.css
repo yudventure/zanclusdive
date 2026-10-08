@@ -1,0 +1,62 @@
+/* Content is visible by default: motion is an optional client-side enhancement. */
+.scroll-progress {
+  display: none;
+  position: fixed;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 110;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, #a8e7de, #bef4a5);
+}
+.motion-active > .scroll-progress {
+  display: block;
+}
+[data-reveal].reveal-pending {
+  opacity: 0;
+  translate: 0 18px;
+}
+/* Keep calendar/form/FAQ hit targets in place while they appear. */
+[data-reveal="fade"].reveal-pending,
+[data-reveal].reveal-pending:has(button, input, textarea, select, summary) {
+  translate: 0 0;
+}
+[data-reveal].is-revealed {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 600ms ease,
+    translate 600ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 250ms ease;
+  transition-delay: var(--reveal-delay, 0ms), var(--reveal-delay, 0ms), 0ms;
+}
+[data-reveal]:focus-within {
+  opacity: 1;
+  translate: 0 0;
+}
+.motion-active [data-parallax] > .hero-photo,
+.motion-active [data-parallax] > .activity-hero-photo {
+  transform: translate3d(0, var(--hero-drift, 0px), 0) scale(1.055);
+}
+@media (max-width: 899px), (pointer: coarse) {
+  .motion-active [data-parallax] > .hero-photo,
+  .motion-active [data-parallax] > .activity-hero-photo {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal].reveal-pending,
+  [data-reveal].is-revealed {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+  .scroll-progress {
+    display: none !important;
+  }
+  .motion-active [data-parallax] > .hero-photo,
+  .motion-active [data-parallax] > .activity-hero-photo {
+    transform: none;
+  }
+}

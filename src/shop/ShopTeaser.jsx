@@ -9,7 +9,7 @@ export default function ShopTeaser({ shop, demo }) {
       id="dive-shop"
       aria-labelledby="shop-teaser-title"
     >
-      <div className="shop-teaser-heading">
+      <div className="shop-teaser-heading" data-reveal>
         <div>
           <p className="eyebrow">ZANCLUS DIVE SHOP</p>
           <h2 id="shop-teaser-title">{shop.heading}</h2>
@@ -22,7 +22,7 @@ export default function ShopTeaser({ shop, demo }) {
         </div>
       </div>
       <div className="shop-teaser-grid">
-        {products.map((product) => {
+        {products.map((product, index) => {
           const price = product.saleEnabled
             ? product.salePrice
             : product.rentalPrice;
@@ -31,6 +31,8 @@ export default function ShopTeaser({ shop, demo }) {
               className="shop-teaser-product"
               href={`/dive-shop?mode=${product.saleEnabled ? "sale" : "rental"}#catalog`}
               key={product.id}
+              data-reveal
+              style={{ "--reveal-delay": `${index * 80}ms` }}
             >
               <ProductVisual product={product} />
               <div>

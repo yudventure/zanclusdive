@@ -2,6 +2,7 @@ import "./globals.css";
 import "./shop.css";
 import "./contact.css";
 import "./activities.css";
+import "./motion.css";
 const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
 export const metadata = {
   ...(siteURL ? { metadataBase: new URL(siteURL) } : {}),

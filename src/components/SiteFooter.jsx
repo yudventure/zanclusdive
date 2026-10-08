@@ -19,7 +19,7 @@ export default function SiteFooter({
   const whatsappURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving, snorkeling, trip, atau perlengkapan.")}`;
   return (
     <footer className="site-footer" aria-label="Informasi Zanclus Dive Center">
-      <div className="site-footer-grid">
+      <div className="site-footer-grid" data-reveal="fade">
         <div className="site-footer-brand">
           <a href="/" aria-label="Zanclus Dive Center — Beranda">
             <img

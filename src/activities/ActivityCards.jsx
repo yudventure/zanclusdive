@@ -1,4 +1,5 @@
 import { activityKeys, activityLabels } from "../activity-model.js";
+import { photoSrcSet } from "../photography.js";
 
 export default function ActivityCards({ activities, exclude, demo = false }) {
   const visible = activityKeys.filter(
@@ -12,7 +13,7 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
       aria-labelledby="activity-discovery-title"
     >
       <div className="activity-container">
-        <div className="activity-section-heading">
+        <div className="activity-section-heading" data-reveal>
           <div>
             <p className="eyebrow">CHOOSE YOUR OCEAN STORY</p>
             <h2 id="activity-discovery-title">
@@ -33,11 +34,18 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
           {visible.map((key) => {
             const activity = activities[key];
             return (
-              <a className="activity-card" href={`/${key}`} key={key}>
+              <a
+                className="activity-card"
+                href={`/${key}`}
+                key={key}
+                data-reveal
+              >
                 <div className="activity-card-image">
                   <img
-                    src={activity.image}
-                    alt={activity.imageAlt}
+                    src={activity.cardImage}
+                    srcSet={photoSrcSet(activity.cardImage)}
+                    sizes="(max-width: 700px) 90vw, 45vw"
+                    alt={activity.cardImageAlt}
                     width="560"
                     height="380"
                     loading="lazy"

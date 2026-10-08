@@ -1,3 +1,4 @@
+import { activityPhotos } from "./photography.js";
 export const activityLabels = {
   diving: "Diving",
   snorkeling: "Snorkeling",
@@ -19,8 +20,7 @@ export const defaultActivities = {
       "Dari pengalaman pertama hingga petualangan berikutnya, susun rencana menyelam yang sesuai denganmu.",
     description:
       "Mulai dengan bercerita tentang pengalamanmu di air dan apa yang ingin kamu jelajahi. Tim Zanclus akan membantu mendiskusikan pilihan aktivitas, kebutuhan peralatan, dan persiapan sebelum menyelam. Program, lokasi, serta persyaratan peserta dikonfirmasi sebelum perjalanan.",
-    image: "/assets/hero.webp",
-    imageAlt: "Visual konsep petualangan menyelam di bawah laut",
+    ...activityPhotos.diving,
     audience: "Pemula & penyelam berpengalaman",
     highlights: [
       "Rencana sesuai pengalaman menyelam",
@@ -80,9 +80,7 @@ export const defaultActivities = {
       "Nikmati warna dan kehidupan laut dengan rencana snorkeling yang nyaman untukmu dan teman perjalananmu.",
     description:
       "Snorkeling membuka cara lain untuk menikmati laut. Ceritakan tingkat kenyamananmu di air, jumlah peserta, dan kebutuhan kelompokmu. Kita diskusikan area aktivitas, perlengkapan, serta pendampingan yang sesuai sebelum menentukan rencana bersama.",
-    image: "/assets/reef.webp",
-    imageAlt:
-      "Visual konsep terumbu dan kehidupan laut untuk pengalaman snorkeling",
+    ...activityPhotos.snorkeling,
     audience: "Individu, teman & keluarga",
     highlights: [
       "Menikmati kehidupan laut dari permukaan",
@@ -141,8 +139,7 @@ export const defaultActivities = {
       "Susun trip laut bersama teman atau keluarga, dengan aktivitas dan rute yang mengikuti caramu menikmati perjalanan.",
     description:
       "Mulai dari ide sederhana: ingin menikmati laut, snorkeling, atau menyelam dalam satu perjalanan. Ceritakan jumlah peserta, waktu yang tersedia, serta tujuanmu. Tim Zanclus membantu mendiskusikan rute, transportasi, dan aktivitas; rincian akhir disepakati sebelum keberangkatan.",
-    image: "/assets/ocean.webp",
-    imageAlt: "Visual konsep laut untuk inspirasi perjalanan bersama Zanclus",
+    ...activityPhotos.trip,
     audience: "Trip pribadi & kelompok",
     highlights: [
       "Diskusi rute dan tujuan perjalanan",

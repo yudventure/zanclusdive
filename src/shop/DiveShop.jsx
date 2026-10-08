@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import ScrollEffects from "../components/ScrollEffects.jsx";
+import { photoSrcSet } from "../photography.js";
 import ProductVisual from "./ProductVisual.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import {
@@ -13,11 +15,13 @@ import {
 export default function DiveShop({
   shop,
   contact,
+  images,
   activities,
   demo,
   initialMode,
   today,
 }) {
+  const motionRoot = useRef(null);
   const [mode, setMode] = useState(initialMode),
     [category, setCategory] = useState("all"),
     [search, setSearch] = useState("");
@@ -94,7 +98,8 @@ export default function DiveShop({
   }
   const helpURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin bantuan untuk membeli atau menyewa perlengkapan diving.")}`;
   return (
-    <div className="shop-page">
+    <div className="shop-page" ref={motionRoot}>
+      <ScrollEffects rootRef={motionRoot} />
       <a className="skip-link" href="#catalog">
         Lewati ke katalog
       </a>
@@ -172,8 +177,14 @@ export default function DiveShop({
             </div>
           </div>
           <div className="shop-hero-art">
-            <ProductVisual
-              product={{ category: "fins", name: "Fins", image: "" }}
+            <img
+              src={images.shop}
+              srcSet={photoSrcSet(images.shop)}
+              sizes="(max-width: 700px) 90vw, 420px"
+              alt="Visual konsep perlengkapan diving dan snorkeling untuk beli atau rental"
+              width="1000"
+              height="667"
+              fetchPriority="high"
             />
             <span>READY FOR YOUR NEXT DIVE</span>
           </div>
@@ -189,7 +200,7 @@ export default function DiveShop({
           id="catalog"
           aria-labelledby="catalog-title"
         >
-          <div className="shop-catalog-top">
+          <div className="shop-catalog-top" data-reveal>
             <div>
               <p className="eyebrow">GEAR UP, DIVE IN</p>
               <h2 id="catalog-title">Temukan perlengkapanmu.</h2>
@@ -267,6 +278,7 @@ export default function DiveShop({
                       className="shop-product-card"
                       key={product.id}
                       data-product={product.id}
+                      data-reveal
                     >
                       <div className="shop-product-image">
                         <ProductVisual product={product} />

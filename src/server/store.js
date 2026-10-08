@@ -9,6 +9,7 @@ import * as demo from "./demo-store.js";
 import { withShop } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
+import { withPhotography } from "../photography.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -54,7 +55,7 @@ export async function getContent() {
   );
   return {
     content: withActivities(
-      withContactFields(withShop(JSON.parse(rows[0].payload))),
+      withPhotography(withContactFields(withShop(JSON.parse(rows[0].payload)))),
     ),
     version: rows[0].version,
   };

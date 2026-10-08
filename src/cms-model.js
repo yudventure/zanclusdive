@@ -2,8 +2,14 @@ import { experiences } from "./domain.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import { blankSocials, socialPlatforms } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
+import {
+  defaultSiteImages,
+  siteImageFields,
+  photographyVersion,
+} from "./photography.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 export const defaultContent = {
+  photographyVersion,
   activities: structuredClone(defaultActivities),
   shop: structuredClone(emptyShop),
   text: {
@@ -32,11 +38,7 @@ export const defaultContent = {
     location: "",
     instagram: "",
   },
-  images: {
-    hero: "/assets/hero.webp",
-    reef: "/assets/reef.webp",
-    ocean: "/assets/ocean.webp",
-  },
+  images: { ...defaultSiteImages },
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -153,7 +155,10 @@ export function validateContent(input) {
     location: plain(c.location, "Lokasi", 500, false),
   };
   const images = Object.fromEntries(
-    ["hero", "reef", "ocean"].map((k) => [k, imageURL(input.images?.[k])]),
+    siteImageFields.map(([k]) => [
+      k,
+      imageURL(input.images?.[k] ?? defaultSiteImages[k]),
+    ]),
   );
   const catalog = Object.fromEntries(
     experienceKeys.map((k) => {
@@ -185,6 +190,7 @@ export function validateContent(input) {
   if (!Object.values(catalog).some((e) => e.enabled))
     throw new Error("Minimal satu pengalaman harus aktif.");
   return {
+    photographyVersion,
     text,
     contact,
     images,
@@ -237,6 +243,12 @@ export function validateActivities(input) {
           description: plain(a.description, "Deskripsi aktivitas", 2000),
           image: imageURL(a.image),
           imageAlt: plain(a.imageAlt, "Deskripsi foto", 250),
+          cardImage: imageURL(a.cardImage ?? a.image),
+          cardImageAlt: plain(
+            a.cardImageAlt ?? a.imageAlt,
+            "Deskripsi foto kartu",
+            250,
+          ),
           duration: plain(a.duration, "Durasi aktivitas", 150),
           audience: plain(a.audience, "Peserta aktivitas", 150),
           meetingPoint: plain(a.meetingPoint, "Titik temu", 250),

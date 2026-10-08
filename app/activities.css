@@ -119,6 +119,7 @@
   margin-top: 24px;
 }
 .activity-hero {
+  overflow: hidden;
   position: relative;
   min-height: 700px;
   color: white;
