@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { initializeWebsite } from "./main.js";
-export default function HomePage({ content }) {
+export default function HomePage({ content, demo = false }) {
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
@@ -353,6 +353,7 @@ export default function HomePage({ content }) {
           </section>
         </main>
         <footer>
+          {demo && <p><a href="/admin">Demo website & CMS · harga dan reservasi contoh ↗</a></p>}
           <a className="brand" href="#">
             <img
               src="/assets/logo-header-dark.svg"

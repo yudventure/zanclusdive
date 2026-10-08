@@ -1,10 +1,12 @@
 import { authConfigured, sameOrigin, jsonBody, passwordMatches } from "../../../../src/server/auth.js";
 import { checkDatabase } from "../../../../src/server/database-check.js";
+import { isDemo } from "../../../../src/cms-mode.js";
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   const respond = (body, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
   if (!sameOrigin(request)) return respond({ error: "Origin tidak valid." }, 403);
+  if (isDemo()) return respond({ error: "Mode demo berjalan tanpa MySQL. Pemeriksaan database tersedia pada mode MySQL." }, 400);
   if (!authConfigured()) return respond({ error: "Lengkapi konfigurasi CMS terlebih dahulu." }, 503);
   // This limit works even when MySQL is unreachable. No persistent login is issued.
   const now = Date.now();

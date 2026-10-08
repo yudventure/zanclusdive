@@ -1,3 +1,10 @@
+.admin-demo-banner {
+  padding: 12px 24px;
+  background: #e8f4f8;
+  color: #244c68;
+  border-bottom: 1px solid #d6e3ec;
+  font-size: 12px;
+}
 .admin-setup ul {
   list-style: disc;
   padding-left: 20px;

@@ -227,7 +227,7 @@ function BookingEditor({
     </section>
   );
 }
-export default function Dashboard({ section, email, today }) {
+export default function Dashboard({ section, email, today, demo = false }) {
   const [data, setData] = useState(null),
     [content, setContent] = useState(structuredClone(defaultContent)),
     [busy, setBusy] = useState(false),
@@ -577,6 +577,7 @@ export default function Dashboard({ section, email, today }) {
           </div>
         </div>
       </header>
+      {demo && <div className="admin-demo-banner"><strong>Mode demo</strong> · Data dan harga contoh. Perubahan disimpan pada server demo, terpisah dari MySQL. Data demo dapat hilang saat redeploy; gunakan data contoh saja.</div>}
       <div className="admin-workspace">
         <aside className={"admin-sidebar " + (mobileMenu ? "open" : "")}>
           <p className="admin-eyebrow">MENU</p>

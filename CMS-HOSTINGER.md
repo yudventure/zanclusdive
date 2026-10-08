@@ -1,5 +1,7 @@
 # CMS Zanclus — setup di Hostinger
 
+Panduan ini untuk **mode MySQL produksi** (`CMS_MODE=mysql`). Mode deployment default saat ini adalah demo tanpa database; lihat [DEMO-HOSTINGER.md](DEMO-HOSTINGER.md). Akun demo hanya berlaku di mode demo.
+
 CMS tersedia pada **https://zanclusdive.com/admin** setelah deploy branch `main`. Tampilannya mengikuti referensi admin: header putih, sidebar, kalender reservasi per pengalaman, serta editor website. Tidak ada password bawaan.
 
 ## 1. Buat database MySQL

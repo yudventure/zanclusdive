@@ -4,6 +4,8 @@ import { randomUUID } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
 import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
+import { isDemo } from "../cms-mode.js";
+import * as demo from "./demo-store.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -42,6 +44,7 @@ async function db() {
   return globalThis.__zanclusDB;
 }
 export async function getContent() {
+  if (isDemo()) return demo.getContent();
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
@@ -49,6 +52,7 @@ export async function getContent() {
   return { content: JSON.parse(rows[0].payload), version: rows[0].version };
 }
 export async function publicContent() {
+  if (isDemo()) return (await demo.getContent()).content;
   if (!databaseConfigured()) return structuredClone(defaultContent);
   try {
     return (await getContent()).content;
@@ -58,6 +62,7 @@ export async function publicContent() {
   }
 }
 export async function saveContent(content, version) {
+  if (isDemo()) return demo.saveContent(content, version);
   const pool = await db();
   const [result] = await pool.execute(
     "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id='site' AND version=?",
@@ -67,6 +72,7 @@ export async function saveContent(content, version) {
   return getContent();
 }
 export async function listBookings() {
+  if (isDemo()) return demo.listBookings();
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT id,payload,updated_at FROM zanclus_records WHERE kind='booking' ORDER BY updated_at DESC",
@@ -78,6 +84,7 @@ export async function listBookings() {
   }));
 }
 export async function saveBooking(payload, id) {
+  if (isDemo()) return demo.saveBooking(payload, id);
   const pool = await db();
   if (id) {
     const [result] = await pool.execute(
@@ -94,6 +101,7 @@ export async function saveBooking(payload, id) {
   return { id: newID, ...payload };
 }
 export async function deleteBooking(id) {
+  if (isDemo()) return demo.deleteBooking(id);
   const pool = await db();
   const [r] = await pool.execute(
     "DELETE FROM zanclus_records WHERE id=? AND kind='booking'",
@@ -102,6 +110,7 @@ export async function deleteBooking(id) {
   return Boolean(r.affectedRows);
 }
 export async function listMedia() {
+  if (isDemo()) return demo.listMedia();
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT id,name,mime,OCTET_LENGTH(data) AS bytes,created_at FROM zanclus_media ORDER BY created_at DESC",
@@ -113,6 +122,7 @@ export async function listMedia() {
   }));
 }
 export async function addMedia(name, mime, data) {
+  if (isDemo()) return demo.addMedia(name, mime, data);
   const pool = await db(),
     id = randomUUID();
   await pool.execute(
@@ -122,6 +132,7 @@ export async function addMedia(name, mime, data) {
   return { id, url: "/api/media/" + id, name, mime, bytes: data.length };
 }
 export async function getMedia(id) {
+  if (isDemo()) return demo.getMedia(id);
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT mime,data FROM zanclus_media WHERE id=?",
@@ -130,6 +141,7 @@ export async function getMedia(id) {
   return rows[0] || null;
 }
 export async function loginBlocked() {
+  if (isDemo()) return demo.loginBlocked();
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT attempts,window_start FROM zanclus_login_attempts WHERE id='owner'",
@@ -141,6 +153,7 @@ export async function loginBlocked() {
   );
 }
 export async function failLogin() {
+  if (isDemo()) return demo.failLogin();
   const pool = await db();
   await pool.execute(
     "INSERT INTO zanclus_login_attempts (id,attempts,window_start) VALUES ('owner',1,?) ON DUPLICATE KEY UPDATE attempts=IF(window_start<?,1,attempts+1),window_start=IF(window_start<?,?,window_start)",
@@ -148,6 +161,7 @@ export async function failLogin() {
   );
 }
 export async function clearLoginFailures() {
+  if (isDemo()) return demo.clearLoginFailures();
   const pool = await db();
   await pool.execute("DELETE FROM zanclus_login_attempts WHERE id='owner'");
 }

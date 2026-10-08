@@ -1,15 +1,23 @@
 import "server-only";
-import { createHmac, createHash, timingSafeEqual } from "node:crypto";
+import { createHmac, createHash, timingSafeEqual, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { configurationIssues } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
+import { isDemo } from "../cms-mode.js";
+import { demoAccount } from "../demo-data.js";
 export const COOKIE = "zanclus_admin_session";
+function account() {
+  if (!isDemo()) return { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD, secret: process.env.SESSION_SECRET };
+  globalThis.__zanclusDemoSecret ||= randomBytes(48).toString("base64url");
+  return { ...demoAccount, secret: globalThis.__zanclusDemoSecret };
+}
 export function authConfigured() {
-  return configurationIssues().length === 0;
+  return isDemo() || configurationIssues().length === 0;
 }
 function sign(value) {
-  return createHmac("sha256", process.env.SESSION_SECRET)
-    .update(process.env.ADMIN_PASSWORD + "|" + value)
+  const credentials = account();
+  return createHmac("sha256", credentials.secret)
+    .update(credentials.password + "|" + value)
     .digest("base64url");
 }
 function equal(a, b) {
@@ -21,14 +29,14 @@ export function passwordMatches(email, password) {
   return (
     equal(
       String(email).trim().toLowerCase(),
-      process.env.ADMIN_EMAIL.trim().toLowerCase(),
-    ) && equal(String(password), process.env.ADMIN_PASSWORD)
+      account().email.trim().toLowerCase(),
+    ) && equal(String(password), account().password)
   );
 }
 export function sessionToken() {
   const data = Buffer.from(
     JSON.stringify({
-      email: process.env.ADMIN_EMAIL,
+      email: account().email,
       expires: Date.now() + 8 * 3600000,
     }),
   ).toString("base64url");
@@ -42,7 +50,7 @@ export async function currentAdmin() {
     const [data, sig, ...rest] = token.split(".");
     if (rest.length || !sig || !equal(sign(data), sig)) return null;
     const value = JSON.parse(Buffer.from(data, "base64url").toString());
-    return value.email === process.env.ADMIN_EMAIL &&
+    return value.email === account().email &&
       Number.isFinite(value.expires) &&
       value.expires > Date.now()
       ? { email: value.email }
@@ -98,6 +106,10 @@ export async function jsonBody(request) {
   return JSON.parse(text);
 }
 export function apiFailure(error) {
+  if (isDemo()) {
+    const limit = error?.message === "DEMO_MEDIA_LIMIT";
+    return Response.json({ error: limit ? "Total gambar demo maksimal 24 MB." : "Penyimpanan demo belum dapat diakses. Coba lagi atau restart aplikasi demo." }, { status: limit ? 413 : 503 });
+  }
   const failure = databaseFailure(error);
   console.error("CMS database failure:", failure.code);
   return Response.json(failure, { status: 503 });

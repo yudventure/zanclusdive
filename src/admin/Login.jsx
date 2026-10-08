@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-export default function Login({ configured, issues = [] }) {
+import { demoAccount } from "../demo-data.js";
+export default function Login({ configured, issues = [], demo = false }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [diagnostic, setDiagnostic] = useState(null);
@@ -33,7 +34,7 @@ export default function Login({ configured, issues = [] }) {
     setDiagnostic(null);
     try {
       const form = new FormData(event.currentTarget);
-      const data = { email: form.get("email"), password: form.get("password") };
+      const data = demo ? demoAccount : { email: form.get("email"), password: form.get("password") };
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,10 +62,10 @@ export default function Login({ configured, issues = [] }) {
           width="220"
           height="55"
         />
-        <p className="admin-eyebrow">OWNER WORKSPACE</p>
-        <h1>Selamat datang kembali.</h1>
+        <p className="admin-eyebrow">{demo ? "ZANCLUS DEMO WORKSPACE" : "OWNER WORKSPACE"}</p>
+        <h1>{demo ? "Coba CMS Zanclus." : "Selamat datang kembali."}</h1>
         <p>
-          Kelola pengalaman, konten, dan reservasi Zanclus dari satu tempat.
+          {demo ? "Demo siap digunakan. Coba kalender, reservasi, konten website, foto, dan harga tanpa konfigurasi database." : "Kelola pengalaman, konten, dan reservasi Zanclus dari satu tempat."}
         </p>
         {configured ? (
           <form onSubmit={login}>
@@ -73,6 +74,8 @@ export default function Login({ configured, issues = [] }) {
               <input
                 type="email"
                 name="email"
+                defaultValue={demo ? demoAccount.email : ""}
+                readOnly={demo}
                 autoComplete="username"
                 required
               />
@@ -82,6 +85,8 @@ export default function Login({ configured, issues = [] }) {
               <input
                 type="password"
                 name="password"
+                defaultValue={demo ? demoAccount.password : ""}
+                readOnly={demo}
                 autoComplete="current-password"
                 required
               />
@@ -92,19 +97,19 @@ export default function Login({ configured, issues = [] }) {
               </p>
             )}
             <button className="admin-button" disabled={busy}>
-              {busy ? "Memeriksa…" : "Masuk ke dashboard →"}
+              {busy ? "Memeriksa…" : demo ? "Masuk ke demo →" : "Masuk ke dashboard →"}
             </button>
-            <details className="admin-db-password-test">
+            {!demo && <details className="admin-db-password-test">
               <summary>Uji dengan password MySQL langsung</summary>
               <p>Opsional: masukkan password user database dari hPanel untuk dibandingkan dengan konfigurasi aktif. Password hanya dipakai sekali untuk pemeriksaan, tidak disimpan.</p>
               <label>
                 Password user MySQL untuk uji
                 <input type="password" name="mysqlPassword" autoComplete="off" maxLength={500} />
               </label>
-            </details>
-            <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
+            </details>}
+            {!demo && <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
               Periksa koneksi database
-            </button>
+            </button>}
             {diagnostic && (
               <section className="admin-db-diagnostic" aria-live="polite">
                 <h2>{diagnostic.ok ? "Koneksi database berhasil." : "Hasil pemeriksaan database"}</h2>
@@ -157,7 +162,7 @@ export default function Login({ configured, issues = [] }) {
             </a>
           </div>
         )}
-        <small>Area khusus pemilik. Tidak ada password bawaan.</small>
+        <small>{demo ? "Demo bersama dengan data contoh. Akun demo terisi otomatis dan tidak mengakses database produksi." : "Area khusus pemilik. Tidak ada password bawaan."}</small>
       </section>
     </div>
   );

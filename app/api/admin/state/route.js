@@ -4,6 +4,7 @@ import {
   listBookings,
   listMedia,
 } from "../../../../src/server/store.js";
+import { cmsMode } from "../../../../src/cms-mode.js";
 export const dynamic = "force-dynamic";
 export async function GET(request) {
   const denied = await requireAdmin(request);
@@ -15,7 +16,7 @@ export async function GET(request) {
       listMedia(),
     ]);
     return Response.json(
-      { ...site, bookings, media },
+      { ...site, bookings, media, mode: cmsMode() },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

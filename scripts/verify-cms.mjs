@@ -13,6 +13,7 @@ assert.ok(
   process.env.MYSQL_DATABASE.endsWith("_test"),
   "CMS tests require a dedicated database ending in _test.",
 );
+assert.equal(process.env.CMS_MODE, "mysql", "MySQL CMS tests require CMS_MODE=mysql.");
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
   port: Number(process.env.MYSQL_PORT || 3306),

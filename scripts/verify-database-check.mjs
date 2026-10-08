@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { mysqlSettings } from "../src/cms-config.js";
 
 assert.ok(process.env.MYSQL_DATABASE?.endsWith("_test"), "Use a dedicated local test database.");
+assert.equal(process.env.CMS_MODE, "mysql", "Database diagnosis tests require CMS_MODE=mysql.");
 const base = process.env.BASE_URL;
 const badBase = process.env.BAD_DATABASE_BASE_URL;
 assert.ok(base && badBase, "Provide BASE_URL (working database) and BAD_DATABASE_BASE_URL (incorrect database password).");

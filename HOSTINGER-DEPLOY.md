@@ -61,6 +61,6 @@ Script `npm run build` memakai `next build --webpack`. Turbopack default Next.js
 
 ## Batas fitur
 
-Reservasi dilakukan melalui pesan WhatsApp yang dikirim pengguna. CMS menggunakan database MySQL untuk konten dan catatan reservasi; lihat CMS-HOSTINGER.md. Belum ada pembayaran atau kalender ketersediaan otomatis. Nomor masih nomor uji coba dari pengguna. Lokasi dan harga belum ditambahkan. Gambar laut merupakan ilustrasi generatif.
+Reservasi publik dilakukan melalui pesan WhatsApp yang dikirim pengguna. CMS kini memakai mode demo secara default, tanpa MySQL; akun serta data contoh terisi otomatis. Lihat [DEMO-HOSTINGER.md](DEMO-HOSTINGER.md). Lokasi, harga, dan reservasi pada demo merupakan contoh. Untuk produksi, isi `CMS_MODE=mysql` dan ikuti [CMS-HOSTINGER.md](CMS-HOSTINGER.md). Belum ada pembayaran atau kalender ketersediaan otomatis. Nomor masih nomor uji coba pengguna. Gambar laut merupakan ilustrasi generatif.
 
 Instruksi ini berdasarkan pengaturan aplikasi yang telah diuji lokal dan keberadaan fitur Node.js Web App yang dikonfirmasi pengguna. Dokumentasi Hostinger tidak dapat diakses dari jaringan sesi ini, sehingga nama/letak kolom hPanel belum diverifikasi langsung.
