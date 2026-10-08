@@ -2,11 +2,32 @@
 import { useState } from "react";
 export default function Login({ configured, issues = [] }) {
   const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [diagnostic, setDiagnostic] = useState(null);
+  async function diagnose(event) {
+    const form = event.currentTarget.form;
+    if (!form.reportValidity()) return;
+    setBusy(true);
+    setError("");
+    setDiagnostic(null);
+    try {
+      const response = await fetch("/api/admin/database-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      const result = await response.json();
+      if (!result.target) throw new Error(result.error || "Pemeriksaan gagal.");
+      setDiagnostic(result);
+    } catch (e) {
+      setError(e.message || "Pemeriksaan gagal.");
+    } finally { setBusy(false); }
+  }
   async function login(event) {
     event.preventDefault();
     setBusy(true);
     setError("");
+    setDiagnostic(null);
     try {
       const data = Object.fromEntries(new FormData(event.currentTarget));
       const response = await fetch("/api/admin/login", {
@@ -69,6 +90,30 @@ export default function Login({ configured, issues = [] }) {
             <button className="admin-button" disabled={busy}>
               {busy ? "Memeriksa…" : "Masuk ke dashboard →"}
             </button>
+            <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
+              Periksa koneksi database
+            </button>
+            {diagnostic && (
+              <section className="admin-db-diagnostic" aria-live="polite">
+                <h2>{diagnostic.ok ? "Koneksi database berhasil." : "Hasil pemeriksaan database"}</h2>
+                <p>Pemeriksaan ini memakai konfigurasi yang sedang berjalan di server. Laporan tidak memuat password.</p>
+                <pre>{[
+                  `Versi: ${diagnostic.version}`,
+                  `MYSQL_HOST=${diagnostic.target.host}`,
+                  `MYSQL_PORT=${diagnostic.target.port}`,
+                  `MYSQL_DATABASE=${diagnostic.target.database}`,
+                  `MYSQL_USER=${diagnostic.target.user}`,
+                  `Koneksi: ${diagnostic.target.transport}`,
+                  diagnostic.code ? `Kode: ${diagnostic.code}` : "Hasil: koneksi dan akses database berhasil",
+                  diagnostic.connectingHost ? `Host asal menurut MySQL: ${diagnostic.connectingHost}` : "",
+                  diagnostic.identity ? `Akun MySQL: ${diagnostic.identity.account}\nKlien MySQL: ${diagnostic.identity.client}\nServer MySQL: ${diagnostic.identity.server}:${diagnostic.identity.port}` : "",
+                  diagnostic.tables ? `Tabel CMS: ${diagnostic.tables.length}/3` : "",
+                  diagnostic.error || "",
+                  ...(diagnostic.warnings || []),
+                ].filter(Boolean).join("\n")}</pre>
+                {diagnostic.ok && <p>Kamu dapat mencoba masuk. Tabel yang belum ada dibuat saat login; pemeriksaan ini tidak mengubah database.</p>}
+              </section>
+            )}
           </form>
         ) : (
           <div className="admin-setup">

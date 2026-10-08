@@ -2,7 +2,7 @@ import "server-only";
 import mysql from "mysql2/promise";
 import { randomUUID } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
-import { databaseIssues } from "../cms-config.js";
+import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
@@ -12,17 +12,8 @@ async function db() {
   if (!globalThis.__zanclusDB) {
     globalThis.__zanclusDB = (async () => {
       const pool = mysql.createPool({
-        host: process.env.MYSQL_HOST,
-        port: Number(process.env.MYSQL_PORT || 3306),
-        user: process.env.MYSQL_USER,
-        password: process.env.MYSQL_PASSWORD,
-        database: process.env.MYSQL_DATABASE,
+        ...mysqlSettings(),
         connectionLimit: 4,
-        connectTimeout: 10000,
-        ssl:
-          process.env.MYSQL_SSL === "true"
-            ? { rejectUnauthorized: true }
-            : undefined,
       });
       try {
         await pool.execute(

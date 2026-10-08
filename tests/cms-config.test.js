@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { configurationIssues } from "../src/cms-config.js";
+import { configurationIssues, mysqlSettings } from "../src/cms-config.js";
 
 const valid = {
   MYSQL_HOST: "database.example.test",
@@ -35,4 +35,23 @@ test("whitespace-only settings are missing and configuration is checked on each 
   assert.equal(configurationIssues(env)[0].name, "MYSQL_HOST");
   env.MYSQL_HOST = valid.MYSQL_HOST;
   assert.deepEqual(configurationIssues(env), []);
+});
+
+test("MySQL settings trim identifiers but preserve exact password bytes", () => {
+  const password = '  secret#with$dollar"and spaces  ';
+  const settings = mysqlSettings({ ...valid, MYSQL_HOST: " localhost\n", MYSQL_USER: " cms_owner ", MYSQL_DATABASE: " cms_test ", MYSQL_PASSWORD: password });
+  assert.equal(settings.host, "localhost");
+  assert.equal(settings.user, "cms_owner");
+  assert.equal(settings.database, "cms_test");
+  assert.equal(settings.password, password);
+  assert.equal(settings.port, 3306);
+  assert.equal(settings.socketPath, undefined);
+  assert.equal(mysqlSettings({ ...valid, MYSQL_SOCKET: " /tmp/mysql.sock " }).socketPath, "/tmp/mysql.sock");
+});
+
+test("bad port, URL hostname, and pasted secret placeholders are blocked", () => {
+  assert.ok(configurationIssues({ ...valid, MYSQL_PORT: "not-a-port" }).some((issue) => issue.name === "MYSQL_PORT"));
+  assert.ok(configurationIssues({ ...valid, MYSQL_HOST: "https://localhost/" }).some((issue) => issue.name === "MYSQL_HOST"));
+  const issues = configurationIssues({ ...valid, MYSQL_PASSWORD: "GANTI_DENGAN_PASSWORD_USER_MYSQL", ADMIN_PASSWORD: "GANTI_DENGAN_PASSWORD_ADMIN_MINIMAL_12_KARAKTER", SESSION_SECRET: "GANTI_DENGAN_STRING_ACAK_MINIMAL_32_KARAKTER" });
+  assert.deepEqual(issues.map((issue) => issue.name), ["MYSQL_PASSWORD", "ADMIN_PASSWORD", "SESSION_SECRET"]);
 });

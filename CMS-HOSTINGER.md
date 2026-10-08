@@ -8,6 +8,8 @@ Di hPanel, buka pengelolaan database MySQL pada layanan hosting yang mendukung d
 
 Gunakan hostname MySQL yang diberikan layanan hosting; jangan mengasumsikan `localhost`. Jika database berada pada layanan berbeda, pastikan koneksi dari Node.js Web App diizinkan melalui pengaturan akses database. Detail akses/hostname bergantung pada layanan Hostinger pengguna.
 
+Untuk akun `u509575013`, dukungan Hostinger telah memeriksa bahwa aplikasi Zanclus dan database berada pada hosting yang sama dan menyarankan **`MYSQL_HOST=localhost`, `MYSQL_PORT=3306`**. Gunakan nilai itu untuk deployment ini. Kode membaca `MYSQL_HOST`, bukan `DB_HOST`. Jika dukungan menyediakan path Unix socket, `MYSQL_SOCKET` dapat diisi; tanpa variabel tersebut koneksi tetap TCP. Jangan menebak path socket.
+
 **Struktur database sudah disiapkan.** Kamu hanya perlu membuat database kosong dan user di hPanel, lalu mengisi kredensial pada langkah 2. Aplikasi otomatis membuat tiga tabel beserta konten awal saat pertama terhubung; tidak perlu impor SQL. Pembuatan database dan user di akun Hostinger tetap harus dilakukan melalui hPanel.
 
 Jika ingin menyiapkan tabel lebih dulu melalui phpMyAdmin, gunakan [file SQL siap impor](database/zanclus-cms.sql):
@@ -57,6 +59,14 @@ Jika halaman menunjukkan **CMS perlu dikonfigurasi**, lengkapi variabel yang diw
 Halaman admin kini menampilkan nama variabel yang belum terbaca dan syarat panjang yang belum terpenuhi, tanpa menampilkan nilai kredensial. Jika masih muncul **Konfigurasi CMS belum lengkap** setelah redeploy, periksa hanya nama yang tercantum: gunakan nama variabel persis seperti tabel di atas, isi nilai tanpa tanda kutip pembungkus, pastikan variabel dipasang pada aplikasi `zanclusdive.com` yang sedang dijalankan, lalu simpan dan deploy ulang. File `.env` lokal atau `.env.example` di GitHub tidak otomatis mengisi variabel runtime Hostinger. Pesan konfigurasi tersebut belum merupakan hasil pengecekan koneksi database; error koneksi baru diperiksa ketika konfigurasi lengkap dan aplikasi mengakses MySQL.
 
 ## Jika login menampilkan error database
+
+Isi email/password admin pada `/admin`, lalu tekan **Periksa koneksi database**. Pemeriksaan dijalankan pada proses aplikasi yang sedang berjalan di Hostinger, memakai konfigurasi yang sama dengan CMS, tanpa membuat/menghapus tabel atau mengubah data. Kredensial admin diverifikasi sebelum informasi koneksi ditampilkan; pemeriksaan tetap dapat digunakan saat MySQL menolak koneksi. Tidak ada sesi login yang diterbitkan melalui pemeriksaan ini.
+
+Laporan menampilkan hostname, port, nama database, user, transport, dan kode error; password tidak disertakan. Pada penolakan login MySQL, laporan juga menampilkan host asal koneksi jika tersedia pada respons driver. Setelah koneksi berhasil, laporan menampilkan akun/klien MySQL, server yang dijangkau, dan jumlah tabel CMS. Salin laporan untuk diagnosis atau dukungan Hostinger. Pemeriksaan dibatasi 8 kali per 15 menit pada masing-masing proses aplikasi dan memerlukan origin yang sama. Batas ini terpisah dari batas login yang disimpan di MySQL.
+
+Jika laporan masih menunjukkan hostname lama setelah perubahan ke `localhost`, deployment yang sedang berjalan belum memakai perubahan environment: simpan variabel pada aplikasi/domain yang benar dan pastikan deployment terbaru aktif. Jika host sudah `localhost` tetapi akses tetap ditolak, laporan host asal/akun merupakan bukti untuk pemeriksaan kredensial atau grant Hostinger. Jangan mengubah lagi hostname tanpa hasil pemeriksaan atau instruksi penyedia.
+
+Kode memangkas spasi pada hostname/nama database/user, namun mempertahankan password persis. Laporan memberikan peringatan jika password mengandung spasi tepi atau tanda kutip pembungkus; peringatan tidak membuktikan password salah. Nilai `GANTI_DENGAN_...` pada kredensial dan port yang tidak valid ditolak sebelum koneksi.
 
 Pesan login menyertakan kode diagnosis aman; nilai password, SQL, dan pesan driver mentah tidak ditampilkan. Kode yang sama dicatat di **Log runtime** hPanel.
 
