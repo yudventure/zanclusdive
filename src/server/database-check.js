@@ -3,8 +3,14 @@ import mysql from "mysql2/promise";
 import { mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 
-export async function checkDatabase() {
+export async function checkDatabase(passwordOverride) {
   const settings = mysqlSettings();
+  const overridden = passwordOverride !== undefined;
+  const passwordTest = {
+    source: overridden ? "form" : "environment",
+    ...(overridden ? { matchesRuntime: passwordOverride === settings.password } : {}),
+  };
+  if (overridden) settings.password = passwordOverride;
   const target = {
     host: settings.host,
     port: settings.port,
@@ -14,8 +20,9 @@ export async function checkDatabase() {
   };
   const warnings = [];
   const password = settings.password || "";
-  if (password !== password.trim()) warnings.push("MYSQL_PASSWORD memiliki spasi atau baris baru di tepi. Pastikan itu memang bagian password database.");
-  if (/^(["']).*\1$/s.test(password)) warnings.push("MYSQL_PASSWORD memiliki tanda kutip pembungkus. Nilai pada hPanel harus persis sesuai password database.");
+  const passwordLabel = overridden ? "Password MySQL pada form uji" : "MYSQL_PASSWORD";
+  if (password !== password.trim()) warnings.push(`${passwordLabel} memiliki spasi atau baris baru di tepi. Pastikan itu memang bagian password database.`);
+  if (/^(["']).*\1$/s.test(password)) warnings.push(`${passwordLabel} memiliki tanda kutip pembungkus. Nilai pada hPanel harus persis sesuai password database.`);
   let connection;
   try {
     connection = await mysql.createConnection(settings);
@@ -24,7 +31,7 @@ export async function checkDatabase() {
       "SELECT TABLE_NAME AS name FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME IN ('zanclus_records','zanclus_media','zanclus_login_attempts')",
       [settings.database],
     );
-    return { ok: true, version: "database-check-v1", target, warnings, identity: rows[0], tables: tables.map((table) => table.name) };
+    return { ok: true, version: "database-check-v2", target, passwordTest, warnings, identity: rows[0], tables: tables.map((table) => table.name) };
   } catch (error) {
     // Extract only MySQL's connecting host; never return its raw message or SQL.
     const match = error.code === "ER_ACCESS_DENIED_ERROR"
@@ -32,8 +39,9 @@ export async function checkDatabase() {
       : null;
     return {
       ok: false,
-      version: "database-check-v1",
+      version: "database-check-v2",
       target,
+      passwordTest,
       warnings,
       ...databaseFailure(error),
       ...(match ? { connectingHost: match[1] } : {}),

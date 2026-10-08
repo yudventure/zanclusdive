@@ -27,6 +27,14 @@
 .admin-db-diagnostic h2 {
   font-size: 21px;
 }
+.admin-db-password-test summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-db-password-test p {
+  font-size: 12px;
+  margin: 12px 0;
+}
 .admin-root {
   --admin-blue: #244c68;
   --admin-muted: #718394;

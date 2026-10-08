@@ -10,11 +10,14 @@ export default function Login({ configured, issues = [] }) {
     setBusy(true);
     setError("");
     setDiagnostic(null);
+    const data = Object.fromEntries(new FormData(form));
+    const testInput = form.elements.namedItem("mysqlPassword");
+    if (testInput) testInput.value = "";
     try {
       const response = await fetch("/api/admin/database-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+        body: JSON.stringify(data),
       });
       const result = await response.json();
       if (!result.target) throw new Error(result.error || "Pemeriksaan gagal.");
@@ -29,7 +32,8 @@ export default function Login({ configured, issues = [] }) {
     setError("");
     setDiagnostic(null);
     try {
-      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const form = new FormData(event.currentTarget);
+      const data = { email: form.get("email"), password: form.get("password") };
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,6 +94,14 @@ export default function Login({ configured, issues = [] }) {
             <button className="admin-button" disabled={busy}>
               {busy ? "Memeriksa…" : "Masuk ke dashboard →"}
             </button>
+            <details className="admin-db-password-test">
+              <summary>Uji dengan password MySQL langsung</summary>
+              <p>Opsional: masukkan password user database dari hPanel untuk dibandingkan dengan konfigurasi aktif. Password hanya dipakai sekali untuk pemeriksaan, tidak disimpan.</p>
+              <label>
+                Password user MySQL untuk uji
+                <input type="password" name="mysqlPassword" autoComplete="off" maxLength={500} />
+              </label>
+            </details>
             <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
               Periksa koneksi database
             </button>
@@ -104,6 +116,8 @@ export default function Login({ configured, issues = [] }) {
                   `MYSQL_DATABASE=${diagnostic.target.database}`,
                   `MYSQL_USER=${diagnostic.target.user}`,
                   `Koneksi: ${diagnostic.target.transport}`,
+                  `Sumber password: ${diagnostic.passwordTest?.source === "form" ? "diisi pada form uji" : "environment aktif"}`,
+                  diagnostic.passwordTest?.source === "form" ? `Sama dengan MYSQL_PASSWORD aktif: ${diagnostic.passwordTest.matchesRuntime ? "ya" : "tidak"}` : "",
                   diagnostic.code ? `Kode: ${diagnostic.code}` : "Hasil: koneksi dan akses database berhasil",
                   diagnostic.connectingHost ? `Host asal menurut MySQL: ${diagnostic.connectingHost}` : "",
                   diagnostic.identity ? `Akun MySQL: ${diagnostic.identity.account}\nKlien MySQL: ${diagnostic.identity.client}\nServer MySQL: ${diagnostic.identity.server}:${diagnostic.identity.port}` : "",
@@ -111,7 +125,9 @@ export default function Login({ configured, issues = [] }) {
                   diagnostic.error || "",
                   ...(diagnostic.warnings || []),
                 ].filter(Boolean).join("\n")}</pre>
-                {diagnostic.ok && <p>Kamu dapat mencoba masuk. Tabel yang belum ada dibuat saat login; pemeriksaan ini tidak mengubah database.</p>}
+                {diagnostic.ok && diagnostic.passwordTest?.source === "form" && !diagnostic.passwordTest.matchesRuntime ? (
+                  <p>Password uji berhasil, tetapi berbeda dari MYSQL_PASSWORD yang dibaca aplikasi. Isi MYSQL_PASSWORD dengan password uji yang sama di hPanel, simpan, lalu deploy ulang sebelum login. Tes ini tidak menyimpan perubahan.</p>
+                ) : diagnostic.ok && <p>Kamu dapat mencoba masuk. Tabel yang belum ada dibuat saat login; pemeriksaan ini tidak mengubah database.</p>}
               </section>
             )}
           </form>

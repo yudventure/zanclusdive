@@ -18,6 +18,8 @@ export async function POST(request) {
   if (typeof data.email !== "string" || typeof data.password !== "string" || data.email.length > 250 || data.password.length > 500)
     return respond({ error: "Data tidak valid." }, 400);
   if (!passwordMatches(data.email, data.password)) return respond({ error: "Email atau password admin tidak sesuai." }, 401);
-  const result = await checkDatabase();
+  if (data.mysqlPassword !== undefined && (typeof data.mysqlPassword !== "string" || data.mysqlPassword.length > 500))
+    return respond({ error: "Password uji MySQL tidak valid." }, 400);
+  const result = await checkDatabase(data.mysqlPassword || undefined);
   return respond(result, result.ok ? 200 : 503);
 }
