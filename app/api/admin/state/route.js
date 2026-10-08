@@ -18,7 +18,7 @@ export async function GET(request) {
       { ...site, bookings, media },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }

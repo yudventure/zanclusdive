@@ -19,7 +19,7 @@ export async function POST(request) {
   }
   try {
     return Response.json(await saveBooking(payload), { status: 201 });
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }

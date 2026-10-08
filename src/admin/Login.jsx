@@ -15,7 +15,8 @@ export default function Login({ configured, issues = [] }) {
         body: JSON.stringify(data),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
+      if (!response.ok)
+        throw new Error(result.code ? `${result.error} (${result.code})` : result.error);
       window.location.assign("/admin");
     } catch (e) {
       setError(e.message || "Login gagal.");

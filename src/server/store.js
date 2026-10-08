@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import { randomUUID } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
 import { databaseIssues } from "../cms-config.js";
+import { databaseFailure } from "../database-error.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -23,20 +24,25 @@ async function db() {
             ? { rejectUnauthorized: true }
             : undefined,
       });
-      await pool.execute(
-        "CREATE TABLE IF NOT EXISTS zanclus_records (id VARCHAR(50) PRIMARY KEY, kind VARCHAR(30) NOT NULL, payload LONGTEXT NOT NULL, version INT NOT NULL DEFAULT 1, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) CHARACTER SET utf8mb4",
-      );
-      await pool.execute(
-        "CREATE TABLE IF NOT EXISTS zanclus_media (id CHAR(36) PRIMARY KEY, name VARCHAR(150) NOT NULL, mime VARCHAR(40) NOT NULL, data MEDIUMBLOB NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) CHARACTER SET utf8mb4",
-      );
-      await pool.execute(
-        "CREATE TABLE IF NOT EXISTS zanclus_login_attempts (id VARCHAR(50) PRIMARY KEY, attempts INT NOT NULL, window_start BIGINT NOT NULL)",
-      );
-      await pool.execute(
-        "INSERT IGNORE INTO zanclus_records (id,kind,payload) VALUES ('site','content',?)",
-        [JSON.stringify(defaultContent)],
-      );
-      return pool;
+      try {
+        await pool.execute(
+          "CREATE TABLE IF NOT EXISTS zanclus_records (id VARCHAR(50) PRIMARY KEY, kind VARCHAR(30) NOT NULL, payload LONGTEXT NOT NULL, version INT NOT NULL DEFAULT 1, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) CHARACTER SET utf8mb4",
+        );
+        await pool.execute(
+          "CREATE TABLE IF NOT EXISTS zanclus_media (id CHAR(36) PRIMARY KEY, name VARCHAR(150) NOT NULL, mime VARCHAR(40) NOT NULL, data MEDIUMBLOB NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) CHARACTER SET utf8mb4",
+        );
+        await pool.execute(
+          "CREATE TABLE IF NOT EXISTS zanclus_login_attempts (id VARCHAR(50) PRIMARY KEY, attempts INT NOT NULL, window_start BIGINT NOT NULL)",
+        );
+        await pool.execute(
+          "INSERT IGNORE INTO zanclus_records (id,kind,payload) VALUES ('site','content',?)",
+          [JSON.stringify(defaultContent)],
+        );
+        return pool;
+      } catch (error) {
+        await pool.end().catch(() => {});
+        throw error;
+      }
     })().catch((error) => {
       delete globalThis.__zanclusDB;
       throw error;
@@ -55,8 +61,8 @@ export async function publicContent() {
   if (!databaseConfigured()) return structuredClone(defaultContent);
   try {
     return (await getContent()).content;
-  } catch {
-    console.error("CMS: content database unavailable; using website defaults.");
+  } catch (error) {
+    console.error("CMS: content database unavailable; using website defaults.", databaseFailure(error).code);
     return structuredClone(defaultContent);
   }
 }

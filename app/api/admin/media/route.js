@@ -46,7 +46,7 @@ export async function POST(request) {
       ),
       { status: 201 },
     );
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }

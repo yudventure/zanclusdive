@@ -2,6 +2,7 @@ import "server-only";
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { configurationIssues } from "../cms-config.js";
+import { databaseFailure } from "../database-error.js";
 export const COOKIE = "zanclus_admin_session";
 export function authConfigured() {
   return configurationIssues().length === 0;
@@ -96,12 +97,8 @@ export async function jsonBody(request) {
   if (Buffer.byteLength(text) > 64000) throw new Error("Data terlalu besar.");
   return JSON.parse(text);
 }
-export function apiFailure() {
-  return Response.json(
-    {
-      error:
-        "Database belum dapat diakses. Periksa konfigurasi MySQL di hPanel.",
-    },
-    { status: 503 },
-  );
+export function apiFailure(error) {
+  const failure = databaseFailure(error);
+  console.error("CMS database failure:", failure.code);
+  return Response.json(failure, { status: 503 });
 }

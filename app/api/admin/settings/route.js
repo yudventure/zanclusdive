@@ -32,7 +32,7 @@ export async function PUT(request) {
           },
           { status: 409 },
         );
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }

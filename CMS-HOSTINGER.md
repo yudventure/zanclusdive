@@ -56,6 +56,19 @@ Jika halaman menunjukkan **CMS perlu dikonfigurasi**, lengkapi variabel yang diw
 
 Halaman admin kini menampilkan nama variabel yang belum terbaca dan syarat panjang yang belum terpenuhi, tanpa menampilkan nilai kredensial. Jika masih muncul **Konfigurasi CMS belum lengkap** setelah redeploy, periksa hanya nama yang tercantum: gunakan nama variabel persis seperti tabel di atas, isi nilai tanpa tanda kutip pembungkus, pastikan variabel dipasang pada aplikasi `zanclusdive.com` yang sedang dijalankan, lalu simpan dan deploy ulang. File `.env` lokal atau `.env.example` di GitHub tidak otomatis mengisi variabel runtime Hostinger. Pesan konfigurasi tersebut belum merupakan hasil pengecekan koneksi database; error koneksi baru diperiksa ketika konfigurasi lengkap dan aplikasi mengakses MySQL.
 
+## Jika login menampilkan error database
+
+Pesan login menyertakan kode diagnosis aman; nilai password, SQL, dan pesan driver mentah tidak ditampilkan. Kode yang sama dicatat di **Log runtime** hPanel.
+
+- `ER_ACCESS_DENIED_ERROR`: periksa user/password database (bukan password admin) dan izin koneksi user dari aplikasi.
+- `ER_HOST_NOT_PRIVILEGED`: server aplikasi belum diizinkan. Pada **Remote MySQL**, izinkan IP keluar aplikasi Node.js untuk database Zanclus. Jangan mengisi kolom IP dengan IP server database. Jika IP keluar tidak tersedia, minta Hostinger memberikannya beserta konfigurasi koneksi yang didukung.
+- `ETIMEDOUT`, `ECONNREFUSED`, `EHOSTUNREACH`, `ENETUNREACH`: periksa hostname, port, dan jalur jaringan dengan Hostinger. Untuk koneksi remote yang dibatasi, aplikasi memerlukan izin IP keluar.
+- `ENOTFOUND`: isi hostname saja pada `MYSQL_HOST`, tanpa `https://`, port, atau tanda kutip pembungkus.
+- `ER_BAD_DB_ERROR`: gunakan nama database lengkap termasuk prefix.
+- `ER_DBACCESS_DENIED_ERROR`, `ER_TABLEACCESS_DENIED_ERROR`, `ER_SPECIFIC_ACCESS_DENIED_ERROR`: user harus memiliki akses dan izin CREATE/SELECT/INSERT/UPDATE/DELETE pada database Zanclus.
+
+Perubahan kredensial perlu disimpan dan aplikasi di-deploy ulang. Berhasil membuka phpMyAdmin menunjukkan akses panel; hal itu belum membuktikan bahwa server Node.js dapat terhubung ke MySQL.
+
 ## Menu yang tersedia
 
 - **Overview:** ringkasan catatan reservasi, pengalaman aktif, nilai terkonfirmasi, dan reservasi terbaru. Nilai bukan bukti pembayaran masuk.

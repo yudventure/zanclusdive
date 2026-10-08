@@ -20,8 +20,8 @@ export async function PUT(request, { params }) {
     return result
       ? Response.json(result)
       : Response.json({ error: "Reservasi tidak ditemukan." }, { status: 404 });
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }
 export async function DELETE(request, { params }) {
@@ -32,7 +32,7 @@ export async function DELETE(request, { params }) {
     return (await deleteBooking(id))
       ? Response.json({ ok: true })
       : Response.json({ error: "Reservasi tidak ditemukan." }, { status: 404 });
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }

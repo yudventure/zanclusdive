@@ -51,7 +51,7 @@ export async function POST(request) {
     await clearLoginFailures();
     (await cookies()).set(COOKIE, sessionToken(), cookieOptions());
     return Response.json({ ok: true });
-  } catch {
-    return apiFailure();
+  } catch (error) {
+    return apiFailure(error);
   }
 }
