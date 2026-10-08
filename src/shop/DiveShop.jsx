@@ -10,7 +10,14 @@ import {
   orderMessage,
 } from "../shop-model.js";
 
-export default function DiveShop({ shop, contact, demo, initialMode, today }) {
+export default function DiveShop({
+  shop,
+  contact,
+  activities,
+  demo,
+  initialMode,
+  today,
+}) {
   const [mode, setMode] = useState(initialMode),
     [category, setCategory] = useState("all"),
     [search, setSearch] = useState("");
@@ -120,7 +127,11 @@ export default function DiveShop({ shop, contact, demo, initialMode, today }) {
           aria-label="Navigasi utama"
         >
           <a href="/">Beranda</a>
-          <a href="/#experiences">Pengalaman</a>
+          {Object.values(activities).some((activity) => activity.enabled) ? (
+            <a href="/#activities">Aktivitas</a>
+          ) : (
+            <a href="/#experiences">Pengalaman</a>
+          )}
           <a href="#catalog" className="active" onClick={() => setMenu(false)}>
             Dive Shop
           </a>
@@ -536,7 +547,7 @@ export default function DiveShop({ shop, contact, demo, initialMode, today }) {
           </div>
         </section>
       </main>
-      <SiteFooter contact={contact} demo={demo} />
+      <SiteFooter contact={contact} activities={activities} demo={demo} />
       {count > 0 && (
         <a className="shop-mobile-order" href="#order">
           Lihat pesanan · {count} alat{" "}

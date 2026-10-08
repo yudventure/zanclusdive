@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { demoSeed } from "../demo-data.js";
 import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
+import { withActivities, activityKeys } from "../activity-model.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -51,6 +52,11 @@ function store() {
           if (!state.content.contact[key]) state.content.contact[key] = value;
         }
         state.contactDefaultsVersion = 1;
+        state.version++;
+        await writeState(directory, state);
+      }
+      if (activityKeys.some((key) => !state.content.activities?.[key])) {
+        state.content = withActivities(state.content);
         state.version++;
         await writeState(directory, state);
       }

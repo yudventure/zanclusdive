@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./shop.css";
 import "./contact.css";
+import "./activities.css";
 const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
 export const metadata = {
   ...(siteURL ? { metadataBase: new URL(siteURL) } : {}),
@@ -19,14 +20,16 @@ export const metadata = {
     description: "Jelajahi laut. Temukan cerita.",
     locale: "id_ID",
     type: "website",
-    images: siteURL ? [
-      {
-        url: "/assets/hero.webp",
-        width: 1672,
-        height: 941,
-        alt: "Konsep petualangan bawah laut Zanclus",
-      },
-    ] : [],
+    images: siteURL
+      ? [
+          {
+            url: "/assets/hero.webp",
+            width: 1672,
+            height: 941,
+            alt: "Konsep petualangan bawah laut Zanclus",
+          },
+        ]
+      : [],
   },
 };
 export const viewport = {

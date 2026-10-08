@@ -4,6 +4,7 @@ import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
+import ActivityCards from "./activities/ActivityCards.jsx";
 export default function HomePage({ content, demo = false }) {
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
@@ -50,7 +51,9 @@ export default function HomePage({ content, demo = false }) {
               {"Beranda"}
             </a>
             <a href="#experiences">{"Pengalaman"}</a>
-            <a href="#ocean">{"Jelajahi laut"}</a>
+            {Object.values(content.activities).some(
+              (activity) => activity.enabled,
+            ) && <a href="#activities">{"Aktivitas"}</a>}
             <a href="#calendar">{"Rencana"}</a>
             <a href="/dive-shop">{"Dive Shop"}</a>
             <a href="#contact">{"Kontak"}</a>
@@ -275,6 +278,7 @@ export default function HomePage({ content, demo = false }) {
               </button>
             </div>
           </section>
+          <ActivityCards activities={content.activities} demo={demo} />
           <section className="ocean-section" id="ocean">
             <div className="section-heading flex items-center justify-between gap-5">
               <div>
@@ -386,13 +390,14 @@ export default function HomePage({ content, demo = false }) {
                 </a>
               )}
               <p className="contact-panel-note">
-                Diving · Perlengkapan · Rental alat
+                Diving · Snorkeling · Trip · Perlengkapan
               </p>
             </div>
           </section>
         </main>
         <SiteFooter
           contact={content.contact}
+          activities={content.activities}
           tagline={content.text.tagline}
           demo={demo}
           home
@@ -412,6 +417,11 @@ export default function HomePage({ content, demo = false }) {
         <button className="button dark" id="detail-book">
           {"Rencanakan pengalaman ini ↗"}
         </button>
+        {content.activities.diving.enabled && (
+          <a className="activity-modal-link" href="/diving">
+            Lihat halaman detail diving ↗
+          </a>
+        )}
       </dialog>
       <dialog id="quiz-dialog" className="modal">
         <button className="close-modal" aria-label="Tutup kuis">

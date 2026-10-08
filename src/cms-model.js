@@ -1,8 +1,10 @@
 import { experiences } from "./domain.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import { blankSocials, socialPlatforms } from "./contact-model.js";
+import { defaultActivities, activityKeys } from "./activity-model.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 export const defaultContent = {
+  activities: structuredClone(defaultActivities),
   shop: structuredClone(emptyShop),
   text: {
     heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
@@ -188,7 +190,71 @@ export function validateContent(input) {
     images,
     experiences: catalog,
     shop: validateShop(input.shop),
+    activities: validateActivities(input.activities),
   };
+}
+export function validateActivities(input) {
+  return Object.fromEntries(
+    activityKeys.map((key) => {
+      const a = input?.[key];
+      if (!a || typeof a.enabled !== "boolean")
+        throw new Error("Halaman aktivitas tidak valid. Muat ulang CMS.");
+      const price = a.price === null || a.price === "" ? null : Number(a.price);
+      if (
+        (typeof a.price !== "number" &&
+          typeof a.price !== "string" &&
+          a.price !== null) ||
+        (price !== null &&
+          (!Number.isSafeInteger(price) || price <= 0 || price > 1e9))
+      )
+        throw new Error(
+          "Harga aktivitas harus berupa rupiah positif. Kosongkan untuk penawaran.",
+        );
+      function points(value, label) {
+        if (!Array.isArray(value) || value.length > 30)
+          throw new Error(`${label} harus berisi 1–8 poin.`);
+        const items = value
+          .map((item) => plain(item, label, 300, false))
+          .filter(Boolean);
+        if (items.length < 1 || items.length > 8)
+          throw new Error(`${label} harus berisi 1–8 poin.`);
+        return items;
+      }
+      if (
+        !Array.isArray(a.itinerary) ||
+        a.itinerary.length < 1 ||
+        a.itinerary.length > 8
+      )
+        throw new Error("Isi 1–8 langkah alur kegiatan.");
+      if (!Array.isArray(a.faqs) || a.faqs.length < 1 || a.faqs.length > 6)
+        throw new Error("Isi 1–6 pertanyaan umum.");
+      return [
+        key,
+        {
+          enabled: a.enabled,
+          title: plain(a.title, "Judul aktivitas", 150),
+          summary: plain(a.summary, "Ringkasan aktivitas", 500),
+          description: plain(a.description, "Deskripsi aktivitas", 2000),
+          image: imageURL(a.image),
+          imageAlt: plain(a.imageAlt, "Deskripsi foto", 250),
+          duration: plain(a.duration, "Durasi aktivitas", 150),
+          audience: plain(a.audience, "Peserta aktivitas", 150),
+          meetingPoint: plain(a.meetingPoint, "Titik temu", 250),
+          price,
+          highlights: points(a.highlights, "Sorotan aktivitas"),
+          preparations: points(a.preparations, "Persiapan aktivitas"),
+          itinerary: a.itinerary.map((item) => ({
+            title: plain(item?.title, "Judul langkah", 120),
+            description: plain(item?.description, "Deskripsi langkah", 500),
+          })),
+          faqs: a.faqs.map((item) => ({
+            question: plain(item?.question, "Pertanyaan", 250),
+            answer: plain(item?.answer, "Jawaban", 1000),
+          })),
+        },
+      ];
+    }),
+  );
 }
 export function validateShop(shop) {
   if (!shop || !Array.isArray(shop.products) || shop.products.length > 20)

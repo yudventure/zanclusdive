@@ -14,6 +14,7 @@ export default async function ShopPage({ searchParams }) {
     <DiveShop
       shop={content.shop}
       contact={content.contact}
+      activities={content.activities}
       demo={isDemo()}
       initialMode={query.mode === "rental" ? "rental" : "sale"}
       today={new Date().toLocaleDateString("en-CA", {

@@ -1,16 +1,22 @@
 import ContactIcon from "./ContactIcon.jsx";
 import { phoneLabel, socialPlatforms } from "../contact-model.js";
+import {
+  defaultActivities,
+  activityKeys,
+  activityLabels,
+} from "../activity-model.js";
 
 export default function SiteFooter({
   contact,
   tagline = "Jelajahi laut. Temukan cerita.",
   demo = false,
   home = false,
+  activities = defaultActivities,
 }) {
   const socials = Object.entries(socialPlatforms).filter(
     ([key]) => contact[key],
   );
-  const whatsappURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving, perlengkapan, atau rental alat.")}`;
+  const whatsappURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving, snorkeling, trip, atau perlengkapan.")}`;
   return (
     <footer className="site-footer" aria-label="Informasi Zanclus Dive Center">
       <div className="site-footer-grid">
@@ -25,8 +31,8 @@ export default function SiteFooter({
           </a>
           <p className="site-footer-tagline">{tagline}</p>
           <p className="site-footer-description">
-            Pengalaman menyelam dan perlengkapan untuk membawamu lebih dekat
-            dengan laut.
+            Diving, snorkeling, trip, dan perlengkapan untuk membawamu lebih
+            dekat dengan laut.
           </p>
         </div>
         <section
@@ -35,9 +41,13 @@ export default function SiteFooter({
         >
           <h2 id="footer-explore-title">Jelajahi Zanclus</h2>
           <div className="site-footer-links">
-            <a href="/#experiences">Pengalaman diving</a>
-            <a href="/#ocean">Jelajahi laut</a>
-            <a href="/#calendar">Rencanakan dive</a>
+            {activityKeys
+              .filter((key) => activities[key].enabled)
+              .map((key) => (
+                <a key={key} href={`/${key}`}>
+                  {activityLabels[key]}
+                </a>
+              ))}
             <a href="/dive-shop">Dive Shop</a>
             <a href="/dive-shop?mode=rental#catalog">Rental perlengkapan</a>
           </div>

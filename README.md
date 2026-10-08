@@ -39,6 +39,14 @@ Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, penc
 
 Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jual dan rental, ketersediaan, tampilan publik, serta foto dari media library. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat delapan produk contoh; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
 
+## Halaman aktivitas
+
+Halaman `/diving`, `/snorkeling`, dan `/trip` menyediakan gambaran kegiatan, durasi, peserta, titik temu, alur aktivitas, persiapan, pertanyaan umum, serta formulir konsultasi WhatsApp. Kartu pada beranda, navigasi halaman detail, dan footer menghubungkan ketiga halaman. Formulir menyiapkan pesan berisi aktivitas, nama, usulan tanggal, jumlah peserta, dan catatan; pengunjung menekan tautan WhatsApp untuk melanjutkan. Reservasi dan rincian biaya tetap dikonfirmasi oleh tim.
+
+Kelola judul, ringkasan, foto/caption, harga mulai per orang, informasi kegiatan, langkah perjalanan, dan FAQ melalui `/admin/activities`. Harga kosong menampilkan “Minta penawaran”. Nonaktifkan halaman untuk menyembunyikan kartu/tautannya dan mengembalikan 404 pada URL tersebut. Dokumen CMS lama mendapat halaman default tanpa menghapus konten atau reservasi sebelumnya; tidak ada harga aktivitas baru yang diisi otomatis. Mode demo menandai aktivitas dan alur sebagai contoh. Foto default adalah visual konsep, dapat diganti melalui media library.
+
+Uji halaman dan CMS pada instance demo lokal khusus tes: `BASE_URL=http://127.0.0.1:3190 node scripts/verify-activities.mjs`. Tes mengubah konten lalu mengembalikannya, memeriksa tiga halaman, pesan WhatsApp, media/FAQ, perubahan CMS, status 404 untuk halaman nonaktif, header, footer, dan layout desktop/mobile. Tes tidak mengirim pesan atau membuka tautan eksternal.
+
 ## Pengujian
 
 ```sh
