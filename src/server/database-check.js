@@ -1,7 +1,7 @@
 import "server-only";
 import mysql from "mysql2/promise";
 import { mysqlSettings } from "../cms-config.js";
-import { databaseFailure } from "../database-error.js";
+import { databaseFailure, connectingHost } from "../database-error.js";
 
 export async function checkDatabase(passwordOverride) {
   const settings = mysqlSettings();
@@ -34,9 +34,7 @@ export async function checkDatabase(passwordOverride) {
     return { ok: true, version: "database-check-v2", target, passwordTest, warnings, identity: rows[0], tables: tables.map((table) => table.name) };
   } catch (error) {
     // Extract only MySQL's connecting host; never return its raw message or SQL.
-    const match = error.code === "ER_ACCESS_DENIED_ERROR"
-      ? error.message?.match(/Access denied for user '[^']*'@'([A-Za-z0-9_.:%-]{1,255})'/)
-      : null;
+    const origin = connectingHost(error);
     return {
       ok: false,
       version: "database-check-v2",
@@ -44,7 +42,7 @@ export async function checkDatabase(passwordOverride) {
       passwordTest,
       warnings,
       ...databaseFailure(error),
-      ...(match ? { connectingHost: match[1] } : {}),
+      ...(origin ? { connectingHost: origin } : {}),
     };
   } finally {
     if (connection) await connection.end().catch(() => {});

@@ -25,3 +25,13 @@ export function databaseFailure(error) {
     error: messages[code] || "Database belum dapat diakses. Periksa konfigurasi MySQL di hPanel dan hubungi Hostinger jika koneksi tetap gagal.",
   };
 }
+
+export function connectingHost(error) {
+  const message = typeof error?.message === "string" ? error.message : "";
+  const pattern = error?.code === "ER_ACCESS_DENIED_ERROR"
+    ? /Access denied for user '[^']*'@'([A-Za-z0-9_.:%-]{1,255})'/
+    : error?.code === "ER_HOST_NOT_PRIVILEGED"
+      ? /Host '([A-Za-z0-9_.:%-]{1,255})' is not allowed/
+      : null;
+  return pattern ? message.match(pattern)?.[1] : undefined;
+}
