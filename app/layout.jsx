@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./shop.css";
 const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
 export const metadata = {
   ...(siteURL ? { metadataBase: new URL(siteURL) } : {}),

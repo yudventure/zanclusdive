@@ -1,6 +1,8 @@
 import { experiences } from "./domain.js";
+import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 export const defaultContent = {
+  shop: structuredClone(emptyShop),
   text: {
     heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
     heroTitle1: "Di bawah laut,",
@@ -161,7 +163,72 @@ export function validateContent(input) {
   );
   if (!Object.values(catalog).some((e) => e.enabled))
     throw new Error("Minimal satu pengalaman harus aktif.");
-  return { text, contact, images, experiences: catalog };
+  return {
+    text,
+    contact,
+    images,
+    experiences: catalog,
+    shop: validateShop(input.shop),
+  };
+}
+export function validateShop(shop) {
+  if (!shop || !Array.isArray(shop.products) || shop.products.length > 20)
+    throw new Error(
+      "Katalog harus berisi maksimal 20 produk. Muat ulang CMS jika katalog belum tersedia.",
+    );
+  const ids = new Set();
+  return {
+    heading: plain(shop.heading, "Judul Dive Shop", 150),
+    description: plain(shop.description, "Deskripsi Dive Shop", 600),
+    products: shop.products.map((p) => {
+      if (
+        !p ||
+        typeof p.id !== "string" ||
+        !/^[a-z0-9-]{1,50}$/.test(p.id) ||
+        ids.has(p.id) ||
+        !Object.hasOwn(shopCategories, p.category) ||
+        !Object.hasOwn(availabilityLabels, p.availability) ||
+        [p.enabled, p.saleEnabled, p.rentalEnabled].some(
+          (v) => typeof v !== "boolean",
+        ) ||
+        (!p.saleEnabled && !p.rentalEnabled)
+      )
+        throw new Error(
+          "Produk, kategori, atau pilihan jual/rental tidak valid.",
+        );
+      ids.add(p.id);
+      function price(value) {
+        if (value === null || value === "") return null;
+        if (typeof value !== "number" && typeof value !== "string")
+          throw new Error("Harga produk tidak valid.");
+        const n = Number(value);
+        if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
+          throw new Error(
+            "Harga produk harus berupa rupiah positif, maksimal 1 miliar. Kosongkan untuk penawaran.",
+          );
+        return n;
+      }
+      return {
+        id: p.id,
+        category: p.category,
+        availability: p.availability,
+        enabled: p.enabled,
+        saleEnabled: p.saleEnabled,
+        rentalEnabled: p.rentalEnabled,
+        name: plain(p.name, "Nama produk", 100),
+        description: plain(p.description, "Deskripsi produk", 500),
+        specification: plain(
+          p.specification || "",
+          "Spesifikasi produk",
+          300,
+          false,
+        ),
+        image: p.image ? imageURL(p.image) : "",
+        salePrice: price(p.salePrice),
+        rentalPrice: price(p.rentalPrice),
+      };
+    }),
+  };
 }
 function validDate(s) {
   if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;

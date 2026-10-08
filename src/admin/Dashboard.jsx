@@ -1,6 +1,7 @@
 "use client";
 import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
+import ShopEditor from "./ShopEditor.jsx";
 import {
   experienceKeys,
   textFields,
@@ -17,6 +18,7 @@ const sections = {
   media: "Foto & media",
   experiences: "Pengalaman & harga",
   contact: "Kontak & sosial media",
+  shop: "Dive Shop",
 };
 const icons = {
   overview: "▦",
@@ -27,6 +29,7 @@ const icons = {
   media: "▧",
   experiences: "◈",
   contact: "↗",
+  shop: "◇",
 };
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
@@ -577,7 +580,13 @@ export default function Dashboard({ section, email, today, demo = false }) {
           </div>
         </div>
       </header>
-      {demo && <div className="admin-demo-banner"><strong>Mode demo</strong> · Data dan harga contoh. Perubahan disimpan pada server demo, terpisah dari MySQL. Data demo dapat hilang saat redeploy; gunakan data contoh saja.</div>}
+      {demo && (
+        <div className="admin-demo-banner">
+          <strong>Mode demo</strong> · Data dan harga contoh. Perubahan disimpan
+          pada server demo, terpisah dari MySQL. Data demo dapat hilang saat
+          redeploy; gunakan data contoh saja.
+        </div>
+      )}
       <div className="admin-workspace">
         <aside className={"admin-sidebar " + (mobileMenu ? "open" : "")}>
           <p className="admin-eyebrow">MENU</p>
@@ -598,17 +607,19 @@ export default function Dashboard({ section, email, today, demo = false }) {
           </div>
           <p className="admin-eyebrow sidebar-group">WEBSITE</p>
           <div className="admin-links">
-            {["media", "website", "experiences", "contact"].map((key) => (
-              <Link
-                key={key}
-                href={"/admin/" + key}
-                aria-current={section === key ? "page" : undefined}
-                className={section === key ? "active" : ""}
-              >
-                <span aria-hidden="true">{icons[key]}</span>
-                {sections[key]}
-              </Link>
-            ))}
+            {["media", "website", "experiences", "shop", "contact"].map(
+              (key) => (
+                <Link
+                  key={key}
+                  href={"/admin/" + key}
+                  aria-current={section === key ? "page" : undefined}
+                  className={section === key ? "active" : ""}
+                >
+                  <span aria-hidden="true">{icons[key]}</span>
+                  {sections[key]}
+                </Link>
+              ),
+            )}
           </div>
           <div className="admin-sidebar-note">
             <strong>Zanclus workspace</strong>
@@ -1055,6 +1066,15 @@ export default function Dashboard({ section, email, today, demo = false }) {
                     </button>
                   </section>
                 </form>
+              )}
+              {section === "shop" && (
+                <ShopEditor
+                  shop={content.shop}
+                  update={(key, value) => mutateContent("shop", key, value)}
+                  onSave={saveSettings}
+                  busy={busy}
+                  media={data.media}
+                />
               )}
               {section === "experiences" && (
                 <form onSubmit={saveSettings}>

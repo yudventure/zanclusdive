@@ -6,6 +6,7 @@ import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import * as demo from "./demo-store.js";
+import { withShop } from "../shop-model.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
 }
@@ -49,7 +50,10 @@ export async function getContent() {
   const [rows] = await pool.execute(
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
-  return { content: JSON.parse(rows[0].payload), version: rows[0].version };
+  return {
+    content: withShop(JSON.parse(rows[0].payload)),
+    version: rows[0].version,
+  };
 }
 export async function publicContent() {
   if (isDemo()) return (await demo.getContent()).content;
@@ -57,7 +61,10 @@ export async function publicContent() {
   try {
     return (await getContent()).content;
   } catch (error) {
-    console.error("CMS: content database unavailable; using website defaults.", databaseFailure(error).code);
+    console.error(
+      "CMS: content database unavailable; using website defaults.",
+      databaseFailure(error).code,
+    );
     return structuredClone(defaultContent);
   }
 }

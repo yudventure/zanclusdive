@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { initializeWebsite } from "./main.js";
+import ShopTeaser from "./shop/ShopTeaser.jsx";
 export default function HomePage({ content, demo = false }) {
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
@@ -49,6 +50,7 @@ export default function HomePage({ content, demo = false }) {
             <a href="#experiences">{"Pengalaman"}</a>
             <a href="#ocean">{"Jelajahi laut"}</a>
             <a href="#calendar">{"Rencana"}</a>
+            <a href="/dive-shop">{"Dive Shop"}</a>
             <a href="#contact">{"Kontak"}</a>
           </nav>
           <a
@@ -302,6 +304,7 @@ export default function HomePage({ content, demo = false }) {
               </article>
             </div>
           </section>
+          <ShopTeaser shop={content.shop} demo={demo} />
           <section className="contact-section" id="contact">
             <p className="eyebrow">{"MAKE ROOM FOR A NEW STORY"}</p>
             <h2>
@@ -353,7 +356,13 @@ export default function HomePage({ content, demo = false }) {
           </section>
         </main>
         <footer>
-          {demo && <p><a href="/admin">Demo website & CMS · harga dan reservasi contoh ↗</a></p>}
+          {demo && (
+            <p>
+              <a href="/admin">
+                Demo website & CMS · harga dan reservasi contoh ↗
+              </a>
+            </p>
+          )}
           <a className="brand" href="#">
             <img
               src="/assets/logo-header-dark.svg"
@@ -363,6 +372,7 @@ export default function HomePage({ content, demo = false }) {
             />
           </a>
           <p>{content.text.tagline}</p>
+          <a href="/dive-shop">Dive Shop ↗</a>
           <a href="#main">{"Kembali ke atas ↑"}</a>
           <span>
             {"© "}

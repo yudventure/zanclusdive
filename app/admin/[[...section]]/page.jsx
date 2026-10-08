@@ -24,6 +24,7 @@ export default async function AdminPage({ params }) {
       "media",
       "experiences",
       "contact",
+      "shop",
     ].includes(active)
   )
     notFound();
@@ -31,7 +32,9 @@ export default async function AdminPage({ params }) {
   if (!admin) {
     const demo = isDemo();
     const issues = demo ? [] : configurationIssues();
-    return <Login configured={issues.length === 0} issues={issues} demo={demo} />;
+    return (
+      <Login configured={issues.length === 0} issues={issues} demo={demo} />
+    );
   }
   return (
     <Dashboard

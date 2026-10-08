@@ -4,7 +4,7 @@ Deploy branch `main` dengan Node.js 22/24, build `npm run build`, dan start `npm
 
 1. Buka `https://zanclusdive.com/admin`.
 2. Tekan **Masuk ke demo**. Akun contoh sudah terisi otomatis.
-3. Coba kalender, reservasi, tamu, teks, harga, kontak, dan upload gambar.
+3. Coba kalender, reservasi, tamu, teks, harga, kontak, upload gambar, dan menu **Dive Shop**.
 4. Simpan perubahan teks dan buka website utama untuk melihat hasilnya.
 
 Akun demo publik adalah `demo@zanclusdive.com` / `ZanclusDemo2026!`. Akun ini khusus mode demo dan **tidak berlaku pada MySQL**. Setiap pengunjung dapat mencoba data demo bersama. Gunakan nama/data tamu contoh saja. Tampilan memberi label demo; harga, lokasi, dan reservasi awal merupakan contoh, bukan informasi operasional terverifikasi.
@@ -27,3 +27,9 @@ BASE_URL=http://127.0.0.1:3172 node scripts/verify-demo.mjs
 ```
 
 Tes membuat/mengubah data demo, bukan data MySQL. Jangan arahkan tes ini ke server publik yang sedang dipakai pengunjung. Pengujian MySQL menggunakan `CMS_MODE=mysql` secara eksplisit.
+
+## Demo Dive Shop
+
+Buka `/dive-shop` untuk mencoba penjualan dan rental alat. Delapan produk contoh sudah disiapkan, termasuk mask, fins, wetsuit, BCD, regulator, dive computer, tabung, dan lampu. Semua harga contoh diberi label demo. Rental memakai harga per unit per hari. Pilih alat, isi nama/tanggal/durasi dan catatan ukuran, lalu siapkan pesan WhatsApp.
+
+Di `/admin/shop`, ubah katalog dan tekan **Simpan katalog Dive Shop**. Data demo dari versi sebelumnya ditambahkan katalog tanpa mengganti teks, kontak, reservasi, atau gambar yang sudah disimpan. Produk baru berupa draft sampai diaktifkan. Foto dapat dipilih dari media library. Saat beralih ke MySQL, isi katalog produk asli di CMS; contoh demo tidak dipindahkan otomatis.
