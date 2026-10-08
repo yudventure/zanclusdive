@@ -13,7 +13,11 @@ assert.ok(
   process.env.MYSQL_DATABASE.endsWith("_test"),
   "CMS tests require a dedicated database ending in _test.",
 );
-assert.equal(process.env.CMS_MODE, "mysql", "MySQL CMS tests require CMS_MODE=mysql.");
+assert.equal(
+  process.env.CMS_MODE,
+  "mysql",
+  "MySQL CMS tests require CMS_MODE=mysql.",
+);
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
   port: Number(process.env.MYSQL_PORT || 3306),
@@ -217,18 +221,15 @@ await page
   .waitFor();
 await publicPage.reload({ waitUntil: "networkidle" });
 assert.equal(
-  await publicPage.locator('[data-course="beginner"] h3').textContent(),
+  await publicPage
+    .locator('select[name="experience"] option[value="beginner"]')
+    .textContent(),
   "Mulai diving",
 );
-assert.ok(
-  (await publicPage.locator('[data-course="beginner"]').textContent()).includes(
-    "1.250.000",
-  ),
-);
-assert.equal(
-  await publicPage.locator('[data-course="specialty"]').isVisible(),
-  false,
-);
+const savedPrograms = await (
+  await context.request.get(baseURL + "/api/admin/state")
+).json();
+assert.equal(savedPrograms.content.experiences.beginner.price, 1250000);
 assert.equal(
   await publicPage
     .locator('select[name="experience"] option[value="specialty"]')

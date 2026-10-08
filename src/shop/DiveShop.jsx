@@ -127,11 +127,7 @@ export default function DiveShop({
           aria-label="Navigasi utama"
         >
           <a href="/">Beranda</a>
-          {Object.values(activities).some((activity) => activity.enabled) ? (
-            <a href="/#activities">Aktivitas</a>
-          ) : (
-            <a href="/#experiences">Pengalaman</a>
-          )}
+          <a href="/#experiences">Pengalaman</a>
           <a href="#catalog" className="active" onClick={() => setMenu(false)}>
             Dive Shop
           </a>

@@ -58,8 +58,8 @@ try {
   assert.equal((await save(edited, snapshot.version)).status(), 200);
   await publicPage.reload({ waitUntil: "networkidle" });
   assert.ok((await publicPage.locator(".quick-service").getAttribute("href")).includes("6285111112222"));
-  assert.ok((await publicPage.locator('[data-course="beginner"]').textContent()).includes("1.250.000"));
-  assert.equal(await publicPage.locator('[data-course="specialty"]').isVisible(), false);
+  assert.equal((await state()).content.experiences.beginner.price, 1250000);
+  assert.equal(await publicPage.locator('select[name="experience"] option[value="specialty"]').count(), 0);
 
   const picture = await readFile("public/assets/reef.webp");
   const upload = await api.post(base + "/api/admin/media", { headers, multipart: { file: { name: "demo-upload.webp", mimeType: "image/webp", buffer: picture } } });

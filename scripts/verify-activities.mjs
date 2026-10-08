@@ -59,16 +59,33 @@ try {
     activityKeys.every((key) => originals.content.activities[key].enabled),
   );
   await page.goto(base, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("#activities .activity-card").count(), 3);
+  assert.equal(await page.locator("#experiences .course-card").count(), 3);
+  assert.equal(
+    await page.locator(".activity-discovery").count(),
+    0,
+    "No added activity section on the home page",
+  );
+  assert.equal(await page.locator("#activities").count(), 0);
+  assert.equal(
+    await page.locator('.beginner-calendar [data-activity="diving"]').count(),
+    1,
+  );
+  assert.equal(await page.locator(".beginner-calendar #calendar").count(), 1);
   for (const key of activityKeys) {
-    const homeLink = page.locator(`#activities a[href="/${key}"]`);
-    assert.ok((await homeLink.textContent()).includes(activityLabels[key]));
+    const homeLink = page.locator(`#experiences a[href="/${key}"]`);
+    assert.equal(
+      await homeLink.locator("h3").textContent(),
+      activityLabels[key],
+    );
     assert.equal(
       await page.getByRole("contentinfo").locator(`a[href="/${key}"]`).count(),
       1,
     );
   }
-  await page.locator('#activities a[href="/snorkeling"]').click();
+  await page
+    .locator("#experiences")
+    .screenshot({ path: "artifacts/experiences-cards-desktop.png" });
+  await page.locator('#experiences a[href="/snorkeling"]').click();
   await page.waitForURL(base + "/snorkeling");
   for (const key of activityKeys) {
     await page.goto(`${base}/${key}`, { waitUntil: "networkidle" });
@@ -191,7 +208,12 @@ try {
       }
     }
     await page.goto(base, { waitUntil: "networkidle" });
-    await noOverflow(`Home activity cards overflow at ${width}`);
+    await noOverflow(`Home experience cards overflow at ${width}`);
+    assert.equal(await page.locator(".activity-discovery").count(), 0);
+    if (width === 390)
+      await page
+        .locator("#experiences")
+        .screenshot({ path: "artifacts/experiences-cards-mobile.png" });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(base + "/admin/activities", { waitUntil: "networkidle" });
@@ -278,8 +300,21 @@ try {
   await page.goto(base, { waitUntil: "networkidle" });
   assert.ok(
     (
-      await page.locator('#activities a[href="/snorkeling"]').textContent()
+      await page.locator('#experiences a[href="/snorkeling"]').textContent()
     ).includes("Ringkasan snorkeling tersimpan dari CMS."),
+  );
+  assert.match(
+    await page
+      .locator('#experiences [data-activity="snorkeling"]')
+      .textContent(),
+    /450\.000/,
+  );
+  assert.ok(
+    (
+      await page
+        .locator('#experiences [data-activity="snorkeling"]')
+        .getAttribute("style")
+    ).includes("/assets/ocean.webp"),
   );
   let current = await state();
   assert.deepEqual(
@@ -307,9 +342,37 @@ try {
   for (const path of ["/", "/diving", "/dive-shop"]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
     assert.equal(
-      await page.locator('a[href="/trip"]').count(),
+      await page.locator('a[href="/trip"]:visible').count(),
       0,
       "Disabled page is hidden across public links",
+    );
+  }
+  current = await state();
+  current.content.activities.diving.enabled = false;
+  assert.equal((await save(current.content, current.version)).status(), 200);
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 950 });
+    await page.goto(base, { waitUntil: "networkidle" });
+    assert.equal(
+      await page.locator('#experiences [data-activity="diving"]').isVisible(),
+      false,
+    );
+    assert.equal(
+      await page
+        .locator('#experiences [data-activity="snorkeling"]')
+        .isVisible(),
+      true,
+    );
+    assert.equal(
+      await page.locator("#calendar").isVisible(),
+      true,
+      "Calendar stays available when diving is disabled",
+    );
+    await noOverflow(`Hidden cards overflow at ${width}`);
+    await page.locator("#calendar-grid button:not([disabled])").first().click();
+    assert.match(
+      await page.locator("#calendar-note").textContent(),
+      /Rencana:/,
     );
   }
   current = await state();

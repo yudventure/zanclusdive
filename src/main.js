@@ -137,27 +137,6 @@ export function initializeWebsite(content) {
       { signal: controller.signal },
     ),
   );
-  document.querySelectorAll("[data-course]").forEach(
-    (button) =>
-      (button.onclick = () => {
-        currentCourse = button.dataset.course;
-        const info = experiences[currentCourse];
-        $("#detail-title").textContent = info.title;
-        $("#detail-description").textContent = info.description;
-        $("#detail-list").replaceChildren(
-          ...info.items.map((item) => {
-            const li = document.createElement("li");
-            li.textContent = item;
-            return li;
-          }),
-        );
-        $("#detail-dialog").showModal();
-      }),
-  );
-  $("#detail-book").onclick = () => {
-    $("#detail-dialog").close();
-    openBooking(currentCourse);
-  };
   $("#see-all").onclick = () => {
     const more = $("#more-courses");
     more.hidden = !more.hidden;

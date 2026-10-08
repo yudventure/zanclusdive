@@ -58,8 +58,9 @@ export default function ActivitiesEditor({
           </label>
         </div>
         <p className="admin-subtle">
-          Halaman /{active} tampil di beranda dan footer. Jika dinonaktifkan,
-          tautannya disembunyikan dan halaman tidak dapat dibuka.
+          Halaman /{active} terhubung dari kartu di seksi Pengalaman dan footer.
+          Jika dinonaktifkan, tautannya disembunyikan dan halaman tidak dapat
+          dibuka.
         </p>
         <a
           className="admin-button secondary"

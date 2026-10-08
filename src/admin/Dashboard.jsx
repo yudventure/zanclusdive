@@ -1102,6 +1102,11 @@ export default function Dashboard({ section, email, today, demo = false }) {
               )}
               {section === "experiences" && (
                 <form onSubmit={saveSettings}>
+                  <p className="admin-subtle">
+                    Program diving di sini digunakan oleh kuis dan formulir
+                    rencana. Kelola kartu Diving, Snorkeling, dan Trip Laut di
+                    menu Halaman aktivitas.
+                  </p>
                   {experienceKeys.map((key) => {
                     const exp = content.experiences[key];
                     function update(field, value) {

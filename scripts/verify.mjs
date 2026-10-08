@@ -30,7 +30,7 @@ assert.equal(
   "Initial header has no background",
 );
 assert.equal(
-  await page.locator('.beginner-calendar [data-course="beginner"]').count(),
+  await page.locator('.beginner-calendar [data-activity="diving"]').count(),
   1,
 );
 assert.equal(await page.locator(".beginner-calendar #calendar").count(), 1);
@@ -96,14 +96,13 @@ assert.equal(
   false,
   "Desktop overflow",
 );
-await page.locator('[data-course="beginner"]').click();
-await page.locator("#detail-dialog").waitFor({ state: "visible" });
-await assertCentered("#detail-dialog");
-assert.equal(
-  await page.locator("#detail-title").textContent(),
-  "Mulai menyelam",
-);
-await page.locator("#detail-book").click();
+for (const key of ["diving", "snorkeling", "trip"]) {
+  await page.locator(`#experiences [data-activity="${key}"]`).click();
+  await page.waitForURL(`${baseURL}/${key}`);
+  await page.locator("#activity-title").waitFor({ state: "visible" });
+  await page.goto(baseURL, { waitUntil: "networkidle" });
+}
+await page.locator(".hero [data-book]").click();
 await page.locator("#booking-dialog").waitFor({ state: "visible" });
 await assertCentered("#booking-dialog");
 await page.locator("#booking-dialog .close-modal").click();

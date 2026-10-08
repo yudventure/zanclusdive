@@ -299,7 +299,7 @@ nav a.active {
 }
 .course-grid {
   display: grid;
-  grid-template-columns: 2.37fr 0.85fr 0.85fr;
+  grid-template-columns: var(--course-columns, 2.37fr 0.85fr 0.85fr);
   gap: 10px;
 }
 .beginner-calendar {
@@ -387,6 +387,30 @@ nav a.active {
   font-size: 10px;
   line-height: 1.6;
   color: #e5f0f2;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.course-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--lime);
+}
+.course-card .course-duration {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.beginner-calendar:has(> .course-card[hidden]) {
+  grid-template-columns: 1fr;
+}
+.course-grid[data-visible-activities="0"] {
+  max-width: 420px;
 }
 .calendar-card {
   background:
@@ -1069,15 +1093,4 @@ nav a.active {
   font-size: 10px;
   line-height: 1.6;
   margin-top: 3px;
-}
-.course-grid:has(> [hidden]) {
-  grid-template-columns: 2.37fr 0.85fr;
-}
-.course-grid:has(> .beginner-calendar[hidden]) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (max-width: 1050px) {
-  .course-grid:has(> [hidden]) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }

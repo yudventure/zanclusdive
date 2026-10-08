@@ -4,7 +4,40 @@ import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
-import ActivityCards from "./activities/ActivityCards.jsx";
+import { activityLabels } from "./activity-model.js";
+
+function ExperienceCard({ activityKey, activity, className, kicker }) {
+  return (
+    <a
+      className={`course-card ${className}`}
+      data-activity={activityKey}
+      href={`/${activityKey}`}
+      hidden={!activity.enabled}
+      aria-label={`Lihat detail ${activityLabels[activityKey]}`}
+      style={{ backgroundImage: `url(${JSON.stringify(activity.image)})` }}
+    >
+      <span className="round-arrow" aria-hidden="true">
+        ↗
+      </span>
+      <div>
+        <span className="card-kicker">{kicker}</span>
+        <h3>{activityLabels[activityKey]}</h3>
+        <small className="course-price">
+          {activity.price === null
+            ? "Biaya sesuai penawaran"
+            : `Mulai ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(activity.price)}`}
+        </small>
+        <small className="course-price course-duration">
+          {activity.duration}
+        </small>
+        <p>{activity.summary}</p>
+        <span className="course-card-cta">
+          Lihat detail <span aria-hidden="true">↗</span>
+        </span>
+      </div>
+    </a>
+  );
+}
 export default function HomePage({ content, demo = false }) {
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
@@ -51,9 +84,7 @@ export default function HomePage({ content, demo = false }) {
               {"Beranda"}
             </a>
             <a href="#experiences">{"Pengalaman"}</a>
-            {Object.values(content.activities).some(
-              (activity) => activity.enabled,
-            ) && <a href="#activities">{"Aktivitas"}</a>}
+            <a href="#ocean">{"Jelajahi laut"}</a>
             <a href="#calendar">{"Rencana"}</a>
             <a href="/dive-shop">{"Dive Shop"}</a>
             <a href="#contact">{"Kontak"}</a>
@@ -129,35 +160,31 @@ export default function HomePage({ content, demo = false }) {
                 <span>{"↗"}</span>
               </button>
             </div>
-            <div className="course-grid">
+            <div
+              className="course-grid"
+              data-visible-activities={
+                Object.values(content.activities).filter(
+                  (activity) => activity.enabled,
+                ).length
+              }
+              style={{
+                "--course-columns": [
+                  content.activities.diving.enabled ? "2.37fr" : "1.12fr",
+                  ...(content.activities.snorkeling.enabled ? ["0.85fr"] : []),
+                  ...(content.activities.trip.enabled ? ["0.85fr"] : []),
+                ].join(" "),
+              }}
+            >
               <article
                 className="beginner-calendar"
-                hidden={!content.experiences.beginner.enabled}
-                aria-label="Mulai menyelam dan pilih tanggal rencana"
+                aria-label="Diving dan kalender rencana"
               >
-                <button className="course-card beginner" data-course="beginner">
-                  <span className="round-arrow">{"↗"}</span>
-                  <div>
-                    <span className="card-kicker">{"LANGKAH PERTAMA"}</span>
-                    <h3>{content.experiences.beginner.title}</h3>
-                    {content.experiences.beginner.price !== null && (
-                      <small className="course-price">
-                        Mulai{" "}
-                        {new Intl.NumberFormat("id-ID", {
-                          style: "currency",
-                          currency: "IDR",
-                          maximumFractionDigits: 0,
-                        }).format(content.experiences.beginner.price)}
-                      </small>
-                    )}
-                    {content.experiences.beginner.duration && (
-                      <small className="course-price">
-                        {content.experiences.beginner.duration}
-                      </small>
-                    )}
-                    <p>{content.experiences.beginner.cardDescription}</p>
-                  </div>
-                </button>
+                <ExperienceCard
+                  activityKey="diving"
+                  activity={content.activities.diving}
+                  className="beginner"
+                  kicker="SELAMI CERITA BARU"
+                />
                 <div className="calendar-card" id="calendar">
                   <div className="calendar-heading">
                     <button id="prev-month" aria-label="Bulan sebelumnya">
@@ -195,60 +222,18 @@ export default function HomePage({ content, demo = false }) {
                   </small>
                 </div>
               </article>
-              <button
-                className="course-card advanced"
-                data-course="explorer"
-                hidden={!content.experiences.explorer.enabled}
-              >
-                <span className="round-arrow">{"↗"}</span>
-                <div>
-                  <span className="card-kicker">{"GO A LITTLE DEEPER"}</span>
-                  <h3>{content.experiences.explorer.title}</h3>
-                  {content.experiences.explorer.price !== null && (
-                    <small className="course-price">
-                      Mulai{" "}
-                      {new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                        maximumFractionDigits: 0,
-                      }).format(content.experiences.explorer.price)}
-                    </small>
-                  )}
-                  {content.experiences.explorer.duration && (
-                    <small className="course-price">
-                      {content.experiences.explorer.duration}
-                    </small>
-                  )}
-                  <p>{content.experiences.explorer.cardDescription}</p>
-                </div>
-              </button>
-              <button
-                className="course-card specialty"
-                data-course="specialty"
-                hidden={!content.experiences.specialty.enabled}
-              >
-                <span className="round-arrow">{"↗"}</span>
-                <div>
-                  <span className="card-kicker">{"FOLLOW YOUR CURIOSITY"}</span>
-                  <h3>{content.experiences.specialty.title}</h3>
-                  {content.experiences.specialty.price !== null && (
-                    <small className="course-price">
-                      Mulai{" "}
-                      {new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                        maximumFractionDigits: 0,
-                      }).format(content.experiences.specialty.price)}
-                    </small>
-                  )}
-                  {content.experiences.specialty.duration && (
-                    <small className="course-price">
-                      {content.experiences.specialty.duration}
-                    </small>
-                  )}
-                  <p>{content.experiences.specialty.cardDescription}</p>
-                </div>
-              </button>
+              <ExperienceCard
+                activityKey="snorkeling"
+                activity={content.activities.snorkeling}
+                className="advanced"
+                kicker="DEKAT DENGAN LAUT"
+              />
+              <ExperienceCard
+                activityKey="trip"
+                activity={content.activities.trip}
+                className="specialty"
+                kicker="JELAJAH BERSAMA"
+              />
             </div>
             <div className="quiz-panel">
               <p className="eyebrow">{"LET'S FIND YOUR NEXT DIVE"}</p>
@@ -278,7 +263,6 @@ export default function HomePage({ content, demo = false }) {
               </button>
             </div>
           </section>
-          <ActivityCards activities={content.activities} demo={demo} />
           <section className="ocean-section" id="ocean">
             <div className="section-heading flex items-center justify-between gap-5">
               <div>
@@ -403,26 +387,6 @@ export default function HomePage({ content, demo = false }) {
           home
         />
       </div>
-      <dialog id="detail-dialog" className="modal">
-        <button className="close-modal" aria-label="Tutup detail">
-          {"×"}
-        </button>
-        <p className="eyebrow">{"YOUR NEXT UNDERWATER STORY"}</p>
-        <h2 id="detail-title"></h2>
-        <p id="detail-description"></p>
-        <ul id="detail-list"></ul>
-        <p className="muted">
-          {"Program, biaya, dan persyaratan dikonfirmasi bersama tim Zanclus."}
-        </p>
-        <button className="button dark" id="detail-book">
-          {"Rencanakan pengalaman ini ↗"}
-        </button>
-        {content.activities.diving.enabled && (
-          <a className="activity-modal-link" href="/diving">
-            Lihat halaman detail diving ↗
-          </a>
-        )}
-      </dialog>
       <dialog id="quiz-dialog" className="modal">
         <button className="close-modal" aria-label="Tutup kuis">
           {"×"}
