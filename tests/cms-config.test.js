@@ -40,13 +40,22 @@ test("whitespace-only settings are missing and configuration is checked on each 
 test("MySQL settings trim identifiers but preserve exact password bytes", () => {
   const password = '  secret#with$dollar"and spaces  ';
   const settings = mysqlSettings({ ...valid, MYSQL_HOST: " localhost\n", MYSQL_USER: " cms_owner ", MYSQL_DATABASE: " cms_test ", MYSQL_PASSWORD: password });
-  assert.equal(settings.host, "localhost");
+  assert.equal(settings.host, "127.0.0.1");
   assert.equal(settings.user, "cms_owner");
   assert.equal(settings.database, "cms_test");
   assert.equal(settings.password, password);
   assert.equal(settings.port, 3306);
   assert.equal(settings.socketPath, undefined);
   assert.equal(mysqlSettings({ ...valid, MYSQL_SOCKET: " /tmp/mysql.sock " }).socketPath, "/tmp/mysql.sock");
+});
+
+test("localhost TCP uses IPv4 while explicit hosts and sockets are preserved", () => {
+  assert.equal(mysqlSettings({ ...valid, MYSQL_HOST: "LOCALHOST" }).host, "127.0.0.1");
+  assert.equal(mysqlSettings({ ...valid, MYSQL_HOST: "::1" }).host, "::1");
+  assert.equal(mysqlSettings(valid).host, valid.MYSQL_HOST);
+  const socket = mysqlSettings({ ...valid, MYSQL_HOST: "localhost", MYSQL_SOCKET: "/tmp/mysql.sock" });
+  assert.equal(socket.host, "localhost");
+  assert.equal(socket.socketPath, "/tmp/mysql.sock");
 });
 
 test("bad port, URL hostname, and pasted secret placeholders are blocked", () => {

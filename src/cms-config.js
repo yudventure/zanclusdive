@@ -1,13 +1,16 @@
 // Return variable names and validation messages only, never credential values.
 export function mysqlSettings(env = process.env) {
+  const host = env.MYSQL_HOST?.trim();
+  const socketPath = env.MYSQL_SOCKET?.trim();
   return {
-    host: env.MYSQL_HOST?.trim(),
+    // IPv6 localhost (::1) can match different MySQL grants from IPv4.
+    host: !socketPath && host?.toLowerCase() === "localhost" ? "127.0.0.1" : host,
     port: Number(env.MYSQL_PORT?.trim() || 3306),
     database: env.MYSQL_DATABASE?.trim(),
     user: env.MYSQL_USER?.trim(),
     // Password bytes must be preserved, including intentional spaces and #/$.
     password: env.MYSQL_PASSWORD,
-    ...(env.MYSQL_SOCKET?.trim() ? { socketPath: env.MYSQL_SOCKET.trim() } : {}),
+    ...(socketPath ? { socketPath } : {}),
     connectTimeout: 10000,
     ...(env.MYSQL_SSL === "true" ? { ssl: { rejectUnauthorized: true } } : {}),
   };
