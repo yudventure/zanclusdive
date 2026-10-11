@@ -262,3 +262,29 @@ test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
   );
   assert.ok(checkoutMessage([fins], { name: "Alex" }, "2030-01-01"));
 });
+
+test("dive gallery validates photos and captions", async () => {
+  const { validateGallery } = await import("../src/cms-model.js");
+  const { defaultGallery, galleryCaption } = await import("../src/gallery.js");
+  assert.deepEqual(validateGallery(undefined), defaultGallery);
+  assert.deepEqual(validateGallery(defaultGallery), defaultGallery);
+  const legacy = structuredClone(defaultContent);
+  delete legacy.gallery;
+  assert.equal(validateContent(legacy).gallery.items.length, 10);
+  assert.throws(() =>
+    validateGallery({ items: [{ src: "javascript:alert(1)", caption: {} }] }),
+  );
+  assert.throws(() =>
+    validateGallery({ items: Array(25).fill(defaultGallery.items[0]) }),
+  );
+  const own = validateGallery({
+    items: [
+      {
+        src: "/api/media/0e7b7d3c-5a2a-4b6e-9a51-3b2a8a1d2f10",
+        caption: { id: " Manta di Arborek ", en: "" },
+      },
+    ],
+  });
+  assert.equal(own.items[0].caption.id, "Manta di Arborek");
+  assert.equal(galleryCaption(own.items[0], "en"), "Manta di Arborek");
+});

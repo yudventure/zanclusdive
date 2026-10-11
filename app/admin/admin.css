@@ -1121,3 +1121,21 @@
   color: #a9b7bd;
   cursor: default;
 }
+.admin-gallery-item {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.admin-gallery-item img {
+  width: 140px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #e8eef1;
+}
+@media (max-width: 700px) {
+  .admin-gallery-item {
+    grid-template-columns: 1fr;
+  }
+}

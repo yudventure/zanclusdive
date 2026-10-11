@@ -4,6 +4,7 @@ import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
+import GalleryEditor from "./GalleryEditor.jsx";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
@@ -1332,6 +1333,13 @@ export default function Dashboard({ section, email, today, demo = false }) {
                       </button>
                     </section>
                   </form>
+                  <GalleryEditor
+                    gallery={content.gallery}
+                    media={data.media}
+                    update={(items) => mutateContent("gallery", "items", items)}
+                    onSave={saveSettings}
+                    busy={busy}
+                  />
                   <section className="admin-card">
                     <h2>Media library</h2>
                     <form className="admin-upload" onSubmit={upload}>

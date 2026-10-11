@@ -1,4 +1,5 @@
 import { experiences } from "./domain.js";
+import { defaultGallery, galleryLimit } from "./gallery.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -52,6 +53,7 @@ export const defaultContent = {
   },
   images: { ...defaultSiteImages },
   priceList: structuredClone(defaultPriceList),
+  gallery: structuredClone(defaultGallery),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -116,6 +118,32 @@ export function imageURL(value) {
   } catch {}
   throw new Error("Gambar harus memakai URL HTTPS atau aset website.");
 }
+function galleryCaptionText(value) {
+  const out = {};
+  for (const lang of ["id", "en"]) {
+    const v = value?.[lang] ?? "";
+    if (typeof v !== "string" || v.length > 120)
+      throw new Error("Keterangan foto galeri tidak valid.");
+    out[lang] = v.trim();
+  }
+  return out;
+}
+
+// Documents saved before the gallery existed get the default photos.
+export function validateGallery(input) {
+  if (input === undefined || input === null)
+    return structuredClone(defaultGallery);
+  const items = input.items;
+  if (!Array.isArray(items) || items.length > galleryLimit)
+    throw new Error(`Galeri berisi maksimal ${galleryLimit} foto.`);
+  return {
+    items: items.map((item) => ({
+      src: imageURL(item?.src),
+      caption: galleryCaptionText(item?.caption),
+    })),
+  };
+}
+
 export function validateContent(input) {
   if (!input || typeof input !== "object")
     throw new Error("Konten tidak valid.");
@@ -210,6 +238,7 @@ export function validateContent(input) {
     experiences: catalog,
     shop,
     activities: validateActivities(input.activities),
+    gallery: validateGallery(input.gallery),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }
