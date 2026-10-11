@@ -69,10 +69,10 @@ try {
   );
   assert.equal(await page.locator("#activities").count(), 0);
   assert.equal(
-    await page.locator('.beginner-calendar [data-activity="diving"]').count(),
+    await page.locator('.experience-item [data-activity="diving"]').count(),
     1,
   );
-  assert.equal(await page.locator(".beginner-calendar #prices").count(), 1);
+  assert.equal(await page.locator(".experience-row#prices").count(), 1);
   for (const key of activityKeys) {
     const homeLink = page.locator(`#experiences a[href="/id/${key}"]`);
     assert.equal(
@@ -376,7 +376,9 @@ try {
       true,
     );
     assert.equal(
-      await page.locator("#prices h3").textContent(),
+      await page
+        .locator(".experience-item.is-open .price-card h3")
+        .textContent(),
       "Harga paket snorkeling",
       "Prices fall back to snorkeling when diving is disabled",
     );

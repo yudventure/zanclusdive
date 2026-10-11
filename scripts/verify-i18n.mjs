@@ -54,11 +54,17 @@ try {
 
   // English prices, booking and WhatsApp text.
   await page.goto(base, { waitUntil: "networkidle" });
-  assert.equal(await page.textContent("#prices h3"), "Diving package prices");
+  assert.equal(
+    await page.textContent(".experience-item.is-open .price-card h3"),
+    "Diving package prices",
+  );
   await page.locator('.course-card[data-activity="trip"]').hover();
-  assert.equal(await page.textContent("#prices h3"), "Sea trip package prices");
+  assert.equal(
+    await page.textContent(".experience-item.is-open .price-card h3"),
+    "Sea trip package prices",
+  );
   assert.match(
-    await page.textContent("#prices .price-list"),
+    await page.textContent(".experience-item.is-open .price-list"),
     /IDR\s?8,000,000/,
   );
   await page.locator("#open-quiz").click();

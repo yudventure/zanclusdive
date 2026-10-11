@@ -620,37 +620,44 @@ nav.open a::after {
   margin-bottom: 15px;
   color: #4c7884;
 }
-.course-grid {
-  display: grid;
-  grid-template-columns: var(--course-columns, 2.37fr 0.85fr 0.85fr);
-  gap: 10px;
+/* Experience accordion: the open item widens and reveals its prices. */
+.experience-row {
+  display: flex;
+  gap: 12px;
+  height: 600px;
 }
-.course-grid > .course-card {
-  height: auto;
-  min-height: 325px;
-}
-.beginner-calendar {
-  display: grid;
-  grid-template-columns: 1.25fr 1.12fr;
+.experience-item {
+  position: relative;
+  flex: 1 1 0;
   min-width: 0;
+  display: flex;
   border-radius: 27px;
   overflow: hidden;
-  background: #e9f2f8;
+  background:
+    radial-gradient(at 100% 0%, #d6f7c0, transparent 70%),
+    linear-gradient(135deg, #f3f4fa, #dce9f8);
+  transition:
+    flex-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease;
 }
-.beginner-calendar .course-card,
-.beginner-calendar .calendar-card {
-  border-radius: 0;
+.experience-item.is-open {
+  flex-grow: 2.6;
+  box-shadow: 0 24px 60px #062b3b2e;
+}
+.experience-item > .course-card {
+  flex: 1 1 auto;
   min-width: 0;
-}
-.beginner-calendar > .course-card {
   height: auto;
-  min-height: 390px;
+  border-radius: 0;
 }
-.beginner-calendar .course-card:hover {
+.experience-item > .course-card:hover {
   transform: none;
 }
-.beginner-calendar .course-card:hover .round-arrow {
-  background: #fff3;
+.experience-row[data-visible-activities="1"] {
+  max-width: 760px;
+}
+.experience-toggle {
+  display: none;
 }
 .course-card {
   position: relative;
@@ -745,48 +752,30 @@ nav.open a::after {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.beginner-calendar:has(> .course-card[hidden]) {
-  grid-template-columns: 1fr;
-}
-.course-grid[data-visible-activities="0"] {
-  max-width: 420px;
-}
-.calendar-card {
-  background:
-    radial-gradient(at 100% 0%, #d6f7c0, transparent 70%),
-    linear-gradient(135deg, #f3f4fa, #dce9f8);
-  border-radius: 27px;
-  padding: 16px 12px;
-  min-width: 0;
-}
-/* Package prices beside the Diving card. */
+/* Package prices inside an open experience item. The inner block keeps a
+   fixed width so text does not reflow while the panel slides open. */
 .price-card {
+  flex: 0 0 auto;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--navy);
+  transition:
+    max-width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease;
+}
+.experience-item.is-open .price-card {
+  max-width: 400px;
+  opacity: 1;
+  transition-delay: 0s, 0.15s;
+}
+.price-inner {
+  width: 400px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 22px 22px 18px;
-  color: var(--navy);
-}
-.price-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: #ffffffa6;
-  align-self: flex-start;
-}
-.price-tabs button {
-  border: 0;
-  border-radius: 999px;
-  padding: 7px 14px;
-  background: transparent;
-  color: #49606b;
-  font-size: 12px;
-  font-weight: 600;
-}
-.price-tabs button[aria-pressed="true"] {
-  background: var(--navy);
-  color: white;
+  padding: 26px 24px 18px;
 }
 .price-body {
   flex: 1;
@@ -1200,17 +1189,18 @@ nav.open a::after {
   .section-heading h2 {
     font-size: 30px;
   }
-  .course-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .beginner-calendar {
-    grid-column: 1 / -1;
-  }
   .course-card {
     height: 300px;
   }
-  .calendar-card {
-    padding: 20px;
+  .experience-item.is-open {
+    flex-grow: 3.2;
+  }
+  .experience-item.is-open .price-card {
+    max-width: 320px;
+  }
+  .price-inner {
+    width: 320px;
+    padding: 22px 18px 16px;
   }
   .course-card h3 {
     font-size: 26px;
@@ -1325,31 +1315,16 @@ nav.open a::after {
     gap: 7px;
     margin-top: 27px;
   }
-  .course-grid {
+  .experience-row {
     gap: 8px;
   }
-  .beginner-calendar {
+  .experience-item {
     border-radius: 21px;
-    /* Diving card above its price list on phones. */
-    grid-template-columns: 1fr;
-  }
-  .beginner-calendar > .course-card {
-    min-height: 280px;
-  }
-  .price-tabs {
-    align-self: stretch;
-  }
-  .price-tabs button {
-    flex: 1;
-    padding: 7px 8px;
   }
   .course-card {
     height: 280px;
     padding: 16px 12px;
     border-radius: 21px;
-  }
-  .course-grid > .course-card {
-    min-height: 280px;
   }
   .course-card h3 {
     font-size: 21px;
@@ -1368,9 +1343,8 @@ nav.open a::after {
     right: 9px;
     top: 9px;
   }
-  .calendar-card {
+  .price-inner {
     padding: 18px 16px 14px;
-    border-radius: 21px;
   }
   .quiz-panel {
     padding: 29px 14px 165px;
@@ -1556,5 +1530,50 @@ nav.open a::after {
   }
   .quick-service:has(svg) .quick-label {
     display: none;
+  }
+}
+/* Phones and small tablets: items stack; only the open item shows its
+   prices, the others offer a button to open them. */
+@media (max-width: 860px) {
+  .experience-row {
+    flex-direction: column;
+    height: auto;
+  }
+  .experience-item,
+  .experience-item.is-open {
+    flex: none;
+    flex-direction: column;
+    transition: box-shadow 0.4s ease;
+  }
+  .experience-item > .course-card {
+    min-height: 280px;
+  }
+  .price-card,
+  .experience-item.is-open .price-card {
+    max-width: none;
+  }
+  .price-card {
+    max-height: 0;
+    transition:
+      max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.35s ease;
+  }
+  .experience-item.is-open .price-card {
+    max-height: 1000px;
+  }
+  .price-inner {
+    width: auto;
+  }
+  .experience-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px;
+    border: 0;
+    background: transparent;
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 600;
   }
 }
