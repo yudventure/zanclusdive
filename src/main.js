@@ -6,13 +6,15 @@ import {
   planSummary as formatPlanSummary,
 } from "./domain.js";
 import { bookingDates } from "./booking-model.js";
-export function initializeWebsite(content) {
+import { dictionary, formatLongDate, intlLocale } from "./i18n.js";
+export function initializeWebsite(content, locale = "en") {
+  const t = dictionary(locale).booking;
   const experiences = content?.experiences || defaultExperiences;
   const WHATSAPP_NUMBER = content?.contact.whatsapp || "6285190849237";
   const activeKeys = Object.keys(experiences).filter(
     (key) => experiences[key].enabled !== false,
   );
-  const planSummary = (plan) => formatPlanSummary(plan, experiences);
+  const planSummary = (plan) => formatPlanSummary(plan, experiences, t.summary);
   const controller = new AbortController();
   const timeouts = [];
   const objectURLs = [];
@@ -44,15 +46,10 @@ export function initializeWebsite(content) {
   const todayKey = dateBounds.today;
   $('input[name="date"]').min = todayKey;
   $('input[name="date"]').max = dateBounds.last;
-  const formatDate = (key) =>
-    new Date(`${key}T12:00:00`).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+  const formatDate = (key) => formatLongDate(key, locale);
   function renderCalendar() {
     $("#month-label").textContent = new Date(year, month, 1).toLocaleDateString(
-      "id-ID",
+      intlLocale[locale],
       { month: "long", year: "numeric" },
     );
     const grid = $("#calendar-grid");
@@ -82,7 +79,7 @@ export function initializeWebsite(content) {
         closed;
       btn.setAttribute(
         "aria-label",
-        formatDate(key) + (closed ? " — ditutup" : ""),
+        formatDate(key) + (closed ? t.closedSuffix : ""),
       );
       if (closed) btn.classList.add("closed");
       btn.setAttribute("aria-pressed", String(key === selectedDate));
@@ -109,14 +106,14 @@ export function initializeWebsite(content) {
       !selectedDate || calendarLoading || calendarError || !calendarEnabled;
     $("#calendar-retry").hidden = !calendarError;
     $("#calendar-note").textContent = calendarLoading
-      ? "Memuat jadwal…"
+      ? t.loading
       : calendarError
-        ? "Jadwal belum dapat dimuat."
+        ? t.loadError
         : !calendarEnabled
-          ? "Program ini belum menerima booking."
+          ? t.disabled
           : selectedDate
-            ? `Tanggal booking: ${formatDate(selectedDate)}`
-            : "Pilih tanggal untuk booking.";
+            ? t.selected(formatDate(selectedDate))
+            : dictionary(locale).home.pickDateNote;
   }
   async function refreshCalendar() {
     const sequence = ++calendarSequence;
@@ -185,7 +182,9 @@ export function initializeWebsite(content) {
     $(".menu-toggle").setAttribute("aria-expanded", opened);
     $(".menu-toggle").setAttribute(
       "aria-label",
-      opened ? "Tutup menu" : "Buka menu",
+      opened
+        ? dictionary(locale).common.closeMenu
+        : dictionary(locale).common.openMenu,
     );
   };
   document.querySelectorAll("nav a").forEach(
@@ -255,9 +254,7 @@ export function initializeWebsite(content) {
   $("#see-all").onclick = () => {
     const more = $("#more-courses");
     more.hidden = !more.hidden;
-    $("#see-all").innerHTML = more.hidden
-      ? "Lihat semua <span>↗</span>"
-      : "Tutup <span>−</span>";
+    $("#see-all").innerHTML = more.hidden ? t.seeAllHtml : t.closeHtml;
     $("#see-all").setAttribute("aria-expanded", !more.hidden);
   };
   let quizStep = 0,
@@ -276,24 +273,21 @@ export function initializeWebsite(content) {
       progress = document.createElement("p");
     progress.className = "quiz-progress";
     progress.textContent =
-      quizStep < 2 ? `LANGKAH ${quizStep + 1} DARI 2` : "PILIHAN UNTUKMU";
+      quizStep < 2 ? t.quizStep(quizStep + 1) : t.quizResult;
     content.append(progress, title);
     if (quizStep < 2) {
-      title.textContent =
-        quizStep === 0
-          ? "Sudah pernah menyelam?"
-          : "Apa yang ingin kamu temukan?";
+      title.textContent = quizStep === 0 ? t.quizQ1 : t.quizQ2;
       const options = document.createElement("div");
       options.className = "quiz-options";
       const list =
         quizStep === 0
           ? [
-              ["Belum, ini pengalaman pertamaku", "new"],
-              ["Sudah, aku ingin menjelajah lagi", "experienced"],
+              [t.quizNew, "new"],
+              [t.quizExperienced, "experienced"],
             ]
           : [
-              ["Terumbu dan kehidupan laut", "nature"],
-              ["Fotografi dan pengalaman yang berbeda", "creative"],
+              [t.quizNature, "nature"],
+              [t.quizCreative, "creative"],
             ];
       list.forEach(([label, value]) =>
         options.append(
@@ -317,7 +311,7 @@ export function initializeWebsite(content) {
       content.append(desc);
       const button = document.createElement("button");
       button.className = "button dark";
-      button.textContent = "Rencanakan pengalaman ini ↗";
+      button.textContent = t.quizPlan;
       button.onclick = () => {
         $("#quiz-dialog").close();
         openBooking(choice);
@@ -327,7 +321,7 @@ export function initializeWebsite(content) {
     if (quizStep > 0) {
       const back = document.createElement("button");
       back.className = "quiz-back";
-      back.textContent = "← Kembali";
+      back.textContent = t.back;
       back.onclick = () => {
         quizStep--;
         renderQuiz();
@@ -335,12 +329,15 @@ export function initializeWebsite(content) {
       content.append(back);
     }
   }
-  $("#open-quiz").onclick = () => {
-    quizStep = 0;
-    answers = {};
-    renderQuiz();
-    $("#quiz-dialog").showModal();
-  };
+  document.querySelectorAll("#open-quiz, [data-quiz]").forEach(
+    (button) =>
+      (button.onclick = () => {
+        quizStep = 0;
+        answers = {};
+        renderQuiz();
+        $("#quiz-dialog").showModal();
+      }),
+  );
   $("#booking-form").onsubmit = async (event) => {
     event.preventDefault();
     if (submitting) return;
@@ -353,7 +350,7 @@ export function initializeWebsite(content) {
       notes: data.notes.trim(),
     };
     if (!plan.name) {
-      $('input[name="name"]').setCustomValidity("Tuliskan nama kamu.");
+      $('input[name="name"]').setCustomValidity(t.nameRequired);
       $('input[name="name"]').reportValidity();
       return;
     }
@@ -363,27 +360,26 @@ export function initializeWebsite(content) {
     const submit = $('#booking-form button[type="submit"]');
     submitting = true;
     submit.disabled = true;
-    submit.textContent = "Menyimpan booking…";
+    submit.textContent = t.saving;
     $("#booking-form").setAttribute("aria-busy", "true");
     $("#booking-error").hidden = true;
     try {
-      const response = await fetch("/api/bookings", {
+      // English visitors get English server errors; Indonesian is the default.
+      const endpoint = "/api/bookings" + (locale === "en" ? "?locale=en" : "");
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...plan, requestId: requestAttempt.id }),
         signal: controller.signal,
       });
       const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Booking belum dapat disimpan.");
+      if (!response.ok) throw new Error(result.error || t.saveFailed);
       lastPlan = plan;
       receipt = result;
     } catch (error) {
       if (controller.signal.aborted) return;
       $("#booking-error").textContent =
-        error.message === "Failed to fetch"
-          ? "Koneksi terputus. Periksa internet lalu kirim ulang; booking yang sama tidak akan dibuat dua kali."
-          : error.message;
+        error.message === "Failed to fetch" ? t.offline : error.message;
       $("#booking-error").hidden = false;
       $("#booking-error").focus();
       refreshCalendar();
@@ -391,7 +387,7 @@ export function initializeWebsite(content) {
     } finally {
       submitting = false;
       submit.disabled = false;
-      submit.textContent = "Kirim permintaan booking ↗";
+      submit.textContent = t.submit;
       $("#booking-form").setAttribute("aria-busy", "false");
     }
     if (controller.signal.aborted) return;
@@ -400,8 +396,10 @@ export function initializeWebsite(content) {
       Number(selectedDate.slice(0, 4)),
       Number(selectedDate.slice(5, 7)) - 1,
     ];
-    $("#booking-reference").textContent =
-      `Referensi: ${receipt.reference}${receipt.demo ? " · DEMO" : ""}`;
+    $("#booking-reference").textContent = t.reference(
+      receipt.reference,
+      receipt.demo,
+    );
     $("#booking-summary").textContent = planSummary({
       ...lastPlan,
       date: formatDate(lastPlan.date),
@@ -411,8 +409,10 @@ export function initializeWebsite(content) {
       WHATSAPP_NUMBER +
       "?text=" +
       encodeURIComponent(
-        `Halo Zanclus! Saya ingin konfirmasi booking ${receipt.reference}.\nStatus: menunggu konfirmasi tim.\n\n` +
+        t.whatsapp(
+          receipt.reference,
           planSummary({ ...lastPlan, date: formatDate(lastPlan.date) }),
+        ),
       );
     $("#booking-form").hidden = true;
     $("#booking-result").hidden = false;
@@ -433,13 +433,17 @@ export function initializeWebsite(content) {
   };
   $("#download-plan").onclick = () => {
     if (!lastPlan) return;
-    const text = `ZANCLUS DIVE CENTER\nPERMINTAAN BOOKING${receipt.demo ? " DEMO" : ""}\nReferensi: ${receipt.reference}\nStatus: menunggu konfirmasi tim\n\n${planSummary(lastPlan)}\n\nJadwal, biaya, dan program perlu dikonfirmasi dengan tim Zanclus. Belum ada pembayaran.\n`;
+    const text = t.download(
+      receipt.reference,
+      receipt.demo,
+      planSummary(lastPlan),
+    );
     const url = URL.createObjectURL(
       new Blob([text], { type: "text/plain;charset=utf-8" }),
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `zanclus-rencana-${lastPlan.date}.txt`;
+    link.download = t.fileName(lastPlan.date);
     link.click();
     const timeout = setTimeout(() => URL.revokeObjectURL(url), 1000);
     timeouts.push(timeout);

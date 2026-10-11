@@ -10,6 +10,7 @@ import { withShop } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
+import { withTranslations } from "../content-i18n.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -59,8 +60,12 @@ export async function getContent() {
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withActivities(
-      withPhotography(withContactFields(withShop(JSON.parse(rows[0].payload)))),
+    content: withTranslations(
+      withActivities(
+        withPhotography(
+          withContactFields(withShop(JSON.parse(rows[0].payload))),
+        ),
+      ),
     ),
     version: rows[0].version,
   };

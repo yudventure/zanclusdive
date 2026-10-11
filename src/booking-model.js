@@ -7,6 +7,41 @@ export class BookingError extends Error {
   }
 }
 
+// Public booking errors are written in Indonesian; English visitors get these.
+const englishErrors = {
+  "Data booking tidak valid.": "Invalid booking data.",
+  "Permintaan tidak valid. Muat ulang halaman lalu coba lagi.":
+    "Invalid request. Reload the page and try again.",
+  "Permintaan tidak dapat diproses.": "This request can't be processed.",
+  "Periksa nama dan catatan booking.":
+    "Please check the name and notes for your booking.",
+  "Isi nomor WhatsApp yang dapat dihubungi, termasuk kode negara.":
+    "Enter a WhatsApp number we can reach, including the country code.",
+  "Jumlah peserta harus 1–30 orang.": "Participants must be between 1 and 30.",
+  "Pilih tanggal mulai hari ini hingga satu tahun ke depan (WIT).":
+    "Choose a date from today up to one year ahead (WIT).",
+  "Program ini belum menerima booking. Pilih program lain.":
+    "This program isn't taking bookings yet. Please choose another program.",
+  "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.":
+    "This date is closed for the selected program. Please choose another date.",
+  "Program atau bulan kalender tidak valid.":
+    "Invalid program or calendar month.",
+  "Bulan berada di luar rentang booking.":
+    "That month is outside the booking window.",
+  "Permintaan ini sudah dikirim. Buat booking baru untuk data berbeda.":
+    "This request was already sent. Make a new booking for different details.",
+  "Terlalu banyak percobaan booking. Coba lagi dalam 15 menit atau hubungi WhatsApp.":
+    "Too many booking attempts. Try again in 15 minutes or contact us on WhatsApp.",
+  "Data booking tidak valid atau terlalu besar.":
+    "Booking data is invalid or too large.",
+  "Booking belum dapat disimpan. Coba lagi atau hubungi tim melalui WhatsApp.":
+    "The booking couldn't be saved. Try again or contact our team on WhatsApp.",
+};
+export function bookingErrorMessage(message, locale) {
+  if (locale !== "en") return message;
+  return englishErrors[message] ?? "Please check your booking details.";
+}
+
 // Booking dates follow the dive center's timezone, including for overseas guests.
 export function bookingDates(now = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {

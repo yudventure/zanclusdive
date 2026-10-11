@@ -1,21 +1,34 @@
 import DiveShop from "../../src/shop/DiveShop.jsx";
 import { publicContent } from "../../src/server/store.js";
+import { requestLocale, languageAlternates } from "../../src/server/locale.js";
+import { localizeContent } from "../../src/content-i18n.js";
+import { dictionary } from "../../src/i18n.js";
 import { isDemo } from "../../src/cms-mode.js";
 export const dynamic = "force-dynamic";
-export const metadata = {
-  title: "Dive Shop — Perlengkapan & Rental | Zanclus Dive Center",
-  description:
-    "Jelajahi perlengkapan diving untuk dibeli atau disewa. Susun kebutuhan alatmu dan konfirmasi bersama tim Zanclus melalui WhatsApp.",
-};
+export async function generateMetadata() {
+  const locale = await requestLocale();
+  const t = dictionary(locale).meta;
+  return {
+    title: t.shopTitle,
+    description: t.shopDescription,
+    alternates: {
+      canonical: locale === "id" ? "/id/dive-shop" : "/dive-shop",
+      languages: languageAlternates("/dive-shop"),
+    },
+  };
+}
 export default async function ShopPage({ searchParams }) {
   const query = await searchParams;
-  const content = await publicContent();
+  const locale = await requestLocale();
+  const content = localizeContent(await publicContent(), locale);
   return (
     <DiveShop
       shop={content.shop}
       contact={content.contact}
       images={content.images}
       activities={content.activities}
+      tagline={content.text.tagline}
+      locale={locale}
       demo={isDemo()}
       initialMode={query.mode === "rental" ? "rental" : "sale"}
       today={new Date().toLocaleDateString("en-CA", {

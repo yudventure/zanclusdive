@@ -1083,3 +1083,11 @@
     font-size: 0;
   }
 }
+.admin-language {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.admin-language .admin-subtle {
+  margin: 0;
+}

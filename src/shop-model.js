@@ -1,3 +1,4 @@
+import { dictionary, formatIDR } from "./i18n.js";
 export const shopCategories = {
   mask: "Mask & snorkel",
   fins: "Fins",
@@ -117,12 +118,7 @@ export function demoShop() {
 export function withShop(content, fallback = emptyShop) {
   return { ...content, shop: content.shop ?? structuredClone(fallback) };
 }
-export const rupiah = (amount) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+export const rupiah = (amount, locale = "id") => formatIDR(amount, locale);
 
 function validDate(date) {
   if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))
@@ -132,14 +128,15 @@ function validDate(date) {
     !Number.isNaN(value.valueOf()) && value.toISOString().slice(0, 10) === date
   );
 }
-export function quoteOrder(products, cart, days = 1) {
+export function quoteOrder(products, cart, days = 1, locale = "id") {
+  const t = dictionary(locale).order;
   if (!Array.isArray(cart) || !cart.length || cart.length > 40)
-    throw new Error("Pilih perlengkapan terlebih dahulu.");
+    throw new Error(t.pickGear);
   if (
     cart.some((item) => item.mode === "rental") &&
     (!Number.isInteger(days) || days < 1 || days > 30)
   )
-    throw new Error("Durasi rental harus 1–30 hari.");
+    throw new Error(t.rentalDays);
   const seen = new Set();
   const lines = cart.map((item) => {
     const product = products.find((p) => p.id === item.id);
@@ -151,22 +148,20 @@ export function quoteOrder(products, cart, days = 1) {
       !product[item.mode === "sale" ? "saleEnabled" : "rentalEnabled"] ||
       seen.has(key)
     )
-      throw new Error(
-        "Pilihan perlengkapan tidak tersedia. Perbarui pesananmu.",
-      );
+      throw new Error(t.unavailable);
     seen.add(key);
     if (
       !Number.isInteger(item.quantity) ||
       item.quantity < 1 ||
       item.quantity > 10
     )
-      throw new Error("Jumlah setiap perlengkapan harus 1–10.");
+      throw new Error(t.quantity);
     const price = product[item.mode === "sale" ? "salePrice" : "rentalPrice"];
     if (
       price !== null &&
       (!Number.isSafeInteger(price) || price <= 0 || price > 1e9)
     )
-      throw new Error("Harga perlengkapan belum valid.");
+      throw new Error(t.price);
     return {
       ...item,
       name: product.name,
@@ -184,28 +179,34 @@ export function quoteOrder(products, cart, days = 1) {
     hasRental: lines.some((line) => line.mode === "rental"),
   };
 }
-export function orderMessage(products, cart, details, demo = false) {
-  const quote = quoteOrder(products, cart, details.days);
+export function orderMessage(
+  products,
+  cart,
+  details,
+  demo = false,
+  locale = "id",
+) {
+  const t = dictionary(locale).order;
+  const quote = quoteOrder(products, cart, details.days, locale);
   const name = details.name?.trim();
-  if (!name || name.length > 80)
-    throw new Error("Isi nama, maksimal 80 karakter.");
+  if (!name || name.length > 80) throw new Error(t.name);
   if (quote.hasRental && !validDate(details.startDate))
-    throw new Error("Pilih tanggal mulai rental yang valid.");
+    throw new Error(t.startDate);
   const notes = details.notes?.trim() || "";
-  if (notes.length > 500) throw new Error("Catatan maksimal 500 karakter.");
+  if (notes.length > 500) throw new Error(t.notes);
   return [
-    `Halo Zanclus! Saya ${name}, ingin konfirmasi pesanan Dive Shop${demo ? " (contoh demo)" : ""}.`,
+    t.greeting(name, demo),
     "",
     ...quote.lines.map(
       (line) =>
-        `${line.mode === "sale" ? "BELI" : "RENTAL"} · ${line.name} × ${line.quantity} — ${line.total === null ? "minta harga" : rupiah(line.total)}`,
+        `${line.mode === "sale" ? t.sale : t.rental} · ${line.name} × ${line.quantity} — ${line.total === null ? t.askPrice : rupiah(line.total, locale)}`,
     ),
     ...(quote.hasRental
-      ? ["", `Rental mulai ${details.startDate}, selama ${details.days} hari.`]
+      ? ["", t.rentalPeriod(details.startDate, details.days)]
       : []),
     "",
-    `Estimasi ${quote.needsQuote ? "harga yang tercantum" : "total"}: ${rupiah(quote.total)}${quote.needsQuote ? " + alat yang perlu penawaran" : ""}.`,
-    ...(notes ? [`Catatan / ukuran: ${notes}`] : []),
-    "Mohon konfirmasi stok, ukuran, harga final, serta pengambilan/pengiriman dan ketentuan rental.",
+    t.estimate(quote.needsQuote, rupiah(quote.total, locale)),
+    ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
+    t.closing,
   ].join("\n");
 }

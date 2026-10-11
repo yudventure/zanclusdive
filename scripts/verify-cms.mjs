@@ -114,7 +114,8 @@ await page
   .filter({ hasText: "Perubahan sudah tersimpan" })
   .waitFor();
 const publicPage = await context.newPage();
-await publicPage.goto(baseURL, { waitUntil: "networkidle" });
+// Indonesian CMS text is shown on the Indonesian website.
+await publicPage.goto(baseURL + "/id", { waitUntil: "networkidle" });
 assert.ok(
   (await publicPage.locator("#hero-title").textContent()).includes(
     "Jelajahi bersama Zanclus,",

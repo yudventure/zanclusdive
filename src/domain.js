@@ -45,6 +45,18 @@ export function recommendation(level, interest) {
   if (level === "new") return "beginner";
   return interest === "creative" ? "specialty" : "explorer";
 }
-export function planSummary(plan, catalog = experiences) {
-  return `Nama: ${plan.name}${plan.phone ? "\nWhatsApp: " + plan.phone : ""}\nTanggal rencana: ${plan.date}\nPeserta: ${plan.people}\nPengalaman: ${catalog[plan.experience].title}\nCatatan: ${plan.notes || "—"}`;
+const summaryLabels = {
+  name: "Nama",
+  whatsapp: "WhatsApp",
+  date: "Tanggal rencana",
+  people: "Peserta",
+  experience: "Pengalaman",
+  notes: "Catatan",
+};
+export function planSummary(
+  plan,
+  catalog = experiences,
+  labels = summaryLabels,
+) {
+  return `${labels.name}: ${plan.name}${plan.phone ? `\n${labels.whatsapp}: ` + plan.phone : ""}\n${labels.date}: ${plan.date}\n${labels.people}: ${plan.people}\n${labels.experience}: ${catalog[plan.experience].title}\n${labels.notes}: ${plan.notes || "—"}`;
 }

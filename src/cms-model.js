@@ -3,6 +3,11 @@ import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import { blankSocials, socialPlatforms } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import {
+  englishDefaults,
+  validateTranslations,
+  withTranslations,
+} from "./content-i18n.js";
+import {
   defaultSiteImages,
   siteImageFields,
   photographyVersion,
@@ -10,6 +15,7 @@ import {
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 export const defaultContent = {
   photographyVersion,
+  en: structuredClone(englishDefaults),
   activities: structuredClone(defaultActivities),
   shop: structuredClone(emptyShop),
   text: {
@@ -189,14 +195,16 @@ export function validateContent(input) {
   );
   if (!Object.values(catalog).some((e) => e.enabled))
     throw new Error("Minimal satu pengalaman harus aktif.");
+  const shop = validateShop(input.shop);
   return {
     photographyVersion,
     text,
     contact,
     images,
     experiences: catalog,
-    shop: validateShop(input.shop),
+    shop,
     activities: validateActivities(input.activities),
+    en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }
 export function validateActivities(input) {

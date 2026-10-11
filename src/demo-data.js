@@ -7,6 +7,16 @@ export const demoAccount = {
   password: "ZanclusDemo2026!",
 };
 
+// English wording for the demo-only values set in demoSeed.
+export function withDemoEnglish(content) {
+  const en = structuredClone(content.en);
+  en.contact.location = "Raja Ampat, Southwest Papua — sample demo location";
+  en.experiences.beginner.duration = "Half day · demo sample";
+  en.experiences.explorer.duration = "2 dives · demo sample";
+  en.experiences.specialty.duration = "1 day · demo sample";
+  return { ...content, en };
+}
+
 export function demoSeed(now = new Date()) {
   const today = now.toLocaleDateString("en-CA", { timeZone: "Asia/Jayapura" });
   const content = structuredClone(defaultContent);
@@ -23,7 +33,7 @@ export function demoSeed(now = new Date()) {
   content.experiences.specialty.duration = "1 hari · contoh demo";
   return {
     contactDefaultsVersion: 1,
-    content,
+    content: withDemoEnglish(content),
     version: 1,
     media: [],
     failures: { attempts: 0, windowStart: 0 },

@@ -4,18 +4,21 @@ import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
-import { activityLabels } from "./activity-model.js";
 import ScrollEffects from "./components/ScrollEffects.jsx";
+import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
+import { dictionary, formatIDR, localeHref } from "./i18n.js";
 
-function ExperienceCard({ activityKey, activity, className, kicker }) {
+function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
+  const t = dictionary(locale);
+  const label = t.activityLabels[activityKey];
   return (
     <a
       className={`course-card ${className}`}
       data-activity={activityKey}
-      href={`/${activityKey}`}
+      href={localeHref(locale, `/${activityKey}`)}
       hidden={!activity.enabled}
-      aria-label={`Lihat detail ${activityLabels[activityKey]}`}
+      aria-label={t.common.viewDetailOf(label)}
       data-reveal={activityKey === "diving" ? undefined : true}
       style={{ "--reveal-delay": activityKey === "trip" ? "160ms" : "80ms" }}
     >
@@ -38,34 +41,69 @@ function ExperienceCard({ activityKey, activity, className, kicker }) {
       </span>
       <div>
         <span className="card-kicker">{kicker}</span>
-        <h3>{activityLabels[activityKey]}</h3>
+        <h3>{label}</h3>
         <small className="course-price">
           {activity.price === null
-            ? "Biaya sesuai penawaran"
-            : `Mulai ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(activity.price)}`}
+            ? t.common.priceOnQuote
+            : t.common.priceFrom(formatIDR(activity.price, locale))}
         </small>
         <small className="course-price course-duration">
           {activity.duration}
         </small>
         <p>{activity.summary}</p>
         <span className="course-card-cta">
-          Lihat detail <span aria-hidden="true">↗</span>
+          {t.common.viewDetail} <span aria-hidden="true">↗</span>
         </span>
       </div>
     </a>
   );
 }
-export default function HomePage({ content, demo = false }) {
+function HeroIcon({ name }) {
+  const paths = {
+    waves:
+      "M3 8c1.5 0 1.5-1.5 3-1.5S7.5 8 9 8s1.5-1.5 3-1.5S13.5 8 15 8s1.5-1.5 3-1.5S19.5 8 21 8M3 13c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5M3 18c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5",
+    gear: "M5.5 8.5h13l-1.2 11H6.7l-1.2-11ZM9 8.5V7a3 3 0 0 1 6 0v1.5",
+    calendar: "M5 6.5h14v13H5zM5 10.5h14M9 4v4M15 4v4M9 14h2M13 14h2M9 17h2",
+  };
+  return (
+    <svg className="hero-stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d={paths[name]}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+export default function HomePage({ content, locale = "en", demo = false }) {
   const motionRoot = useRef(null);
+  const t = dictionary(locale);
+  const h = t.home;
+  // Hero facts come from live content, never invented numbers.
+  const activeActivities = Object.values(content.activities).filter(
+    (activity) => activity.enabled,
+  ).length;
+  const gearCount = content.shop.products.filter((p) => p.enabled).length;
+  const stats = [
+    ["waves", activeActivities, h.statExperiences],
+    ...(gearCount ? [["gear", gearCount, h.statGear]] : []),
+    ["calendar", "365", h.statBooking],
+  ];
+  const featured = ["snorkeling", "trip", "diving"].find(
+    (key) => content.activities[key].enabled,
+  );
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
     : "+" + WHATSAPP_NUMBER;
-  useEffect(() => initializeWebsite(content), [content]);
+  useEffect(() => initializeWebsite(content, locale), [content, locale]);
   return (
     <>
       <a className="skip-link" href="#main">
-        {"Lewati ke konten"}
+        {t.common.skipToContent}
       </a>
       <div
         className="page-shell"
@@ -78,11 +116,7 @@ export default function HomePage({ content, demo = false }) {
       >
         <ScrollEffects rootRef={motionRoot} />
         <header className="site-header">
-          <a
-            className="brand"
-            href="#"
-            aria-label="Zanclus Dive Center — Beranda"
-          >
+          <a className="brand" href="#" aria-label={t.common.homeLabel}>
             <img
               src="/assets/logo-header-dark.svg"
               alt="Zanclus Dive Center"
@@ -92,82 +126,127 @@ export default function HomePage({ content, demo = false }) {
           </a>
           <button
             className="menu-toggle"
-            aria-label="Buka menu"
+            aria-label={t.common.openMenu}
             aria-expanded="false"
             aria-controls="navigation"
           >
             <span></span>
             <span></span>
           </button>
-          <nav id="navigation" aria-label="Navigasi utama">
+          <nav id="navigation" aria-label={t.common.mainNav}>
             <a href="#" className="active">
-              {"Beranda"}
+              {t.common.home}
             </a>
-            <a href="#experiences">{"Pengalaman"}</a>
-            <a href="#ocean">{"Jelajahi laut"}</a>
-            <a href="#calendar">{"Rencana"}</a>
-            <a href="/dive-shop">{"Dive Shop"}</a>
-            <a href="#contact">{"Kontak"}</a>
+            <a href="#experiences">{t.common.experiences}</a>
+            <a href="#ocean">{t.common.exploreOcean}</a>
+            <a href="#calendar">{t.common.plan}</a>
+            <a href={localeHref(locale, "/dive-shop")}>{"Dive Shop"}</a>
+            <a href="#contact">{t.common.contact}</a>
           </nav>
-          <a
-            className="button quick-service"
-            href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Chat WhatsApp untuk bantuan cepat"
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M20.5 11.6a8.5 8.5 0 0 1-12.7 7.4L3 20.5l1.5-4.7A8.5 8.5 0 1 1 20.5 11.6Z"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8.3 7.5c-.6.3-.8 1.1-.5 2 .8 2.3 2.5 4 4.8 4.9.9.3 1.7.1 2-.5l.6-1.1-2-1-.8.9a6.2 6.2 0 0 1-2.8-2.8l.9-.8-1-2-1.2.4Z"
-                fill="currentColor"
-              />
-            </svg>
-            <span className="quick-label">
-              <span className="quick-prefix">Chat </span>WhatsApp
-            </span>
-          </a>
+          <div className="header-actions">
+            <LanguageSwitch locale={locale} path="/" />
+            <a
+              className="button quick-service"
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappHelp)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t.common.quickChat}
+            >
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M20.5 11.6a8.5 8.5 0 0 1-12.7 7.4L3 20.5l1.5-4.7A8.5 8.5 0 1 1 20.5 11.6Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8.3 7.5c-.6.3-.8 1.1-.5 2 .8 2.3 2.5 4 4.8 4.9.9.3 1.7.1 2-.5l.6-1.1-2-1-.8.9a6.2 6.2 0 0 1-2.8-2.8l.9-.8-1-2-1.2.4Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span className="quick-label">
+                <span className="quick-prefix">Chat </span>WhatsApp
+              </span>
+            </a>
+          </div>
         </header>
         <main id="main">
           <section className="hero" aria-labelledby="hero-title" data-parallax>
             <img
               className="hero-photo"
               src={content.images.hero}
-              alt="Visual konsep petualangan scuba diving di bawah laut"
+              alt={h.heroAlt}
               width="1672"
               height="941"
               fetchPriority="high"
             />
-            <div className="hero-topline">
-              <span className="tiny-dot"></span>
-              {content.text.heroEyebrow}
-            </div>
-            <h1 id="hero-title">
-              {content.text.heroTitle1}
-              <br />
-              <span>{content.text.heroTitle2}</span>
-            </h1>
-            <div className="hero-bottom">
-              <p>
-                {content.text.tagline}
+            <div className="hero-content">
+              <p className="hero-topline">{content.text.heroEyebrow}</p>
+              <h1 id="hero-title">
+                {content.text.heroTitle1}
                 <br />
-                {content.text.heroDescription}
+                <span>{content.text.heroTitle2}</span>
+              </h1>
+              <p className="hero-lead">
+                {content.text.tagline} {content.text.heroDescription}
               </p>
-              <button className="button primary" data-book>
-                {content.text.heroButton}
-                <span>{"↗"}</span>
-              </button>
+              <div className="hero-actions">
+                <button className="button hero-primary" data-book>
+                  {content.text.heroButton}
+                  <span aria-hidden="true">→</span>
+                </button>
+                <button className="hero-quiz" type="button" data-quiz>
+                  <span className="hero-quiz-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>
+                    {h.quizCta}
+                    <small>{h.quizMeta}</small>
+                  </span>
+                </button>
+              </div>
             </div>
-            <div className="hero-caption">
-              <span>{"01 — THE OCEAN IS CALLING"}</span>
-              <a href="#experiences" aria-label="Jelajahi pengalaman">
-                {"SCROLL TO EXPLORE "}
-                <span>{"↓"}</span>
+            {featured && (
+              <a
+                className="hero-feature"
+                href={localeHref(locale, `/${featured}`)}
+              >
+                <img
+                  src={content.activities[featured].cardImage}
+                  srcSet={photoSrcSet(content.activities[featured].cardImage)}
+                  sizes="96px"
+                  alt=""
+                  width="96"
+                  height="72"
+                />
+                <span className="hero-feature-copy">
+                  <strong>{t.activityLabels[featured]}</strong>
+                  <small>{content.activities[featured].summary}</small>
+                </span>
+                <span className="hero-feature-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            )}
+            <div className="hero-footer">
+              <dl className="hero-stats">
+                {stats.map(([icon, value, label]) => (
+                  <div key={icon}>
+                    <HeroIcon name={icon} />
+                    <dt>{value}</dt>
+                    <dd>{label}</dd>
+                  </div>
+                ))}
+              </dl>
+              <a
+                className="hero-scroll"
+                href="#experiences"
+                aria-label={h.exploreExperiences}
+              >
+                <span className="hero-mouse" aria-hidden="true" />
+                {h.scrollDown}
               </a>
             </div>
           </section>
@@ -187,7 +266,7 @@ export default function HomePage({ content, demo = false }) {
                 </h2>
               </div>
               <button className="button lime small" id="see-all">
-                {"Lihat semua "}
+                {h.seeAll + " "}
                 <span>{"↗"}</span>
               </button>
             </div>
@@ -208,45 +287,42 @@ export default function HomePage({ content, demo = false }) {
             >
               <article
                 className="beginner-calendar"
-                aria-label="Diving dan kalender booking"
+                aria-label={h.divingCalendar}
                 data-reveal
               >
                 <ExperienceCard
                   activityKey="diving"
                   activity={content.activities.diving}
                   className="beginner"
-                  kicker="SELAMI CERITA BARU"
+                  kicker={h.divingKicker}
+                  locale={locale}
                 />
                 <div className="calendar-card" id="calendar">
                   <div className="calendar-heading">
-                    <button id="prev-month" aria-label="Bulan sebelumnya">
+                    <button id="prev-month" aria-label={h.prevMonth}>
                       {"‹"}
                     </button>
                     <h3 id="month-label"></h3>
-                    <button id="next-month" aria-label="Bulan berikutnya">
+                    <button id="next-month" aria-label={h.nextMonth}>
                       {"›"}
                     </button>
                   </div>
                   <div className="weekday-row" aria-hidden="true">
-                    <span>{"S"}</span>
-                    <span>{"S"}</span>
-                    <span>{"R"}</span>
-                    <span>{"K"}</span>
-                    <span>{"J"}</span>
-                    <span>{"S"}</span>
-                    <span>{"M"}</span>
+                    {h.weekdays.map((day, index) => (
+                      <span key={index}>{day}</span>
+                    ))}
                   </div>
                   <div
                     id="calendar-grid"
                     className="calendar-grid"
                     role="group"
-                    aria-label="Pilih tanggal booking diving"
+                    aria-label={h.pickDate}
                   ></div>
                   <label
                     className="calendar-program"
                     htmlFor="calendar-experience"
                   >
-                    Program diving
+                    {h.program}
                     <select id="calendar-experience">
                       {Object.entries(content.experiences)
                         .filter(([, e]) => e.enabled)
@@ -262,7 +338,7 @@ export default function HomePage({ content, demo = false }) {
                     id="calendar-note"
                     aria-live="polite"
                   >
-                    {"Pilih tanggal untuk booking."}
+                    {h.pickDateNote}
                   </p>
                   <button
                     className="button dark calendar-book-button"
@@ -271,7 +347,7 @@ export default function HomePage({ content, demo = false }) {
                     disabled
                     aria-describedby="calendar-note calendar-book-help"
                   >
-                    Booking tanggal ini <span aria-hidden="true">↗</span>
+                    {h.bookDate} <span aria-hidden="true">↗</span>
                   </button>
                   <button
                     className="text-button"
@@ -279,16 +355,11 @@ export default function HomePage({ content, demo = false }) {
                     type="button"
                     hidden
                   >
-                    Muat ulang jadwal
+                    {h.reloadSchedule}
                   </button>
-                  <small id="calendar-book-help">
-                    Jadwal WIT · Booking dikonfirmasi oleh tim.
-                  </small>
+                  <small id="calendar-book-help">{h.scheduleHelp}</small>
                   <noscript>
-                    <small>
-                      Aktifkan JavaScript untuk memilih tanggal, atau hubungi
-                      WhatsApp di bawah.
-                    </small>
+                    <small>{h.noscript}</small>
                   </noscript>
                 </div>
               </article>
@@ -296,13 +367,15 @@ export default function HomePage({ content, demo = false }) {
                 activityKey="snorkeling"
                 activity={content.activities.snorkeling}
                 className="advanced"
-                kicker="DEKAT DENGAN LAUT"
+                kicker={h.snorkelingKicker}
+                locale={locale}
               />
               <ExperienceCard
                 activityKey="trip"
                 activity={content.activities.trip}
                 className="specialty"
-                kicker="JELAJAH BERSAMA"
+                kicker={h.tripKicker}
+                locale={locale}
               />
             </div>
             <div className="quiz-panel" data-reveal>
@@ -310,7 +383,7 @@ export default function HomePage({ content, demo = false }) {
               <h2>{content.text.quizTitle}</h2>
               <p>{content.text.quizDescription}</p>
               <button className="button quiz-button" id="open-quiz">
-                {"Temukan pilihanmu "}
+                {h.findChoice + " "}
                 <span>{"↗"}</span>
               </button>
               <div className="photo-fan" aria-hidden="true">
@@ -337,13 +410,9 @@ export default function HomePage({ content, demo = false }) {
               </div>
             </div>
             <div id="more-courses" className="more-courses" hidden>
-              <p>
-                {
-                  "Setiap pengalaman disesuaikan dengan kemampuan dan kondisi laut. Pilih kartu untuk melihat detail, lalu diskusikan rencanamu dengan tim Zanclus."
-                }
-              </p>
+              <p>{h.moreCourses}</p>
               <button className="button dark" data-book>
-                {"Susun rencana dive "}
+                {h.planDive + " "}
                 <span>{"↗"}</span>
               </button>
             </div>
@@ -368,16 +437,16 @@ export default function HomePage({ content, demo = false }) {
                 <img
                   className="ocean-photo"
                   src={content.images.reef}
-                  alt="Visual konsep penyu dan kehidupan terumbu"
+                  alt={h.reefAlt}
                   width="1200"
                   height="800"
                   loading="lazy"
                 />
-                <span>{"01 / KEHIDUPAN LAUT"}</span>
+                <span>{h.reefLabel}</span>
                 <h3>
-                  {"Warna yang"}
+                  {h.reefTitle[0]}
                   <br />
-                  {"tak pernah biasa."}
+                  {h.reefTitle[1]}
                 </h3>
               </article>
               <article
@@ -390,21 +459,21 @@ export default function HomePage({ content, demo = false }) {
                   src={content.images.ocean}
                   srcSet={photoSrcSet(content.images.ocean)}
                   sizes="(max-width: 700px) 90vw, 45vw"
-                  alt="Visual konsep manta di laut terbuka"
+                  alt={h.oceanAlt}
                   width="1200"
                   height="800"
                   loading="lazy"
                 />
-                <span>{"02 / RUANG UNTUK MENJELAJAH"}</span>
+                <span>{h.oceanLabel}</span>
                 <h3>
-                  {"Lebih dekat"}
+                  {h.oceanTitle[0]}
                   <br />
-                  {"dengan laut."}
+                  {h.oceanTitle[1]}
                 </h3>
               </article>
             </div>
           </section>
-          <ShopTeaser shop={content.shop} demo={demo} />
+          <ShopTeaser shop={content.shop} demo={demo} locale={locale} />
           <section
             className="contact-section"
             id="contact"
@@ -422,23 +491,19 @@ export default function HomePage({ content, demo = false }) {
               </p>
               <div className="contact-actions">
                 <button className="button dark" data-book>
-                  {"Rencanakan bersama Zanclus "}
+                  {h.planWithZanclus + " "}
                   <span>{"↗"}</span>
                 </button>
                 <a
                   className="contact-chat"
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin berdiskusi tentang rencana diving saya.")}`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappDiscuss)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Chat dulu dengan tim <span aria-hidden="true">↗</span>
+                  {h.chatTeam} <span aria-hidden="true">↗</span>
                 </a>
               </div>
-              <p className="contact-note">
-                {
-                  "Tanggal dan program perlu dikonfirmasi dengan tim sebelum perjalanan."
-                }
-              </p>
+              <p className="contact-note">{h.contactNote}</p>
             </div>
             <div
               className="contact-panel"
@@ -448,14 +513,11 @@ export default function HomePage({ content, demo = false }) {
               <p className="contact-panel-label">
                 <span /> LET'S TALK ABOUT YOUR NEXT DIVE
               </p>
-              <h3>Tim Zanclus siap membantu.</h3>
-              <p>
-                Mulai dari pertanyaan sederhana. Kita susun rencana yang sesuai
-                denganmu.
-              </p>
+              <h3>{h.teamReady}</h3>
+              <p>{h.teamIntro}</p>
               <a
                 className="contact-channel"
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving dan perlengkapan.")}`}
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappInfo)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -487,9 +549,7 @@ export default function HomePage({ content, demo = false }) {
                   </span>
                 </a>
               )}
-              <p className="contact-panel-note">
-                Diving · Snorkeling · Trip · Perlengkapan
-              </p>
+              <p className="contact-panel-note">{h.contactTopics}</p>
             </div>
           </section>
         </main>
@@ -498,27 +558,24 @@ export default function HomePage({ content, demo = false }) {
           activities={content.activities}
           tagline={content.text.tagline}
           demo={demo}
+          locale={locale}
           home
         />
       </div>
       <dialog id="quiz-dialog" className="modal">
-        <button className="close-modal" aria-label="Tutup kuis">
+        <button className="close-modal" aria-label={h.closeQuiz}>
           {"×"}
         </button>
         <p className="eyebrow">{"FIND YOUR NEXT DIVE"}</p>
         <div id="quiz-content"></div>
       </dialog>
       <dialog id="booking-dialog" className="modal booking-modal">
-        <button className="close-modal" aria-label="Tutup formulir">
+        <button className="close-modal" aria-label={h.closeForm}>
           {"×"}
         </button>
         <p className="eyebrow">{"LET'S PLAN SOMETHING GOOD"}</p>
-        <h2>{"Booking penyelamanmu."}</h2>
-        <p className="muted">
-          {
-            "Pilih program dan tanggal, lalu isi data peserta. Tim Zanclus akan menghubungimu untuk konfirmasi jadwal dan biaya."
-          }
-        </p>
+        <h2>{h.bookingTitle}</h2>
+        <p className="muted">{h.bookingIntro}</p>
         <form id="booking-form">
           <input
             name="website"
@@ -528,17 +585,17 @@ export default function HomePage({ content, demo = false }) {
             aria-hidden="true"
           />
           <label>
-            {"Nama"}
+            {h.name}
             <input
               name="name"
               autoComplete="name"
               required
               maxLength="80"
-              placeholder="Nama kamu"
+              placeholder={h.namePlaceholder}
             />
           </label>
           <label>
-            Nomor WhatsApp peserta
+            {h.phone}
             <input
               name="phone"
               type="tel"
@@ -547,16 +604,16 @@ export default function HomePage({ content, demo = false }) {
               required
               minLength="8"
               maxLength="30"
-              placeholder="Contoh: +62 851 9084 9237"
+              placeholder={h.phonePlaceholder}
             />
           </label>
           <div className="form-row grid grid-cols-2 gap-4">
             <label>
-              {"Tanggal booking (WIT)"}
+              {h.date}
               <input type="date" name="date" required />
             </label>
             <label>
-              {"Jumlah peserta"}
+              {h.people}
               <input
                 type="number"
                 name="people"
@@ -568,7 +625,7 @@ export default function HomePage({ content, demo = false }) {
             </label>
           </div>
           <label>
-            {"Pengalaman yang diminati"}
+            {h.experience}
             <select name="experience">
               {Object.entries(content.experiences)
                 .filter(([, e]) => e.enabled)
@@ -580,12 +637,12 @@ export default function HomePage({ content, demo = false }) {
             </select>
           </label>
           <label>
-            {"Ceritakan sedikit tentangmu"}
+            {h.notes}
             <textarea
               name="notes"
               rows="3"
               maxLength="1000"
-              placeholder="Pengalaman diving, pertanyaan, atau kebutuhan lainnya"
+              placeholder={h.notesPlaceholder}
             ></textarea>
           </label>
           <p
@@ -596,40 +653,35 @@ export default function HomePage({ content, demo = false }) {
             hidden
           ></p>
           <p className="booking-privacy">
-            {demo ? "Mode demo: gunakan data contoh. " : ""}Data ini digunakan
-            tim untuk menghubungimu terkait booking. Pengajuan belum merupakan
-            konfirmasi atau pembayaran.
+            {demo ? h.demoData : ""}
+            {h.privacy}
           </p>
           <button className="button dark" type="submit">
-            {"Kirim permintaan booking "}
+            {h.submit + " "}
             <span>{"↗"}</span>
           </button>
         </form>
         <div id="booking-result" hidden aria-live="polite">
           <h3 tabIndex="-1" id="booking-success-title">
-            {"Permintaan booking tersimpan."}
+            {h.saved}
           </h3>
-          <p className="booking-status">Menunggu konfirmasi tim</p>
+          <p className="booking-status">{h.waiting}</p>
           <p className="booking-reference" id="booking-reference"></p>
           <p id="booking-summary"></p>
-          <p className="muted">
-            {
-              "Tim akan menghubungimu melalui nomor yang diisi. Untuk bantuan lebih cepat, lanjutkan ke WhatsApp dengan nomor referensi booking ini."
-            }
-          </p>
+          <p className="muted">{h.savedNote}</p>
           <a
             className="button dark"
             id="send-whatsapp"
             target="_blank"
             rel="noopener noreferrer"
           >
-            {"Lanjut ke WhatsApp ↗"}
+            {h.continueWhatsApp}
           </a>
           <button className="button primary" id="download-plan">
-            {"Unduh ringkasan booking ↓"}
+            {h.download}
           </button>
           <button className="text-button" id="edit-plan">
-            {"Buat booking lain"}
+            {h.another}
           </button>
         </div>
       </dialog>

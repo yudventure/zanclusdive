@@ -5,6 +5,8 @@ import { activityKeys, activityLabels } from "../src/activity-model.js";
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3190";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(
   ["localhost", "127.0.0.1"].includes(new URL(base).hostname),
   "CMS mutation tests require an isolated local demo server.",
@@ -58,7 +60,7 @@ try {
   assert.ok(
     activityKeys.every((key) => originals.content.activities[key].enabled),
   );
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#experiences .course-card").count(), 3);
   assert.equal(
     await page.locator(".activity-discovery").count(),
@@ -72,23 +74,26 @@ try {
   );
   assert.equal(await page.locator(".beginner-calendar #calendar").count(), 1);
   for (const key of activityKeys) {
-    const homeLink = page.locator(`#experiences a[href="/${key}"]`);
+    const homeLink = page.locator(`#experiences a[href="/id/${key}"]`);
     assert.equal(
       await homeLink.locator("h3").textContent(),
       activityLabels[key],
     );
     assert.equal(
-      await page.getByRole("contentinfo").locator(`a[href="/${key}"]`).count(),
+      await page
+        .getByRole("contentinfo")
+        .locator(`a[href="/id/${key}"]`)
+        .count(),
       1,
     );
   }
   await page
     .locator("#experiences")
     .screenshot({ path: "artifacts/experiences-cards-desktop.png" });
-  await page.locator('#experiences a[href="/snorkeling"]').click();
-  await page.waitForURL(base + "/snorkeling");
+  await page.locator('#experiences a[href="/id/snorkeling"]').click();
+  await page.waitForURL(site + "/snorkeling");
   for (const key of activityKeys) {
-    await page.goto(`${base}/${key}`, { waitUntil: "networkidle" });
+    await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
     const activity = originals.content.activities[key];
     assert.equal(await page.locator("h1").textContent(), activity.title);
     assert.ok((await page.title()).includes(activityLabels[key]));
@@ -181,7 +186,7 @@ try {
   for (const width of [1440, 1000, 820, 390, 320]) {
     await page.setViewportSize({ width, height: 950 });
     for (const key of activityKeys) {
-      await page.goto(`${base}/${key}`, { waitUntil: "networkidle" });
+      await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
       await noOverflow(`${key} overflow at ${width}`);
       await page.getByRole("link", { name: "Rencanakan kegiatan" }).click();
       await page.locator("#inquiry-name").waitFor({ state: "visible" });
@@ -207,7 +212,7 @@ try {
         });
       }
     }
-    await page.goto(base, { waitUntil: "networkidle" });
+    await page.goto(site, { waitUntil: "networkidle" });
     await noOverflow(`Home experience cards overflow at ${width}`);
     assert.equal(await page.locator(".activity-discovery").count(), 0);
     if (width === 390)
@@ -271,7 +276,7 @@ try {
     path: "artifacts/admin-activities.png",
     fullPage: true,
   });
-  await page.goto(base + "/snorkeling", { waitUntil: "networkidle" });
+  await page.goto(site + "/snorkeling", { waitUntil: "networkidle" });
   assert.equal(
     await page.locator("h1").textContent(),
     "Snorkeling bersama keluarga — uji CMS",
@@ -302,10 +307,10 @@ try {
       .textContent(),
     "Jawaban snorkeling tersimpan.",
   );
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   assert.ok(
     (
-      await page.locator('#experiences a[href="/snorkeling"]').textContent()
+      await page.locator('#experiences a[href="/id/snorkeling"]').textContent()
     ).includes("Ringkasan snorkeling tersimpan dari CMS."),
   );
   assert.match(
@@ -342,11 +347,14 @@ try {
   current.content.activities.trip.enabled = false;
   assert.equal((await save(current.content, current.version)).status(), 200);
   assert.equal((await api.get(base + "/trip")).status(), 404);
+  assert.equal((await api.get(site + "/trip")).status(), 404);
   assert.equal((await api.get(base + "/not-an-activity")).status(), 404);
   for (const path of ["/", "/diving", "/dive-shop"]) {
-    await page.goto(base + path, { waitUntil: "networkidle" });
+    await page.goto(site + (path === "/" ? "" : path), {
+      waitUntil: "networkidle",
+    });
     assert.equal(
-      await page.locator('a[href="/trip"]:visible').count(),
+      await page.locator('a[href="/id/trip"]:visible').count(),
       0,
       "Disabled page is hidden across public links",
     );
@@ -356,7 +364,7 @@ try {
   assert.equal((await save(current.content, current.version)).status(), 200);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 950 });
-    await page.goto(base, { waitUntil: "networkidle" });
+    await page.goto(site, { waitUntil: "networkidle" });
     assert.equal(
       await page.locator('#experiences [data-activity="diving"]').isVisible(),
       false,
@@ -384,7 +392,9 @@ try {
     current.content.activities[key].enabled = false;
   assert.equal((await save(current.content, current.version)).status(), 200);
   for (const path of ["/", "/dive-shop"]) {
-    await page.goto(base + path, { waitUntil: "networkidle" });
+    await page.goto(site + (path === "/" ? "" : path), {
+      waitUntil: "networkidle",
+    });
     assert.equal(
       await page.locator('a[href$="#activities"]').count(),
       0,

@@ -1,7 +1,15 @@
-import { activityKeys, activityLabels } from "../activity-model.js";
+import { activityKeys } from "../activity-model.js";
 import { photoSrcSet } from "../photography.js";
+import { dictionary, localeHref } from "../i18n.js";
 
-export default function ActivityCards({ activities, exclude, demo = false }) {
+export default function ActivityCards({
+  activities,
+  exclude,
+  demo = false,
+  locale = "en",
+}) {
+  const t = dictionary(locale).activity;
+  const labels = dictionary(locale).activityLabels;
   const visible = activityKeys.filter(
     (key) => key !== exclude && activities[key].enabled,
   );
@@ -17,15 +25,10 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
           <div>
             <p className="eyebrow">CHOOSE YOUR OCEAN STORY</p>
             <h2 id="activity-discovery-title">
-              {exclude
-                ? "Masih banyak cerita untuk dijelajahi."
-                : "Tiga cara menikmati laut."}
+              {exclude ? t.otherTitle : t.allTitle}
             </h2>
           </div>
-          <p>
-            Lihat detail kegiatan, temukan pilihanmu, lalu susun rencana bersama
-            tim Zanclus.
-          </p>
+          <p>{t.cardsIntro}</p>
         </div>
         <div
           className="activity-cards"
@@ -36,7 +39,7 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
             return (
               <a
                 className="activity-card"
-                href={`/${key}`}
+                href={localeHref(locale, `/${key}`)}
                 key={key}
                 data-reveal
               >
@@ -50,9 +53,7 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
                     height="380"
                     loading="lazy"
                   />
-                  <span className="activity-card-label">
-                    {activityLabels[key]}
-                  </span>
+                  <span className="activity-card-label">{labels[key]}</span>
                   <span className="activity-card-arrow" aria-hidden="true">
                     ↗
                   </span>
@@ -61,20 +62,14 @@ export default function ActivityCards({ activities, exclude, demo = false }) {
                   <h3>{activity.title}</h3>
                   <p>{activity.summary}</p>
                   <span className="activity-card-link">
-                    Lihat detail {activityLabels[key].toLowerCase()}{" "}
-                    <span aria-hidden="true">↗</span>
+                    {t.cardLink(labels[key])} <span aria-hidden="true">↗</span>
                   </span>
                 </div>
               </a>
             );
           })}
         </div>
-        {demo && (
-          <p className="activity-demo-note">
-            Contoh aktivitas untuk demo. Lokasi, jadwal, dan biaya dikonfirmasi
-            bersama tim.
-          </p>
-        )}
+        {demo && <p className="activity-demo-note">{t.cardsDemo}</p>}
       </div>
     </section>
   );

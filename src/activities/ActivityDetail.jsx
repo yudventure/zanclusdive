@@ -2,17 +2,17 @@
 import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
-import {
-  activityInquiry,
-  activityKeys,
-  activityLabels,
-} from "../activity-model.js";
+import { activityInquiry, activityKeys } from "../activity-model.js";
+import { dictionary, formatIDR, localeHref } from "../i18n.js";
+import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import ActivityCards from "./ActivityCards.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
 
-function Inquiry({ activityKey, activity, contact, demo }) {
+function Inquiry({ activityKey, activity, contact, demo, locale }) {
+  const t = dictionary(locale).activity;
+  const label = dictionary(locale).activityLabels[activityKey];
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -31,7 +31,9 @@ function Inquiry({ activityKey, activity, contact, demo }) {
   function prepare(event) {
     event.preventDefault();
     try {
-      setMessage(activityInquiry(activityKey, activity, details, today, demo));
+      setMessage(
+        activityInquiry(activityKey, activity, details, today, demo, locale),
+      );
       setError("");
     } catch (err) {
       setError(err.message);
@@ -43,33 +45,25 @@ function Inquiry({ activityKey, activity, contact, demo }) {
       id="inquiry"
       aria-labelledby="inquiry-title"
     >
-      <p className="eyebrow">LET'S MAKE A PLAN</p>
-      <h2 id="inquiry-title">
-        Rencanakan {activityLabels[activityKey].toLowerCase()}.
-      </h2>
+      <p className="eyebrow">{t.planKicker}</p>
+      <h2 id="inquiry-title">{t.planTitle(label)}</h2>
       <div className="activity-price">
         <small>
           {activity.price === null
-            ? "BIAYA KEGIATAN"
+            ? t.priceLabel
             : demo
-              ? "HARGA CONTOH DEMO / ORANG"
-              : "MULAI DARI / ORANG"}
+              ? t.demoPrice
+              : t.fromPrice}
         </small>
         <strong>
           {activity.price === null
-            ? "Minta penawaran"
-            : new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                maximumFractionDigits: 0,
-              }).format(activity.price)}
+            ? dictionary(locale).common.requestQuote
+            : formatIDR(activity.price, locale)}
         </strong>
-        <p>
-          Jadwal, rincian biaya, dan ketersediaan dikonfirmasi melalui WhatsApp.
-        </p>
+        <p>{t.priceNote}</p>
       </div>
       <form className="activity-form" onSubmit={prepare}>
-        <label htmlFor="inquiry-name">Nama kamu</label>
+        <label htmlFor="inquiry-name">{t.name}</label>
         <input
           id="inquiry-name"
           name="name"
@@ -78,11 +72,11 @@ function Inquiry({ activityKey, activity, contact, demo }) {
           required
           value={details.name}
           onChange={(e) => change("name", e.target.value)}
-          placeholder="Nama lengkap"
+          placeholder={t.namePlaceholder}
         />
         <div className="activity-form-row">
           <div>
-            <label htmlFor="inquiry-date">Usulan tanggal</label>
+            <label htmlFor="inquiry-date">{t.date}</label>
             <input
               id="inquiry-date"
               name="date"
@@ -94,7 +88,7 @@ function Inquiry({ activityKey, activity, contact, demo }) {
             />
           </div>
           <div>
-            <label htmlFor="inquiry-participants">Jumlah peserta</label>
+            <label htmlFor="inquiry-participants">{t.participants}</label>
             <input
               id="inquiry-participants"
               name="participants"
@@ -108,7 +102,7 @@ function Inquiry({ activityKey, activity, contact, demo }) {
           </div>
         </div>
         <label htmlFor="inquiry-notes">
-          Ceritakan rencanamu <span>(opsional)</span>
+          {t.notes} <span>{t.optional}</span>
         </label>
         <textarea
           id="inquiry-notes"
@@ -117,7 +111,7 @@ function Inquiry({ activityKey, activity, contact, demo }) {
           maxLength={1000}
           value={details.notes}
           onChange={(e) => change("notes", e.target.value)}
-          placeholder="Pengalaman di air, pilihan aktivitas, atau kebutuhan kelompok…"
+          placeholder={t.notesPlaceholder}
         />
         {error && (
           <p className="activity-error" role="alert">
@@ -125,12 +119,12 @@ function Inquiry({ activityKey, activity, contact, demo }) {
           </p>
         )}
         <button className="button dark" type="submit">
-          Siapkan pesan WhatsApp <span aria-hidden="true">↗</span>
+          {t.prepare} <span aria-hidden="true">↗</span>
         </button>
       </form>
       {message && (
         <div className="activity-message" role="status">
-          <h3>Pesanmu siap.</h3>
+          <h3>{t.ready}</h3>
           <p className="activity-message-preview">{message}</p>
           <a
             className="button lime"
@@ -138,28 +132,34 @@ function Inquiry({ activityKey, activity, contact, demo }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Lanjutkan ke WhatsApp <span aria-hidden="true">↗</span>
+            {t.continueWhatsApp} <span aria-hidden="true">↗</span>
           </a>
         </div>
       )}
-      <p className="activity-form-note">
-        Formulir ini menyiapkan pesan untuk tim. Reservasi berlaku setelah
-        dikonfirmasi.
-      </p>
+      <p className="activity-form-note">{t.formNote}</p>
       <a
         className="activity-inquiry-contact"
-        href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(`Halo Zanclus! Saya ingin bertanya tentang ${activityLabels[activityKey]}.`)}`}
+        href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(t.askMessage(label))}`}
         target="_blank"
         rel="noopener noreferrer"
       >
-        <ContactIcon name="whatsapp" /> Tanya dulu:{" "}
+        <ContactIcon name="whatsapp" /> {t.askFirst}{" "}
         {phoneLabel(contact.whatsapp)} <span aria-hidden="true">↗</span>
       </a>
     </aside>
   );
 }
 
-export default function ActivityDetail({ activityKey, content, demo }) {
+export default function ActivityDetail({
+  activityKey,
+  content,
+  demo,
+  locale = "en",
+}) {
+  const dict = dictionary(locale);
+  const t = dict.activity;
+  const labels = dict.activityLabels;
+  const href = (path) => localeHref(locale, path);
   const motionRoot = useRef(null);
   const activity = content.activities[activityKey];
   const [menu, setMenu] = useState(false);
@@ -170,18 +170,18 @@ export default function ActivityDetail({ activityKey, content, demo }) {
     window.addEventListener("scroll", scroll, { passive: true });
     return () => window.removeEventListener("scroll", scroll);
   }, []);
-  const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(`Halo Zanclus! Saya ingin bantuan untuk merencanakan ${activityLabels[activityKey]}.`)}`;
+  const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(t.helpMessage(labels[activityKey]))}`;
   return (
     <div className="activity-page" ref={motionRoot}>
       <ScrollEffects rootRef={motionRoot} />
       <a className="skip-link" href="#activity-main">
-        Lewati ke detail aktivitas
+        {t.skip}
       </a>
       <header className={"site-header" + (scrolled ? " is-scrolled" : "")}>
         <a
           className="brand"
-          href="/"
-          aria-label="Zanclus Dive Center — Beranda"
+          href={href("/")}
+          aria-label={dict.common.homeLabel}
         >
           <img
             src="/assets/logo-header-dark.svg"
@@ -192,7 +192,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
         </a>
         <button
           className="menu-toggle"
-          aria-label={menu ? "Tutup menu" : "Buka menu"}
+          aria-label={menu ? dict.common.closeMenu : dict.common.openMenu}
           aria-expanded={menu}
           aria-controls="activity-navigation"
           onClick={() => setMenu(!menu)}
@@ -203,37 +203,40 @@ export default function ActivityDetail({ activityKey, content, demo }) {
         <nav
           id="activity-navigation"
           className={menu ? "open" : ""}
-          aria-label="Navigasi utama"
+          aria-label={dict.common.mainNav}
         >
-          <a href="/">Beranda</a>
+          <a href={href("/")}>{dict.common.home}</a>
           {activityKeys
             .filter((key) => content.activities[key].enabled)
             .map((key) => (
               <a
-                href={`/${key}`}
+                href={href(`/${key}`)}
                 key={key}
                 className={key === activityKey ? "active" : ""}
                 aria-current={key === activityKey ? "page" : undefined}
                 onClick={() => setMenu(false)}
               >
-                {activityLabels[key]}
+                {labels[key]}
               </a>
             ))}
-          <a href="/dive-shop">Dive Shop</a>
-          <a href="/#contact">Kontak</a>
+          <a href={href("/dive-shop")}>Dive Shop</a>
+          <a href={href("/#contact")}>{dict.common.contact}</a>
         </nav>
-        <a
-          className="button quick-service"
-          href={helpURL}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat WhatsApp untuk bantuan cepat"
-        >
-          <ContactIcon name="whatsapp" />
-          <span className="quick-label">
-            <span className="quick-prefix">Chat </span>WhatsApp
-          </span>
-        </a>
+        <div className="header-actions">
+          <LanguageSwitch locale={locale} path={`/${activityKey}`} />
+          <a
+            className="button quick-service"
+            href={helpURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={dict.common.quickChat}
+          >
+            <ContactIcon name="whatsapp" />
+            <span className="quick-label">
+              <span className="quick-prefix">Chat </span>WhatsApp
+            </span>
+          </a>
+        </div>
       </header>
       <main id="activity-main">
         <section
@@ -253,45 +256,40 @@ export default function ActivityDetail({ activityKey, content, demo }) {
           />
           <div className="activity-container activity-hero-content">
             <div className="activity-breadcrumb">
-              <a href="/">Beranda</a>
+              <a href={href("/")}>{dict.common.home}</a>
               <span aria-hidden="true">/</span>
-              <span>{activityLabels[activityKey]}</span>
+              <span>{labels[activityKey]}</span>
             </div>
             <p className="eyebrow">
-              ZANCLUS EXPERIENCES / {activityLabels[activityKey].toUpperCase()}
+              ZANCLUS EXPERIENCES / {labels[activityKey].toUpperCase()}
             </p>
             <h1 id="activity-title">{activity.title}</h1>
             <p className="activity-hero-summary">{activity.summary}</p>
             <div className="activity-hero-actions">
               <a className="button primary" href="#inquiry">
-                Rencanakan kegiatan <span aria-hidden="true">↗</span>
+                {t.planActivity} <span aria-hidden="true">↗</span>
               </a>
               <a className="activity-text-link" href="#overview">
-                Jelajahi detail <span aria-hidden="true">↓</span>
+                {t.exploreDetails} <span aria-hidden="true">↓</span>
               </a>
             </div>
             <div className="activity-hero-bottom">
-              <span>
-                {demo
-                  ? "MODE DEMO · CONTOH AKTIVITAS"
-                  : "JELAJAHI LAUT. TEMUKAN CERITA."}
-              </span>
+              <span>{demo ? t.demoHero : t.tagline}</span>
               <span>{activity.imageAlt}</span>
             </div>
           </div>
         </section>
         <div className="activity-body">
           <div className="activity-container">
-            <div className="activity-jump-links" aria-label="Bagian halaman">
-              <a href="#overview">Tentang kegiatan</a>
-              <a href="#itinerary">Alur kegiatan</a>
-              <a href="#preparation">Persiapan</a>
-              <a href="#faq">Pertanyaan umum</a>
+            <div className="activity-jump-links" aria-label={t.sections}>
+              <a href="#overview">{t.about}</a>
+              <a href="#itinerary">{t.itinerary}</a>
+              <a href="#preparation">{t.preparation}</a>
+              <a href="#faq">{t.faq}</a>
             </div>
             {demo && (
               <p className="activity-demo-note activity-demo-banner">
-                Ini halaman demo. Aktivitas dan alur adalah contoh; jadwal,
-                lokasi, serta biaya perlu dikonfirmasi.
+                {t.demoBanner}
               </p>
             )}
             <div className="activity-layout">
@@ -302,19 +300,19 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                   data-reveal
                 >
                   <p className="eyebrow">A LITTLE CLOSER TO THE OCEAN</p>
-                  <h2>Kenali pengalamanmu.</h2>
+                  <h2>{t.overviewTitle}</h2>
                   <p className="activity-description">{activity.description}</p>
                   <dl className="activity-facts">
                     <div>
-                      <dt>Untuk siapa</dt>
+                      <dt>{t.audience}</dt>
                       <dd>{activity.audience}</dd>
                     </div>
                     <div>
-                      <dt>Durasi</dt>
+                      <dt>{t.duration}</dt>
                       <dd>{activity.duration}</dd>
                     </div>
                     <div>
-                      <dt>Titik temu</dt>
+                      <dt>{t.meetingPoint}</dt>
                       <dd>{activity.meetingPoint}</dd>
                     </div>
                   </dl>
@@ -329,13 +327,8 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                 </section>
                 <section className="activity-content-section" id="itinerary">
                   <p className="eyebrow">ONE STEP AT A TIME</p>
-                  <h2>
-                    {demo ? "Contoh alur kegiatan." : "Rencana aktivitas."}
-                  </h2>
-                  <p className="activity-section-intro">
-                    Susun rincian bersama tim; alur akhir mengikuti program dan
-                    kondisi laut.
-                  </p>
+                  <h2>{demo ? t.demoItinerary : t.itineraryTitle}</h2>
+                  <p className="activity-section-intro">{t.itineraryIntro}</p>
                   <ol className="activity-timeline">
                     {activity.itinerary.map((step, index) => (
                       <li key={index} data-reveal>
@@ -359,7 +352,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                   data-reveal
                 >
                   <p className="eyebrow">COME PREPARED, ENJOY MORE</p>
-                  <h2>Persiapan sebelum berangkat.</h2>
+                  <h2>{t.preparationTitle}</h2>
                   <ul className="activity-preparations">
                     {activity.preparations.map((item, index) => (
                       <li key={index}>
@@ -370,11 +363,11 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                   </ul>
                   <a
                     className="activity-equipment-link"
-                    href="/dive-shop?mode=rental#catalog"
+                    href={href("/dive-shop?mode=rental#catalog")}
                   >
                     <span>
-                      Butuh perlengkapan?
-                      <strong>Lihat pilihan rental di Dive Shop</strong>
+                      {t.needGear}
+                      <strong>{t.rentalLink}</strong>
                     </span>
                     <span aria-hidden="true">↗</span>
                   </a>
@@ -385,7 +378,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                   data-reveal
                 >
                   <p className="eyebrow">GOOD TO KNOW</p>
-                  <h2>Sebelum kamu bertanya.</h2>
+                  <h2>{t.faqTitle}</h2>
                   <div className="activity-faqs">
                     {activity.faqs.map((item, index) => (
                       <details key={index}>
@@ -404,6 +397,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
                 activity={activity}
                 contact={content.contact}
                 demo={demo}
+                locale={locale}
               />
             </div>
           </div>
@@ -412,6 +406,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
           activities={content.activities}
           exclude={activityKey}
           demo={demo}
+          locale={locale}
         />
       </main>
       <SiteFooter
@@ -419,6 +414,7 @@ export default function ActivityDetail({ activityKey, content, demo }) {
         activities={content.activities}
         tagline={content.text.tagline}
         demo={demo}
+        locale={locale}
       />
     </div>
   );
