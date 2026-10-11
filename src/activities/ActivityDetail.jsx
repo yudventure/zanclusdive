@@ -265,14 +265,6 @@ export default function ActivityDetail({
             </p>
             <h1 id="activity-title">{activity.title}</h1>
             <p className="activity-hero-summary">{activity.summary}</p>
-            <div className="activity-hero-actions">
-              <a className="button primary" href="#inquiry">
-                {t.planActivity} <span aria-hidden="true">↗</span>
-              </a>
-              <a className="activity-text-link" href="#overview">
-                {t.exploreDetails} <span aria-hidden="true">↓</span>
-              </a>
-            </div>
             <div className="activity-hero-bottom">
               <span>{demo ? t.demoHero : t.tagline}</span>
               <span>{activity.imageAlt}</span>

@@ -160,21 +160,6 @@ export default function DiveShop({
             <p className="eyebrow">ZANCLUS / DIVE SHOP</p>
             <h1>{shop.heading}</h1>
             <p className="shop-lead">{shop.description}</p>
-            <div className="shop-hero-actions">
-              <a className="button lime" href="#catalog">
-                {t.choose}
-              </a>
-              <a
-                href="#catalog"
-                className="shop-rental-link"
-                onClick={() => {
-                  setMode("rental");
-                  setCategory("all");
-                }}
-              >
-                {t.findRental}
-              </a>
-            </div>
             <div className="shop-hero-note">
               <span className="tiny-dot" /> {t.heroNote}
             </div>

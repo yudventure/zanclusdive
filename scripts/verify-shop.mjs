@@ -45,12 +45,8 @@ try {
     .getByRole("heading", { name: "Temukan perlengkapanmu." })
     .waitFor();
   assert.equal(await page.locator(".shop-product-card").count(), 7);
-  assert.equal(
-    await page
-      .locator(".shop-hero .button.lime")
-      .evaluate((el) => getComputedStyle(el).color),
-    "rgb(6, 43, 59)",
-  );
+  // The page banner has no buttons.
+  assert.equal(await page.locator(".shop-hero .button").count(), 0);
   await page.screenshot({
     path: "artifacts/dive-shop-desktop.png",
     fullPage: true,
