@@ -759,117 +759,97 @@ nav.open a::after {
   padding: 16px 12px;
   min-width: 0;
 }
-.calendar-heading {
+/* Package prices beside the Diving card. */
+.price-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 18px;
+  color: var(--navy);
 }
-.calendar-heading h3 {
+.price-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #ffffffa6;
+  align-self: flex-start;
+}
+.price-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: transparent;
+  color: #49606b;
   font-size: 12px;
+  font-weight: 600;
 }
-.calendar-heading button {
-  background: transparent;
-  font-size: 24px;
-  width: 28px;
-  color: var(--navy);
-}
-.calendar-heading button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-.calendar-program {
-  display: grid;
-  gap: 5px;
-  margin-top: 12px;
-  color: #496774;
-  font-size: 10px;
-}
-.calendar-program select {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid #17354326;
-  border-radius: 10px;
-  background: #ffffffa8;
-  padding: 8px;
-  font-size: 11px;
-  color: var(--navy);
-}
-.calendar-book-button {
-  width: 100%;
-  justify-content: center;
-  padding: 11px 8px;
-  margin-top: 8px;
-  font-size: 11px;
-}
-.calendar-book-button:disabled {
-  opacity: 0.45;
-  cursor: default;
-  transform: none;
-}
-#calendar-retry {
-  margin: 6px auto;
-  font-size: 11px;
-}
-.weekday-row,
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-.weekday-row {
-  text-align: center;
-  font-size: 10px;
-  color: #60747e;
-  margin-bottom: 8px;
-}
-.calendar-grid button {
-  position: relative;
-  background: transparent;
-  color: #173543;
-  border-radius: 50%;
-  height: 29px;
-  font-size: 11px;
-  padding: 0;
-}
-.calendar-grid button:hover {
-  background: #fff9;
-}
-.calendar-grid .today:after {
-  content: "";
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #2d839f;
-  position: absolute;
-  bottom: 2px;
-  left: calc(50% - 1.5px);
-}
-.calendar-grid button.selected {
+.price-tabs button[aria-pressed="true"] {
   background: var(--navy);
   color: white;
 }
-.calendar-grid button:disabled {
-  color: #82979b;
-  cursor: default;
-  opacity: 0.5;
+.price-body {
+  flex: 1;
+  min-height: 0;
 }
-.calendar-grid .closed {
-  text-decoration: line-through;
+.price-kicker {
+  margin: 0 0 4px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #5d7480;
 }
-.calendar-note {
-  font-size: 9px;
-  text-align: center;
-  margin-top: 12px;
-  line-height: 1.5;
+.price-body h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  letter-spacing: -0.02em;
 }
-.calendar-card small {
+.price-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.price-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid #062b3b1a;
+}
+.price-list li > span:first-child {
+  min-width: 0;
+}
+.price-list strong {
   display: block;
-  font-size: 7px;
-  text-align: center;
-  margin-top: 5px;
-  color: #667b84;
+  font-size: 13px;
+  font-weight: 600;
+}
+.price-list small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
   line-height: 1.4;
+  color: #60747e;
+}
+.price-amount {
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.price-amount small {
+  font-weight: 400;
+}
+.price-cta {
+  justify-content: center;
+  min-height: 48px;
+}
+.price-note {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #60747e;
+  text-align: center;
 }
 .quiz-panel {
   position: relative;
@@ -1232,12 +1212,6 @@ nav.open a::after {
   .calendar-card {
     padding: 20px;
   }
-  .calendar-grid button {
-    height: 30px;
-  }
-  .calendar-heading {
-    margin-bottom: 10px;
-  }
   .course-card h3 {
     font-size: 26px;
   }
@@ -1356,6 +1330,18 @@ nav.open a::after {
   }
   .beginner-calendar {
     border-radius: 21px;
+    /* Diving card above its price list on phones. */
+    grid-template-columns: 1fr;
+  }
+  .beginner-calendar > .course-card {
+    min-height: 280px;
+  }
+  .price-tabs {
+    align-self: stretch;
+  }
+  .price-tabs button {
+    flex: 1;
+    padding: 7px 8px;
   }
   .course-card {
     height: 280px;
@@ -1383,29 +1369,8 @@ nav.open a::after {
     top: 9px;
   }
   .calendar-card {
-    padding: 14px 7px;
+    padding: 18px 16px 14px;
     border-radius: 21px;
-  }
-  .calendar-heading h3 {
-    font-size: 10px;
-  }
-  .calendar-heading button {
-    font-size: 20px;
-    width: 21px;
-  }
-  .weekday-row {
-    font-size: 8px;
-  }
-  .calendar-grid button {
-    height: 26px;
-    font-size: 9px;
-  }
-  .calendar-note {
-    font-size: 8px;
-    margin-top: 9px;
-  }
-  .calendar-card small {
-    font-size: 6px;
   }
   .quiz-panel {
     padding: 29px 14px 165px;

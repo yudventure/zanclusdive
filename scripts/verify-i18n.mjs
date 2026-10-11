@@ -52,9 +52,15 @@ try {
   await page.locator('.language-switch a[hreflang="en"]').click();
   await page.waitForURL(base + "/snorkeling");
 
-  // English calendar, booking and WhatsApp text.
+  // English prices, booking and WhatsApp text.
   await page.goto(base, { waitUntil: "networkidle" });
-  assert.match(await page.textContent("#month-label"), /^[A-Z][a-z]+ \d{4}$/);
+  assert.equal(await page.textContent("#prices h3"), "Diving package prices");
+  await page.locator('.course-card[data-activity="trip"]').hover();
+  assert.equal(await page.textContent("#prices h3"), "Sea trip package prices");
+  assert.match(
+    await page.textContent("#prices .price-list"),
+    /IDR\s?8,000,000/,
+  );
   await page.locator("#open-quiz").click();
   assert.equal(
     await page.textContent("#quiz-content h2"),

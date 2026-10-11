@@ -72,7 +72,7 @@ try {
     await page.locator('.beginner-calendar [data-activity="diving"]').count(),
     1,
   );
-  assert.equal(await page.locator(".beginner-calendar #calendar").count(), 1);
+  assert.equal(await page.locator(".beginner-calendar #prices").count(), 1);
   for (const key of activityKeys) {
     const homeLink = page.locator(`#experiences a[href="/id/${key}"]`);
     assert.equal(
@@ -376,16 +376,11 @@ try {
       true,
     );
     assert.equal(
-      await page.locator("#calendar").isVisible(),
-      true,
-      "Calendar stays available when diving is disabled",
+      await page.locator("#prices h3").textContent(),
+      "Harga paket snorkeling",
+      "Prices fall back to snorkeling when diving is disabled",
     );
     await noOverflow(`Hidden cards overflow at ${width}`);
-    await page.locator("#calendar-grid button:not([disabled])").first().click();
-    assert.match(
-      await page.locator("#calendar-note").textContent(),
-      /Tanggal booking:/,
-    );
   }
   current = await state();
   for (const key of activityKeys)

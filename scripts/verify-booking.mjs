@@ -61,27 +61,11 @@ const request = () => ({
   experience: "beginner",
   notes: "Data contoh pengujian",
 });
-async function chooseDate(target) {
-  const month = target.slice(0, 7);
-  for (let i = 0; i < 13; i++) {
-    const present = await page
-      .locator("#calendar-grid button")
-      .first()
-      .getAttribute("data-date");
-    if (present.startsWith(month)) break;
-    await page.locator("#next-month").click();
-    await page.waitForFunction(
-      () =>
-        document.querySelector("#calendar-grid").getAttribute("aria-busy") ===
-        "false",
-    );
-  }
-  await page.locator(`#calendar-grid [data-date="${target}"]`).click();
-  assert.equal(
-    await page.evaluate(() => document.activeElement.dataset.date),
-    target,
-    "Date selection preserves keyboard focus",
-  );
+// The homepage has no calendar; bookings start from the hero button.
+async function openBooking(target) {
+  await page.locator(".hero [data-book]").click();
+  await page.locator("#booking-dialog").waitFor({ state: "visible" });
+  await page.locator('input[name="date"]').fill(target);
 }
 async function fillBooking(name) {
   await page.locator('input[name="name"]').fill(name);
@@ -224,39 +208,17 @@ try {
   );
 
   await page.goto(site, { waitUntil: "networkidle" });
-  assert.equal(await page.locator("#calendar-book").isDisabled(), true);
-  await chooseDate(date);
-  assert.equal(
-    await page
-      .locator(`#calendar-grid [data-date="${closedDate}"]`)
-      .isDisabled(),
-    true,
-  );
-  await page.locator("#calendar-experience").selectOption("explorer");
-  await page.waitForFunction(
-    () =>
-      document.querySelector("#calendar-grid").getAttribute("aria-busy") ===
-      "false",
-  );
-  assert.equal(
-    await page
-      .locator(`#calendar-grid [data-date="${closedDate}"]`)
-      .isDisabled(),
-    false,
-    "Closure affects its own program",
-  );
-  await page.locator("#calendar-experience").selectOption("beginner");
-  await page.waitForFunction(
-    () =>
-      document.querySelector("#calendar-grid").getAttribute("aria-busy") ===
-      "false",
-  );
-  await chooseDate(date);
-  await page
-    .locator("#calendar")
-    .screenshot({ path: "artifacts/booking-calendar-desktop.png" });
-  await page.locator("#calendar-book").click();
+  // A date the admin closed is refused by the server.
+  await openBooking(closedDate);
   await centered();
+  await fillBooking(prefix + " Closed");
+  await page.locator('#booking-form button[type="submit"]').click();
+  await page.locator("#booking-error").waitFor({ state: "visible" });
+  assert.match(
+    await page.locator("#booking-error").textContent(),
+    /sudah ditutup/,
+  );
+  await page.locator('input[name="date"]').fill(date);
   assert.equal(await page.locator('input[name="date"]').inputValue(), date);
   await fillBooking(prefix + " Desktop");
   await page
@@ -325,8 +287,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(site, { waitUntil: "networkidle" });
-  await chooseDate(date);
-  await page.locator("#calendar-book").click();
+  await openBooking(date);
   await centered();
   await fillBooking(prefix + " Mobile");
   assert.ok(
@@ -353,29 +314,6 @@ try {
   for (const b of (await state()).bookings)
     if (b.guestName.startsWith(prefix)) created.add(b.id);
 
-  let blockCalendar = true;
-  await page.route("**/api/bookings?**", (r) =>
-    blockCalendar
-      ? r.fulfill({
-          status: 503,
-          contentType: "application/json",
-          body: '{"error":"Test unavailable"}',
-        })
-      : r.continue(),
-  );
-  await page.reload({ waitUntil: "networkidle" });
-  assert.equal(await page.locator("#calendar-book").isDisabled(), true);
-  assert.equal(await page.locator("#calendar-retry").isVisible(), true);
-  blockCalendar = false;
-  await page.locator("#calendar-retry").click();
-  await page.waitForFunction(
-    () =>
-      document.querySelector("#calendar-grid").getAttribute("aria-busy") ===
-      "false",
-  );
-  assert.equal(await page.locator("#calendar-retry").isVisible(), false);
-  await chooseDate(date);
-  assert.equal(await page.locator("#calendar-book").isEnabled(), true);
   let throttled = false;
   for (let i = 0; i < 25; i++) {
     const response = await post(duplicate);
@@ -389,7 +327,7 @@ try {
   assert.equal(throttled, true, "Repeated submissions are rate limited");
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: calendar booking, WIT, private availability, admin closures, disabled programs, validation, concurrent and lost-response deduplication, CMS pending reservations, WhatsApp references, download, centered desktop/mobile and calendar retry.",
+    "PASS: booking dialog, WIT, private availability, admin closures, disabled programs, validation, concurrent and lost-response deduplication, CMS pending reservations, WhatsApp references, download and centered desktop/mobile.",
   );
 } finally {
   if (originals) {

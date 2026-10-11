@@ -3,6 +3,7 @@ import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
+import PriceListEditor from "./PriceListEditor.jsx";
 import { socialPlatforms } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
@@ -25,6 +26,7 @@ const sections = {
   contact: "Kontak & sosial media",
   shop: "Dive Shop",
   activities: "Halaman aktivitas",
+  prices: "Daftar harga",
 };
 const icons = {
   overview: "▦",
@@ -37,6 +39,7 @@ const icons = {
   contact: "↗",
   shop: "◇",
   activities: "≋",
+  prices: "Rp",
 };
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
@@ -638,6 +641,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
               "website",
               "experiences",
               "activities",
+              "prices",
               "shop",
               "contact",
             ].map((key) => (
@@ -1160,6 +1164,16 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
+                />
+              )}
+              {section === "prices" && (
+                <PriceListEditor
+                  priceList={content.priceList}
+                  update={(group, items) =>
+                    mutateContent("priceList", group, items)
+                  }
+                  onSave={saveSettings}
+                  busy={busy}
                 />
               )}
               {section === "shop" && (

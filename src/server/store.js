@@ -11,6 +11,7 @@ import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
 import { withTranslations, withRajaAmpatTitle } from "../content-i18n.js";
+import { withPriceList } from "../price-list.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -60,11 +61,13 @@ export async function getContent() {
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withRajaAmpatTitle(
-      withTranslations(
-        withActivities(
-          withPhotography(
-            withContactFields(withShop(JSON.parse(rows[0].payload))),
+    content: withPriceList(
+      withRajaAmpatTitle(
+        withTranslations(
+          withActivities(
+            withPhotography(
+              withContactFields(withShop(JSON.parse(rows[0].payload))),
+            ),
           ),
         ),
       ),

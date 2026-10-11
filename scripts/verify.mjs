@@ -35,7 +35,7 @@ assert.equal(
   await page.locator('.beginner-calendar [data-activity="diving"]').count(),
   1,
 );
-assert.equal(await page.locator(".beginner-calendar #calendar").count(), 1);
+assert.equal(await page.locator(".beginner-calendar #prices").count(), 1);
 async function assertCentered(selector) {
   const centered = await page.locator(selector).evaluate((el) => {
     const rect = el.getBoundingClientRect();
@@ -108,20 +108,27 @@ await page.locator(".hero [data-book]").click();
 await page.locator("#booking-dialog").waitFor({ state: "visible" });
 await assertCentered("#booking-dialog");
 await page.locator("#booking-dialog .close-modal").click();
-const oldLabel = await page.locator("#month-label").textContent();
-await page.locator("#next-month").click();
-assert.notEqual(await page.locator("#month-label").textContent(), oldLabel);
-await page.locator("#calendar-grid button:not([disabled])").first().click();
-const selected = await page.locator('input[name="date"]').inputValue();
-assert.ok(selected);
-assert.match(
-  await page.locator("#calendar-note").textContent(),
-  /Tanggal booking:/,
+// Package prices follow the card under the pointer, diving by default.
+assert.equal(
+  await page.locator("#prices h3").textContent(),
+  "Harga paket diving",
 );
-await page.locator("#calendar-book").click();
-await assertCentered("#booking-dialog");
-assert.equal(await page.locator('input[name="date"]').inputValue(), selected);
-await page.locator("#booking-dialog .close-modal").click();
+assert.equal(await page.locator("#prices .price-list li").count(), 6);
+await page.locator('.course-card[data-activity="snorkeling"]').hover();
+assert.equal(
+  await page.locator("#prices h3").textContent(),
+  "Harga paket snorkeling",
+);
+await page.locator('.course-card[data-activity="trip"]').hover();
+assert.equal(
+  await page.locator("#prices h3").textContent(),
+  "Harga paket trip laut",
+);
+await page.mouse.move(2, 2);
+assert.equal(
+  await page.locator("#prices h3").textContent(),
+  "Harga paket diving",
+);
 await page.locator("#open-quiz").click();
 await assertCentered("#quiz-dialog");
 await page
@@ -138,6 +145,9 @@ await page.locator("#quiz-content .button").click();
 await page.locator('input[name="name"]').fill("Ayu <script>");
 await page.locator('input[name="phone"]').fill("+62 851 9084 9237");
 await page.locator('input[name="people"]').fill("2");
+await page
+  .locator('input[name="date"]')
+  .fill(await page.locator('input[name="date"]').getAttribute("min"));
 await page.locator("textarea").fill("Saya ingin info diving.");
 await page.locator('#booking-form button[type="submit"]').click();
 await page.locator("#booking-result").waitFor({ state: "visible" });
@@ -182,6 +192,6 @@ await page.keyboard.press("Escape");
 assert.equal(await page.locator("#booking-dialog").isVisible(), false);
 assert.deepEqual(errors, []);
 console.log(
-  "PASS: full-width desktop/mobile, sticky header, quick WhatsApp popup, no overflow, calendar, details, quiz, booking, WhatsApp URL, download, mobile menu, dialog keyboard, no runtime/network errors.",
+  "PASS: full-width desktop/mobile, sticky header, quick WhatsApp popup, no overflow, package prices, details, quiz, booking, WhatsApp URL, download, mobile menu, dialog keyboard, no runtime/network errors.",
 );
 await browser.close();
