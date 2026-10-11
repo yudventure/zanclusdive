@@ -373,14 +373,49 @@ const id = {
     ],
     mobileOrder: (count) => `Lihat pesanan · ${count} alat`,
     explore: "Jelajahi Dive Shop ↗",
-    saleRental: "BELI / RENTAL",
     teaserEmpty:
       "Katalog sedang disiapkan. Hubungi tim Zanclus melalui Dive Shop untuk kebutuhan alatmu.",
-    teaserSteps: [
-      "01 / Beli perlengkapan",
-      "02 / Rental harian",
-      "03 / Konfirmasi bersama tim",
-    ],
+    teaser: {
+      tabsLabel: "Layanan Dive Shop",
+      buyTag: "KATALOG BELI",
+      rentalTag: "SEWA HARIAN · DAFTAR HARGA 2025",
+      shopBuy: "Lihat katalog beli",
+      shopRent: "Sewa di Dive Shop",
+      ask: "Tanya lewat WhatsApp",
+      whatsapp: (title) =>
+        `Halo Zanclus! Saya ingin bertanya tentang ${title.toLowerCase()}.`,
+      note: "Harga sewa sesuai daftar harga Zanclus 2025, dalam rupiah dan dapat berubah. Ukuran dan ketersediaan alat dikonfirmasi tim lewat WhatsApp.",
+      groups: {
+        buy: [
+          "Beli alat selam & aksesori",
+          "Mask, fin, wetsuit, BCD, regulator, dive computer sampai senter. Pilih alat untuk dimiliki; tim membantu memastikan ukuran dan ketersediaannya.",
+        ],
+        rentalSets: [
+          "Sewa paket alat",
+          "Satu paket lengkap untuk sehari menyelam atau snorkeling, tinggal dipakai saat berangkat.",
+        ],
+        rentalBasics: [
+          "Sewa masker, snorkel & fin",
+          "Sewa alat dasar per item bila sebagian perlengkapan sudah kamu bawa sendiri.",
+        ],
+        rentalScuba: [
+          "Sewa BCD, regulator & wetsuit",
+          "Lengkapi peralatan scuba per item, disiapkan dan dicek tim sebelum menyelam.",
+        ],
+        rentalTank: [
+          "Tabung & isi ulang",
+          "Tabung penuh 200 bar untuk setiap penyelaman, atau isi ulang tabung milikmu sendiri.",
+        ],
+        rentalTools: [
+          "Dive computer, senter & pelampung",
+          "Alat pendukung agar penyelaman dan snorkeling terasa lebih aman dan nyaman.",
+        ],
+        rentalCamera: [
+          "Sewa kamera bawah air",
+          "Abadikan penyu, manta dan terumbu Raja Ampat dengan kamera yang siap dibawa menyelam.",
+        ],
+      },
+    },
     teaserDemo: "Produk & harga contoh demo",
   },
   order: {
@@ -742,14 +777,49 @@ const en = {
     mobileOrder: (count) =>
       `View order · ${count} ${count === 1 ? "item" : "items"}`,
     explore: "Explore the Dive Shop ↗",
-    saleRental: "BUY / RENT",
     teaserEmpty:
       "Our catalog is being prepared. Contact the Zanclus team through the Dive Shop for your gear needs.",
-    teaserSteps: [
-      "01 / Buy gear",
-      "02 / Daily rental",
-      "03 / Confirm with our team",
-    ],
+    teaser: {
+      tabsLabel: "Dive Shop services",
+      buyTag: "BUY CATALOG",
+      rentalTag: "DAILY RENTAL · 2025 PRICE LIST",
+      shopBuy: "See the buy catalog",
+      shopRent: "Rent at the Dive Shop",
+      ask: "Ask on WhatsApp",
+      whatsapp: (title) =>
+        `Hi Zanclus! I'd like to ask about ${title.charAt(0).toLowerCase() + title.slice(1)}.`,
+      note: "Rental prices follow the Zanclus 2025 price list, in rupiah and subject to change. Sizes and availability are confirmed by our team on WhatsApp.",
+      groups: {
+        buy: [
+          "Buy dive gear & accessories",
+          "Masks, fins, wetsuits, BCDs, regulators, dive computers and torches. Pick gear to keep; our team helps you check sizes and availability.",
+        ],
+        rentalSets: [
+          "Rent a full gear set",
+          "One complete set for a day of diving or snorkeling, ready when you head out.",
+        ],
+        rentalBasics: [
+          "Rent masks, snorkels & fins",
+          "Rent the basics item by item when you bring some of your own gear.",
+        ],
+        rentalScuba: [
+          "Rent BCDs, regulators & wetsuits",
+          "Complete your scuba kit item by item, prepared and checked by our team before you dive.",
+        ],
+        rentalTank: [
+          "Tanks & refills",
+          "A full 200 bar tank for every dive, or a refill for your own tank.",
+        ],
+        rentalTools: [
+          "Dive computers, torches & life jackets",
+          "Extra gear that makes diving and snorkeling safer and more comfortable.",
+        ],
+        rentalCamera: [
+          "Rent an underwater camera",
+          "Capture the turtles, mantas and reefs of Raja Ampat with a camera ready to dive.",
+        ],
+      },
+    },
     teaserDemo: "Sample demo products & prices",
   },
   order: {

@@ -183,6 +183,13 @@ test("package price list validates, migrates and keeps both languages", async ()
   assert.throws(() => validatePriceList(broken));
   broken.trip = Array(9).fill(defaultPriceList.diving[0]);
   assert.throws(() => validatePriceList(broken));
+  const older = structuredClone(defaultContent);
+  older.priceList = { diving: [], snorkeling: [], trip: [] };
+  const migrated = withPriceList(older).priceList;
+  assert.deepEqual(migrated.diving, []);
+  assert.deepEqual(migrated.rentalBasics, defaultPriceList.rentalBasics);
+  assert.equal(defaultPriceList.rentalSets[0].price, 600000);
+  assert.equal(withPriceList({ priceList: migrated }).priceList, migrated);
   assert.equal(priceText({ id: "Pelampung", en: "" }, "en"), "Pelampung");
   assert.equal(
     priceText({ id: "Pelampung", en: "Life jacket" }, "en"),
