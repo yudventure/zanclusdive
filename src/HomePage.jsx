@@ -81,9 +81,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
     snorkeling: "advanced",
     trip: "specialty",
   };
-  const featured = ["snorkeling", "trip", "diving"].find(
-    (key) => content.activities[key].enabled,
-  );
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
@@ -204,38 +201,8 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 </button>
               </div>
             </div>
-            {featured && (
-              <a
-                className="hero-feature"
-                href={localeHref(locale, `/${featured}`)}
-              >
-                <img
-                  src={content.activities[featured].cardImage}
-                  srcSet={photoSrcSet(content.activities[featured].cardImage)}
-                  sizes="96px"
-                  alt=""
-                  width="96"
-                  height="72"
-                />
-                <span className="hero-feature-copy">
-                  <strong>{t.activityLabels[featured]}</strong>
-                  <small>{content.activities[featured].summary}</small>
-                </span>
-                <span className="hero-feature-arrow" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            )}
             <div className="hero-footer">
               <HeroWeather locale={locale} />
-              <a
-                className="hero-scroll"
-                href="#experiences"
-                aria-label={h.exploreExperiences}
-              >
-                <span className="hero-mouse" aria-hidden="true" />
-                {h.scrollDown}
-              </a>
             </div>
           </section>
           <section
