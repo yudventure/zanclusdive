@@ -33,6 +33,22 @@ Layout memenuhi lebar layar tanpa bingkai luar, hero imersif, header tetap terli
 
 Gambar generatif bukan dokumentasi lokasi. Logo adalah adaptasi vektor dari aset brand sebelumnya. Font Inter dan Montserrat berlisensi SIL OFL; lisensi ada di `public/licenses`.
 
+## Dua bahasa
+
+Website publik tersedia dalam bahasa Inggris sebagai default dan Bahasa Indonesia:
+
+| Halaman | English (default) | Bahasa Indonesia |
+| --- | --- | --- |
+| Beranda | `/` | `/id` |
+| Aktivitas | `/diving`, `/snorkeling`, `/trip` | `/id/diving`, `/id/snorkeling`, `/id/trip` |
+| Dive Shop | `/dive-shop` | `/id/dive-shop` |
+
+Tombol **EN / ID** di header berpindah ke halaman yang sama dalam bahasa lain. `proxy.js` mengarahkan URL `/id` ke halaman yang sama dengan bahasa Indonesia; atribut `lang`, metadata, dan tautan `hreflang` mengikuti bahasa. Tautan internal, kalender, kuis, formulir booking, pesan WhatsApp, pesan pesanan Dive Shop, ringkasan unduhan, serta pesan error booking ikut bahasa halaman. Harga tetap dalam rupiah (IDR). CMS admin tetap berbahasa Indonesia.
+
+Teks yang dikelola CMS memiliki versi English. Di **Teks website**, **Pengalaman & harga**, **Halaman aktivitas**, **Dive Shop**, dan **Kontak & sosial media**, pilih **Bahasa Indonesia** atau **English** sebelum mengedit. Harga, foto, status tampil, nomor WhatsApp, email, dan sosial media dipakai bersama oleh kedua bahasa; lokasi dapat ditulis per bahasa. Dokumen CMS lama mendapat terjemahan English default sekali tanpa mengubah teks Indonesia. Kolom English yang kosong memakai teks Indonesia. Jika teks Indonesia diubah, perbarui juga versi English-nya. Produk baru yang belum diterjemahkan tampil dengan nama Indonesia di versi English.
+
+Teks UI tetap (label tombol, formulir, dan navigasi) ada di `src/i18n.js`; terjemahan default konten CMS ada di `src/content-i18n.js`. Uji dua bahasa dengan `node scripts/verify-i18n.mjs` terhadap server demo lokal (`BASE_URL`). Skrip verifikasi lain menguji versi Indonesia di `/id`.
+
 ## Dive Shop
 
 Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, pencarian, filter kategori, serta pesanan gabungan. Rental dihitung per unit per hari (1–30 hari). Pengunjung menyiapkan pesan lalu mengirim sendiri lewat WhatsApp untuk konfirmasi stok, ukuran, harga, pembayaran, serta pengambilan/pengembalian. Tidak ada checkout pembayaran atau pencatatan stok otomatis.

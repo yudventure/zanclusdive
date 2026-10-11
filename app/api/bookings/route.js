@@ -8,6 +8,7 @@ import {
   BookingError,
   validateBookingRequest,
   calendarAvailability,
+  bookingErrorMessage,
 } from "../../../src/booking-model.js";
 import {
   allowBookingRequest,
@@ -17,10 +18,10 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
-function failure(error) {
+function failure(error, locale) {
   if (error instanceof BookingError)
     return Response.json(
-      { error: error.message },
+      { error: bookingErrorMessage(error.message, locale) },
       {
         status: error.status,
         headers: {
@@ -35,12 +36,18 @@ function failure(error) {
   );
   return Response.json(
     {
-      error:
+      error: bookingErrorMessage(
         "Booking belum dapat disimpan. Coba lagi atau hubungi tim melalui WhatsApp.",
+        locale,
+      ),
     },
     { status: 503, headers },
   );
 }
+
+// Visitors on the English site send ?locale=en to get English errors.
+const requestLocale = (request) =>
+  new URL(request.url).searchParams.get("locale") === "en" ? "en" : "id";
 
 export async function GET(request) {
   try {
@@ -59,7 +66,7 @@ export async function GET(request) {
       { headers },
     );
   } catch (error) {
-    return failure(error);
+    return failure(error, "id");
   }
 }
 
@@ -88,6 +95,6 @@ export async function POST(request) {
       headers,
     });
   } catch (error) {
-    return failure(error);
+    return failure(error, requestLocale(request));
   }
 }

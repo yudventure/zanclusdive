@@ -6,6 +6,8 @@ import { demoAccount } from "../src/demo-data.js";
 import { bookingDates, bookingReference } from "../src/booking-model.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3202";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(
   ["127.0.0.1", "localhost"].includes(new URL(base).hostname),
   "Mutations require a local test server.",
@@ -221,7 +223,7 @@ try {
     200,
   );
 
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#calendar-book").isDisabled(), true);
   await chooseDate(date);
   assert.equal(
@@ -322,7 +324,7 @@ try {
     .waitFor();
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   await chooseDate(date);
   await page.locator("#calendar-book").click();
   await centered();

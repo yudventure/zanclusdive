@@ -1,27 +1,28 @@
 import ContactIcon from "./ContactIcon.jsx";
 import { phoneLabel, socialPlatforms } from "../contact-model.js";
-import {
-  defaultActivities,
-  activityKeys,
-  activityLabels,
-} from "../activity-model.js";
+import { defaultActivities, activityKeys } from "../activity-model.js";
+import { dictionary, localeHref } from "../i18n.js";
 
 export default function SiteFooter({
   contact,
-  tagline = "Jelajahi laut. Temukan cerita.",
+  tagline,
   demo = false,
   home = false,
   activities = defaultActivities,
+  locale = "en",
 }) {
+  const t = dictionary(locale).footer;
+  const labels = dictionary(locale).activityLabels;
+  const href = (path) => localeHref(locale, path);
   const socials = Object.entries(socialPlatforms).filter(
     ([key]) => contact[key],
   );
-  const whatsappURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin informasi tentang diving, snorkeling, trip, atau perlengkapan.")}`;
+  const whatsappURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(t.whatsapp)}`;
   return (
-    <footer className="site-footer" aria-label="Informasi Zanclus Dive Center">
+    <footer className="site-footer" aria-label={t.label}>
       <div className="site-footer-grid" data-reveal="fade">
         <div className="site-footer-brand">
-          <a href="/" aria-label="Zanclus Dive Center — Beranda">
+          <a href={href("/")} aria-label={dictionary(locale).common.homeLabel}>
             <img
               src="/assets/logo-header-dark.svg"
               alt="Zanclus Dive Center"
@@ -29,34 +30,31 @@ export default function SiteFooter({
               height="50"
             />
           </a>
-          <p className="site-footer-tagline">{tagline}</p>
-          <p className="site-footer-description">
-            Diving, snorkeling, trip, dan perlengkapan untuk membawamu lebih
-            dekat dengan laut.
-          </p>
+          <p className="site-footer-tagline">{tagline || t.tagline}</p>
+          <p className="site-footer-description">{t.description}</p>
         </div>
         <section
           className="site-footer-column"
           aria-labelledby="footer-explore-title"
         >
-          <h2 id="footer-explore-title">Jelajahi Zanclus</h2>
+          <h2 id="footer-explore-title">{t.explore}</h2>
           <div className="site-footer-links">
             {activityKeys
               .filter((key) => activities[key].enabled)
               .map((key) => (
-                <a key={key} href={`/${key}`}>
-                  {activityLabels[key]}
+                <a key={key} href={href(`/${key}`)}>
+                  {labels[key]}
                 </a>
               ))}
-            <a href="/dive-shop">Dive Shop</a>
-            <a href="/dive-shop?mode=rental#catalog">Rental perlengkapan</a>
+            <a href={href("/dive-shop")}>Dive Shop</a>
+            <a href={href("/dive-shop?mode=rental#catalog")}>{t.rental}</a>
           </div>
         </section>
         <section
           className="site-footer-column"
           aria-labelledby="footer-contact-title"
         >
-          <h2 id="footer-contact-title">Hubungi kami</h2>
+          <h2 id="footer-contact-title">{t.contact}</h2>
           <a
             className="site-footer-contact"
             href={whatsappURL}
@@ -89,10 +87,8 @@ export default function SiteFooter({
           className="site-footer-column"
           aria-labelledby="footer-social-title"
         >
-          <h2 id="footer-social-title">Ikuti cerita kami</h2>
-          <p className="site-footer-description">
-            Cerita dari laut, inspirasi dive, dan kabar dari Zanclus.
-          </p>
+          <h2 id="footer-social-title">{t.follow}</h2>
+          <p className="site-footer-description">{t.followDescription}</p>
           {socials.length > 0 ? (
             <div className="site-footer-socials">
               {socials.map(([key, platform]) => (
@@ -115,16 +111,14 @@ export default function SiteFooter({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Mulai percakapan ↗
+              {t.startChat}
             </a>
           )}
           {demo &&
             socials.some(
               ([key, platform]) => contact[key] === platform.url,
             ) && (
-              <small className="site-footer-social-note">
-                Tautan platform contoh untuk demo.
-              </small>
+              <small className="site-footer-social-note">{t.socialDemo}</small>
             )}
         </section>
       </div>
@@ -132,15 +126,15 @@ export default function SiteFooter({
         <p>
           ©{" "}
           <span id={home ? "year" : undefined}>{new Date().getFullYear()}</span>{" "}
-          Zanclus Dive Center. All rights reserved.
+          {t.rights}
         </p>
         {demo && (
           <a className="site-footer-demo" href="/admin">
-            <span /> Mode demo · CMS ↗
+            <span /> {t.demo}
           </a>
         )}
         <a className="site-footer-top" href={home ? "#main" : "#"}>
-          Kembali ke atas <span aria-hidden="true">↑</span>
+          {t.top} <span aria-hidden="true">↑</span>
         </a>
       </div>
     </footer>

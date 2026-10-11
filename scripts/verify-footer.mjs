@@ -5,6 +5,8 @@ import { demoAccount } from "../src/demo-data.js";
 import { socialPlatforms } from "../src/contact-model.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3186";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(base).hostname));
 const headers = { Origin: new URL(base).origin };
 const browser = await chromium.launch({
@@ -70,7 +72,7 @@ try {
     200,
   );
   originals = (await state()).content;
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   await assertFooter(
     originals.contact.whatsapp,
     originals.contact.email,
@@ -126,7 +128,7 @@ try {
       });
     }
   }
-  await page.goto(base + "/dive-shop", { waitUntil: "networkidle" });
+  await page.goto(site + "/dive-shop", { waitUntil: "networkidle" });
   await assertFooter(
     originals.contact.whatsapp,
     originals.contact.email,
@@ -134,7 +136,7 @@ try {
   );
   assert.equal(
     await page
-      .locator('.site-footer a[href="/dive-shop?mode=rental#catalog"]')
+      .locator('.site-footer a[href="/id/dive-shop?mode=rental#catalog"]')
       .count(),
     1,
   );
@@ -161,7 +163,9 @@ try {
     .filter({ hasText: "Perubahan sudah tersimpan" })
     .waitFor();
   for (const path of ["/", "/dive-shop"]) {
-    await page.goto(base + path, { waitUntil: "networkidle" });
+    await page.goto(site + (path === "/" ? "" : path), {
+      waitUntil: "networkidle",
+    });
     await assertFooter("6285111112222", "contact-test@example.com", socials);
     if (path === "/")
       assert.equal(

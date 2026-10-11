@@ -4,6 +4,8 @@ import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3172";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(["127.0.0.1", "localhost"].includes(new URL(base).hostname), "Run demo mutation tests only on a local test server.");
 const origin = new URL(base).origin;
 const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", args: ["--no-sandbox"] });
@@ -47,7 +49,7 @@ try {
   await page.getByRole("button", { name: "Simpan & tampilkan di website", exact: true }).click();
   await page.getByRole("status").filter({ hasText: "Perubahan sudah tersimpan" }).waitFor();
   const publicPage = await context.newPage();
-  await publicPage.goto(base, { waitUntil: "networkidle" });
+  await publicPage.goto(site, { waitUntil: "networkidle" });
   assert.ok((await publicPage.locator("#hero-title").textContent()).includes("Demo Zanclus siap dipakai."));
   assert.equal((await save(originals, initial.version)).status(), 409);
   let snapshot = await state();

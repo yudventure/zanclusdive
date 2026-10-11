@@ -4,6 +4,8 @@ import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3182";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(
   ["localhost", "127.0.0.1"].includes(new URL(base).hostname),
   "Mutation tests must target a local test server.",
@@ -37,8 +39,8 @@ async function save(content, version) {
 try {
   await mkdir("artifacts", { recursive: true });
   assert.equal((await api.get(base + "/api/admin/state")).status(), 401);
-  await page.goto(base, { waitUntil: "networkidle" });
-  await page.locator('#dive-shop a[href="/dive-shop"]').click();
+  await page.goto(site, { waitUntil: "networkidle" });
+  await page.locator('#dive-shop a[href="/id/dive-shop"]').click();
   await page
     .getByRole("heading", { name: "Temukan perlengkapanmu." })
     .waitFor();
@@ -159,7 +161,7 @@ try {
     .waitFor();
   const live = await context.newPage();
   live.on("pageerror", (e) => errors.push(e.message));
-  await live.goto(base + "/dive-shop", { waitUntil: "networkidle" });
+  await live.goto(site + "/dive-shop", { waitUntil: "networkidle" });
   assert.match(
     await live.locator('[data-product="demo-mask"] .shop-price').textContent(),
     /720\.000/,

@@ -2,11 +2,12 @@ import "server-only";
 import { mkdir, readFile, writeFile, rename, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { demoSeed } from "../demo-data.js";
+import { demoSeed, withDemoEnglish } from "../demo-data.js";
 import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
+import { withTranslations } from "../content-i18n.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -68,6 +69,11 @@ function store() {
       }
       if (state.content.photographyVersion !== photographyVersion) {
         state.content = withActivities(withPhotography(state.content));
+        state.version++;
+        await writeState(directory, state);
+      }
+      if (!state.content.en) {
+        state.content = withDemoEnglish(withTranslations(state.content));
         state.version++;
         await writeState(directory, state);
       }

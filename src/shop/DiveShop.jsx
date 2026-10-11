@@ -4,13 +4,9 @@ import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import ProductVisual from "./ProductVisual.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
-import {
-  shopCategories,
-  availabilityLabels,
-  rupiah,
-  quoteOrder,
-  orderMessage,
-} from "../shop-model.js";
+import LanguageSwitch from "../components/LanguageSwitch.jsx";
+import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
+import { dictionary, intlLocale, localeHref } from "../i18n.js";
 
 export default function DiveShop({
   shop,
@@ -20,7 +16,14 @@ export default function DiveShop({
   demo,
   initialMode,
   today,
+  tagline,
+  locale = "en",
 }) {
+  const dict = dictionary(locale);
+  const t = dict.shop;
+  const shopCategories = dict.shopCategories;
+  const href = (path) => localeHref(locale, path);
+  const money = (amount) => rupiah(amount, locale);
   const motionRoot = useRef(null);
   const [mode, setMode] = useState(initialMode),
     [category, setCategory] = useState("all"),
@@ -50,13 +53,14 @@ export default function DiveShop({
     (p) =>
       (category === "all" || p.category === category) &&
       `${p.name} ${p.description} ${shopCategories[p.category]}`
-        .toLocaleLowerCase("id-ID")
-        .includes(search.toLocaleLowerCase("id-ID")),
+        .toLocaleLowerCase(intlLocale[locale])
+        .includes(search.toLocaleLowerCase(intlLocale[locale])),
   );
   const categories = [...new Set(eligible.map((p) => p.category))];
   let quote;
   try {
-    if (cart.length) quote = quoteOrder(shop.products, cart, details.days);
+    if (cart.length)
+      quote = quoteOrder(shop.products, cart, details.days, locale);
   } catch {}
   const hasRental = cart.some((p) => p.mode === "rental");
   const count = cart.reduce((n, p) => n + p.quantity, 0);
@@ -68,7 +72,7 @@ export default function DiveShop({
   function add(product) {
     const item = cart.find((p) => p.id === product.id && p.mode === mode);
     if (item?.quantity >= 10) {
-      setNotice("Maksimal 10 unit per perlengkapan.");
+      setNotice(t.maxUnits);
       return;
     }
     changeCart(
@@ -76,9 +80,7 @@ export default function DiveShop({
         ? cart.map((p) => (p === item ? { ...p, quantity: p.quantity + 1 } : p))
         : [...cart, { id: product.id, mode, quantity: 1 }],
     );
-    setNotice(
-      `${product.name} ditambahkan untuk ${mode === "sale" ? "dibeli" : "rental"}.`,
-    );
+    setNotice(t.added(product.name, mode === "sale"));
   }
   function changeDetails(key, value) {
     setDetails({ ...details, [key]: value });
@@ -88,26 +90,25 @@ export default function DiveShop({
   function prepare(event) {
     event.preventDefault();
     try {
-      if (hasRental && details.startDate < today)
-        throw new Error("Tanggal rental harus hari ini atau setelahnya.");
-      setMessage(orderMessage(shop.products, cart, details, demo));
+      if (hasRental && details.startDate < today) throw new Error(t.pastDate);
+      setMessage(orderMessage(shop.products, cart, details, demo, locale));
       setError("");
     } catch (err) {
       setError(err.message);
     }
   }
-  const helpURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Halo Zanclus! Saya ingin bantuan untuk membeli atau menyewa perlengkapan diving.")}`;
+  const helpURL = `https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(t.help)}`;
   return (
     <div className="shop-page" ref={motionRoot}>
       <ScrollEffects rootRef={motionRoot} />
       <a className="skip-link" href="#catalog">
-        Lewati ke katalog
+        {t.skip}
       </a>
       <header className={"site-header" + (scrolled ? " is-scrolled" : "")}>
         <a
           className="brand"
-          href="/"
-          aria-label="Zanclus Dive Center — Beranda"
+          href={href("/")}
+          aria-label={dict.common.homeLabel}
         >
           <img
             src="/assets/logo-header-dark.svg"
@@ -118,7 +119,7 @@ export default function DiveShop({
         </a>
         <button
           className="menu-toggle"
-          aria-label={menu ? "Tutup menu" : "Buka menu"}
+          aria-label={menu ? dict.common.closeMenu : dict.common.openMenu}
           aria-expanded={menu}
           aria-controls="shop-navigation"
           onClick={() => setMenu(!menu)}
@@ -129,36 +130,39 @@ export default function DiveShop({
         <nav
           id="shop-navigation"
           className={menu ? "open" : ""}
-          aria-label="Navigasi utama"
+          aria-label={dict.common.mainNav}
         >
-          <a href="/">Beranda</a>
-          <a href="/#experiences">Pengalaman</a>
+          <a href={href("/")}>{dict.common.home}</a>
+          <a href={href("/#experiences")}>{dict.common.experiences}</a>
           <a href="#catalog" className="active" onClick={() => setMenu(false)}>
             Dive Shop
           </a>
-          <a href="/#contact">Kontak</a>
+          <a href={href("/#contact")}>{dict.common.contact}</a>
         </nav>
-        <a
-          className="button quick-service"
-          href={helpURL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Bantuan alat ↗
-        </a>
+        <div className="header-actions">
+          <LanguageSwitch locale={locale} path="/dive-shop" />
+          <a
+            className="button quick-service"
+            href={helpURL}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t.gearHelp}
+          </a>
+        </div>
       </header>
       <main>
         <section className="shop-hero">
           <div className="shop-hero-copy">
-            <a className="shop-back" href="/">
-              ← Kembali ke laut
+            <a className="shop-back" href={href("/")}>
+              {t.back}
             </a>
             <p className="eyebrow">ZANCLUS / DIVE SHOP</p>
             <h1>{shop.heading}</h1>
             <p className="shop-lead">{shop.description}</p>
             <div className="shop-hero-actions">
               <a className="button lime" href="#catalog">
-                Pilih perlengkapan ↓
+                {t.choose}
               </a>
               <a
                 href="#catalog"
@@ -168,12 +172,11 @@ export default function DiveShop({
                   setCategory("all");
                 }}
               >
-                Cari alat rental ↗
+                {t.findRental}
               </a>
             </div>
             <div className="shop-hero-note">
-              <span className="tiny-dot" /> Pilih alat. Susun kebutuhan.
-              Konfirmasi bersama tim.
+              <span className="tiny-dot" /> {t.heroNote}
             </div>
           </div>
           <div className="shop-hero-art">
@@ -181,7 +184,7 @@ export default function DiveShop({
               src={images.shop}
               srcSet={photoSrcSet(images.shop)}
               sizes="(max-width: 700px) 90vw, 420px"
-              alt="Visual konsep perlengkapan diving dan snorkeling untuk beli atau rental"
+              alt={t.heroAlt}
               width="1000"
               height="667"
               fetchPriority="high"
@@ -191,8 +194,8 @@ export default function DiveShop({
         </section>
         {demo && (
           <div className="shop-demo-note">
-            <strong>Mode demo</strong> · Produk dan harga contoh untuk mencoba
-            Dive Shop.
+            <strong>{t.demoTitle}</strong>
+            {t.demoNote}
           </div>
         )}
         <section
@@ -203,10 +206,10 @@ export default function DiveShop({
           <div className="shop-catalog-top" data-reveal>
             <div>
               <p className="eyebrow">GEAR UP, DIVE IN</p>
-              <h2 id="catalog-title">Temukan perlengkapanmu.</h2>
+              <h2 id="catalog-title">{t.catalogTitle}</h2>
             </div>
             <a className="shop-order-shortcut" href="#order">
-              Pesananmu <span>{count}</span> ↓
+              {t.yourOrder} <span>{count}</span> ↓
             </a>
           </div>
           <div className="shop-layout">
@@ -215,7 +218,7 @@ export default function DiveShop({
                 <div
                   className="shop-mode"
                   role="group"
-                  aria-label="Jenis layanan"
+                  aria-label={t.serviceType}
                 >
                   <button
                     aria-pressed={mode === "sale"}
@@ -224,7 +227,7 @@ export default function DiveShop({
                       setCategory("all");
                     }}
                   >
-                    Beli alat
+                    {t.buy}
                   </button>
                   <button
                     aria-pressed={mode === "rental"}
@@ -233,31 +236,28 @@ export default function DiveShop({
                       setCategory("all");
                     }}
                   >
-                    Rental alat
+                    {t.rent}
                   </button>
                 </div>
                 <label className="shop-search">
-                  <span className="sr-only">Cari perlengkapan</span>
+                  <span className="sr-only">{t.search}</span>
                   <input
                     type="search"
-                    placeholder="Cari perlengkapan…"
+                    placeholder={t.searchPlaceholder}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </label>
               </div>
               <div className="shop-filter-row">
-                <p>
-                  {products.length} perlengkapan ·{" "}
-                  {mode === "sale" ? "untuk dibeli" : "harga per hari"}
-                </p>
+                <p>{t.count(products.length, mode === "sale")}</p>
                 <label>
-                  <span className="sr-only">Kategori perlengkapan</span>
+                  <span className="sr-only">{t.category}</span>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                   >
-                    <option value="all">Semua kategori</option>
+                    <option value="all">{t.allCategories}</option>
                     {categories.map((key) => (
                       <option key={key} value={key}>
                         {shopCategories[key]}
@@ -267,7 +267,7 @@ export default function DiveShop({
                 </label>
               </div>
               <p className="shop-add-notice" role="status">
-                {notice || "Pilih alat dan tambahkan ke pesananmu."}
+                {notice || t.pick}
               </p>
               <div className="shop-product-grid">
                 {products.map((product) => {
@@ -285,7 +285,7 @@ export default function DiveShop({
                         <span
                           className={"shop-stock stock-" + product.availability}
                         >
-                          {availabilityLabels[product.availability]}
+                          {dict.availability[product.availability]}
                         </span>
                       </div>
                       <div className="shop-product-info">
@@ -303,18 +303,18 @@ export default function DiveShop({
                         )}
                         <div className="shop-product-bottom">
                           <p className="shop-price">
-                            {price === null ? "Minta harga" : rupiah(price)}
+                            {price === null ? t.askPrice : money(price)}
                             {mode === "rental" && price !== null && (
-                              <small> / hari</small>
+                              <small>{t.perDay}</small>
                             )}
                           </p>
                           <button
                             disabled={product.availability === "unavailable"}
-                            aria-label={`Tambahkan ${product.name} untuk ${mode === "sale" ? "dibeli" : "rental"}`}
+                            aria-label={t.add(product.name, mode === "sale")}
                             onClick={() => add(product)}
                           >
                             <span aria-hidden="true">+</span>{" "}
-                            {mode === "sale" ? "Beli" : "Sewa"}
+                            {mode === "sale" ? t.buyShort : t.rentShort}
                           </button>
                         </div>
                       </div>
@@ -324,17 +324,15 @@ export default function DiveShop({
               </div>
               {!products.length && (
                 <div className="shop-empty">
-                  <h3>Belum ada perlengkapan pada pilihan ini.</h3>
-                  <p>
-                    Coba kategori lain atau diskusikan kebutuhanmu dengan tim.
-                  </p>
+                  <h3>{t.emptyTitle}</h3>
+                  <p>{t.emptyText}</p>
                   <a
                     className="button dark"
                     href={helpURL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Tanya tim Zanclus ↗
+                    {t.askTeam}
                   </a>
                 </div>
               )}
@@ -345,15 +343,13 @@ export default function DiveShop({
               aria-labelledby="order-title"
             >
               <p className="eyebrow">YOUR GEAR, YOUR PLAN</p>
-              <h2 id="order-title">Pesananmu.</h2>
-              <p className="shop-order-intro">
-                Gabungkan alat yang ingin dibeli dan disewa dalam satu rencana.
-              </p>
+              <h2 id="order-title">{t.orderTitle}</h2>
+              <p className="shop-order-intro">{t.orderIntro}</p>
               {!cart.length ? (
                 <div className="shop-cart-empty">
                   <span aria-hidden="true">＋</span>
-                  <p>Petualangan dimulai dari sini.</p>
-                  <small>Tambahkan perlengkapan dari katalog.</small>
+                  <p>{t.cartEmpty}</p>
+                  <small>{t.cartHint}</small>
                 </div>
               ) : (
                 <>
@@ -370,12 +366,15 @@ export default function DiveShop({
                           <div className="shop-cart-heading">
                             <div>
                               <span>
-                                {item.mode === "sale" ? "BELI" : "RENTAL"}
+                                {item.mode === "sale" ? t.saleTag : t.rentalTag}
                               </span>
                               <h3>{product.name}</h3>
                             </div>
                             <button
-                              aria-label={`Hapus ${product.name} ${item.mode === "sale" ? "beli" : "rental"}`}
+                              aria-label={t.remove(
+                                product.name,
+                                item.mode === "sale",
+                              )}
                               onClick={() =>
                                 changeCart(cart.filter((p) => p !== item))
                               }
@@ -385,9 +384,12 @@ export default function DiveShop({
                           </div>
                           <div className="shop-cart-quantity">
                             <label>
-                              Jumlah
+                              {t.quantity}
                               <select
-                                aria-label={`Jumlah ${product.name} ${item.mode === "sale" ? "beli" : "rental"}`}
+                                aria-label={t.quantityOf(
+                                  product.name,
+                                  item.mode === "sale",
+                                )}
                                 value={item.quantity}
                                 onChange={(e) =>
                                   changeCart(
@@ -411,8 +413,8 @@ export default function DiveShop({
                             </label>
                             <strong>
                               {line?.total === null || !line
-                                ? "Minta harga"
-                                : rupiah(line.total)}
+                                ? t.askPrice
+                                : money(line.total)}
                             </strong>
                           </div>
                         </li>
@@ -421,7 +423,7 @@ export default function DiveShop({
                   </ul>
                   <form className="shop-order-form" onSubmit={prepare}>
                     <label>
-                      Nama kamu
+                      {t.name}
                       <input
                         required
                         maxLength={80}
@@ -433,7 +435,7 @@ export default function DiveShop({
                     {hasRental && (
                       <div className="shop-rental-dates">
                         <label>
-                          Tanggal mulai rental
+                          {t.rentalStart}
                           <input
                             type="date"
                             required
@@ -445,7 +447,7 @@ export default function DiveShop({
                           />
                         </label>
                         <label>
-                          Durasi (hari)
+                          {t.days}
                           <input
                             type="number"
                             required
@@ -461,47 +463,39 @@ export default function DiveShop({
                       </div>
                     )}
                     <label>
-                      Ukuran / catatan (opsional)
+                      {t.notes}
                       <textarea
                         rows={2}
                         maxLength={500}
-                        placeholder="Ukuran, lokasi pengambilan, atau kebutuhan lain"
+                        placeholder={t.notesPlaceholder}
                         value={details.notes}
                         onChange={(e) => changeDetails("notes", e.target.value)}
                       />
                     </label>
                     <div className="shop-total">
-                      <span>
-                        Estimasi{" "}
-                        {quote?.needsQuote ? "harga tercantum" : "total"}
-                      </span>
+                      <span>{t.estimate(quote?.needsQuote)}</span>
                       <strong>
-                        {quote ? rupiah(quote.total) : "Periksa durasi"}
+                        {quote ? money(quote.total) : t.checkDuration}
                       </strong>
                     </div>
                     {quote?.needsQuote && (
-                      <p className="shop-small">
-                        Belum termasuk alat yang perlu penawaran.
-                      </p>
+                      <p className="shop-small">{t.excludesQuote}</p>
                     )}
-                    <p className="shop-small">
-                      Stok, ukuran, harga final, dan ketentuan rental
-                      dikonfirmasi tim melalui WhatsApp.
-                    </p>
+                    <p className="shop-small">{t.confirmNote}</p>
                     {error && (
                       <p className="shop-error" role="alert">
                         {error}
                       </p>
                     )}
                     <button className="button dark shop-submit" type="submit">
-                      Siapkan pesan pesanan ↗
+                      {t.prepare}
                     </button>
                   </form>
                   {message && (
                     <div className="shop-message" role="status">
-                      <h3>Pesanan siap dikonfirmasi.</h3>
+                      <h3>{t.ready}</h3>
                       <details>
-                        <summary>Lihat isi pesan</summary>
+                        <summary>{t.viewMessage}</summary>
                         <pre>{message}</pre>
                       </details>
                       <a
@@ -510,11 +504,9 @@ export default function DiveShop({
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        Lanjut ke WhatsApp ↗
+                        {t.continueWhatsApp}
                       </a>
-                      <p className="shop-small">
-                        Tekan kirim di WhatsApp untuk menghubungi tim.
-                      </p>
+                      <p className="shop-small">{t.sendNote}</p>
                     </div>
                   )}
                 </>
@@ -526,40 +518,31 @@ export default function DiveShop({
           <div>
             <p className="eyebrow">MADE SIMPLE</p>
             <h2>
-              Siap sebelum
+              {t.howTitle[0]}
               <br />
-              masuk ke air.
+              {t.howTitle[1]}
             </h2>
           </div>
-          <div>
-            <span>01</span>
-            <h3>Pilih alatmu</h3>
-            <p>
-              Beli perlengkapan sendiri atau sewa untuk perjalanan berikutnya.
-            </p>
-          </div>
-          <div>
-            <span>02</span>
-            <h3>Ceritakan rencanamu</h3>
-            <p>
-              Tentukan jumlah, tanggal rental, dan ukuran yang kamu perlukan.
-            </p>
-          </div>
-          <div>
-            <span>03</span>
-            <h3>Konfirmasi bersama tim</h3>
-            <p>
-              Diskusikan ketersediaan, pembayaran, pengambilan, dan pengembalian
-              lewat WhatsApp.
-            </p>
-          </div>
+          {t.steps.map(([title, text], index) => (
+            <div key={index}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
+          ))}
         </section>
       </main>
-      <SiteFooter contact={contact} activities={activities} demo={demo} />
+      <SiteFooter
+        contact={contact}
+        activities={activities}
+        tagline={tagline}
+        demo={demo}
+        locale={locale}
+      />
       {count > 0 && (
         <a className="shop-mobile-order" href="#order">
-          Lihat pesanan · {count} alat{" "}
-          <span>{quote ? rupiah(quote.total) : "Periksa durasi"} ↓</span>
+          {t.mobileOrder(count)}{" "}
+          <span>{quote ? money(quote.total) : t.checkDuration} ↓</span>
         </a>
       )}
     </div>

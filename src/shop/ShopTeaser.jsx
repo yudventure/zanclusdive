@@ -1,7 +1,9 @@
 import ProductVisual from "./ProductVisual.jsx";
 import { rupiah } from "../shop-model.js";
+import { dictionary, localeHref } from "../i18n.js";
 
-export default function ShopTeaser({ shop, demo }) {
+export default function ShopTeaser({ shop, demo, locale = "en" }) {
+  const t = dictionary(locale).shop;
   const products = shop.products.filter((p) => p.enabled).slice(0, 3);
   return (
     <section
@@ -16,8 +18,8 @@ export default function ShopTeaser({ shop, demo }) {
         </div>
         <div>
           <p>{shop.description}</p>
-          <a className="button dark" href="/dive-shop">
-            Jelajahi Dive Shop ↗
+          <a className="button dark" href={localeHref(locale, "/dive-shop")}>
+            {t.explore}
           </a>
         </div>
       </div>
@@ -29,7 +31,10 @@ export default function ShopTeaser({ shop, demo }) {
           return (
             <a
               className="shop-teaser-product"
-              href={`/dive-shop?mode=${product.saleEnabled ? "sale" : "rental"}#catalog`}
+              href={localeHref(
+                locale,
+                `/dive-shop?mode=${product.saleEnabled ? "sale" : "rental"}#catalog`,
+              )}
               key={product.id}
               data-reveal
               style={{ "--reveal-delay": `${index * 80}ms` }}
@@ -38,34 +43,30 @@ export default function ShopTeaser({ shop, demo }) {
               <div>
                 <span>
                   {product.saleEnabled && product.rentalEnabled
-                    ? "BELI / RENTAL"
+                    ? t.saleRental
                     : product.saleEnabled
-                      ? "BELI"
-                      : "RENTAL"}
+                      ? t.saleTag
+                      : t.rentalTag}
                 </span>
                 <h3>{product.name}</h3>
                 <p>
                   {price === null
-                    ? "Minta penawaran"
-                    : rupiah(price) + (product.saleEnabled ? "" : " / hari")}
+                    ? dictionary(locale).common.requestQuote
+                    : rupiah(price, locale) +
+                      (product.saleEnabled ? "" : t.perDay)}
                 </p>
               </div>
               <span className="shop-teaser-arrow">↗</span>
             </a>
           );
         })}
-        {!products.length && (
-          <p className="shop-empty">
-            Katalog sedang disiapkan. Hubungi tim Zanclus melalui Dive Shop
-            untuk kebutuhan alatmu.
-          </p>
-        )}
+        {!products.length && <p className="shop-empty">{t.teaserEmpty}</p>}
       </div>
       <div className="shop-teaser-bottom">
-        <span>01 / Beli perlengkapan</span>
-        <span>02 / Rental harian</span>
-        <span>03 / Konfirmasi bersama tim</span>
-        {demo && <small>Produk & harga contoh demo</small>}
+        {t.teaserSteps.map((step) => (
+          <span key={step}>{step}</span>
+        ))}
+        {demo && <small>{t.teaserDemo}</small>}
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import { socialPlatforms } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
+import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
   experienceKeys,
   textFields,
@@ -249,7 +250,19 @@ export default function Dashboard({ section, email, today, demo = false }) {
     [statusFilter, setStatusFilter] = useState("all"),
     [month, setMonth] = useState(today.slice(0, 7)),
     [booking, setBooking] = useState(blankBooking(today)),
-    [editing, setEditing] = useState(null);
+    [editing, setEditing] = useState(null),
+    [editLocale, setEditLocale] = useState("id");
+  // Copy sections can be edited per language; prices, photos and visibility
+  // are shared by both versions of the website.
+  const bilingual = [
+    "website",
+    "experiences",
+    "activities",
+    "shop",
+    "contact",
+  ].includes(section);
+  const view =
+    bilingual && editLocale === "en" ? localizeContent(content, "en") : content;
   const pending = data?.bookings.filter((b) => b.status === "pending") || [];
   async function refresh() {
     try {
@@ -272,10 +285,14 @@ export default function Dashboard({ section, email, today, demo = false }) {
     setNotice("");
   }, [section]);
   function mutateContent(group, key, value) {
-    setContent((current) => ({
-      ...current,
-      [group]: { ...current[group], [key]: value },
-    }));
+    setContent((current) =>
+      editLocale === "en"
+        ? applyEnglishEdit(current, group, key, value)
+        : {
+            ...current,
+            [group]: { ...current[group], [key]: value },
+          },
+    );
     setNotice("");
   }
   async function saveSettings(event) {
@@ -992,6 +1009,34 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   </div>
                 </section>
               )}
+              {bilingual && data && (
+                <div className="admin-language">
+                  <div
+                    className="admin-activity-tabs"
+                    role="group"
+                    aria-label="Bahasa konten"
+                  >
+                    {[
+                      ["id", "Bahasa Indonesia"],
+                      ["en", "English"],
+                    ].map(([code, label]) => (
+                      <button
+                        type="button"
+                        key={code}
+                        aria-pressed={editLocale === code}
+                        onClick={() => setEditLocale(code)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="admin-subtle">
+                    {editLocale === "en"
+                      ? "Mengedit versi English (halaman utama zanclusdive.com). Harga, foto, nomor kontak, dan status tampil sama di kedua bahasa."
+                      : "Mengedit versi Bahasa Indonesia (zanclusdive.com/id). Pilih English untuk mengubah teks website default."}
+                  </p>
+                </div>
+              )}
               {section === "website" && (
                 <form onSubmit={saveSettings}>
                   <section className="admin-card">
@@ -1008,7 +1053,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                             }
                             maxLength="2000"
                             required
-                            value={content.text[key]}
+                            value={view.text[key]}
                             onChange={(e) =>
                               mutateContent("text", key, e.target.value)
                             }
@@ -1050,7 +1095,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                         <textarea
                           rows="3"
                           maxLength="500"
-                          value={content.contact.location}
+                          value={view.contact.location}
                           onChange={(e) =>
                             mutateContent("contact", "location", e.target.value)
                           }
@@ -1087,7 +1132,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
               )}
               {section === "activities" && (
                 <ActivitiesEditor
-                  activities={content.activities}
+                  activities={view.activities}
                   update={(key, value) =>
                     mutateContent("activities", key, value)
                   }
@@ -1098,7 +1143,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
               )}
               {section === "shop" && (
                 <ShopEditor
-                  shop={content.shop}
+                  shop={view.shop}
                   update={(key, value) => mutateContent("shop", key, value)}
                   onSave={saveSettings}
                   busy={busy}
@@ -1113,7 +1158,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                     menu Halaman aktivitas.
                   </p>
                   {experienceKeys.map((key) => {
-                    const exp = content.experiences[key];
+                    const exp = view.experiences[key];
                     function update(field, value) {
                       mutateContent("experiences", key, {
                         ...exp,

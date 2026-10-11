@@ -1,0 +1,120 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { localeHref, messages, formatIDR } from "../src/i18n.js";
+import {
+  localizeContent,
+  applyEnglishEdit,
+  withTranslations,
+  englishDefaults,
+} from "../src/content-i18n.js";
+import { defaultContent, validateContent } from "../src/cms-model.js";
+import { demoShop } from "../src/shop-model.js";
+import { activityInquiry } from "../src/activity-model.js";
+import { orderMessage } from "../src/shop-model.js";
+import { bookingErrorMessage } from "../src/booking-model.js";
+
+test("Indonesian links gain the /id prefix; English links stay at the root", () => {
+  assert.equal(localeHref("en", "/dive-shop"), "/dive-shop");
+  assert.equal(localeHref("id", "/"), "/id");
+  assert.equal(localeHref("id", "/#contact"), "/id#contact");
+  assert.equal(
+    localeHref("id", "/dive-shop?mode=rental#catalog"),
+    "/id/dive-shop?mode=rental#catalog",
+  );
+  assert.equal(localeHref("id", "https://wa.me/1"), "https://wa.me/1");
+});
+
+test("both dictionaries define the same message keys", () => {
+  const keys = (object, prefix = "") =>
+    Object.entries(object).flatMap(([key, value]) =>
+      value && typeof value === "object" && !Array.isArray(value)
+        ? keys(value, prefix + key + ".")
+        : [prefix + key],
+    );
+  assert.deepEqual(keys(messages.en).sort(), keys(messages.id).sort());
+  assert.match(formatIDR(650000, "en"), /IDR\s?650,000/);
+});
+
+test("English content overlays Indonesian copy and falls back when empty", () => {
+  const content = structuredClone(defaultContent);
+  content.shop = demoShop();
+  const en = localizeContent(content, "en");
+  assert.equal(en.text.heroTitle1, "Beneath the sea,");
+  assert.equal(en.activities.trip.title, englishDefaults.activities.trip.title);
+  assert.equal(en.shop.products[0].name, "Mask & snorkel set");
+  assert.equal(
+    en.shop.products[0].salePrice,
+    content.shop.products[0].salePrice,
+  );
+  assert.equal(
+    localizeContent(content, "id").text.heroTitle1,
+    "Di bawah laut,",
+  );
+  content.en.text.heroTitle1 = "";
+  assert.equal(
+    localizeContent(content, "en").text.heroTitle1,
+    "Di bawah laut,",
+  );
+});
+
+test("English admin edits keep shared prices and visibility on the base content", () => {
+  const content = structuredClone(defaultContent);
+  const view = localizeContent(content, "en");
+  const edited = applyEnglishEdit(content, "activities", "diving", {
+    ...view.activities.diving,
+    title: "Dive with us.",
+    price: 750000,
+    enabled: false,
+  });
+  assert.equal(edited.en.activities.diving.title, "Dive with us.");
+  assert.equal(edited.activities.diving.title, content.activities.diving.title);
+  assert.equal(edited.activities.diving.price, 750000);
+  assert.equal(edited.activities.diving.enabled, false);
+  const saved = validateContent(edited);
+  assert.equal(saved.en.activities.diving.title, "Dive with us.");
+});
+
+test("documents saved before translations still render English defaults", () => {
+  const legacy = structuredClone(defaultContent);
+  delete legacy.en;
+  assert.equal(
+    withTranslations(legacy).en.text.heroButton,
+    "Start your adventure",
+  );
+  assert.equal(
+    validateContent(legacy).en.text.heroButton,
+    "Start your adventure",
+  );
+});
+
+test("WhatsApp messages and booking errors follow the visitor's language", () => {
+  const activity = defaultContent.activities.snorkeling;
+  const details = { name: "Alex", date: "2030-01-01", participants: 2 };
+  assert.match(
+    activityInquiry("snorkeling", activity, details, "2029-12-31", false, "en"),
+    /^Hi Zanclus! I'd like to ask about Snorkeling\./,
+  );
+  assert.match(
+    activityInquiry("snorkeling", activity, details, "2029-12-31"),
+    /^Halo Zanclus!/,
+  );
+  const products = demoShop().products;
+  assert.match(
+    orderMessage(
+      products,
+      [{ id: "demo-mask", mode: "sale", quantity: 1 }],
+      { name: "Alex", days: 1 },
+      false,
+      "en",
+    ),
+    /BUY · Mask & snorkel set × 1 — IDR/,
+  );
+  assert.equal(
+    bookingErrorMessage("Jumlah peserta harus 1–30 orang.", "en"),
+    "Participants must be between 1 and 30.",
+  );
+  assert.equal(
+    bookingErrorMessage("Jumlah peserta harus 1–30 orang.", "id"),
+    "Jumlah peserta harus 1–30 orang.",
+  );
+});

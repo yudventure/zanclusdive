@@ -9,6 +9,8 @@ import {
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3196";
+// The Indonesian website (/id); English is served at the root.
+const site = base + "/id";
 assert.ok(
   ["localhost", "127.0.0.1"].includes(new URL(base).hostname),
   "Use an isolated local demo server for CMS checks.",
@@ -52,7 +54,7 @@ async function sweep() {
   await page.waitForTimeout(800);
 }
 try {
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   await page.waitForFunction(() =>
     document.querySelector(".page-shell").classList.contains("motion-active"),
   );
@@ -161,7 +163,7 @@ try {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   for (const width of [1000, 820, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(base, { waitUntil: "networkidle" });
+    await page.goto(site, { waitUntil: "networkidle" });
     await sweep();
     await noOverflow();
     if (width === 390) {
@@ -188,7 +190,7 @@ try {
     }
   }
   for (const key of Object.keys(activityPhotos)) {
-    await page.goto(`${base}/${key}`, { waitUntil: "networkidle" });
+    await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
     assert.equal(
       await page.locator(".activity-hero-photo").getAttribute("src"),
       activityPhotos[key].image,
@@ -204,7 +206,7 @@ try {
     await noOverflow();
     assert.equal(await page.locator(".reveal-pending").count(), 0);
   }
-  await page.goto(base + "/dive-shop", { waitUntil: "networkidle" });
+  await page.goto(site + "/dive-shop", { waitUntil: "networkidle" });
   assert.equal(
     await page.locator(".shop-hero-art img").getAttribute("src"),
     defaultSiteImages.shop,
@@ -242,7 +244,7 @@ try {
         window.IntersectionObserver = undefined;
       });
     const fallbackPage = await fallback.newPage();
-    await fallbackPage.goto(base, { waitUntil: "networkidle" });
+    await fallbackPage.goto(site, { waitUntil: "networkidle" });
     assert.equal(await fallbackPage.locator(".reveal-pending").count(), 0);
     assert.equal(
       await fallbackPage
@@ -291,7 +293,7 @@ try {
     await page.getByLabel("Galeri — penyu", { exact: true }).inputValue(),
     "/assets/photos/fan-coral.webp",
   );
-  await page.goto(base, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
   assert.equal(
     await page.locator(".photo-four img").getAttribute("src"),
     "/assets/photos/fan-coral.webp",

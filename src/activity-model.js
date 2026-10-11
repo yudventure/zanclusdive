@@ -1,4 +1,5 @@
 import { activityPhotos } from "./photography.js";
+import { dictionary } from "./i18n.js";
 export const activityLabels = {
   diving: "Diving",
   snorkeling: "Snorkeling",
@@ -210,35 +211,41 @@ export function withActivities(content) {
   };
 }
 
-export function activityInquiry(key, activity, details, today, demo = false) {
+export function activityInquiry(
+  key,
+  activity,
+  details,
+  today,
+  demo = false,
+  locale = "id",
+) {
+  const t = dictionary(locale).inquiry;
+  const label = dictionary(locale).activityLabels[key];
   if (!activityKeys.includes(key) || !activity?.enabled)
-    throw new Error("Aktivitas belum tersedia.");
+    throw new Error(t.unavailable);
   const name = typeof details.name === "string" ? details.name.trim() : "";
   const notes = typeof details.notes === "string" ? details.notes.trim() : "";
   const participants = Number(details.participants);
   const date = details.date;
-  if (!name || name.length > 120)
-    throw new Error("Isi nama, maksimal 120 karakter.");
+  if (!name || name.length > 120) throw new Error(t.name);
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
     Number.isNaN(new Date(date + "T12:00:00Z").valueOf()) ||
     new Date(date + "T12:00:00Z").toISOString().slice(0, 10) !== date ||
     date < today
   )
-    throw new Error("Pilih tanggal yang valid, hari ini atau setelahnya.");
+    throw new Error(t.date);
   if (!Number.isInteger(participants) || participants < 1 || participants > 100)
-    throw new Error("Jumlah peserta harus 1–100 orang.");
-  if (notes.length > 1000) throw new Error("Catatan maksimal 1.000 karakter.");
+    throw new Error(t.participants);
+  if (notes.length > 1000) throw new Error(t.notes);
   return [
-    `Halo Zanclus! Saya ingin konsultasi ${activityLabels[key]}.`,
-    `Program: ${activity.title}`,
-    `Nama: ${name}`,
-    `Usulan tanggal: ${date}`,
-    `Peserta: ${participants} orang`,
-    ...(notes ? [`Catatan: ${notes}`] : []),
-    ...(demo
-      ? ["Permintaan dari halaman demo; rincian aktivitas adalah contoh."]
-      : []),
-    "Mohon konfirmasi jadwal, persyaratan, perlengkapan, dan biaya. Ini belum menjadi reservasi.",
+    t.greeting(label),
+    `${t.program}: ${activity.title}`,
+    `${t.name_}: ${name}`,
+    `${t.proposedDate}: ${date}`,
+    t.people(participants),
+    ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
+    ...(demo ? [t.demo] : []),
+    t.closing,
   ].join("\n");
 }

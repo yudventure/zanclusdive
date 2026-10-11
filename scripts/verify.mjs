@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 await mkdir("artifacts", { recursive: true });
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:3000";
+// The Indonesian website (/id); English is served at the root.
+const site = baseURL + "/id";
 const browser = await chromium.launch({
   executablePath: "/usr/bin/chromium",
   headless: true,
@@ -21,7 +23,7 @@ page.on("console", (message) => {
 page.on("response", (r) => {
   if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`);
 });
-await page.goto(baseURL, { waitUntil: "networkidle" });
+await page.goto(site, { waitUntil: "networkidle" });
 assert.equal(
   await page
     .locator(".site-header")
@@ -98,9 +100,9 @@ assert.equal(
 );
 for (const key of ["diving", "snorkeling", "trip"]) {
   await page.locator(`#experiences [data-activity="${key}"]`).click();
-  await page.waitForURL(`${baseURL}/${key}`);
+  await page.waitForURL(`${site}/${key}`);
   await page.locator("#activity-title").waitFor({ state: "visible" });
-  await page.goto(baseURL, { waitUntil: "networkidle" });
+  await page.goto(site, { waitUntil: "networkidle" });
 }
 await page.locator(".hero [data-book]").click();
 await page.locator("#booking-dialog").waitFor({ state: "visible" });
@@ -160,7 +162,7 @@ assert.equal(await page.locator("#more-courses").isVisible(), true);
 await page.locator("#see-all").click();
 assert.equal(await page.locator("#more-courses").isVisible(), false);
 await page.setViewportSize({ width: 390, height: 844 });
-await page.goto(baseURL, { waitUntil: "networkidle" });
+await page.goto(site, { waitUntil: "networkidle" });
 assert.equal(await quickChat.isVisible(), true, "Mobile quick service visible");
 await page.screenshot({ path: "artifacts/mobile.png", fullPage: true });
 assert.equal(
