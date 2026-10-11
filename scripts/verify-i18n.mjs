@@ -67,21 +67,49 @@ try {
     await page.textContent(".experience-item.is-open .price-list"),
     /IDR\s?8,000,000/,
   );
-  // Dive Shop services: buying first, rentals from the price list.
+  // Dive Shop services: buying first, rentals per item from the price list,
+  // then cart and WhatsApp checkout.
   assert.equal(
     await page.textContent(".shop-service-panel h3"),
     "Buy dive gear & accessories",
   );
-  await page.getByRole("tab", { name: "Tanks & refills" }).click();
-  assert.match(
-    await page.textContent(".shop-service-list"),
-    /Tank \+ refill[\s\S]*IDR\s?100,000/,
+  assert.equal(
+    await page.locator('#navigation a[href="#dive-shop"]').count(),
+    1,
   );
-  await page.keyboard.press("ArrowDown");
+  await page.getByRole("tab", { name: "Tanks & refills" }).click();
+  const tank = page.locator(".shop-item", { hasText: "Tank + refill" });
+  assert.match(await tank.textContent(), /IDR\s?100,000/);
+  await page.keyboard.press("ArrowUp");
   assert.equal(
     await page.textContent(".shop-service-panel h3"),
-    "Dive computers, torches & life jackets",
+    "Rent BCDs, regulators & wetsuits",
   );
+  await page.getByRole("tab", { name: "Rent masks, snorkels & fins" }).click();
+  await page.getByRole("button", { name: "Add Mask to the cart" }).click();
+  await page.getByRole("button", { name: "One more Mask" }).click();
+  await page.getByRole("button", { name: "Add Snorkel to the cart" }).click();
+  assert.match(await page.textContent(".shop-cart-bar"), /Cart · 3 items/);
+  await page.locator(".shop-cart-bar .button").click();
+  const checkout = page.locator(".shop-checkout");
+  await checkout.waitFor({ state: "visible" });
+  await checkout.getByRole("button", { name: "Review my order" }).click();
+  assert.equal(
+    await checkout.locator(".booking-error").textContent(),
+    "Please enter your name.",
+  );
+  await checkout.getByLabel("Name").fill("Alex");
+  await checkout.getByLabel("Rental days").fill("2");
+  await checkout.getByRole("button", { name: "Review my order" }).click();
+  const order2 = await checkout.locator("pre").textContent();
+  assert.match(order2, /RENT · Mask × 2 · IDR\s?50,000 \/ day/);
+  assert.match(order2, /Rental for 2 days/);
+  assert.match(order2, /Estimated total IDR\s?300,000/);
+  assert.match(
+    await checkout.locator("a.button").getAttribute("href"),
+    /^https:\/\/wa\.me\/\d+\?text=/,
+  );
+  await page.keyboard.press("Escape");
   await page.locator("#open-quiz").click();
   assert.equal(
     await page.textContent("#quiz-content h2"),

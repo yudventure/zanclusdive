@@ -129,7 +129,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             <a href="#experiences">{t.common.experiences}</a>
             <a href="#ocean">{t.common.exploreOcean}</a>
             <a href="#dive-sites">{t.common.diveSites}</a>
-            <a href={localeHref(locale, "/dive-shop")}>{"Dive Shop"}</a>
+            <a href="#dive-shop">{"Dive Shop"}</a>
             <a href="#contact">{t.common.contact}</a>
           </nav>
           <div className="header-actions">
