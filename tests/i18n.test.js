@@ -39,7 +39,7 @@ test("English content overlays Indonesian copy and falls back when empty", () =>
   const content = structuredClone(defaultContent);
   content.shop = demoShop();
   const en = localizeContent(content, "en");
-  assert.equal(en.text.heroTitle1, "Beneath the sea,");
+  assert.equal(en.text.heroTitle1, "Beneath the waters of Raja Ampat,");
   assert.equal(en.activities.trip.title, englishDefaults.activities.trip.title);
   assert.equal(en.shop.products[0].name, "Mask & snorkel set");
   assert.equal(
@@ -48,12 +48,12 @@ test("English content overlays Indonesian copy and falls back when empty", () =>
   );
   assert.equal(
     localizeContent(content, "id").text.heroTitle1,
-    "Di bawah laut,",
+    "Di bawah laut Raja Ampat,",
   );
   content.en.text.heroTitle1 = "";
   assert.equal(
     localizeContent(content, "en").text.heroTitle1,
-    "Di bawah laut,",
+    "Di bawah laut Raja Ampat,",
   );
 });
 
@@ -117,4 +117,33 @@ test("WhatsApp messages and booking errors follow the visitor's language", () =>
     bookingErrorMessage("Jumlah peserta harus 1–30 orang.", "id"),
     "Jumlah peserta harus 1–30 orang.",
   );
+});
+
+test("hero video accepts YouTube links only and old titles gain Raja Ampat", async () => {
+  const { youtubeId } = await import("../src/video.js");
+  const { withRajaAmpatTitle } = await import("../src/content-i18n.js");
+  for (const url of [
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://youtu.be/dQw4w9WgXcQ?si=abc",
+    "https://youtube.com/shorts/dQw4w9WgXcQ",
+  ])
+    assert.equal(youtubeId(url), "dQw4w9WgXcQ");
+  for (const url of [
+    "http://youtu.be/dQw4w9WgXcQ",
+    "https://evil.example/watch?v=dQw4w9WgXcQ",
+    "javascript:alert(1)",
+  ])
+    assert.equal(youtubeId(url), null);
+  const content = structuredClone(defaultContent);
+  content.heroVideo = "https://example.com/video";
+  assert.throws(() => validateContent(content));
+  content.heroVideo = "https://youtu.be/dQw4w9WgXcQ";
+  assert.equal(validateContent(content).heroVideo, content.heroVideo);
+  content.text.heroTitle1 = "Di bawah laut,";
+  content.en.text.heroTitle1 = "Beneath the sea,";
+  const titled = withRajaAmpatTitle(content);
+  assert.equal(titled.text.heroTitle1, "Di bawah laut Raja Ampat,");
+  assert.equal(titled.en.text.heroTitle1, "Beneath the waters of Raja Ampat,");
+  content.text.heroTitle1 = "Judul pemilik";
+  assert.equal(withRajaAmpatTitle(content).text.heroTitle1, "Judul pemilik");
 });

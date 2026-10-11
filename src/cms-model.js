@@ -2,6 +2,7 @@ import { experiences } from "./domain.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import { blankSocials, socialPlatforms } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
+import { youtubeId } from "./video.js";
 import {
   englishDefaults,
   validateTranslations,
@@ -20,7 +21,7 @@ export const defaultContent = {
   shop: structuredClone(emptyShop),
   text: {
     heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
-    heroTitle1: "Di bawah laut,",
+    heroTitle1: "Di bawah laut Raja Ampat,",
     heroTitle2: "cerita dimulai.",
     tagline: "Jelajahi laut. Temukan cerita.",
     heroDescription: "Pengalaman menyelam untuk setiap rasa ingin tahu.",
@@ -45,6 +46,8 @@ export const defaultContent = {
     instagram: "",
   },
   images: { ...defaultSiteImages },
+  // Optional YouTube link for the hero video button.
+  heroVideo: "",
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -196,11 +199,17 @@ export function validateContent(input) {
   if (!Object.values(catalog).some((e) => e.enabled))
     throw new Error("Minimal satu pengalaman harus aktif.");
   const shop = validateShop(input.shop);
+  const heroVideo = plain(input.heroVideo ?? "", "Link video", 500, false);
+  if (heroVideo && !youtubeId(heroVideo))
+    throw new Error(
+      "Link video harus berupa tautan YouTube, misalnya https://youtu.be/…",
+    );
   return {
     photographyVersion,
     text,
     contact,
     images,
+    heroVideo,
     experiences: catalog,
     shop,
     activities: validateActivities(input.activities),
