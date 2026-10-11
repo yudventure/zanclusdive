@@ -1,0 +1,77 @@
+.dive-sites-section {
+  padding: 90px max(40px, calc((100vw - 1280px) / 2));
+  background: #f6faf8;
+  color: #062b3b;
+}
+.dive-sites-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 70px;
+  align-items: end;
+  margin-bottom: 36px;
+}
+.dive-sites-heading .eyebrow {
+  color: #527c70;
+  letter-spacing: 2.2px;
+  font-size: 10px;
+  margin-bottom: 18px;
+}
+.dive-sites-heading h2 {
+  font-size: clamp(34px, 3.2vw, 46px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -1.6px;
+  max-width: 600px;
+}
+.dive-sites-heading p:not(.eyebrow) {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #5d7770;
+}
+.dive-sites-heading .dive-sites-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #70887f;
+}
+/* Zanclus theme for the shared Raja Ampat map. */
+.peta-zanclus {
+  --prj-darat: #062b3b;
+  --prj-darat-sorot: #0d4a5c;
+  --prj-darat-arah: #0a3a4b;
+  --prj-garis-sorot: #3fc1b0;
+  --prj-karang: #9fdcd2;
+  --prj-laut: radial-gradient(
+    120% 100% at 50% 55%,
+    #f3fbf8 0%,
+    #def2ec 60%,
+    #cbe8e0 100%
+  );
+  --prj-latar: #e8f2ec;
+  --prj-tinta: #062b3b;
+  --prj-tinta-2: #5d7770;
+  --prj-biru: #0d6f73;
+  --prj-aksen: #0d6f73;
+  --prj-bingkai: #d0dfd5;
+  --prj-sudut: 24px;
+}
+@media (max-width: 900px) {
+  .dive-sites-section {
+    padding: 60px 28px;
+  }
+  .dive-sites-heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+@media (max-width: 700px) {
+  .dive-sites-section {
+    padding: 44px 16px;
+  }
+  .dive-sites-heading h2 {
+    font-size: 32px;
+    letter-spacing: -1px;
+  }
+  .dive-sites-heading p:not(.eyebrow) {
+    font-size: 12px;
+  }
+}

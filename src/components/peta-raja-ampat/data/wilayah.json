@@ -1,0 +1,238 @@
+[
+ {
+  "id": "waigeo",
+  "nama": "Waigeo",
+  "pulau": "waigeo",
+  "kotak": [
+   20,
+   20,
+   1160,
+   510
+  ],
+  "label": [
+   800,
+   220
+  ],
+  "dariWaisai": 0,
+  "keterangan": {
+   "id": "Pulau terbesar di Raja Ampat. Teluk Mayalibit hampir membelahnya menjadi dua, dan hutannya rumah cenderawasih merah dan cenderawasih Wilson.",
+   "en": "The largest island in Raja Ampat. Mayalibit Bay almost splits it in two, and its forest is home to red and Wilson's birds of paradise.",
+   "zh": "拉贾安帕特最大的岛屿。马亚利比特湾几乎将它一分为二，森林里栖息着红极乐鸟和威氏极乐鸟。",
+   "ru": "Крупнейший остров Раджа-Ампат. Залив Маялибит почти разделяет его надвое, а в лесах живут красные райские птицы и райские птицы Уилсона."
+  }
+ },
+ {
+  "id": "waisai",
+  "nama": "Waisai",
+  "pulau": null,
+  "kotak": [
+   510,
+   410,
+   240,
+   150
+  ],
+  "label": [
+   680,
+   535
+  ],
+  "jangkar": [
+   635,
+   492.5
+  ],
+  "dariWaisai": 0,
+  "keterangan": {
+   "id": "Ibu kota Raja Ampat di Pulau Waigeo, tempat kapal cepat dari Sorong bersandar. Tim DAMPIER berangkat dari sini.",
+   "en": "The capital of Raja Ampat on Waigeo island, where the fast boats from Sorong dock. The DAMPIER team sets out from here.",
+   "zh": "拉贾安帕特的首府，位于韦吉奥岛，从索龙来的快船在此靠岸。DAMPIER团队从这里出发。",
+   "ru": "Столица Раджа-Ампат на острове Вайгео, куда приходят скоростные паромы из Соронга. Команда DAMPIER отправляется отсюда."
+  }
+ },
+ {
+  "id": "friwen",
+  "nama": "Friwen",
+  "pulau": "friwen",
+  "kotak": [
+   465,
+   490,
+   120,
+   80
+  ],
+  "label": [
+   565,
+   548
+  ],
+  "jangkar": [
+   513.5,
+   535.5
+  ],
+  "dariWaisai": 0,
+  "keterangan": {
+   "id": "Pulau kecil tak jauh dari Waisai. Dinding karang di tepinya jadi titik snorkel dan selam yang tenang.",
+   "en": "A small island not far from Waisai. The reef wall along its edge makes a calm snorkel and dive site.",
+   "zh": "离怀赛不远的小岛。岛边的珊瑚墙是平静的浮潜和潜水点。",
+   "ru": "Небольшой остров недалеко от Ваисаи. Рифовая стена у берега стала спокойным местом для снорклинга и дайвинга."
+  }
+ },
+ {
+  "id": "gam",
+  "nama": "Gam",
+  "pulau": "gam",
+  "kotak": [
+   260,
+   430,
+   290,
+   190
+  ],
+  "label": [
+   420,
+   530
+  ],
+  "dariWaisai": 0,
+  "keterangan": {
+   "id": "Pulau di utara Selat Dampier. Kampung Sawinggrai dan Yenwaupnor di pesisir selatannya dikenal sebagai tempat mengamati cenderawasih pagi hari.",
+   "en": "An island on the north side of the Dampier Strait. Sawinggrai and Yenwaupnor villages on its south coast are known for early morning birds of paradise.",
+   "zh": "位于丹皮尔海峡北侧的岛屿。南岸的萨温格赖村和延瓦普诺尔村以清晨观赏极乐鸟闻名。",
+   "ru": "Остров на северной стороне пролива Дампир. Деревни Савинграй и Йенваупнор на южном побережье известны утренними наблюдениями за райскими птицами."
+  }
+ },
+ {
+  "id": "arborek",
+  "nama": "Arborek",
+  "pulau": "arborek",
+  "kotak": [
+   329.5,
+   624,
+   10,
+   6
+  ],
+  "label": [
+   310,
+   650
+  ],
+  "jangkar": [
+   334.2,
+   627
+  ],
+  "dariWaisai": 75,
+  "keterangan": {
+   "id": "Kampung wisata kecil yang dikenal dengan kerajinan noken dan topi pandan. Manta Sandy tidak jauh dari pulau ini.",
+   "en": "A small tourism village known for its noken bags and pandan hats. Manta Sandy lies not far from the island.",
+   "zh": "以诺肯包和露兜树叶帽闻名的小型旅游村。蝠鲼清洁站Manta Sandy就在岛的不远处。",
+   "ru": "Небольшая туристическая деревня, известная сумками нокен и шляпами из пандана. Недалеко от острова находится Manta Sandy."
+  }
+ },
+ {
+  "id": "mansuar",
+  "nama": "Mansuar",
+  "pulau": "mansuar",
+  "kotak": [
+   355,
+   615,
+   140,
+   70
+  ],
+  "label": [
+   420,
+   702
+  ],
+  "dariWaisai": 60,
+  "keterangan": {
+   "id": "Pulau di tengah selat dengan Kampung Sawandarek di selatan, Kurkapa, Yenbekwan, dan Yenbuba di utara, dan banyak homestay di pesisirnya.",
+   "en": "An island in the middle of the strait, with Sawandarek village in the south, Kurkapa, Yenbekwan and Yenbuba in the north, and many homestays along its coast.",
+   "zh": "位于海峡中央的岛屿，南岸有萨万达雷克村，北岸有库尔卡帕、延贝克万和延布巴村，海岸边有许多民宿。",
+   "ru": "Остров посреди пролива с деревней Савандарек на юге, Куркапой, Йенбекваном и Йенбубой на севере и множеством гостевых домов на побережье."
+  }
+ },
+ {
+  "id": "kri",
+  "nama": "Kri",
+  "pulau": "kri",
+  "kotak": [
+   445,
+   575,
+   110,
+   75
+  ],
+  "label": [
+   532,
+   638
+  ],
+  "jangkar": [
+   497.1,
+   622.5
+  ],
+  "dariWaisai": 45,
+  "keterangan": {
+   "id": "Pulau kecil di ujung timur Mansuar. Cape Kri di dekatnya dikenal sebagai titik selam dengan jenis ikan yang sangat beragam.",
+   "en": "A small island off the eastern tip of Mansuar. Nearby Cape Kri is known as a dive site with an extraordinary variety of fish.",
+   "zh": "位于曼苏阿尔东端的小岛。附近的Cape Kri以鱼类种类极其丰富的潜点而闻名。",
+   "ru": "Небольшой остров у восточной оконечности Мансуара. Расположенный рядом Cape Kri известен невероятным разнообразием рыб."
+  }
+ },
+ {
+  "id": "batanta",
+  "nama": "Batanta",
+  "pulau": "batanta",
+  "kotak": [
+   190,
+   800,
+   580,
+   200
+  ],
+  "label": [
+   480,
+   910
+  ],
+  "dariWaisai": 0,
+  "keterangan": {
+   "id": "Pulau besar di selatan Selat Dampier, berhutan lebat dengan air terjun dan pantai yang sepi.",
+   "en": "A large island on the south side of the Dampier Strait, densely forested, with waterfalls and quiet beaches.",
+   "zh": "位于丹皮尔海峡南侧的大岛，森林茂密，有瀑布和宁静的海滩。",
+   "ru": "Большой остров на южной стороне пролива Дампир, покрытый густым лесом, с водопадами и тихими пляжами."
+  }
+ },
+ {
+  "id": "fam",
+  "nama": "Piaynemo",
+  "pulau": "fam",
+  "kotak": [
+   56,
+   594,
+   78,
+   78
+  ],
+  "label": [
+   120,
+   580
+  ],
+  "dariWaisai": 120,
+  "keterangan": {
+   "id": "Gugusan pulau karst di barat Selat Dampier. Piaynemo dan Telaga Bintang di sini menyuguhkan pemandangan khas Raja Ampat dari atas bukit.",
+   "en": "A cluster of karst islands west of the Dampier Strait. Piaynemo and Telaga Bintang offer the classic Raja Ampat view from the hilltops.",
+   "zh": "丹皮尔海峡以西的喀斯特群岛。这里的Piaynemo和Telaga Bintang可从山顶欣赏拉贾安帕特的经典景色。",
+   "ru": "Группа карстовых островов к западу от пролива Дампир. С холмов Пиайнемо и Телага-Бинтанг открывается классический вид Раджа-Ампат."
+  }
+ },
+ {
+  "id": "pam",
+  "nama": "Pam",
+  "pulau": "pam",
+  "kotak": [
+   42,
+   693,
+   94,
+   67
+  ],
+  "label": [
+   130,
+   765
+  ],
+  "dariWaisai": 120,
+  "keterangan": {
+   "id": "Gugusan pulau di selatan Piaynemo, bagian dari Kepulauan Fam. Pulau Fam dengan Kampung Saukabu, Meos Ambower, Pambemuk, Mios Besar, dan Andau dikelilingi karang dangkal, dengan homestay di pantai-pantainya.",
+   "en": "A group of islands south of Piaynemo, part of the Fam islands. Fam island with Saukabu village, Meos Ambower, Pambemuk, Mios Besar and Andau are ringed by shallow reefs, with homestays along their beaches.",
+   "zh": "皮亚内莫以南的一组岛屿，属于法姆群岛。绍卡布村所在的法姆岛、Meos Ambower、Pambemuk、Mios Besar和Andau四周环绕着浅礁，海滩边散布着民宿。",
+   "ru": "Группа островов к югу от Пиайнемо, часть островов Фам. Остров Фам с деревней Саукабу, Меос-Амбовер, Пэмбемук, Миос-Бесар и Андау окружены мелководными рифами, а на пляжах стоят гостевые дома."
+  }
+ }
+]

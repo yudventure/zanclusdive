@@ -1,0 +1,1209 @@
+[
+ {
+  "id": "teluk-mayalibit",
+  "jenis": "menarik",
+  "nama": "Teluk Mayalibit",
+  "wilayah": "waigeo",
+  "lat": -0.258,
+  "lng": 130.83,
+  "keterangan": {
+   "id": "Teluk besar yang hampir membelah Pulau Waigeo menjadi dua. Airnya tenang dan dikelilingi hutan, dengan beberapa kampung di tepiannya.",
+   "en": "A large bay that almost splits Waigeo island in two. Calm water ringed by forest, with a few villages along its shores.",
+   "zh": "几乎把韦吉奥岛一分为二的大海湾。水面平静，四周森林环绕，岸边散落着几个村庄。",
+   "ru": "Большой залив, почти разрезающий остров Вайгео надвое. Спокойная вода в кольце леса и несколько деревень на берегах."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "kali-biru",
+  "jenis": "menarik",
+  "nama": "Kali Biru",
+  "wilayah": "waigeo",
+  "lat": -0.325,
+  "lng": 130.905,
+  "keterangan": {
+   "id": "Sungai berair biru jernih di hutan Waigeo, dekat Kampung Warsambin di mulut Teluk Mayalibit. Dari Waisai sekitar satu jam lewat darat ke Warsambin, lalu naik perahu kecil dan berjalan kaki menembus hutan.",
+   "en": "A clear blue river in Waigeo's forest near Warsambin village at the mouth of Mayalibit Bay. About an hour by road from Waisai to Warsambin, then a small boat and a walk through the forest.",
+   "zh": "韦吉奥岛森林中一条湛蓝清澈的河流，靠近马亚利比特湾湾口的瓦尔桑宾村。从怀赛走陆路约一小时到瓦尔桑宾，再乘小船并穿过森林步行前往。",
+   "ru": "Прозрачная голубая река в лесу Вайгео возле деревни Варсамбин у входа в залив Маялибит. Около часа по дороге от Ваисаи до Варсамбина, затем небольшая лодка и прогулка через лес."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "pelabuhan-waisai",
+  "jenis": "pelabuhan",
+  "nama": "Pelabuhan Waisai",
+  "wilayah": "waisai",
+  "lat": -0.4325,
+  "lng": 130.812,
+  "keterangan": {
+   "id": "Pelabuhan kapal cepat dari Sorong, pintu masuk utama ke Raja Ampat. Perahu ke homestay di Selat Dampier biasanya berangkat dari sini.",
+   "en": "Fast boat harbour from Sorong and the main gateway to Raja Ampat. Boats to homestays across the Dampier Strait usually leave from here.",
+   "zh": "从索龙出发的快船码头，也是进入拉贾安帕特的主要门户。前往丹皮尔海峡各民宿的船通常从这里出发。",
+   "ru": "Причал скоростных паромов из Соронга и главные ворота в Раджа-Ампат. Лодки к гостевым домам в проливе Дампир обычно отходят отсюда."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "pantai-wtc",
+  "jenis": "pantai",
+  "nama": "Pantai WTC Waisai",
+  "wilayah": "waisai",
+  "lat": -0.4264,
+  "lng": 130.8329,
+  "keterangan": {
+   "id": "Pantai Waisai Torang Cinta di tepi kota, tempat warga bersantai sore hari. Tidak jauh dari pelabuhan.",
+   "en": "Waisai Torang Cinta beach on the edge of town, where locals unwind in the late afternoon. Not far from the harbour.",
+   "zh": "位于怀赛镇边的Torang Cinta海滩，当地人傍晚常来这里休闲。距离码头不远。",
+   "ru": "Пляж Waisai Torang Cinta на окраине города, где местные жители отдыхают ближе к вечеру. Недалеко от причала."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "saporkren",
+  "jenis": "kampung",
+  "nama": "Kampung Saporkren",
+  "wilayah": "waisai",
+  "lat": -0.4401,
+  "lng": 130.7623,
+  "keterangan": {
+   "id": "Kampung di pesisir selatan Waigeo, sebelah barat Waisai. Dikenal dengan homestay dan pengamatan burung di hutan belakang kampung.",
+   "en": "Village on Waigeo's south coast, west of Waisai, known for its homestays and birdwatching in the forest behind it.",
+   "zh": "位于怀赛以西、韦吉奥岛南岸的村庄，以民宿和村后森林里的观鸟闻名。",
+   "ru": "Деревня на южном побережье Вайгео к западу от Ваисаи, известная гостевыми домами и наблюдением за птицами в лесу за деревней."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "cenderawasih-saporkren",
+  "jenis": "burung",
+  "nama": "Cenderawasih Saporkren",
+  "wilayah": "waisai",
+  "lat": -0.432,
+  "lng": 130.762,
+  "keterangan": {
+   "id": "Cenderawasih merah biasa terlihat menari di pohon pada pagi hari. Berangkat sebelum subuh bersama pemandu dari kampung.",
+   "en": "Red birds of paradise are often seen displaying in the trees early in the morning. Set off before dawn with a guide from the village.",
+   "zh": "清晨常能看到红极乐鸟在树上求偶起舞。请在黎明前与村里的向导一同出发。",
+   "ru": "Ранним утром на деревьях часто можно увидеть брачные танцы красных райских птиц. Выходите до рассвета вместе с проводником из деревни."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "kampung-friwen",
+  "jenis": "kampung",
+  "nama": "Kampung Friwen",
+  "wilayah": "friwen",
+  "lat": -0.47434,
+  "lng": 130.69233,
+  "keterangan": {
+   "id": "Kampung kecil di Pulau Friwen. Dermaganya jadi tempat singgah yang tenang di perjalanan antara Waisai dan Gam.",
+   "en": "A small village on Friwen island. Its jetty is a quiet stop on the way between Waisai and Gam.",
+   "zh": "弗里温岛上的小村庄。村里的码头是往返怀赛与甘姆岛途中一个安静的停靠点。",
+   "ru": "Небольшая деревня на острове Фривен. Её причал служит тихой остановкой по пути между Ваисаи и Гамом."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "friwen-wall",
+  "jenis": "selam",
+  "nama": "Friwen Wall",
+  "wilayah": "friwen",
+  "lat": -0.47671,
+  "lng": 130.69671,
+  "keterangan": {
+   "id": "Dinding karang di sisi barat Pulau Friwen dengan kipas laut dan karang lunak. Arusnya biasanya ringan, cocok untuk menyelam santai dan snorkel.",
+   "en": "A reef wall on the west side of Friwen with sea fans and soft corals. Currents are usually mild, good for relaxed dives and snorkelling.",
+   "zh": "弗里温岛西侧的珊瑚墙，长满海扇和软珊瑚。水流通常较缓，适合轻松潜水和浮潜。",
+   "ru": "Рифовая стена на западной стороне Фривена с горгониями и мягкими кораллами. Течение обычно слабое, подходит для спокойных погружений и снорклинга."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "teluk-kabui",
+  "jenis": "menarik",
+  "nama": "Teluk Kabui",
+  "wilayah": "gam",
+  "lat": -0.395,
+  "lng": 130.6,
+  "keterangan": {
+   "id": "Perairan di antara Gam dan Waigeo yang dipenuhi pulau karst berbentuk jamur. Perahu biasanya melintas pelan di antara tebingnya.",
+   "en": "Waters between Gam and Waigeo dotted with mushroom-shaped karst islets. Boats usually cruise slowly between the cliffs.",
+   "zh": "甘姆岛与韦吉奥岛之间的水域，布满蘑菇形的喀斯特小岛。船只通常在峭壁间缓缓穿行。",
+   "ru": "Воды между Гамом и Вайгео, усеянные карстовыми островками в форме грибов. Лодки обычно медленно проходят между скалами."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "the-passage",
+  "jenis": "selam",
+  "nama": "The Passage",
+  "wilayah": "gam",
+  "lat": -0.4017,
+  "lng": 130.5551,
+  "keterangan": {
+   "id": "Selat sempit seperti sungai di antara Gam dan Waigeo. Penyelaman arus yang terkenal dengan karang lunak, kipas laut, dan tebing yang menjorok.",
+   "en": "A narrow, river-like channel between Gam and Waigeo. A well-known drift dive with soft corals, sea fans, and overhanging walls.",
+   "zh": "甘姆岛与韦吉奥岛之间一条像河流般狭窄的水道。著名的放流潜点，有软珊瑚、海扇和悬垂的岩壁。",
+   "ru": "Узкий, похожий на реку пролив между Гамом и Вайгео. Известное место для дрейфовых погружений с мягкими кораллами, горгониями и нависающими стенами."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "yenbeser",
+  "jenis": "kampung",
+  "nama": "Kampung Yenbeser",
+  "wilayah": "gam",
+  "lat": -0.506,
+  "lng": 130.525,
+  "keterangan": {
+   "id": "Kampung di pesisir selatan Pulau Gam. Beberapa homestay berdiri di sekitarnya.",
+   "en": "A village on the south coast of Gam island, with several homestays nearby.",
+   "zh": "甘姆岛南岸的村庄，附近有几家民宿。",
+   "ru": "Деревня на южном побережье острова Гам, рядом несколько гостевых домов."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "sawinggrai",
+  "jenis": "kampung",
+  "nama": "Kampung Sawinggrai",
+  "wilayah": "gam",
+  "lat": -0.524,
+  "lng": 130.625,
+  "keterangan": {
+   "id": "Kampung di pesisir selatan Gam. Di dermaganya ikan berkumpul di air yang jernih, dan cenderawasih bisa diamati di hutan dekat kampung.",
+   "en": "A village on Gam's south coast. Fish gather around its jetty in clear water, and birds of paradise can be watched in the nearby forest.",
+   "zh": "甘姆岛南岸的村庄。码头周围清澈的水中聚集着鱼群，附近森林里可以观赏极乐鸟。",
+   "ru": "Деревня на южном побережье Гама. У причала в прозрачной воде собираются рыбы, а в соседнем лесу можно наблюдать райских птиц."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "cenderawasih-gam",
+  "jenis": "burung",
+  "nama": "Cenderawasih Gam",
+  "wilayah": "gam",
+  "lat": -0.508,
+  "lng": 130.625,
+  "keterangan": {
+   "id": "Jalur pengamatan cenderawasih merah di hutan Gam. Paling baik pagi buta bersama pemandu kampung.",
+   "en": "A trail for watching red birds of paradise in Gam's forest. Best at first light with a village guide.",
+   "zh": "在甘姆岛森林中观赏红极乐鸟的小径。最好在天刚亮时与村里的向导同行。",
+   "ru": "Тропа для наблюдения за красными райскими птицами в лесу Гама. Лучше всего на рассвете с проводником из деревни."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "mikes-point",
+  "jenis": "selam",
+  "nama": "Mike's Point",
+  "wilayah": "gam",
+  "lat": -0.538,
+  "lng": 130.668,
+  "keterangan": {
+   "id": "Titik selam di sebuah batu karang kecil di antara Gam dan Kri. Arusnya bisa kuat, dengan karang dan ikan karang yang melimpah.",
+   "en": "A dive site at a small rocky islet between Gam and Kri. Currents can be strong, with rich corals and reef fish.",
+   "zh": "位于甘姆岛与克里岛之间一块小礁岩处的潜点。水流可能很强，珊瑚和礁鱼非常丰富。",
+   "ru": "Место для погружений у небольшой скалы между Гамом и Кри. Течение бывает сильным, много кораллов и рифовых рыб."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "yenbuba",
+  "jenis": "kampung",
+  "nama": "Kampung Yenbuba",
+  "wilayah": "mansuar",
+  "lat": -0.5701,
+  "lng": 130.64533,
+  "keterangan": {
+   "id": "Kampung di pesisir utara Mansuar, berhadapan dengan Pulau Kri. Banyak homestay berjajar di pantainya.",
+   "en": "A village on Mansuar's north coast, facing Kri island, with many homestays along its beach.",
+   "zh": "曼苏阿尔岛北岸的村庄，正对克里岛，海滩上有许多民宿。",
+   "ru": "Деревня на северном побережье Мансуара напротив острова Кри, вдоль пляжа много гостевых домов."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "yenbuba-jetty",
+  "jenis": "selam",
+  "nama": "Yenbuba Jetty",
+  "wilayah": "mansuar",
+  "lat": -0.56802,
+  "lng": 130.651,
+  "keterangan": {
+   "id": "Snorkel dan selam di bawah dermaga kampung Yenbuba. Banyak ikan berlindung di antara tiangnya, mudah dicapai dari pantai.",
+   "en": "Snorkel and dive under Yenbuba's village jetty. Lots of fish shelter among its pilings, easy to reach from the beach.",
+   "zh": "在耶恩布巴村码头下浮潜和潜水。许多鱼在桩柱间栖息，从海滩就能轻松到达。",
+   "ru": "Снорклинг и дайвинг под деревенским причалом Йенбубы. Среди свай прячется много рыбы, легко добраться с пляжа."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "sawandarek",
+  "jenis": "kampung",
+  "nama": "Kampung Sawandarek",
+  "wilayah": "mansuar",
+  "lat": -0.60616,
+  "lng": 130.58925,
+  "keterangan": {
+   "id": "Kampung di pesisir selatan Mansuar dengan homestay dan dermaga kayu. Karang di depannya bisa dinikmati sambil snorkel.",
+   "en": "A village on Mansuar's south coast with homestays and a wooden jetty. The reef in front can be enjoyed while snorkelling.",
+   "zh": "曼苏阿尔岛南岸的村庄，有民宿和木码头。可以在村前的珊瑚礁浮潜。",
+   "ru": "Деревня на южном побережье Мансуара с гостевыми домами и деревянным причалом. Риф напротив можно рассмотреть со снорклингом."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "sawandarek-jetty",
+  "jenis": "selam",
+  "nama": "Sawandarek Jetty",
+  "wilayah": "mansuar",
+  "lat": -0.60749,
+  "lng": 130.59049,
+  "keterangan": {
+   "id": "Titik snorkel dan selam di sekitar dermaga Sawandarek, dengan karang dangkal dan ikan karang yang beragam.",
+   "en": "A snorkel and dive site around Sawandarek's jetty, with shallow reef and a wide variety of reef fish.",
+   "zh": "萨万达雷克码头周边的浮潜和潜水点，有浅礁和种类丰富的礁鱼。",
+   "ru": "Место для снорклинга и дайвинга у причала Савандарека, с мелким рифом и разнообразными рифовыми рыбами."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "cape-kri",
+  "jenis": "selam",
+  "nama": "Cape Kri",
+  "wilayah": "kri",
+  "lat": -0.556,
+  "lng": 130.693,
+  "keterangan": {
+   "id": "Ujung timur Pulau Kri, salah satu titik selam paling terkenal di Raja Ampat. Di sini pernah tercatat ratusan jenis ikan dalam satu kali selam.",
+   "en": "The eastern tip of Kri island and one of Raja Ampat's best-known dive sites, where hundreds of fish species have been counted on a single dive.",
+   "zh": "克里岛的东端，拉贾安帕特最著名的潜点之一，曾在一次潜水中记录到数百种鱼类。",
+   "ru": "Восточная оконечность острова Кри, одно из самых известных мест для дайвинга в Раджа-Ампат. Здесь за одно погружение насчитывали сотни видов рыб."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "sardine-reef",
+  "jenis": "selam",
+  "nama": "Sardine Reef",
+  "wilayah": "kri",
+  "lat": -0.552,
+  "lng": 130.712,
+  "keterangan": {
+   "id": "Gundukan karang di timur Kri dengan kawanan ikan yang rapat saat arus kencang. Lebih cocok untuk penyelam berpengalaman.",
+   "en": "A reef east of Kri with dense schools of fish when the current is strong. Better suited to experienced divers.",
+   "zh": "克里岛以东的礁丘，水流强时鱼群密集。更适合有经验的潜水员。",
+   "ru": "Риф к востоку от Кри, где при сильном течении собираются плотные стаи рыб. Больше подходит опытным дайверам."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "blue-magic",
+  "jenis": "selam",
+  "nama": "Blue Magic",
+  "wilayah": "kri",
+  "lat": -0.532,
+  "lng": 130.712,
+  "keterangan": {
+   "id": "Gundukan karang di tengah laut, tidak jauh dari Kri. Pari manta dan kawanan ikan besar kerap lewat saat arus mengalir.",
+   "en": "A submerged reef in open water not far from Kri. Manta rays and big schools of fish often pass by when the current runs.",
+   "zh": "位于克里岛附近开阔海域的水下礁丘。有水流时常有蝠鲼和大群鱼经过。",
+   "ru": "Подводный риф в открытой воде недалеко от Кри. Когда идёт течение, здесь часто проплывают манты и большие стаи рыб."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "kampung-arborek",
+  "jenis": "kampung",
+  "nama": "Kampung Arborek",
+  "wilayah": "arborek",
+  "lat": -0.567,
+  "lng": 130.515,
+  "keterangan": {
+   "id": "Kampung wisata kecil yang dikenal dengan kerajinan noken dan topi pandan buatan warganya. Pantainya berpasir putih.",
+   "en": "A small tourism village known for the noken bags and pandan hats made by its residents. White sand beach.",
+   "zh": "以村民手工编织的诺肯包和露兜树叶帽闻名的小型旅游村，有白沙海滩。",
+   "ru": "Небольшая туристическая деревня, известная сумками нокен и шляпами из пандана, которые плетут местные жители. Пляж с белым песком."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "arborek-jetty",
+  "jenis": "selam",
+  "nama": "Arborek Jetty",
+  "wilayah": "arborek",
+  "lat": -0.56565,
+  "lng": 130.51736,
+  "keterangan": {
+   "id": "Snorkel di bawah dermaga Arborek yang ramai oleh kawanan ikan kecil. Bisa langsung dari kampung.",
+   "en": "Snorkel under Arborek's jetty among swirling schools of small fish, right from the village.",
+   "zh": "在阿尔博雷克码头下浮潜，成群的小鱼在身边游动，从村里就能直接下水。",
+   "ru": "Снорклинг под причалом Арборека среди стай мелких рыб, прямо из деревни."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "manta-sandy",
+  "jenis": "selam",
+  "nama": "Manta Sandy",
+  "wilayah": "arborek",
+  "lat": -0.578,
+  "lng": 130.535,
+  "keterangan": {
+   "id": "Stasiun pembersihan pari manta di antara Arborek dan Mansuar. Pengunjung menunggu di dasar berpasir dan tidak boleh mendekati manta.",
+   "en": "A manta ray cleaning station between Arborek and Mansuar. Visitors wait on the sandy bottom and must not approach the mantas.",
+   "zh": "位于阿尔博雷克与曼苏阿尔之间的蝠鲼清洁站。游客在沙底等候，不得靠近蝠鲼。",
+   "ru": "Станция очистки мант между Арбореком и Мансуаром. Посетители ждут на песчаном дне и не должны приближаться к мантам."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "hutan-batanta",
+  "jenis": "burung",
+  "nama": "Hutan Batanta",
+  "wilayah": "batanta",
+  "lat": -0.83,
+  "lng": 130.66,
+  "keterangan": {
+   "id": "Hutan lebat Batanta adalah rumah cenderawasih Wilson, burung yang hanya hidup di Batanta dan Waigeo. Pengamatan dengan pemandu setempat.",
+   "en": "Batanta's dense forest is home to the Wilson's bird of paradise, found only on Batanta and Waigeo. Watch with a local guide.",
+   "zh": "巴坦塔岛茂密的森林是威氏极乐鸟的家园，这种鸟只生活在巴坦塔岛和韦吉奥岛。请随当地向导观赏。",
+   "ru": "В густом лесу Батанты обитает райская птица Уилсона, которая живёт только на Батанте и Вайгео. Наблюдайте вместе с местным проводником."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "piaynemo",
+  "jenis": "pandang",
+  "nama": "Piaynemo",
+  "wilayah": "fam",
+  "lat": -0.56929,
+  "lng": 130.27012,
+  "keterangan": {
+   "id": "Titik pandang di Kepulauan Fam dengan tangga kayu ke puncak bukit. Dari atas terlihat gugusan pulau karst dan laguna biru, pemandangan khas Raja Ampat.",
+   "en": "A viewpoint in the Fam islands with wooden stairs up the hill. From the top you see clusters of karst islands and blue lagoons, the classic Raja Ampat view.",
+   "zh": "法姆群岛的观景点，沿木阶梯登上山顶。山顶可俯瞰成群的喀斯特小岛和蓝色泻湖，是拉贾安帕特的经典景色。",
+   "ru": "Смотровая площадка на островах Фам с деревянной лестницей на вершину холма. Сверху видны группы карстовых островов и голубые лагуны, классический вид Раджа-Ампат."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "telaga-bintang",
+  "jenis": "pandang",
+  "nama": "Telaga Bintang",
+  "wilayah": "fam",
+  "lat": -0.58029,
+  "lng": 130.27333,
+  "keterangan": {
+   "id": "Bukit pandang di Kepulauan Fam dengan laguna berbentuk bintang di bawahnya. Pendakiannya singkat melewati batu karst.",
+   "en": "A hilltop viewpoint in the Fam islands overlooking a star-shaped lagoon. A short climb over karst rock.",
+   "zh": "法姆群岛的山顶观景点，可俯瞰一座星形泻湖。沿喀斯特岩石短程攀爬即可到达。",
+   "ru": "Смотровая площадка на холме на островах Фам с видом на лагуну в форме звезды. Короткий подъём по карстовым камням."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "melissas-garden",
+  "jenis": "selam",
+  "nama": "Melissa's Garden",
+  "wilayah": "fam",
+  "lat": -0.58,
+  "lng": 130.307,
+  "keterangan": {
+   "id": "Taman karang dangkal di Kepulauan Fam dengan karang keras yang sangat beragam. Cocok untuk menyelam dan snorkel saat arus tenang.",
+   "en": "A shallow coral garden in the Fam islands with remarkably diverse hard corals. Good for diving and snorkelling when the current is calm.",
+   "zh": "法姆群岛的浅水珊瑚花园，硬珊瑚种类极其丰富。水流平缓时适合潜水和浮潜。",
+   "ru": "Мелководный коралловый сад на островах Фам с очень разнообразными твёрдыми кораллами. Подходит для дайвинга и снорклинга при спокойном течении."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 1
+ },
+ {
+  "id": "lukson-homestay",
+  "jenis": "homestay",
+  "nama": "Lukson Homestay",
+  "wilayah": "kri",
+  "lat": -0.56236,
+  "lng": 130.67005,
+  "keterangan": {
+   "id": "Homestay di pesisir utara Pulau Kri, menghadap karang dangkal dan Sorido Wall. Tamu bisa menyelam langsung dari homestay.",
+   "en": "A homestay on the north shore of Kri, facing the shallow reef and Sorido Wall. Guests can dive straight from the homestay.",
+   "zh": "位于克里岛北岸的民宿，面朝浅礁和Sorido Wall。住客可以直接从民宿出发潜水。",
+   "ru": "Гостевой дом на северном берегу острова Кри, напротив мелководного рифа и Sorido Wall. Нырять можно прямо от дома."
+  },
+  "selam": true,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "byuk-beya-homestay",
+  "jenis": "homestay",
+  "nama": "Byuk Beya Homestay",
+  "wilayah": "kri",
+  "lat": -0.55992,
+  "lng": 130.67557,
+  "keterangan": {
+   "id": "Homestay keluarga langsung di tepi pantai utara Pulau Kri.",
+   "en": "A family homestay right on the beach on Kri's north shore.",
+   "zh": "位于克里岛北岸海滩边的家庭民宿。",
+   "ru": "Семейный гостевой дом прямо на пляже северного берега Кри."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "mangkur-kodon-homestay",
+  "jenis": "homestay",
+  "nama": "Mangkur Kodon Homestay",
+  "wilayah": "kri",
+  "lat": -0.56636,
+  "lng": 130.66325,
+  "keterangan": {
+   "id": "Homestay di ujung barat Pulau Kri, di teluk tenang yang menghadap matahari terbenam. Bungalow panggungnya berdiri di atas laguna, dan karang bisa dicapai dengan berenang dari teras.",
+   "en": "A homestay at the western tip of Kri, in a quiet bay facing the sunset. Its stilt bungalows stand over the lagoon, and the reef is a short swim from the terrace.",
+   "zh": "位于克里岛西端的民宿，坐落在面朝日落的宁静海湾。高脚木屋建在泻湖之上，从露台游一小段即可到达珊瑚礁。",
+   "ru": "Гостевой дом на западной оконечности Кри, в тихой бухте с видом на закат. Бунгало на сваях стоят над лагуной, до рифа можно доплыть прямо с террасы."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "sorido-wall",
+  "jenis": "selam",
+  "nama": "Sorido Wall",
+  "wilayah": "kri",
+  "lat": -0.5535,
+  "lng": 130.6795,
+  "keterangan": {
+   "id": "Dinding karang di sisi utara Pulau Kri yang turun curam lebih dari 70 meter, dengan ceruk dan celah. Arus selat membawa banyak ikan, cocok untuk penyelam berpengalaman.",
+   "en": "A reef wall off Kri's north side that drops steeply past 70 metres, with overhangs and crevices. The strait's current brings plenty of fish, best for experienced divers.",
+   "zh": "克里岛北侧的珊瑚礁墙，陡降超过70米，有岩檐和缝隙。海峡的水流带来大量鱼群，适合有经验的潜水员。",
+   "ru": "Рифовая стена у северной стороны Кри, круто уходящая глубже 70 метров, с нависаниями и расщелинами. Течение пролива приносит много рыбы, подходит опытным дайверам."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "gosong-pasir-kri",
+  "jenis": "pantai",
+  "nama": "Gosong Pasir Kri",
+  "wilayah": "kri",
+  "lat": -0.5495,
+  "lng": 130.6885,
+  "keterangan": {
+   "id": "Gosong pasir putih di tengah karang dangkal di utara Pulau Kri. Air di sekitarnya jernih dan dangkal.",
+   "en": "A white sandbank in the middle of the shallow reef north of Kri. The water around it is clear and shallow.",
+   "zh": "克里岛北面浅礁中的白色沙洲。周围海水清澈且浅。",
+   "ru": "Белая песчаная отмель посреди мелководного рифа к северу от Кри. Вокруг прозрачная мелкая вода."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "nyanderos-homestay",
+  "jenis": "homestay",
+  "nama": "Nyanderos Homestay",
+  "wilayah": "mansuar",
+  "lat": -0.60381,
+  "lng": 130.56081,
+  "keterangan": {
+   "id": "Homestay di ujung barat Pulau Mansuar dengan taman, dan teras menghadap laut di setiap unit.",
+   "en": "A homestay at the western end of Mansuar with a garden and a sea-view terrace for each unit.",
+   "zh": "位于曼苏阿尔岛西端的民宿，有花园，每间客房都有海景露台。",
+   "ru": "Гостевой дом на западной оконечности Мансуара с садом и террасой с видом на море у каждого домика."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "tanjung-mansuar-homestay",
+  "jenis": "homestay",
+  "nama": "Tanjung Mansuar Homestay",
+  "wilayah": "mansuar",
+  "lat": -0.61134,
+  "lng": 130.55557,
+  "keterangan": {
+   "id": "Homestay di tanjung barat Pulau Mansuar, tidak jauh dari Manta Sandy dan Manta Ridge.",
+   "en": "A homestay on Mansuar's western cape, not far from Manta Sandy and Manta Ridge.",
+   "zh": "位于曼苏阿尔岛西角的民宿，离Manta Sandy和Manta Ridge不远。",
+   "ru": "Гостевой дом на западном мысе Мансуара, недалеко от Manta Sandy и Manta Ridge."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "manta-ridge",
+  "jenis": "selam",
+  "nama": "Manta Ridge",
+  "wilayah": "arborek",
+  "lat": -0.585,
+  "lng": 130.546,
+  "keterangan": {
+   "id": "Punggung karang tempat pari manta datang untuk dibersihkan, tidak jauh dari Manta Sandy. Peluang terbaik melihat manta sekitar Desember sampai Mei.",
+   "en": "A reef ridge where manta rays come to be cleaned, not far from Manta Sandy. The best chance to see them is around December to May.",
+   "zh": "蝠鲼前来接受清洁的珊瑚礁脊，离Manta Sandy不远。观赏蝠鲼的最佳时间约为12月至次年5月。",
+   "ru": "Рифовый гребень, куда манты приплывают на очистку, недалеко от Manta Sandy. Лучше всего их видно примерно с декабря по май."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "kampung-kurkapa",
+  "jenis": "kampung",
+  "nama": "Kampung Kurkapa",
+  "wilayah": "mansuar",
+  "lat": -0.57736,
+  "lng": 130.61742,
+  "keterangan": {
+   "id": "Kampung di pesisir utara Pulau Mansuar, menghadap Selat Dampier ke arah Gam.",
+   "en": "A village on the north coast of Mansuar, facing the Dampier Strait towards Gam.",
+   "zh": "曼苏阿尔岛北岸的村庄，隔丹皮尔海峡面向甘姆岛。",
+   "ru": "Деревня на северном побережье Мансуара, обращённая через пролив Дампир к Гаму."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "kampung-yenbekwan",
+  "jenis": "kampung",
+  "nama": "Kampung Yenbekwan",
+  "wilayah": "mansuar",
+  "lat": -0.57635,
+  "lng": 130.629,
+  "keterangan": {
+   "id": "Kampung di pesisir utara Pulau Mansuar, di antara Kurkapa dan Yenbuba.",
+   "en": "A village on the north coast of Mansuar, between Kurkapa and Yenbuba.",
+   "zh": "曼苏阿尔岛北岸的村庄，位于库尔卡帕和延布巴之间。",
+   "ru": "Деревня на северном побережье Мансуара, между Куркапой и Йенбубой."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "cape-mansuar",
+  "jenis": "selam",
+  "nama": "Cape Mansuar",
+  "wilayah": "mansuar",
+  "lat": -0.57664,
+  "lng": 130.66044,
+  "keterangan": {
+   "id": "Tanjung di ujung timur Pulau Mansuar dengan arus yang kuat. Kawanan barakuda, ikan kakatua kepala benjol, dan penyu sering terlihat. Untuk penyelam berpengalaman.",
+   "en": "The cape at Mansuar's eastern tip, with strong currents. Schools of barracuda, bumphead parrotfish and turtles are often seen. For experienced divers.",
+   "zh": "曼苏阿尔岛东端的海角，水流较强。常能看到梭鱼群、隆头鹦嘴鱼和海龟。适合有经验的潜水员。",
+   "ru": "Мыс на восточной оконечности Мансуара с сильными течениями. Часто встречаются стаи барракуд, горбоголовые рыбы-попугаи и черепахи. Для опытных дайверов."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "terimakasih-homestay",
+  "jenis": "homestay",
+  "nama": "Terimakasih Homestay",
+  "wilayah": "mansuar",
+  "lat": -0.60016,
+  "lng": 130.59671,
+  "keterangan": {
+   "id": "Homestay di pesisir selatan Pulau Mansuar dengan karang yang bagus untuk snorkel tepat di depannya.",
+   "en": "A homestay on Mansuar's south coast with a fine snorkelling reef right in front.",
+   "zh": "位于曼苏阿尔岛南岸的民宿，门前就有适合浮潜的漂亮珊瑚礁。",
+   "ru": "Гостевой дом на южном берегу Мансуара, прямо перед ним хороший риф для снорклинга."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "napoleon-homestay",
+  "jenis": "homestay",
+  "nama": "Napoleon Homestay",
+  "wilayah": "mansuar",
+  "lat": -0.60389,
+  "lng": 130.59239,
+  "keterangan": {
+   "id": "Homestay dengan teras menghadap laut di pesisir selatan Pulau Mansuar, dekat Kampung Sawandarek.",
+   "en": "A homestay with a sea-view terrace on Mansuar's south coast, near Sawandarek village.",
+   "zh": "位于曼苏阿尔岛南岸、靠近萨万达雷克村的民宿，有海景露台。",
+   "ru": "Гостевой дом с террасой с видом на море на южном берегу Мансуара, рядом с деревней Савандарек."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "imuri-homestay",
+  "jenis": "homestay",
+  "nama": "Imuri Homestay",
+  "wilayah": "mansuar",
+  "lat": -0.61026,
+  "lng": 130.58455,
+  "keterangan": {
+   "id": "Homestay di Kampung Sawandarek, Pulau Mansuar, dengan pemandangan laut.",
+   "en": "A homestay in Sawandarek village on Mansuar, with sea views.",
+   "zh": "位于曼苏阿尔岛萨万达雷克村的民宿，可欣赏海景。",
+   "ru": "Гостевой дом в деревне Савандарек на Мансуаре, с видом на море."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "piaynemo-homestay",
+  "jenis": "homestay",
+  "nama": "Piaynemo Homestay",
+  "wilayah": "fam",
+  "lat": -0.57681,
+  "lng": 130.26202,
+  "keterangan": {
+   "id": "Homestay di pesisir barat Pulau Piaynemo, tidak jauh dari bukit pandang Piaynemo.",
+   "en": "A homestay on the west coast of Piaynemo island, not far from the Piaynemo viewpoint.",
+   "zh": "位于皮亚内莫岛西岸的民宿，离皮亚内莫观景台不远。",
+   "ru": "Гостевой дом на западном берегу острова Пиайнемо, недалеко от смотровой площадки Пиайнемо."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "or-mandira-homestay",
+  "jenis": "homestay",
+  "nama": "Or Mandira Homestay",
+  "wilayah": "fam",
+  "lat": -0.59154,
+  "lng": 130.27407,
+  "keterangan": {
+   "id": "Homestay di bagian sempit Pulau Piaynemo yang menghadap barat. Sekitar 15–20 menit perahu ke Rufas, Fam Wall, dan bukit pandang Piaynemo.",
+   "en": "A homestay on a narrow stretch of Piaynemo island, facing west. About 15–20 minutes by boat to Rufas, Fam Wall and the Piaynemo viewpoint.",
+   "zh": "位于皮亚内莫岛狭长地带的民宿，面朝西方。乘船约15–20分钟可到Rufas、Fam Wall和皮亚内莫观景台。",
+   "ru": "Гостевой дом на узкой части острова Пиайнемо, обращённый на запад. Около 15–20 минут на лодке до Руфаса, Fam Wall и смотровой площадки Пиайнемо."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "gloria-homestay",
+  "jenis": "homestay",
+  "nama": "Gloria Homestay",
+  "wilayah": "fam",
+  "lat": -0.60066,
+  "lng": 130.28062,
+  "keterangan": {
+   "id": "Homestay di bagian selatan Pulau Piaynemo, dekat titik snorkel. Tamu bisa menyelam langsung dari homestay.",
+   "en": "A homestay on the southern part of Piaynemo island, close to snorkel spots. Guests can dive straight from the homestay.",
+   "zh": "位于皮亚内莫岛南部的民宿，靠近浮潜点。住客可以直接从民宿出发潜水。",
+   "ru": "Гостевой дом в южной части острова Пиайнемо, рядом с местами для снорклинга. Нырять можно прямо от дома."
+  },
+  "selam": true,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "yenmankankan-homestay",
+  "jenis": "homestay",
+  "nama": "Yenmankankan Homestay",
+  "wilayah": "fam",
+  "lat": -0.60312,
+  "lng": 130.27896,
+  "keterangan": {
+   "id": "Homestay di Kepulauan Fam, dekat Piaynemo dan Pulau Saukabu.",
+   "en": "A homestay in the Fam islands, close to Piaynemo and Saukabu island.",
+   "zh": "位于法姆群岛的民宿，靠近皮亚内莫和绍卡布岛。",
+   "ru": "Гостевой дом на островах Фам, рядом с Пиайнемо и островом Саукабу."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "keruwo-homestay",
+  "jenis": "homestay",
+  "nama": "Keruwo Homestay",
+  "wilayah": "fam",
+  "lat": -0.58625,
+  "lng": 130.30049,
+  "keterangan": {
+   "id": "Homestay dengan teras menghadap laut di Kepulauan Fam, dekat Piaynemo, Rufas, dan Telaga Bintang.",
+   "en": "A homestay with a sea-view terrace in the Fam islands, close to Piaynemo, Rufas and Telaga Bintang.",
+   "zh": "位于法姆群岛的民宿，有海景露台，靠近皮亚内莫、Rufas和Telaga Bintang。",
+   "ru": "Гостевой дом с террасой с видом на море на островах Фам, рядом с Пиайнемо, Руфасом и Телага-Бинтанг."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "fam-wall-homestay",
+  "jenis": "homestay",
+  "nama": "Fam Wall Homestay",
+  "wilayah": "fam",
+  "lat": -0.588,
+  "lng": 130.29068,
+  "keterangan": {
+   "id": "Homestay di pulau kecil Kepulauan Fam, di depan dinding karang Fam Wall.",
+   "en": "A homestay on a small island in the Fam group, in front of the Fam Wall reef.",
+   "zh": "位于法姆群岛一座小岛上的民宿，就在Fam Wall珊瑚墙前。",
+   "ru": "Гостевой дом на небольшом острове группы Фам, прямо напротив рифовой стены Fam Wall."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "fam-wall",
+  "jenis": "selam",
+  "nama": "Fam Wall",
+  "wilayah": "fam",
+  "lat": -0.59136,
+  "lng": 130.29107,
+  "keterangan": {
+   "id": "Dinding karang di Kepulauan Fam yang dikenal untuk snorkel dan selam, tidak jauh dari Piaynemo.",
+   "en": "A reef wall in the Fam islands known for snorkelling and diving, not far from Piaynemo.",
+   "zh": "法姆群岛的珊瑚墙，以浮潜和潜水闻名，离皮亚内莫不远。",
+   "ru": "Рифовая стена на островах Фам, известная снорклингом и дайвингом, недалеко от Пиайнемо."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "laguna-rufas",
+  "jenis": "menarik",
+  "nama": "Laguna Rufas",
+  "wilayah": "fam",
+  "lat": -0.55946,
+  "lng": 130.28194,
+  "keterangan": {
+   "id": "Laguna di Pulau Rufas, Kepulauan Fam, dikelilingi tebing karst dan karang yang sangat indah.",
+   "en": "A lagoon on Rufas island in the Fam group, ringed by karst cliffs and stunning reefs.",
+   "zh": "法姆群岛Rufas岛上的泻湖，四周环绕着喀斯特峭壁和美丽的珊瑚礁。",
+   "ru": "Лагуна на острове Руфас в группе Фам, окружённая карстовыми скалами и красивейшими рифами."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 2
+ },
+ {
+  "id": "kampung-warsambin",
+  "jenis": "kampung",
+  "nama": "Kampung Warsambin",
+  "wilayah": "waigeo",
+  "lat": -0.343,
+  "lng": 130.9285,
+  "keterangan": {
+   "id": "Kampung di tepi selat sempit yang menjadi mulut Teluk Mayalibit, sekitar satu jam lewat darat dari Waisai. Dari sini perjalanan ke Kali Biru dimulai.",
+   "en": "A village on the narrow channel at the mouth of Mayalibit Bay, about an hour by road from Waisai. Trips to Kali Biru start here.",
+   "zh": "位于马亚利比特湾湾口狭窄水道旁的村庄，从怀赛走陆路约一小时。前往Kali Biru的行程从这里出发。",
+   "ru": "Деревня на узкой протоке у входа в залив Маялибит, примерно в часе езды от Ваисаи. Отсюда начинаются поездки на Кали-Биру."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "mawar-homestay",
+  "jenis": "homestay",
+  "nama": "Mawar Homestay",
+  "wilayah": "arborek",
+  "lat": -0.5669,
+  "lng": 130.5117,
+  "keterangan": {
+   "id": "Homestay di ujung barat Pulau Arborek, beberapa langkah dari kampung dan karang dangkalnya.",
+   "en": "A homestay at the western tip of Arborek island, a few steps from the village and its shallow reef.",
+   "zh": "位于阿尔博雷克岛西端的民宿，离村庄和浅礁只有几步之遥。",
+   "ru": "Гостевой дом на западной оконечности острова Арборек, в нескольких шагах от деревни и мелководного рифа."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "arborek-dive-homestay",
+  "jenis": "homestay",
+  "nama": "Arborek Dive Homestay",
+  "wilayah": "arborek",
+  "lat": -0.5679,
+  "lng": 130.5137,
+  "keterangan": {
+   "id": "Homestay di pesisir selatan Arborek dengan layanan selam sendiri. Manta Sandy dan Manta Ridge dekat dari sini.",
+   "en": "A homestay on Arborek's south shore with its own dive service. Manta Sandy and Manta Ridge are close by.",
+   "zh": "位于阿尔博雷克南岸的民宿，自设潜水服务。离Manta Sandy和Manta Ridge很近。",
+   "ru": "Гостевой дом на южном берегу Арборека с собственным дайвингом. Manta Sandy и Manta Ridge совсем рядом."
+  },
+  "selam": true,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "par-fray-homestay",
+  "jenis": "homestay",
+  "nama": "Par Fray Homestay",
+  "wilayah": "arborek",
+  "lat": -0.56795,
+  "lng": 130.5146,
+  "keterangan": {
+   "id": "Homestay di pesisir selatan Arborek, menghadap karang dangkal yang bisa dinikmati dengan snorkel.",
+   "en": "A homestay on Arborek's south shore, facing a shallow reef you can snorkel.",
+   "zh": "位于阿尔博雷克南岸的民宿，面朝可以浮潜的浅礁。",
+   "ru": "Гостевой дом на южном берегу Арборека, напротив мелководного рифа для снорклинга."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "sehati-homestay",
+  "jenis": "homestay",
+  "nama": "Sehati Homestay",
+  "wilayah": "arborek",
+  "lat": -0.5678,
+  "lng": 130.5156,
+  "keterangan": {
+   "id": "Homestay di pesisir selatan Arborek, dekat pantai pasir putih dan kampung.",
+   "en": "A homestay on Arborek's south shore, close to the white sand beach and the village.",
+   "zh": "位于阿尔博雷克南岸的民宿，靠近白沙海滩和村庄。",
+   "ru": "Гостевой дом на южном берегу Арборека, рядом с белым пляжем и деревней."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "kayafyof-homestay",
+  "jenis": "homestay",
+  "nama": "Kayafyof Homestay",
+  "wilayah": "arborek",
+  "lat": -0.5676,
+  "lng": 130.5162,
+  "keterangan": {
+   "id": "Homestay dengan bungalow di atas air di sisi tenggara Arborek. Karang di depannya enak untuk snorkel.",
+   "en": "A homestay with overwater bungalows on Arborek's southeast side. The reef in front is good for snorkelling.",
+   "zh": "位于阿尔博雷克东南侧的民宿，有水上平房。门前的珊瑚礁很适合浮潜。",
+   "ru": "Гостевой дом с бунгало над водой на юго-восточной стороне Арборека. Риф прямо перед ним хорош для снорклинга."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "arborek-dive-shop",
+  "jenis": "dive",
+  "nama": "Arborek Dive Shop",
+  "wilayah": "arborek",
+  "lat": -0.5664,
+  "lng": 130.5157,
+  "keterangan": {
+   "id": "Pusat selam milik warga Arborek yang berdiri sejak 2016. Melayani selam dan snorkel ke titik-titik di sekitar pulau.",
+   "en": "A dive centre owned by Arborek villagers, running since 2016. Dives and snorkel trips to sites around the island.",
+   "zh": "由阿尔博雷克村民经营的潜水中心，2016年起营业。提供岛屿周边潜点的潜水和浮潜。",
+   "ru": "Дайв-центр, которым владеют жители Арборека, работает с 2016 года. Погружения и снорклинг на точках вокруг острова."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "rosye-homestay",
+  "jenis": "homestay",
+  "nama": "Rosye Homestay",
+  "wilayah": "pam",
+  "lat": -0.656,
+  "lng": 130.2652,
+  "keterangan": {
+   "id": "Homestay di ujung barat Pulau Fam, Kepulauan Pam, dengan pantai sendiri.",
+   "en": "A homestay at the western end of Fam island in the Pam group, with its own beach.",
+   "zh": "位于帕姆群岛法姆岛西端的民宿，有自己的海滩。",
+   "ru": "Гостевой дом на западной оконечности острова Фам в группе Пам, со своим пляжем."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "wesano-homestay",
+  "jenis": "homestay",
+  "nama": "Wesano Homestay",
+  "wilayah": "pam",
+  "lat": -0.6474,
+  "lng": 130.2727,
+  "keterangan": {
+   "id": "Homestay di Pulau Meos Ambower, utara Pulau Fam. Kata tamu, snorkel langsung di depan homestay sangat bagus.",
+   "en": "A homestay on Meos Ambower island, north of Fam island. Guests say the snorkelling right in front is excellent.",
+   "zh": "位于法姆岛北边Meos Ambower岛上的民宿。住客说门前浮潜非常棒。",
+   "ru": "Гостевой дом на острове Меос-Амбовер к северу от острова Фам. Гости хвалят снорклинг прямо перед домом."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "meos-ambower-homestay",
+  "jenis": "homestay",
+  "nama": "Meos Ambower Homestay",
+  "wilayah": "pam",
+  "lat": -0.6484,
+  "lng": 130.2703,
+  "keterangan": {
+   "id": "Homestay di atas air di Pulau Meos Ambower, dengan karang rumah di depannya.",
+   "en": "An overwater homestay on Meos Ambower island, with a house reef right in front.",
+   "zh": "Meos Ambower岛上的水上民宿，门前就是珊瑚礁。",
+   "ru": "Гостевой дом над водой на острове Меос-Амбовер, домашний риф прямо перед ним."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "marlina-homestay",
+  "jenis": "homestay",
+  "nama": "Marlina Homestay",
+  "wilayah": "pam",
+  "lat": -0.6551,
+  "lng": 130.2712,
+  "keterangan": {
+   "id": "Homestay di tepi pantai Pulau Fam, menghadap teluk kecil ke arah Meos Ambower.",
+   "en": "A beachfront homestay on Fam island, facing a small bay towards Meos Ambower.",
+   "zh": "法姆岛海边的民宿，面向通往Meos Ambower的小海湾。",
+   "ru": "Гостевой дом на берегу острова Фам, с видом на небольшую бухту в сторону Меос-Амбовер."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "fam-homestay",
+  "jenis": "homestay",
+  "nama": "Fam Homestay",
+  "wilayah": "pam",
+  "lat": -0.6605,
+  "lng": 130.2652,
+  "keterangan": {
+   "id": "Homestay di sudut barat daya Pulau Fam, menghadap Mios Besar dan Andau.",
+   "en": "A homestay on the southwest corner of Fam island, looking out to Mios Besar and Andau.",
+   "zh": "位于法姆岛西南角的民宿，望向Mios Besar和Andau。",
+   "ru": "Гостевой дом на юго-западном краю острова Фам с видом на Миос-Бесар и Андау."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "mares-homestay",
+  "jenis": "homestay",
+  "nama": "Mares Homestay",
+  "wilayah": "pam",
+  "lat": -0.6618,
+  "lng": 130.2705,
+  "keterangan": {
+   "id": "Homestay di pantai selatan Pulau Fam. Kata tamu, tuan rumahnya pemandu yang mengatur banyak kegiatan.",
+   "en": "A homestay on the south beach of Fam island. Guests say the host is a great guide who arranges plenty of activities.",
+   "zh": "位于法姆岛南岸海滩的民宿。住客说房东是出色的向导，会安排许多活动。",
+   "ru": "Гостевой дом на южном пляже острова Фам. Гости говорят, что хозяин отличный гид и организует много занятий."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "senja-homestay",
+  "jenis": "homestay",
+  "nama": "Senja Homestay",
+  "wilayah": "pam",
+  "lat": -0.6617,
+  "lng": 130.2728,
+  "keterangan": {
+   "id": "Homestay di pantai selatan Pulau Fam, tidak jauh dari Mares dan Fam Homestay.",
+   "en": "A homestay on the south beach of Fam island, not far from Mares and Fam Homestay.",
+   "zh": "位于法姆岛南岸海滩的民宿，离Mares和Fam Homestay不远。",
+   "ru": "Гостевой дом на южном пляже острова Фам, недалеко от Mares и Fam Homestay."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "tara-fudin-homestay",
+  "jenis": "homestay",
+  "nama": "Tara Fudin Homestay",
+  "wilayah": "pam",
+  "lat": -0.6392,
+  "lng": 130.3024,
+  "keterangan": {
+   "id": "Homestay di pesisir utara Pulau Fam dengan teras menghadap laut, dekat Kampung Saukabu.",
+   "en": "A homestay on the north coast of Fam island with a sea-view terrace, close to Saukabu village.",
+   "zh": "位于法姆岛北岸的民宿，有海景露台，靠近绍卡布村。",
+   "ru": "Гостевой дом на северном побережье острова Фам с террасой с видом на море, рядом с деревней Саукабу."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "kampung-saukabu",
+  "jenis": "kampung",
+  "nama": "Kampung Saukabu",
+  "wilayah": "pam",
+  "lat": -0.6428,
+  "lng": 130.3032,
+  "keterangan": {
+   "id": "Kampung di ujung timur Pulau Fam, salah satu dari tiga kampung di Kepulauan Fam. Beberapa homestay berdiri di tanjungnya.",
+   "en": "A village at the eastern end of Fam island, one of the three villages in the Fam islands. Several homestays stand on its cape.",
+   "zh": "位于法姆岛东端的村庄，是法姆群岛三个村庄之一。岬角上有几家民宿。",
+   "ru": "Деревня на восточной оконечности острова Фам, одна из трёх деревень островов Фам. На её мысу стоят несколько гостевых домов."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "mamere-homestay",
+  "jenis": "homestay",
+  "nama": "Mamere Homestay",
+  "wilayah": "pam",
+  "lat": -0.6408,
+  "lng": 130.3075,
+  "keterangan": {
+   "id": "Homestay dengan bungalow di tepi pantai di tanjung timur Pulau Fam, dekat Kampung Saukabu.",
+   "en": "A homestay with beachfront bungalows on the eastern cape of Fam island, near Saukabu village.",
+   "zh": "位于法姆岛东岬的民宿，海滩边有平房，靠近绍卡布村。",
+   "ru": "Гостевой дом с бунгало на пляже на восточном мысе острова Фам, рядом с деревней Саукабу."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "mefiyai-homestay",
+  "jenis": "homestay",
+  "nama": "Mefiyai Homestay",
+  "wilayah": "pam",
+  "lat": -0.6428,
+  "lng": 130.31,
+  "keterangan": {
+   "id": "Homestay di Tanjung Mefiyai, ujung timur Pulau Fam.",
+   "en": "A homestay on Mefiyai cape at the eastern tip of Fam island.",
+   "zh": "位于法姆岛东端Mefiyai岬角的民宿。",
+   "ru": "Гостевой дом на мысе Мефияй на восточной оконечности острова Фам."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "saukabu-homestay",
+  "jenis": "homestay",
+  "nama": "Saukabu Homestay",
+  "wilayah": "pam",
+  "lat": -0.6437,
+  "lng": 130.3102,
+  "keterangan": {
+   "id": "Homestay di ujung timur Pulau Fam, tidak jauh dari Piaynemo.",
+   "en": "A homestay at the eastern tip of Fam island, not far from Piaynemo.",
+   "zh": "位于法姆岛东端的民宿，离皮亚内莫不远。",
+   "ru": "Гостевой дом на восточной оконечности острова Фам, недалеко от Пиайнемо."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "kasumasa-homestay",
+  "jenis": "homestay",
+  "nama": "Kasumasa Homestay",
+  "wilayah": "pam",
+  "lat": -0.6699,
+  "lng": 130.2921,
+  "keterangan": {
+   "id": "Homestay di Pulau Pambemuk, selatan Pulau Fam, dengan teras menghadap laut.",
+   "en": "A homestay on Pambemuk island, south of Fam island, with a sea-view terrace.",
+   "zh": "位于法姆岛南边Pambemuk岛上的民宿，有海景露台。",
+   "ru": "Гостевой дом на острове Пэмбемук к югу от острова Фам, с террасой с видом на море."
+  },
+  "selam": false,
+  "perkiraan": true,
+  "sejak": 3
+ },
+ {
+  "id": "aibaf-pam-dive-homestay",
+  "jenis": "homestay",
+  "nama": "Aibaf Pam Dive Homestay",
+  "wilayah": "pam",
+  "lat": -0.6853,
+  "lng": 130.2452,
+  "keterangan": {
+   "id": "Homestay dengan layanan selam sendiri di Pulau Andau Besar, dulu bernama Bau Homestay. Tuan rumahnya bisa mengantar ke titik snorkel sekitar.",
+   "en": "A homestay with its own dive service on Andau Besar island, formerly Bau Homestay. The host can take you to snorkel sites nearby.",
+   "zh": "位于Andau Besar岛、自设潜水服务的民宿，前身是Bau Homestay。房东可以带你去附近的浮潜点。",
+   "ru": "Гостевой дом с собственным дайвингом на острове Андау-Бесар, раньше назывался Bau Homestay. Хозяин может отвезти к ближайшим местам для снорклинга."
+  },
+  "selam": true,
+  "perkiraan": true,
+  "sejak": 3
+ }
+]

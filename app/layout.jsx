@@ -3,6 +3,8 @@ import "./shop.css";
 import "./contact.css";
 import "./activities.css";
 import "./motion.css";
+import "./dive-sites.css";
+import "../src/components/peta-raja-ampat/peta-raja-ampat.css";
 import { dictionary, htmlLang } from "../src/i18n.js";
 import { requestLocale, languageAlternates } from "../src/server/locale.js";
 const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
