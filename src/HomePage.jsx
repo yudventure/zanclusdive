@@ -325,7 +325,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                   height="800"
                   loading="lazy"
                 />
-                <span>{h.reefLabel}</span>
                 <h3>
                   {h.reefTitle[0]}
                   <br />
@@ -347,7 +346,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                   height="800"
                   loading="lazy"
                 />
-                <span>{h.oceanLabel}</span>
                 <h3>
                   {h.oceanTitle[0]}
                   <br />

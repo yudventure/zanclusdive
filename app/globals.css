@@ -806,7 +806,7 @@ nav.open a::after {
   background-size: cover;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 .ocean-card::before {
   content: "";
