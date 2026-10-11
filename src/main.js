@@ -5,7 +5,6 @@ import {
 } from "./domain.js";
 import { bookingDates } from "./booking-model.js";
 import { dictionary, formatLongDate } from "./i18n.js";
-import { youtubeEmbed } from "./video.js";
 export function initializeWebsite(content, locale = "en") {
   const t = dictionary(locale).booking;
   const experiences = content?.experiences || defaultExperiences;
@@ -175,22 +174,6 @@ export function initializeWebsite(content, locale = "en") {
       content.append(back);
     }
   }
-  // The player loads only when opened and is unloaded on close.
-  const videoDialog = $("#video-dialog");
-  document.querySelectorAll("[data-video]").forEach(
-    (button) =>
-      (button.onclick = () => {
-        videoDialog.querySelector("iframe").src = youtubeEmbed(
-          button.dataset.video,
-        );
-        videoDialog.showModal();
-      }),
-  );
-  videoDialog?.addEventListener(
-    "close",
-    () => videoDialog.querySelector("iframe").removeAttribute("src"),
-    { signal: controller.signal },
-  );
   document.querySelectorAll("#open-quiz").forEach(
     (button) =>
       (button.onclick = () => {

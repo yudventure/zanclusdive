@@ -119,26 +119,9 @@ test("WhatsApp messages and booking errors follow the visitor's language", () =>
   );
 });
 
-test("hero video accepts YouTube links only and old titles gain Raja Ampat", async () => {
-  const { youtubeId } = await import("../src/video.js");
+test("old hero titles gain Raja Ampat", async () => {
   const { withRajaAmpatTitle } = await import("../src/content-i18n.js");
-  for (const url of [
-    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "https://youtu.be/dQw4w9WgXcQ?si=abc",
-    "https://youtube.com/shorts/dQw4w9WgXcQ",
-  ])
-    assert.equal(youtubeId(url), "dQw4w9WgXcQ");
-  for (const url of [
-    "http://youtu.be/dQw4w9WgXcQ",
-    "https://evil.example/watch?v=dQw4w9WgXcQ",
-    "javascript:alert(1)",
-  ])
-    assert.equal(youtubeId(url), null);
   const content = structuredClone(defaultContent);
-  content.heroVideo = "https://example.com/video";
-  assert.throws(() => validateContent(content));
-  content.heroVideo = "https://youtu.be/dQw4w9WgXcQ";
-  assert.equal(validateContent(content).heroVideo, content.heroVideo);
   content.text.heroTitle1 = "Di bawah laut,";
   content.en.text.heroTitle1 = "Beneath the sea,";
   const titled = withRajaAmpatTitle(content);

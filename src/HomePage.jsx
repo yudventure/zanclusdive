@@ -10,7 +10,6 @@ import PricePanel from "./components/PricePanel.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
-import { youtubeId } from "./video.js";
 
 function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
   const t = dictionary(locale);
@@ -62,7 +61,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
-  const videoId = youtubeId(content.heroVideo);
   const visibleActivities = ["diving", "snorkeling", "trip"].filter(
     (key) => content.activities[key].enabled,
   );
@@ -180,24 +178,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 <button className="button hero-primary" data-book>
                   {content.text.heroButton}
                   <span aria-hidden="true">→</span>
-                </button>
-                {/* Plays the YouTube link set in the CMS; until then it is
-                    shown as coming soon. */}
-                <button
-                  className="hero-quiz"
-                  type="button"
-                  data-video={videoId || undefined}
-                  disabled={!videoId}
-                >
-                  <span className="hero-quiz-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                      <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
-                    </svg>
-                  </span>
-                  <span>
-                    {h.videoCta}
-                    <small>{videoId ? h.videoMeta : h.videoSoon}</small>
-                  </span>
                 </button>
               </div>
             </div>
@@ -459,25 +439,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
           home
         />
       </div>
-      {videoId && (
-        <dialog
-          id="video-dialog"
-          className="modal video-modal"
-          aria-label={h.videoTitle}
-        >
-          <button className="close-modal" aria-label={h.closeVideo}>
-            {"×"}
-          </button>
-          <div className="video-frame">
-            <iframe
-              title={h.videoTitle}
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-          </div>
-        </dialog>
-      )}
       <dialog id="quiz-dialog" className="modal">
         <button className="close-modal" aria-label={h.closeQuiz}>
           {"×"}

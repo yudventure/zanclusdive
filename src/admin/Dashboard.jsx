@@ -1049,27 +1049,6 @@ export default function Dashboard({ section, email, today, demo = false }) {
                       Teks biasa; HTML atau script tidak dieksekusi.
                     </p>
                     <div className="admin-form-grid">
-                      <Field label="Link video YouTube (tombol video di hero)">
-                        <input
-                          type="url"
-                          maxLength="500"
-                          placeholder="https://youtu.be/…"
-                          value={content.heroVideo ?? ""}
-                          onChange={(e) => {
-                            const heroVideo = e.target.value;
-                            setContent((current) => ({
-                              ...current,
-                              heroVideo,
-                            }));
-                            setNotice("");
-                          }}
-                        />
-                      </Field>
-                      <p className="admin-subtle">
-                        Tempel tautan YouTube (youtube.com/watch, youtu.be, atau
-                        Shorts). Selama kosong, tombol tampil sebagai "Segera
-                        hadir". Video dipakai di kedua bahasa.
-                      </p>
                       {textFields.map(([key, label]) => (
                         <Field label={label} key={key}>
                           <textarea
