@@ -1,17 +1,25 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
 import ScrollEffects from "./components/ScrollEffects.jsx";
 import HeroWeather from "./components/HeroWeather.jsx";
+import PricePanel from "./components/PricePanel.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
 import { youtubeId } from "./video.js";
 
-function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
+function ExperienceCard({
+  activityKey,
+  activity,
+  className,
+  kicker,
+  locale,
+  onPreview,
+}) {
   const t = dictionary(locale);
   const label = t.activityLabels[activityKey];
   return (
@@ -23,6 +31,10 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
       aria-label={t.common.viewDetailOf(label)}
       data-reveal={activityKey === "diving" ? undefined : true}
       style={{ "--reveal-delay": activityKey === "trip" ? "160ms" : "80ms" }}
+      onMouseEnter={() => onPreview(activityKey)}
+      onMouseLeave={() => onPreview(null)}
+      onFocus={() => onPreview(activityKey)}
+      onBlur={() => onPreview(null)}
     >
       <img
         className="course-photo"
@@ -65,6 +77,16 @@ export default function HomePage({ content, locale = "en", demo = false }) {
   const t = dictionary(locale);
   const h = t.home;
   const videoId = youtubeId(content.heroVideo);
+  // Prices beside the cards: diving by default, the hovered card's activity
+  // while the pointer is on it.
+  const priceGroups = ["diving", "snorkeling", "trip"].filter(
+    (key) =>
+      content.activities[key].enabled && content.priceList?.[key]?.length,
+  );
+  const [priceGroup, setPriceGroup] = useState(priceGroups[0] || null);
+  const [preview, setPreview] = useState(null);
+  const previewPrices = (key) =>
+    setPreview(key && priceGroups.includes(key) ? key : null);
   const featured = ["snorkeling", "trip", "diving"].find(
     (key) => content.activities[key].enabled,
   );
@@ -112,7 +134,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             </a>
             <a href="#experiences">{t.common.experiences}</a>
             <a href="#ocean">{t.common.exploreOcean}</a>
-            <a href="#calendar">{t.common.plan}</a>
+            <a href="#prices">{t.common.prices}</a>
             <a href={localeHref(locale, "/dive-shop")}>{"Dive Shop"}</a>
             <a href="#contact">{t.common.contact}</a>
           </nav>
@@ -259,7 +281,8 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             >
               <article
                 className="beginner-calendar"
-                aria-label={h.divingCalendar}
+                aria-label={h.divingPrices}
+                hidden={!priceGroup && !content.activities.diving.enabled}
                 data-reveal
               >
                 <ExperienceCard
@@ -268,72 +291,20 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                   className="beginner"
                   kicker={h.divingKicker}
                   locale={locale}
+                  onPreview={previewPrices}
                 />
-                <div className="calendar-card" id="calendar">
-                  <div className="calendar-heading">
-                    <button id="prev-month" aria-label={h.prevMonth}>
-                      {"‹"}
-                    </button>
-                    <h3 id="month-label"></h3>
-                    <button id="next-month" aria-label={h.nextMonth}>
-                      {"›"}
-                    </button>
-                  </div>
-                  <div className="weekday-row" aria-hidden="true">
-                    {h.weekdays.map((day, index) => (
-                      <span key={index}>{day}</span>
-                    ))}
-                  </div>
-                  <div
-                    id="calendar-grid"
-                    className="calendar-grid"
-                    role="group"
-                    aria-label={h.pickDate}
-                  ></div>
-                  <label
-                    className="calendar-program"
-                    htmlFor="calendar-experience"
-                  >
-                    {h.program}
-                    <select id="calendar-experience">
-                      {Object.entries(content.experiences)
-                        .filter(([, e]) => e.enabled)
-                        .map(([key, e]) => (
-                          <option key={key} value={key}>
-                            {e.title}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  <p
-                    className="calendar-note"
-                    id="calendar-note"
-                    aria-live="polite"
-                  >
-                    {h.pickDateNote}
-                  </p>
-                  <button
-                    className="button dark calendar-book-button"
-                    id="calendar-book"
-                    type="button"
-                    disabled
-                    aria-describedby="calendar-note calendar-book-help"
-                  >
-                    {h.bookDate} <span aria-hidden="true">↗</span>
-                  </button>
-                  <button
-                    className="text-button"
-                    id="calendar-retry"
-                    type="button"
-                    hidden
-                  >
-                    {h.reloadSchedule}
-                  </button>
-                  <small id="calendar-book-help">{h.scheduleHelp}</small>
-                  <noscript>
-                    <small>{h.noscript}</small>
-                  </noscript>
-                </div>
+                {priceGroup && (
+                  <PricePanel
+                    priceList={content.priceList}
+                    group={preview || priceGroup}
+                    groups={priceGroups}
+                    onSelect={(key) => {
+                      setPriceGroup(key);
+                      setPreview(null);
+                    }}
+                    locale={locale}
+                  />
+                )}
               </article>
               <ExperienceCard
                 activityKey="snorkeling"
@@ -341,6 +312,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 className="advanced"
                 kicker={h.snorkelingKicker}
                 locale={locale}
+                onPreview={previewPrices}
               />
               <ExperienceCard
                 activityKey="trip"
@@ -348,6 +320,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 className="specialty"
                 kicker={h.tripKicker}
                 locale={locale}
+                onPreview={previewPrices}
               />
             </div>
             <div className="quiz-panel" data-reveal>

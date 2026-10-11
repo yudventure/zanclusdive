@@ -182,3 +182,27 @@ test("MET Norway forecasts become live hero weather readings", async () => {
     for (const { key } of weatherLocations)
       assert.ok(messages[locale].weather.places[key]);
 });
+
+test("package price list validates, migrates and keeps both languages", async () => {
+  const { defaultPriceList, validatePriceList, withPriceList, priceText } =
+    await import("../src/price-list.js");
+  assert.deepEqual(validatePriceList(defaultPriceList), defaultPriceList);
+  assert.equal(defaultPriceList.diving[0].price, 1200000);
+  const legacy = structuredClone(defaultContent);
+  delete legacy.priceList;
+  assert.deepEqual(withPriceList(legacy).priceList, defaultPriceList);
+  assert.deepEqual(validateContent(legacy).priceList, defaultPriceList);
+  const broken = structuredClone(defaultPriceList);
+  broken.trip[0].price = -5;
+  assert.throws(() => validatePriceList(broken));
+  broken.trip[0].price = 1;
+  broken.trip[0].name.id = "";
+  assert.throws(() => validatePriceList(broken));
+  broken.trip = Array(9).fill(defaultPriceList.diving[0]);
+  assert.throws(() => validatePriceList(broken));
+  assert.equal(priceText({ id: "Pelampung", en: "" }, "en"), "Pelampung");
+  assert.equal(
+    priceText({ id: "Pelampung", en: "Life jacket" }, "en"),
+    "Life jacket",
+  );
+});

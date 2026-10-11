@@ -4,6 +4,11 @@ import { blankSocials, socialPlatforms } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import { youtubeId } from "./video.js";
 import {
+  defaultPriceList,
+  validatePriceList,
+  withPriceList,
+} from "./price-list.js";
+import {
   englishDefaults,
   validateTranslations,
   withTranslations,
@@ -48,6 +53,7 @@ export const defaultContent = {
   images: { ...defaultSiteImages },
   // Optional YouTube link for the hero video button.
   heroVideo: "",
+  priceList: structuredClone(defaultPriceList),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -210,6 +216,7 @@ export function validateContent(input) {
     contact,
     images,
     heroVideo,
+    priceList: validatePriceList(withPriceList(input).priceList),
     experiences: catalog,
     shop,
     activities: validateActivities(input.activities),

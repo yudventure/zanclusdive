@@ -1,12 +1,10 @@
 import {
   experiences as defaultExperiences,
-  monthCells,
-  dateKey,
   recommendation,
   planSummary as formatPlanSummary,
 } from "./domain.js";
 import { bookingDates } from "./booking-model.js";
-import { dictionary, formatLongDate, intlLocale } from "./i18n.js";
+import { dictionary, formatLongDate } from "./i18n.js";
 import { youtubeEmbed } from "./video.js";
 export function initializeWebsite(content, locale = "en") {
   const t = dictionary(locale).booking;
@@ -29,155 +27,16 @@ export function initializeWebsite(content, locale = "en") {
     signal: controller.signal,
   });
   const dateBounds = bookingDates();
-  const today = new Date(dateBounds.today + "T12:00:00");
-  let year = today.getFullYear(),
-    month = today.getMonth(),
-    selectedDate = null,
-    currentCourse = activeKeys[0] || "beginner",
+  let currentCourse = activeKeys[0] || "beginner",
     lastPlan = null,
     receipt = null,
     requestAttempt = null,
-    submitting = false,
-    calendarLoading = true,
-    calendarError = false,
-    calendarEnabled = true,
-    calendarSequence = 0,
-    closedDates = [];
-  $("#year").textContent = year;
+    submitting = false;
+  $("#year").textContent = dateBounds.today.slice(0, 4);
   const todayKey = dateBounds.today;
   $('input[name="date"]').min = todayKey;
   $('input[name="date"]').max = dateBounds.last;
   const formatDate = (key) => formatLongDate(key, locale);
-  function renderCalendar() {
-    $("#month-label").textContent = new Date(year, month, 1).toLocaleDateString(
-      intlLocale[locale],
-      { month: "long", year: "numeric" },
-    );
-    const grid = $("#calendar-grid");
-    const focusedDate = grid.contains(document.activeElement)
-      ? document.activeElement.dataset.date
-      : null;
-    grid.replaceChildren();
-    for (const day of monthCells(year, month)) {
-      if (!day) {
-        grid.append(document.createElement("span"));
-        continue;
-      }
-      const key = dateKey(year, month, day),
-        btn = document.createElement("button");
-      btn.textContent = day;
-      btn.type = "button";
-      btn.dataset.date = key;
-      const closed = closedDates.some(
-        (range) => range.startDate <= key && key <= range.endDate,
-      );
-      btn.disabled =
-        calendarLoading ||
-        calendarError ||
-        !calendarEnabled ||
-        key < todayKey ||
-        key > dateBounds.last ||
-        closed;
-      btn.setAttribute(
-        "aria-label",
-        formatDate(key) + (closed ? t.closedSuffix : ""),
-      );
-      if (closed) btn.classList.add("closed");
-      btn.setAttribute("aria-pressed", String(key === selectedDate));
-      if (key === todayKey) btn.classList.add("today");
-      if (key === selectedDate) btn.classList.add("selected");
-      btn.onclick = () => {
-        selectedDate = key;
-        $('input[name="date"]').value = key;
-        receipt = null;
-        renderCalendar();
-      };
-      grid.append(btn);
-    }
-    if (focusedDate) {
-      const focusedButton = grid.querySelector(`[data-date="${focusedDate}"]`);
-      if (focusedButton && !focusedButton.disabled)
-        focusedButton.focus({ preventScroll: true });
-    }
-    $("#calendar-grid").setAttribute("aria-busy", String(calendarLoading));
-    const monthKey = dateKey(year, month, 1).slice(0, 7);
-    $("#prev-month").disabled = monthKey <= todayKey.slice(0, 7);
-    $("#next-month").disabled = monthKey >= dateBounds.last.slice(0, 7);
-    $("#calendar-book").disabled =
-      !selectedDate || calendarLoading || calendarError || !calendarEnabled;
-    $("#calendar-retry").hidden = !calendarError;
-    $("#calendar-note").textContent = calendarLoading
-      ? t.loading
-      : calendarError
-        ? t.loadError
-        : !calendarEnabled
-          ? t.disabled
-          : selectedDate
-            ? t.selected(formatDate(selectedDate))
-            : dictionary(locale).home.pickDateNote;
-  }
-  async function refreshCalendar() {
-    const sequence = ++calendarSequence;
-    calendarLoading = true;
-    calendarError = false;
-    renderCalendar();
-    try {
-      const query = new URLSearchParams({
-        month: dateKey(year, month, 1).slice(0, 7),
-        experience: currentCourse,
-      });
-      const response = await fetch("/api/bookings?" + query, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("CALENDAR_UNAVAILABLE");
-      const availability = await response.json();
-      if (sequence !== calendarSequence || controller.signal.aborted) return;
-      closedDates = availability.closed;
-      calendarEnabled = availability.enabled;
-      if (
-        selectedDate &&
-        closedDates.some(
-          (range) =>
-            range.startDate <= selectedDate && selectedDate <= range.endDate,
-        )
-      )
-        selectedDate = null;
-    } catch (error) {
-      if (sequence !== calendarSequence || controller.signal.aborted) return;
-      calendarError = true;
-    }
-    calendarLoading = false;
-    renderCalendar();
-  }
-  $("#prev-month").onclick = () => {
-    if (--month < 0) {
-      month = 11;
-      year--;
-    }
-    selectedDate = null;
-    refreshCalendar();
-  };
-  $("#next-month").onclick = () => {
-    if (++month > 11) {
-      month = 0;
-      year++;
-    }
-    selectedDate = null;
-    refreshCalendar();
-  };
-  $("#calendar-experience").addEventListener(
-    "change",
-    (event) => {
-      currentCourse = event.target.value;
-      $('select[name="experience"]').value = currentCourse;
-      receipt = null;
-      refreshCalendar();
-    },
-    { signal: controller.signal },
-  );
-  $("#calendar-retry").onclick = refreshCalendar;
-  refreshCalendar();
   $(".menu-toggle").onclick = () => {
     const opened = $("#navigation").classList.toggle("open");
     $(".menu-toggle").setAttribute("aria-expanded", opened);
@@ -199,31 +58,17 @@ export function initializeWebsite(content, locale = "en") {
       }),
   );
   function openBooking(course = currentCourse) {
-    const showReceipt =
-      receipt &&
-      lastPlan?.date === selectedDate &&
-      lastPlan?.experience === course;
+    const showReceipt = receipt && lastPlan?.experience === course;
     $("#booking-form").hidden = Boolean(showReceipt);
     $("#booking-result").hidden = !showReceipt;
     $("#booking-error").hidden = true;
-    if (course !== currentCourse) {
-      $("#calendar-experience").value = course;
-      currentCourse = course;
-      refreshCalendar();
-    }
     currentCourse = course;
     $('select[name="experience"]').value = course;
-    if (selectedDate) $('input[name="date"]').value = selectedDate;
     $("#booking-dialog").showModal();
   }
-  $("#calendar-book").onclick = () => openBooking(currentCourse);
   $('select[name="experience"]').addEventListener(
     "change",
-    (event) => {
-      currentCourse = event.target.value;
-      $("#calendar-experience").value = currentCourse;
-      refreshCalendar();
-    },
+    (event) => (currentCourse = event.target.value),
     { signal: controller.signal },
   );
   document
@@ -399,7 +244,6 @@ export function initializeWebsite(content, locale = "en") {
         error.message === "Failed to fetch" ? t.offline : error.message;
       $("#booking-error").hidden = false;
       $("#booking-error").focus();
-      refreshCalendar();
       return;
     } finally {
       submitting = false;
@@ -408,11 +252,6 @@ export function initializeWebsite(content, locale = "en") {
       $("#booking-form").setAttribute("aria-busy", "false");
     }
     if (controller.signal.aborted) return;
-    selectedDate = lastPlan.date;
-    [year, month] = [
-      Number(selectedDate.slice(0, 4)),
-      Number(selectedDate.slice(5, 7)) - 1,
-    ];
     $("#booking-reference").textContent = t.reference(
       receipt.reference,
       receipt.demo,
@@ -434,7 +273,6 @@ export function initializeWebsite(content, locale = "en") {
     $("#booking-form").hidden = true;
     $("#booking-result").hidden = false;
     $("#booking-success-title").focus();
-    refreshCalendar();
   };
   $('input[name="name"]').oninput = (event) =>
     event.target.setCustomValidity("");
@@ -444,7 +282,6 @@ export function initializeWebsite(content, locale = "en") {
     requestAttempt = null;
     $("#booking-form").reset();
     $('select[name="experience"]').value = currentCourse;
-    if (selectedDate) $('input[name="date"]').value = selectedDate;
     $("#booking-form").hidden = false;
     $("#booking-result").hidden = true;
   };

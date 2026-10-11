@@ -8,6 +8,7 @@ import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
 import { withTranslations, withRajaAmpatTitle } from "../content-i18n.js";
+import { withPriceList } from "../price-list.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -77,7 +78,7 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
-      const titled = withRajaAmpatTitle(state.content);
+      const titled = withPriceList(withRajaAmpatTitle(state.content));
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;
         state.version++;
