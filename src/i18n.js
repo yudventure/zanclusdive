@@ -88,11 +88,6 @@ const id = {
   },
   home: {
     heroAlt: "Visual konsep petualangan scuba diving di bawah laut",
-    videoCta: "Tonton video",
-    videoMeta: "Raja Ampat di YouTube",
-    videoSoon: "Segera hadir",
-    videoTitle: "Video Zanclus Dive Center di Raja Ampat",
-    closeVideo: "Tutup video",
     seeAll: "Lihat semua",
     close: "Tutup",
     divingKicker: "SELAMI CERITA BARU",
@@ -471,11 +466,6 @@ const en = {
   },
   home: {
     heroAlt: "Concept visual of a scuba diving adventure underwater",
-    videoCta: "Watch video",
-    videoMeta: "Raja Ampat on YouTube",
-    videoSoon: "Coming soon",
-    videoTitle: "Zanclus Dive Center video in Raja Ampat",
-    closeVideo: "Close video",
     seeAll: "See all",
     close: "Close",
     divingKicker: "DIVE INTO A NEW STORY",
