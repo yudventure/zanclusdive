@@ -581,7 +581,7 @@
 }
 .shop-teaser {
   padding: 75px max(40px, calc((100vw - 1280px) / 2));
-  background: #eef4ed;
+  background: #e2eef3;
 }
 .shop-teaser-heading {
   display: grid;
@@ -630,7 +630,7 @@
     color 0.2s;
 }
 .shop-service-tabs button:hover {
-  background: #e1ece4;
+  background: #d3e5ec;
 }
 .shop-service-tabs button[aria-selected="true"] {
   background: #0d6f73;
@@ -643,8 +643,8 @@
 }
 .shop-service-panel {
   padding: 36px;
-  background: #f6faf8;
-  border: 1px solid #d6e6e2;
+  background: #f8fbfc;
+  border: 1px solid #cfe2ea;
   border-radius: 26px;
 }
 .shop-service-panel h3 {
@@ -986,7 +986,7 @@
     padding: 11px 16px;
     font-size: 13px;
     white-space: nowrap;
-    border: 1px solid #d3e2da;
+    border: 1px solid #c7dce5;
     border-radius: 999px;
   }
   .shop-service-tabs button[aria-selected="true"] {
