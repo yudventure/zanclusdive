@@ -188,7 +188,7 @@ try {
     for (const key of activityKeys) {
       await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
       await noOverflow(`${key} overflow at ${width}`);
-      await page.getByRole("link", { name: "Rencanakan kegiatan" }).click();
+      await page.locator("#inquiry").scrollIntoViewIfNeeded();
       await page.locator("#inquiry-name").waitFor({ state: "visible" });
       if (width <= 820) {
         await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));

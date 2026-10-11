@@ -174,25 +174,6 @@
   color: #d1e2e6;
   max-width: 580px;
 }
-.activity-hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  margin-top: 32px;
-}
-.activity-hero-actions .button {
-  font-size: 13px;
-  min-height: 50px;
-}
-.activity-text-link {
-  font-size: 13px;
-  display: flex;
-  gap: 16px;
-  color: #deedf0;
-}
-.activity-text-link:hover {
-  color: #bef4a5;
-}
 .activity-hero-bottom {
   margin-top: 60px;
   display: flex;
@@ -657,10 +638,6 @@
   }
   .activity-hero-summary {
     font-size: 14px;
-  }
-  .activity-hero-actions {
-    flex-wrap: wrap;
-    gap: 22px;
   }
   .activity-hero-bottom {
     flex-direction: column;
