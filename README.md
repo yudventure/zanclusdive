@@ -35,7 +35,11 @@ Gambar generatif bukan dokumentasi lokasi. Logo adalah adaptasi vektor dari aset
 
 ## Hero beranda
 
-Hero memakai font Plus Jakarta Sans (file lokal di `public/assets`, tanpa CDN) dengan judul tebal dua baris; baris kedua bergradasi. Isinya: label kecil, judul, deskripsi, tombol booking, tombol kuis (“Find your dive”), kartu kaca berisi satu halaman aktivitas (Snorkeling, atau aktivitas aktif berikutnya), bar statistik, dan indikator scroll. Label, judul, deskripsi, dan teks tombol diatur dari **Teks website**. Angka statistik diambil dari konten aktif: jumlah aktivitas tampil, jumlah produk Dive Shop tampil (disembunyikan bila kosong), dan rentang booking 365 hari; tidak ada angka rating atau jumlah tamu buatan. Di layar ≤860px kartu aktivitas dan indikator scroll disembunyikan.
+Hero memakai font Plus Jakarta Sans (file lokal di `public/assets`, tanpa CDN) dengan judul tebal dua baris; baris kedua bergradasi. Isinya: label kecil, judul, deskripsi, tombol booking, tombol video atau kuis, kartu kaca berisi satu halaman aktivitas (Snorkeling, atau aktivitas aktif berikutnya), bar statistik, dan indikator scroll. Label, judul, deskripsi, dan teks tombol diatur dari **Teks website**. Angka statistik diambil dari konten aktif: jumlah aktivitas tampil, jumlah produk Dive Shop tampil (disembunyikan bila kosong), dan rentang booking 365 hari; tidak ada angka rating atau jumlah tamu buatan. Di layar ≤860px kartu aktivitas dan indikator scroll disembunyikan.
+
+Judul default memuat “Raja Ampat” untuk SEO (“Di bawah laut Raja Ampat, cerita dimulai.” / “Beneath the waters of Raja Ampat, the story begins.”), begitu juga judul dan deskripsi halaman. Dokumen CMS yang masih memakai judul default lama (“Di bawah laut,” / “Beneath the sea,”) diperbarui otomatis; judul yang sudah diubah pemilik tidak disentuh.
+
+**Video hero:** isi **Link video YouTube** di **Teks website** (youtube.com/watch, youtu.be, Shorts, atau live). Tombol kanan berubah menjadi “Watch video / Tonton video” dan membuka pemutar YouTube (youtube-nocookie) dalam dialog; pemutar baru dimuat saat dibuka dan dihentikan saat ditutup. Link dipakai di kedua bahasa. Bila kosong, tombol kanan membuka kuis.
 
 ## Dua bahasa
 

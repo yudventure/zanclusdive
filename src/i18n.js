@@ -34,9 +34,9 @@ export const formatLongDate = (key, locale = "id") =>
 
 const id = {
   meta: {
-    title: "Zanclus Dive Center — Jelajahi laut. Temukan cerita.",
+    title: "Zanclus Dive Center — Diving & snorkeling di Raja Ampat",
     description:
-      "Jelajahi kehidupan bawah laut bersama Zanclus Dive Center. Temukan pengalaman diving dan susun rencana penyelamanmu.",
+      "Diving, snorkeling, dan trip laut di Raja Ampat bersama Zanclus Dive Center. Jelajahi kehidupan bawah laut dan susun rencana penyelamanmu.",
     ogDescription: "Jelajahi laut. Temukan cerita.",
     ogLocale: "id_ID",
     heroAlt: "Konsep petualangan bawah laut Zanclus",
@@ -91,6 +91,10 @@ const id = {
     exploreExperiences: "Jelajahi pengalaman",
     quizCta: "Temukan pilihanmu",
     quizMeta: "Kuis 2 pertanyaan",
+    videoCta: "Tonton video",
+    videoMeta: "Raja Ampat di YouTube",
+    videoTitle: "Video Zanclus Dive Center di Raja Ampat",
+    closeVideo: "Tutup video",
     scrollDown: "Gulir ke bawah",
     statExperiences: "Pengalaman laut",
     statGear: "Alat beli & sewa",
@@ -410,9 +414,9 @@ const id = {
 
 const en = {
   meta: {
-    title: "Zanclus Dive Center — Explore the ocean. Find your story.",
+    title: "Zanclus Dive Center — Diving & snorkeling in Raja Ampat",
     description:
-      "Explore underwater life with Zanclus Dive Center. Discover diving experiences and plan your next dive.",
+      "Diving, snorkeling and sea trips in Raja Ampat with Zanclus Dive Center. Explore underwater life and plan your next dive.",
     ogDescription: "Explore the ocean. Find your story.",
     ogLocale: "en_US",
     heroAlt: "Zanclus underwater adventure concept",
@@ -467,6 +471,10 @@ const en = {
     exploreExperiences: "Explore experiences",
     quizCta: "Find your dive",
     quizMeta: "2-question quiz",
+    videoCta: "Watch video",
+    videoMeta: "Raja Ampat on YouTube",
+    videoTitle: "Zanclus Dive Center video in Raja Ampat",
+    closeVideo: "Close video",
     scrollDown: "Scroll down",
     statExperiences: "Ocean experiences",
     statGear: "Gear to buy or rent",

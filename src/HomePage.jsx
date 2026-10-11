@@ -8,6 +8,7 @@ import ScrollEffects from "./components/ScrollEffects.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
+import { youtubeId } from "./video.js";
 
 function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
   const t = dictionary(locale);
@@ -92,6 +93,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
     ...(gearCount ? [["gear", gearCount, h.statGear]] : []),
     ["calendar", "365", h.statBooking],
   ];
+  const videoId = youtubeId(content.heroVideo);
   const featured = ["snorkeling", "trip", "diving"].find(
     (key) => content.activities[key].enabled,
   );
@@ -195,15 +197,22 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                   {content.text.heroButton}
                   <span aria-hidden="true">→</span>
                 </button>
-                <button className="hero-quiz" type="button" data-quiz>
+                {/* Video button once a YouTube link is set in the CMS. */}
+                <button
+                  className="hero-quiz"
+                  type="button"
+                  {...(videoId
+                    ? { "data-video": videoId }
+                    : { "data-quiz": true })}
+                >
                   <span className="hero-quiz-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24">
                       <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
                     </svg>
                   </span>
                   <span>
-                    {h.quizCta}
-                    <small>{h.quizMeta}</small>
+                    {videoId ? h.videoCta : h.quizCta}
+                    <small>{videoId ? h.videoMeta : h.quizMeta}</small>
                   </span>
                 </button>
               </div>
@@ -562,6 +571,25 @@ export default function HomePage({ content, locale = "en", demo = false }) {
           home
         />
       </div>
+      {videoId && (
+        <dialog
+          id="video-dialog"
+          className="modal video-modal"
+          aria-label={h.videoTitle}
+        >
+          <button className="close-modal" aria-label={h.closeVideo}>
+            {"×"}
+          </button>
+          <div className="video-frame">
+            <iframe
+              title={h.videoTitle}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+        </dialog>
+      )}
       <dialog id="quiz-dialog" className="modal">
         <button className="close-modal" aria-label={h.closeQuiz}>
           {"×"}

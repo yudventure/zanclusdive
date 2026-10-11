@@ -47,7 +47,7 @@ const common = {
 export const englishDefaults = {
   text: {
     heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
-    heroTitle1: "Beneath the sea,",
+    heroTitle1: "Beneath the waters of Raja Ampat,",
     heroTitle2: "the story begins.",
     tagline: "Explore the ocean. Find your story.",
     heroDescription: "Diving experiences for every kind of curiosity.",
@@ -362,6 +362,20 @@ function overlay(base, english = {}) {
   for (const [key, value] of Object.entries(english))
     if (filled(value)) result[key] = value;
   return result;
+}
+
+// The hero title gained "Raja Ampat" for search. Only the untouched former
+// default is replaced; titles written by the owner stay as they are.
+export function withRajaAmpatTitle(content) {
+  const updated = { ...content };
+  if (content.text?.heroTitle1 === "Di bawah laut,")
+    updated.text = { ...content.text, heroTitle1: "Di bawah laut Raja Ampat," };
+  if (content.en?.text?.heroTitle1 === "Beneath the sea,")
+    updated.en = {
+      ...content.en,
+      text: { ...content.en.text, heroTitle1: englishDefaults.text.heroTitle1 },
+    };
+  return updated;
 }
 
 // Older CMS documents gain the English overlay; saved English copy survives.

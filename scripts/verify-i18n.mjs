@@ -18,8 +18,8 @@ page.on("pageerror", (error) => errors.push(error.message));
 try {
   // English is the default language at the root URLs.
   const pages = {
-    "/": ["en", "Beneath the sea,"],
-    "/id": ["id", "Di bawah laut,"],
+    "/": ["en", "Beneath the waters of Raja Ampat,"],
+    "/id": ["id", "Di bawah laut Raja Ampat,"],
     "/diving": ["en", "Find the story beneath the surface."],
     "/id/diving": ["id", "Temukan cerita di bawah permukaan."],
     "/dive-shop": ["en", "Gear for your next story."],
