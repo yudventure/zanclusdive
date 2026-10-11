@@ -58,10 +58,43 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
     </a>
   );
 }
+function HeroIcon({ name }) {
+  const paths = {
+    waves:
+      "M3 8c1.5 0 1.5-1.5 3-1.5S7.5 8 9 8s1.5-1.5 3-1.5S13.5 8 15 8s1.5-1.5 3-1.5S19.5 8 21 8M3 13c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5M3 18c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5",
+    gear: "M5.5 8.5h13l-1.2 11H6.7l-1.2-11ZM9 8.5V7a3 3 0 0 1 6 0v1.5",
+    calendar: "M5 6.5h14v13H5zM5 10.5h14M9 4v4M15 4v4M9 14h2M13 14h2M9 17h2",
+  };
+  return (
+    <svg className="hero-stat-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d={paths[name]}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 export default function HomePage({ content, locale = "en", demo = false }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
+  // Hero facts come from live content, never invented numbers.
+  const activeActivities = Object.values(content.activities).filter(
+    (activity) => activity.enabled,
+  ).length;
+  const gearCount = content.shop.products.filter((p) => p.enabled).length;
+  const stats = [
+    ["waves", activeActivities, h.statExperiences],
+    ...(gearCount ? [["gear", gearCount, h.statGear]] : []),
+    ["calendar", "365", h.statBooking],
+  ];
+  const featured = ["snorkeling", "trip", "diving"].find(
+    (key) => content.activities[key].enabled,
+  );
   const WHATSAPP_NUMBER = content.contact.whatsapp;
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
@@ -147,31 +180,73 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               height="941"
               fetchPriority="high"
             />
-            <div className="hero-topline">
-              <span className="tiny-dot"></span>
-              {content.text.heroEyebrow}
-            </div>
-            <h1 id="hero-title">
-              {content.text.heroTitle1}
-              <br />
-              <span>{content.text.heroTitle2}</span>
-            </h1>
-            <div className="hero-bottom">
-              <p>
-                {content.text.tagline}
+            <div className="hero-content">
+              <p className="hero-topline">{content.text.heroEyebrow}</p>
+              <h1 id="hero-title">
+                {content.text.heroTitle1}
                 <br />
-                {content.text.heroDescription}
+                <span>{content.text.heroTitle2}</span>
+              </h1>
+              <p className="hero-lead">
+                {content.text.tagline} {content.text.heroDescription}
               </p>
-              <button className="button primary" data-book>
-                {content.text.heroButton}
-                <span>{"↗"}</span>
-              </button>
+              <div className="hero-actions">
+                <button className="button hero-primary" data-book>
+                  {content.text.heroButton}
+                  <span aria-hidden="true">→</span>
+                </button>
+                <button className="hero-quiz" type="button" data-quiz>
+                  <span className="hero-quiz-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor" />
+                    </svg>
+                  </span>
+                  <span>
+                    {h.quizCta}
+                    <small>{h.quizMeta}</small>
+                  </span>
+                </button>
+              </div>
             </div>
-            <div className="hero-caption">
-              <span>{"01 — THE OCEAN IS CALLING"}</span>
-              <a href="#experiences" aria-label={h.exploreExperiences}>
-                {"SCROLL TO EXPLORE "}
-                <span>{"↓"}</span>
+            {featured && (
+              <a
+                className="hero-feature"
+                href={localeHref(locale, `/${featured}`)}
+              >
+                <img
+                  src={content.activities[featured].cardImage}
+                  srcSet={photoSrcSet(content.activities[featured].cardImage)}
+                  sizes="96px"
+                  alt=""
+                  width="96"
+                  height="72"
+                />
+                <span className="hero-feature-copy">
+                  <strong>{t.activityLabels[featured]}</strong>
+                  <small>{content.activities[featured].summary}</small>
+                </span>
+                <span className="hero-feature-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            )}
+            <div className="hero-footer">
+              <dl className="hero-stats">
+                {stats.map(([icon, value, label]) => (
+                  <div key={icon}>
+                    <HeroIcon name={icon} />
+                    <dt>{value}</dt>
+                    <dd>{label}</dd>
+                  </div>
+                ))}
+              </dl>
+              <a
+                className="hero-scroll"
+                href="#experiences"
+                aria-label={h.exploreExperiences}
+              >
+                <span className="hero-mouse" aria-hidden="true" />
+                {h.scrollDown}
               </a>
             </div>
           </section>

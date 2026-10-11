@@ -31,7 +31,11 @@ Salin `.env.example` menjadi `.env.local` untuk konfigurasi lokal. `NEXT_PUBLIC_
 
 Layout memenuhi lebar layar tanpa bingkai luar, hero imersif, header tetap terlihat, tombol layanan cepat WhatsApp langsung, menu mobile, kartu pengalaman, kalender rencana, kuis, dialog, formulir, pesan WhatsApp, serta unduhan TXT. Formulir publik tidak mengirim pesan otomatis atau menyimpan data tamu ke server. Admin dapat mencatat konfirmasi reservasi di MySQL. Jadwal/biaya dikonfirmasi lewat tim. Nomor uji coba pengguna: 085190849237.
 
-Gambar generatif bukan dokumentasi lokasi. Logo adalah adaptasi vektor dari aset brand sebelumnya. Font Inter dan Montserrat berlisensi SIL OFL; lisensi ada di `public/licenses`.
+Gambar generatif bukan dokumentasi lokasi. Logo adalah adaptasi vektor dari aset brand sebelumnya. Font Inter, Montserrat, dan Plus Jakarta Sans berlisensi SIL OFL; lisensi ada di `public/licenses`.
+
+## Hero beranda
+
+Hero memakai font Plus Jakarta Sans (file lokal di `public/assets`, tanpa CDN) dengan judul tebal dua baris; baris kedua bergradasi. Isinya: label kecil, judul, deskripsi, tombol booking, tombol kuis (“Find your dive”), kartu kaca berisi satu halaman aktivitas (Snorkeling, atau aktivitas aktif berikutnya), bar statistik, dan indikator scroll. Label, judul, deskripsi, dan teks tombol diatur dari **Teks website**. Angka statistik diambil dari konten aktif: jumlah aktivitas tampil, jumlah produk Dive Shop tampil (disembunyikan bila kosong), dan rentang booking 365 hari; tidak ada angka rating atau jumlah tamu buatan. Di layar ≤860px kartu aktivitas dan indikator scroll disembunyikan.
 
 ## Dua bahasa
 

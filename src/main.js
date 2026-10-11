@@ -329,12 +329,15 @@ export function initializeWebsite(content, locale = "en") {
       content.append(back);
     }
   }
-  $("#open-quiz").onclick = () => {
-    quizStep = 0;
-    answers = {};
-    renderQuiz();
-    $("#quiz-dialog").showModal();
-  };
+  document.querySelectorAll("#open-quiz, [data-quiz]").forEach(
+    (button) =>
+      (button.onclick = () => {
+        quizStep = 0;
+        answers = {};
+        renderQuiz();
+        $("#quiz-dialog").showModal();
+      }),
+  );
   $("#booking-form").onsubmit = async (event) => {
     event.preventDefault();
     if (submitting) return;
