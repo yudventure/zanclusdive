@@ -416,7 +416,11 @@ nav.open a::after {
   backdrop-filter: blur(12px);
   transition: background 0.2s ease;
 }
-.hero-quiz:hover .hero-quiz-icon {
+.hero-quiz:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+.hero-quiz:not(:disabled):hover .hero-quiz-icon {
   background: #ffffff38;
 }
 .hero-quiz-icon svg {

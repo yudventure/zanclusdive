@@ -1063,8 +1063,8 @@ export default function Dashboard({ section, email, today, demo = false }) {
                       </Field>
                       <p className="admin-subtle">
                         Tempel tautan YouTube (youtube.com/watch, youtu.be, atau
-                        Shorts). Kosongkan untuk menampilkan tombol kuis. Video
-                        dipakai di kedua bahasa.
+                        Shorts). Selama kosong, tombol tampil sebagai "Segera
+                        hadir". Video dipakai di kedua bahasa.
                       </p>
                       {textFields.map(([key, label]) => (
                         <Field label={label} key={key}>

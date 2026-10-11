@@ -89,10 +89,9 @@ const id = {
   home: {
     heroAlt: "Visual konsep petualangan scuba diving di bawah laut",
     exploreExperiences: "Jelajahi pengalaman",
-    quizCta: "Temukan pilihanmu",
-    quizMeta: "Kuis 2 pertanyaan",
     videoCta: "Tonton video",
     videoMeta: "Raja Ampat di YouTube",
+    videoSoon: "Segera hadir",
     videoTitle: "Video Zanclus Dive Center di Raja Ampat",
     closeVideo: "Tutup video",
     scrollDown: "Gulir ke bawah",
@@ -469,10 +468,9 @@ const en = {
   home: {
     heroAlt: "Concept visual of a scuba diving adventure underwater",
     exploreExperiences: "Explore experiences",
-    quizCta: "Find your dive",
-    quizMeta: "2-question quiz",
     videoCta: "Watch video",
     videoMeta: "Raja Ampat on YouTube",
+    videoSoon: "Coming soon",
     videoTitle: "Zanclus Dive Center video in Raja Ampat",
     closeVideo: "Close video",
     scrollDown: "Scroll down",
