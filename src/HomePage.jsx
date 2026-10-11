@@ -5,6 +5,7 @@ import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
 import ScrollEffects from "./components/ScrollEffects.jsx";
+import HeroWeather from "./components/HeroWeather.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
@@ -59,40 +60,10 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
     </a>
   );
 }
-function HeroIcon({ name }) {
-  const paths = {
-    waves:
-      "M3 8c1.5 0 1.5-1.5 3-1.5S7.5 8 9 8s1.5-1.5 3-1.5S13.5 8 15 8s1.5-1.5 3-1.5S19.5 8 21 8M3 13c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5M3 18c1.5 0 1.5-1.5 3-1.5s1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5 1.5-1.5 3-1.5 1.5 1.5 3 1.5",
-    gear: "M5.5 8.5h13l-1.2 11H6.7l-1.2-11ZM9 8.5V7a3 3 0 0 1 6 0v1.5",
-    calendar: "M5 6.5h14v13H5zM5 10.5h14M9 4v4M15 4v4M9 14h2M13 14h2M9 17h2",
-  };
-  return (
-    <svg className="hero-stat-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d={paths[name]}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 export default function HomePage({ content, locale = "en", demo = false }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
-  // Hero facts come from live content, never invented numbers.
-  const activeActivities = Object.values(content.activities).filter(
-    (activity) => activity.enabled,
-  ).length;
-  const gearCount = content.shop.products.filter((p) => p.enabled).length;
-  const stats = [
-    ["waves", activeActivities, h.statExperiences],
-    ...(gearCount ? [["gear", gearCount, h.statGear]] : []),
-    ["calendar", "365", h.statBooking],
-  ];
   const videoId = youtubeId(content.heroVideo);
   const featured = ["snorkeling", "trip", "diving"].find(
     (key) => content.activities[key].enabled,
@@ -240,15 +211,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               </a>
             )}
             <div className="hero-footer">
-              <dl className="hero-stats">
-                {stats.map(([icon, value, label]) => (
-                  <div key={icon}>
-                    <HeroIcon name={icon} />
-                    <dt>{value}</dt>
-                    <dd>{label}</dd>
-                  </div>
-                ))}
-              </dl>
+              <HeroWeather locale={locale} />
               <a
                 className="hero-scroll"
                 href="#experiences"

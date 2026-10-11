@@ -147,3 +147,38 @@ test("hero video accepts YouTube links only and old titles gain Raja Ampat", asy
   content.text.heroTitle1 = "Judul pemilik";
   assert.equal(withRajaAmpatTitle(content).text.heroTitle1, "Judul pemilik");
 });
+
+test("MET Norway forecasts become live hero weather readings", async () => {
+  const { parseForecast, weatherCondition, weatherLocations } =
+    await import("../src/weather.js");
+  const sample = {
+    properties: {
+      timeseries: [
+        {
+          time: "2026-10-11T05:00:00Z",
+          data: {
+            instant: { details: { air_temperature: 29.4, wind_speed: 3.4 } },
+            next_1_hours: { summary: { symbol_code: "lightrainshowers_day" } },
+          },
+        },
+      ],
+    },
+  };
+  assert.deepEqual(parseForecast(sample), {
+    temperature: 29,
+    wind: 12,
+    condition: "showers",
+    time: "2026-10-11T05:00:00Z",
+  });
+  assert.equal(parseForecast({}), null);
+  assert.equal(weatherCondition("clearsky_night"), "night");
+  assert.equal(weatherCondition("partlycloudy_day"), "partly");
+  assert.equal(weatherCondition("heavyrainandthunder"), "storm");
+  assert.equal(weatherCondition("rain"), "rain");
+  for (const { lat, lon } of weatherLocations)
+    for (const value of [lat, lon])
+      assert.ok((String(value).split(".")[1] || "").length <= 4);
+  for (const locale of ["en", "id"])
+    for (const { key } of weatherLocations)
+      assert.ok(messages[locale].weather.places[key]);
+});
