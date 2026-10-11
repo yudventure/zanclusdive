@@ -111,7 +111,7 @@ Tes diagnosis menggunakan `scripts/verify-database-check.mjs` dengan `BASE_URL` 
 
 ## Daftar harga paket
 
-Di samping kartu Diving di beranda tampil daftar harga paket (Price List Zanclus Dive Center 2025). Bawaannya menampilkan harga Diving; saat pointer berada di kartu Snorkeling atau Trip laut, daftar berganti ke harga aktivitas itu dan kembali ke Diving saat pointer keluar. Tombol Diving / Snorkeling / Trip laut di panel dapat dipakai di layar sentuh dan keyboard. Setiap daftar berisi maksimal 8 item (nama, keterangan, harga rupiah, satuan) dalam Bahasa Indonesia dan English, dikelola di `/admin/prices` (**Daftar harga**). Dokumen CMS lama mendapat daftar harga default sekali. Aktivitas yang dinonaktifkan tidak ditampilkan di panel.
+Seksi Pengalaman di beranda berupa akordeon tiga kartu (Diving, Snorkeling, Trip laut) dengan daftar harga paket (Price List Zanclus Dive Center 2025). Bawaannya kartu Diving terbuka lebar dengan panel harganya; saat pointer atau fokus keyboard berada di kartu lain, kartu itu melebar dengan animasi dan menampilkan harganya, sementara kartu lain menyempit. Saat pointer keluar dari seksi, Diving kembali terbuka. Di layar ≤860px dan layar sentuh kartu bertumpuk; hanya satu panel harga terbuka dan kartu lain memiliki tombol “Lihat harga …”. Panel yang tertutup bersifat `inert` sehingga dilewati keyboard dan pembaca layar. Setiap daftar berisi maksimal 8 item (nama, keterangan, harga rupiah, satuan) dalam Bahasa Indonesia dan English, dikelola di `/admin/prices` (**Daftar harga**). Dokumen CMS lama mendapat daftar harga default sekali. Aktivitas yang dinonaktifkan tidak ditampilkan di panel.
 
 ## Booking
 

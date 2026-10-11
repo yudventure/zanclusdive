@@ -12,14 +12,7 @@ import { photoSrcSet } from "./photography.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
 import { youtubeId } from "./video.js";
 
-function ExperienceCard({
-  activityKey,
-  activity,
-  className,
-  kicker,
-  locale,
-  onPreview,
-}) {
+function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
   const t = dictionary(locale);
   const label = t.activityLabels[activityKey];
   return (
@@ -27,14 +20,7 @@ function ExperienceCard({
       className={`course-card ${className}`}
       data-activity={activityKey}
       href={localeHref(locale, `/${activityKey}`)}
-      hidden={!activity.enabled}
       aria-label={t.common.viewDetailOf(label)}
-      data-reveal={activityKey === "diving" ? undefined : true}
-      style={{ "--reveal-delay": activityKey === "trip" ? "160ms" : "80ms" }}
-      onMouseEnter={() => onPreview(activityKey)}
-      onMouseLeave={() => onPreview(null)}
-      onFocus={() => onPreview(activityKey)}
-      onBlur={() => onPreview(null)}
     >
       <img
         className="course-photo"
@@ -77,16 +63,24 @@ export default function HomePage({ content, locale = "en", demo = false }) {
   const t = dictionary(locale);
   const h = t.home;
   const videoId = youtubeId(content.heroVideo);
-  // Prices beside the cards: diving by default, the hovered card's activity
-  // while the pointer is on it.
-  const priceGroups = ["diving", "snorkeling", "trip"].filter(
-    (key) =>
-      content.activities[key].enabled && content.priceList?.[key]?.length,
+  const visibleActivities = ["diving", "snorkeling", "trip"].filter(
+    (key) => content.activities[key].enabled,
   );
-  const [priceGroup, setPriceGroup] = useState(priceGroups[0] || null);
-  const [preview, setPreview] = useState(null);
-  const previewPrices = (key) =>
-    setPreview(key && priceGroups.includes(key) ? key : null);
+  const [openActivity, setOpenActivity] = useState(null);
+  // Hover opens items only in the side-by-side layout; stacked layouts and
+  // touch screens use the "see prices" buttons, avoiding layout jumps.
+  const hoverLayout = () =>
+    window.matchMedia("(hover: hover) and (min-width: 861px)").matches;
+  const kickers = {
+    diving: h.divingKicker,
+    snorkeling: h.snorkelingKicker,
+    trip: h.tripKicker,
+  };
+  const cardClasses = {
+    diving: "beginner",
+    snorkeling: "advanced",
+    trip: "specialty",
+  };
   const featured = ["snorkeling", "trip", "diving"].find(
     (key) => content.activities[key].enabled,
   );
@@ -264,64 +258,55 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 <span>{"↗"}</span>
               </button>
             </div>
+            {/* Accordion: the item under the pointer (or keyboard focus)
+                widens and shows its prices; diving is open by default. */}
             <div
-              className="course-grid"
-              data-visible-activities={
-                Object.values(content.activities).filter(
-                  (activity) => activity.enabled,
-                ).length
-              }
-              style={{
-                "--course-columns": [
-                  content.activities.diving.enabled ? "2.37fr" : "1.12fr",
-                  ...(content.activities.snorkeling.enabled ? ["0.85fr"] : []),
-                  ...(content.activities.trip.enabled ? ["0.85fr"] : []),
-                ].join(" "),
-              }}
+              className="experience-row"
+              id="prices"
+              data-visible-activities={visibleActivities.length}
+              onMouseLeave={() => hoverLayout() && setOpenActivity(null)}
             >
-              <article
-                className="beginner-calendar"
-                aria-label={h.divingPrices}
-                hidden={!priceGroup && !content.activities.diving.enabled}
-                data-reveal
-              >
-                <ExperienceCard
-                  activityKey="diving"
-                  activity={content.activities.diving}
-                  className="beginner"
-                  kicker={h.divingKicker}
-                  locale={locale}
-                  onPreview={previewPrices}
-                />
-                {priceGroup && (
-                  <PricePanel
-                    priceList={content.priceList}
-                    group={preview || priceGroup}
-                    groups={priceGroups}
-                    onSelect={(key) => {
-                      setPriceGroup(key);
-                      setPreview(null);
-                    }}
-                    locale={locale}
-                  />
-                )}
-              </article>
-              <ExperienceCard
-                activityKey="snorkeling"
-                activity={content.activities.snorkeling}
-                className="advanced"
-                kicker={h.snorkelingKicker}
-                locale={locale}
-                onPreview={previewPrices}
-              />
-              <ExperienceCard
-                activityKey="trip"
-                activity={content.activities.trip}
-                className="specialty"
-                kicker={h.tripKicker}
-                locale={locale}
-                onPreview={previewPrices}
-              />
+              {visibleActivities.map((key, index) => {
+                const open = key === (openActivity || visibleActivities[0]);
+                const prices = content.priceList?.[key]?.length > 0;
+                return (
+                  <article
+                    key={key}
+                    className={"experience-item" + (open ? " is-open" : "")}
+                    aria-label={t.activityLabels[key]}
+                    onMouseEnter={() => hoverLayout() && setOpenActivity(key)}
+                    onFocus={() => setOpenActivity(key)}
+                    data-reveal
+                    style={{ "--reveal-delay": `${index * 80}ms` }}
+                  >
+                    <ExperienceCard
+                      activityKey={key}
+                      activity={content.activities[key]}
+                      className={cardClasses[key]}
+                      kicker={kickers[key]}
+                      locale={locale}
+                    />
+                    {prices && !open && (
+                      <button
+                        type="button"
+                        className="experience-toggle"
+                        onClick={() => setOpenActivity(key)}
+                      >
+                        {t.prices.show(t.activityLabels[key])}
+                        <span aria-hidden="true">↓</span>
+                      </button>
+                    )}
+                    {prices && (
+                      <PricePanel
+                        priceList={content.priceList}
+                        group={key}
+                        locale={locale}
+                        hidden={!open}
+                      />
+                    )}
+                  </article>
+                );
+              })}
             </div>
             <div className="quiz-panel" data-reveal>
               <p className="eyebrow">{"LET'S FIND YOUR NEXT DIVE"}</p>

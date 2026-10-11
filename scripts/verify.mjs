@@ -32,10 +32,10 @@ assert.equal(
   "Initial header has no background",
 );
 assert.equal(
-  await page.locator('.beginner-calendar [data-activity="diving"]').count(),
+  await page.locator('.experience-item [data-activity="diving"]').count(),
   1,
 );
-assert.equal(await page.locator(".beginner-calendar #prices").count(), 1);
+assert.equal(await page.locator(".experience-row#prices").count(), 1);
 async function assertCentered(selector) {
   const centered = await page.locator(selector).evaluate((el) => {
     const rect = el.getBoundingClientRect();
@@ -110,23 +110,26 @@ await assertCentered("#booking-dialog");
 await page.locator("#booking-dialog .close-modal").click();
 // Package prices follow the card under the pointer, diving by default.
 assert.equal(
-  await page.locator("#prices h3").textContent(),
+  await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket diving",
 );
-assert.equal(await page.locator("#prices .price-list li").count(), 6);
+assert.equal(
+  await page.locator(".experience-item.is-open .price-list li").count(),
+  6,
+);
 await page.locator('.course-card[data-activity="snorkeling"]').hover();
 assert.equal(
-  await page.locator("#prices h3").textContent(),
+  await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket snorkeling",
 );
 await page.locator('.course-card[data-activity="trip"]').hover();
 assert.equal(
-  await page.locator("#prices h3").textContent(),
+  await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket trip laut",
 );
 await page.mouse.move(2, 2);
 assert.equal(
-  await page.locator("#prices h3").textContent(),
+  await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket diving",
 );
 await page.locator("#open-quiz").click();
