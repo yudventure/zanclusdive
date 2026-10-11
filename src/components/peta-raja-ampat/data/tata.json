@@ -1,0 +1,209 @@
+{
+ "jenis": [
+  {
+   "id": "kampung",
+   "warna": "#34468D",
+   "nama": {
+    "id": "Kampung",
+    "en": "Village",
+    "zh": "村庄",
+    "ru": "Деревня"
+   }
+  },
+  {
+   "id": "homestay",
+   "warna": "#F26B4E",
+   "nama": {
+    "id": "Homestay & resort",
+    "en": "Homestay & resort",
+    "zh": "民宿与度假村",
+    "ru": "Гостевой дом и курорт"
+   }
+  },
+  {
+   "id": "dive",
+   "warna": "#7656D1",
+   "nama": {
+    "id": "Dive center",
+    "en": "Dive center",
+    "zh": "潜水中心",
+    "ru": "Дайв-центр"
+   }
+  },
+  {
+   "id": "selam",
+   "warna": "#1FA39E",
+   "nama": {
+    "id": "Titik selam & snorkel",
+    "en": "Dive & snorkel site",
+    "zh": "潜水与浮潜点",
+    "ru": "Место для дайвинга и снорклинга"
+   }
+  },
+  {
+   "id": "pandang",
+   "warna": "#D9467A",
+   "nama": {
+    "id": "Titik pandang",
+    "en": "Viewpoint",
+    "zh": "观景点",
+    "ru": "Смотровая площадка"
+   }
+  },
+  {
+   "id": "pantai",
+   "warna": "#E99A2C",
+   "nama": {
+    "id": "Pantai",
+    "en": "Beach",
+    "zh": "海滩",
+    "ru": "Пляж"
+   }
+  },
+  {
+   "id": "burung",
+   "warna": "#3C9657",
+   "nama": {
+    "id": "Cenderawasih & burung",
+    "en": "Birds of paradise",
+    "zh": "极乐鸟与观鸟",
+    "ru": "Райские птицы"
+   }
+  },
+  {
+   "id": "pelabuhan",
+   "warna": "#1B2452",
+   "nama": {
+    "id": "Pelabuhan",
+    "en": "Harbour",
+    "zh": "码头",
+    "ru": "Причал"
+   }
+  },
+  {
+   "id": "menarik",
+   "warna": "#0A76A8",
+   "nama": {
+    "id": "Tempat menarik",
+    "en": "Point of interest",
+    "zh": "景点",
+    "ru": "Достопримечательность"
+   }
+  }
+ ],
+ "laut": {
+  "selat": [
+   500,
+   750
+  ],
+  "kabui": [
+   458,
+   436
+  ],
+  "mayalibit": [
+   565,
+   250
+  ]
+ },
+ "pulauKecil": {
+  "fam": [
+   116,
+   718.8
+  ],
+  "meosAmbower": [
+   92,
+   702.5
+  ],
+  "pambemuk": [
+   120.5,
+   734.5
+  ],
+  "miosKor": [
+   108.5,
+   741.2
+  ],
+  "miosBesar": [
+   96.5,
+   753.5
+  ],
+  "andauBesar": [
+   49,
+   737
+  ],
+  "andauMkun": [
+   55.5,
+   726.5
+  ]
+ },
+ "versiTitik": 3,
+ "letakLama": {
+  "1": {
+   "yenbuba": [
+    -0.57,
+    130.646
+   ],
+   "yenbuba-jetty": [
+    -0.566,
+    130.646
+   ],
+   "sawandarek": [
+    -0.6044,
+    130.5873
+   ],
+   "sawandarek-jetty": [
+    -0.609,
+    130.588
+   ],
+   "kampung-arborek": [
+    -0.565,
+    130.5175
+   ],
+   "arborek-jetty": [
+    -0.5615,
+    130.5195
+   ],
+   "kampung-friwen": [
+    -0.4685,
+    130.7045
+   ],
+   "friwen-wall": [
+    -0.4735,
+    130.699
+   ],
+   "piaynemo": [
+    -0.575,
+    130.272
+   ],
+   "telaga-bintang": [
+    -0.556,
+    130.262
+   ],
+   "melissas-garden": [
+    -0.6,
+    130.3
+   ],
+   "kali-biru": [
+    -0.1665,
+    130.659
+   ],
+   "teluk-mayalibit": [
+    -0.2,
+    130.722
+   ]
+  },
+  "2": {
+   "kali-biru": [
+    -0.1665,
+    130.659
+   ],
+   "teluk-mayalibit": [
+    -0.2,
+    130.722
+   ],
+   "kampung-arborek": [
+    -0.56784,
+    130.51377
+   ]
+  }
+ }
+}

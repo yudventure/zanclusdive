@@ -78,7 +78,7 @@ const id = {
     experiences: "Pengalaman",
     exploreOcean: "Jelajahi laut",
     contact: "Kontak",
-    prices: "Harga",
+    diveSites: "Dive site",
     quickChat: "Chat WhatsApp untuk bantuan cepat",
     viewDetail: "Lihat detail",
     viewDetailOf: (label) => `Lihat detail ${label}`,
@@ -143,6 +143,21 @@ const id = {
     whatsappHelp:
       "Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.",
     whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
+  },
+  diveSites: {
+    title: "Titik selam di Selat Dampier.",
+    intro:
+      "Lima belas titik selam di sekitar Waisai, dari Cape Kri dan Blue Magic sampai Manta Sandy dan Melissa's Garden. Ketuk pulau atau tanda di peta untuk memperbesar dan membaca keterangannya.",
+    note: "Letak titik di peta adalah perkiraan. Tim Zanclus memilih titik yang sesuai dengan cuaca, arus, dan pengalamanmu.",
+    map: {
+      awalJudul: "Titik selam Raja Ampat",
+      awalTeks:
+        "Titik selam di peta ini tersebar di Selat Dampier antara Waigeo, Gam, Mansuar, Kri, Arborek, dan Batanta, sampai Piaynemo di barat. Pilih pulau untuk melihat titik selam di sekitarnya.",
+      diWilayah: "Titik selam di {wilayah}",
+      belumAdaTanda: "Belum ada titik selam di wilayah ini.",
+      lihatLayanan: "Rencanakan diving",
+      legenda: "Titik selam",
+    },
   },
   prices: {
     kicker: "DAFTAR HARGA 2025",
@@ -488,7 +503,7 @@ const en = {
     experiences: "Experiences",
     exploreOcean: "Explore the ocean",
     contact: "Contact",
-    prices: "Prices",
+    diveSites: "Dive sites",
     quickChat: "Chat on WhatsApp for quick help",
     viewDetail: "View details",
     viewDetailOf: (label) => `View ${label} details`,
@@ -553,6 +568,21 @@ const en = {
     whatsappHelp:
       "Hi Zanclus! I'd like some help with diving experiences and available dates.",
     whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
+  },
+  diveSites: {
+    title: "Dive sites of the Dampier Strait.",
+    intro:
+      "Fifteen dive sites around Waisai, from Cape Kri and Blue Magic to Manta Sandy and Melissa's Garden. Tap an island or a marker on the map to zoom in and read about it.",
+    note: "Marker positions are approximate. The Zanclus team picks sites that suit the weather, the current and your experience.",
+    map: {
+      awalJudul: "Raja Ampat dive sites",
+      awalTeks:
+        "The dive sites on this map spread across the Dampier Strait between Waigeo, Gam, Mansuar, Kri, Arborek, and Batanta, out to Piaynemo in the west. Pick an island to see the dive sites around it.",
+      diWilayah: "Dive sites in {wilayah}",
+      belumAdaTanda: "No dive sites in this area yet.",
+      lihatLayanan: "Plan a dive",
+      legenda: "Dive sites",
+    },
   },
   prices: {
     kicker: "PRICE LIST 2025",

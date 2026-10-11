@@ -7,6 +7,7 @@ import ContactIcon from "./components/ContactIcon.jsx";
 import ScrollEffects from "./components/ScrollEffects.jsx";
 import HeroWeather from "./components/HeroWeather.jsx";
 import PricePanel from "./components/PricePanel.jsx";
+import DiveSiteMap from "./components/DiveSiteMap.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
@@ -127,7 +128,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             </a>
             <a href="#experiences">{t.common.experiences}</a>
             <a href="#ocean">{t.common.exploreOcean}</a>
-            <a href="#prices">{t.common.prices}</a>
+            <a href="#dive-sites">{t.common.diveSites}</a>
             <a href={localeHref(locale, "/dive-shop")}>{"Dive Shop"}</a>
             <a href="#contact">{t.common.contact}</a>
           </nav>
@@ -354,6 +355,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               </article>
             </div>
           </section>
+          <DiveSiteMap locale={locale} />
           <ShopTeaser
             shop={content.shop}
             priceList={content.priceList}
