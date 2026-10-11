@@ -346,7 +346,7 @@ export function initializeWebsite(content, locale = "en") {
     () => videoDialog.querySelector("iframe").removeAttribute("src"),
     { signal: controller.signal },
   );
-  document.querySelectorAll("#open-quiz, [data-quiz]").forEach(
+  document.querySelectorAll("#open-quiz").forEach(
     (button) =>
       (button.onclick = () => {
         quizStep = 0;

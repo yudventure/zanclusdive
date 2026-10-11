@@ -197,13 +197,13 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                   {content.text.heroButton}
                   <span aria-hidden="true">→</span>
                 </button>
-                {/* Video button once a YouTube link is set in the CMS. */}
+                {/* Plays the YouTube link set in the CMS; until then it is
+                    shown as coming soon. */}
                 <button
                   className="hero-quiz"
                   type="button"
-                  {...(videoId
-                    ? { "data-video": videoId }
-                    : { "data-quiz": true })}
+                  data-video={videoId || undefined}
+                  disabled={!videoId}
                 >
                   <span className="hero-quiz-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24">
@@ -211,8 +211,8 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                     </svg>
                   </span>
                   <span>
-                    {videoId ? h.videoCta : h.quizCta}
-                    <small>{videoId ? h.videoMeta : h.quizMeta}</small>
+                    {h.videoCta}
+                    <small>{videoId ? h.videoMeta : h.videoSoon}</small>
                   </span>
                 </button>
               </div>
