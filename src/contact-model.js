@@ -32,3 +32,6 @@ export function withContactFields(content) {
 export function phoneLabel(phone) {
   return phone.startsWith("62") ? "0" + phone.slice(2) : "+" + phone;
 }
+
+// Google Maps search used for the store map when the admin sets none.
+export const defaultMapQuery = "Zanclus Dive Center, Waisai, Raja Ampat";

@@ -103,14 +103,18 @@ const id = {
     oceanAlt: "Visual konsep manta di laut terbuka",
     oceanLabel: "02 / RUANG UNTUK MENJELAJAH",
     oceanTitle: ["Lebih dekat", "dengan laut."],
-    planWithZanclus: "Rencanakan bersama Zanclus",
-    chatTeam: "Chat dulu dengan tim",
-    contactNote:
-      "Tanggal dan program perlu dikonfirmasi dengan tim sebelum perjalanan.",
-    teamReady: "Tim Zanclus siap membantu.",
-    teamIntro:
-      "Mulai dari pertanyaan sederhana. Kita susun rencana yang sesuai denganmu.",
-    contactTopics: "Diving · Snorkeling · Trip · Perlengkapan",
+    storeEyebrow: "KUNJUNGI TOKO KAMI",
+    storeTitle: ["Toko kami di Waisai,", "Raja Ampat."],
+    storeIntro:
+      "Mampir untuk mencoba atau menyewa perlengkapan, konsultasi rencana menyelam, dan bertemu langsung dengan tim Zanclus sebelum turun ke laut.",
+    storeAddress: "ALAMAT",
+    storeDefaultAddress: "Kota Waisai, Kabupaten Raja Ampat, Papua Barat Daya",
+    directions: "Petunjuk arah",
+    storeChat: "Chat sebelum datang",
+    storeNote:
+      "Kabari kami lewat WhatsApp sebelum datang agar tim siap menyambutmu.",
+    mapTitle: "Peta lokasi toko Zanclus Dive Center",
+    openMap: "Buka di Google Maps",
     closeQuiz: "Tutup kuis",
     closeForm: "Tutup formulir",
     bookingTitle: "Booking penyelamanmu.",
@@ -138,10 +142,7 @@ const id = {
     another: "Buat booking lain",
     whatsappHelp:
       "Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.",
-    whatsappDiscuss:
-      "Halo Zanclus! Saya ingin berdiskusi tentang rencana diving saya.",
-    whatsappInfo:
-      "Halo Zanclus! Saya ingin informasi tentang diving dan perlengkapan.",
+    whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
   },
   prices: {
     kicker: "DAFTAR HARGA 2025",
@@ -477,14 +478,18 @@ const en = {
     oceanAlt: "Concept visual of a manta ray in open water",
     oceanLabel: "02 / ROOM TO EXPLORE",
     oceanTitle: ["Closer", "to the ocean."],
-    planWithZanclus: "Plan it with Zanclus",
-    chatTeam: "Chat with our team first",
-    contactNote:
-      "Dates and programs need to be confirmed with our team before your trip.",
-    teamReady: "The Zanclus team is here to help.",
-    teamIntro:
-      "Start with a simple question. We'll put together a plan that suits you.",
-    contactTopics: "Diving · Snorkeling · Trips · Gear",
+    storeEyebrow: "VISIT OUR STORE",
+    storeTitle: ["Our store in Waisai,", "Raja Ampat."],
+    storeIntro:
+      "Drop by to try or rent gear, talk through your dive plans and meet the Zanclus team before you head into the water.",
+    storeAddress: "ADDRESS",
+    storeDefaultAddress: "Waisai City, Raja Ampat Regency, Southwest Papua",
+    directions: "Get directions",
+    storeChat: "Chat before you visit",
+    storeNote:
+      "Message us on WhatsApp before you come so the team is ready for you.",
+    mapTitle: "Map of the Zanclus Dive Center store",
+    openMap: "Open in Google Maps",
     closeQuiz: "Close quiz",
     closeForm: "Close form",
     bookingTitle: "Book your dive.",
@@ -512,8 +517,7 @@ const en = {
     another: "Make another booking",
     whatsappHelp:
       "Hi Zanclus! I'd like some help with diving experiences and available dates.",
-    whatsappDiscuss: "Hi Zanclus! I'd like to talk about my diving plans.",
-    whatsappInfo: "Hi Zanclus! I'd like information about diving and gear.",
+    whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
   },
   prices: {
     kicker: "PRICE LIST 2025",

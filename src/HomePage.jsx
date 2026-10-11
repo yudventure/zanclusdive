@@ -9,6 +9,7 @@ import HeroWeather from "./components/HeroWeather.jsx";
 import PricePanel from "./components/PricePanel.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
+import { defaultMapQuery } from "./contact-model.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
 
 function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
@@ -83,6 +84,9 @@ export default function HomePage({ content, locale = "en", demo = false }) {
   const WHATSAPP_DISPLAY = WHATSAPP_NUMBER.startsWith("62")
     ? "0" + WHATSAPP_NUMBER.slice(2)
     : "+" + WHATSAPP_NUMBER;
+  const storeAddress = content.contact.location || h.storeDefaultAddress;
+  const mapQuery = content.contact.mapQuery || defaultMapQuery;
+  const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
   useEffect(() => initializeWebsite(content, locale), [content, locale]);
   return (
     <>
@@ -357,76 +361,92 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             aria-labelledby="contact-title"
           >
             <div className="contact-copy" data-reveal>
-              <p className="eyebrow">{"MAKE ROOM FOR A NEW STORY"}</p>
+              <p className="eyebrow">{h.storeEyebrow}</p>
               <h2 id="contact-title">
-                {content.text.contactTitle1}
+                {h.storeTitle[0]}
                 <br />
-                {content.text.contactTitle2}
+                {h.storeTitle[1]}
               </h2>
-              <p className="contact-description">
-                {content.text.contactDescription}
-              </p>
+              <p className="contact-description">{h.storeIntro}</p>
+              <ul className="store-details">
+                <li>
+                  <span className="contact-channel-icon">
+                    <ContactIcon name="location" />
+                  </span>
+                  <span>
+                    <small>{h.storeAddress}</small>
+                    <strong>{storeAddress}</strong>
+                  </span>
+                </li>
+                <li>
+                  <span className="contact-channel-icon">
+                    <ContactIcon name="whatsapp" />
+                  </span>
+                  <span>
+                    <small>WHATSAPP</small>
+                    <a
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {WHATSAPP_DISPLAY}
+                    </a>
+                  </span>
+                </li>
+                {content.contact.email && (
+                  <li>
+                    <span className="contact-channel-icon">
+                      <ContactIcon name="email" />
+                    </span>
+                    <span>
+                      <small>EMAIL</small>
+                      <a href={`mailto:${content.contact.email}`}>
+                        {content.contact.email}
+                      </a>
+                    </span>
+                  </li>
+                )}
+              </ul>
               <div className="contact-actions">
-                <button className="button dark" data-book>
-                  {h.planWithZanclus + " "}
-                  <span>{"↗"}</span>
-                </button>
                 <a
-                  className="contact-chat"
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappDiscuss)}`}
+                  className="button dark"
+                  href={mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {h.chatTeam} <span aria-hidden="true">↗</span>
+                  {h.directions} <span aria-hidden="true">↗</span>
+                </a>
+                <a
+                  className="contact-chat"
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {h.storeChat} <span aria-hidden="true">↗</span>
                 </a>
               </div>
-              <p className="contact-note">{h.contactNote}</p>
+              <p className="contact-note">{h.storeNote}</p>
             </div>
             <div
-              className="contact-panel"
+              className="store-map"
               data-reveal
               style={{ "--reveal-delay": "100ms" }}
             >
-              <p className="contact-panel-label">
-                <span /> LET'S TALK ABOUT YOUR NEXT DIVE
-              </p>
-              <h3>{h.teamReady}</h3>
-              <p>{h.teamIntro}</p>
-              <a
-                className="contact-channel"
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappInfo)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="contact-channel-icon">
-                  <ContactIcon name="whatsapp" />
-                </span>
+              <iframe
+                title={h.mapTitle}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <div className="store-map-caption">
                 <span>
-                  <small>WHATSAPP</small>
-                  <strong>{WHATSAPP_DISPLAY}</strong>
+                  <strong>Zanclus Dive Center</strong>
+                  <small>Waisai · Raja Ampat</small>
                 </span>
-                <span className="contact-channel-arrow" aria-hidden="true">
-                  ↗
-                </span>
-              </a>
-              {content.contact.email && (
-                <a
-                  className="contact-channel"
-                  href={`mailto:${content.contact.email}`}
-                >
-                  <span className="contact-channel-icon">
-                    <ContactIcon name="email" />
-                  </span>
-                  <span>
-                    <small>EMAIL</small>
-                    <strong>{content.contact.email}</strong>
-                  </span>
-                  <span className="contact-channel-arrow" aria-hidden="true">
-                    ↗
-                  </span>
+                <a href={mapLink} target="_blank" rel="noopener noreferrer">
+                  {h.openMap} <span aria-hidden="true">↗</span>
                 </a>
-              )}
-              <p className="contact-panel-note">{h.contactTopics}</p>
+              </div>
             </div>
           </section>
         </main>

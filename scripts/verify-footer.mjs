@@ -79,7 +79,11 @@ try {
     originals.contact,
   );
   assert.equal(await page.locator(".contact-copy").count(), 1);
-  assert.equal(await page.locator(".contact-panel").count(), 1);
+  assert.equal(await page.locator(".store-map iframe").count(), 1);
+  assert.match(
+    await page.locator(".contact-actions a.button").getAttribute("href"),
+    /^https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/,
+  );
   const colors = await page.evaluate(() =>
     [".contact-section", ".site-footer"].map(
       (selector) =>
@@ -87,9 +91,6 @@ try {
     ),
   );
   assert.notEqual(colors[0], colors[1], "CTA and footer are distinct sections");
-  await page.locator(".contact-section [data-book]").click();
-  await page.locator("#booking-dialog").waitFor({ state: "visible" });
-  await page.locator("#booking-dialog .close-modal").click();
   await page.locator(".contact-section").scrollIntoViewIfNeeded();
   // Capture the two finished sections together, without a scrolled sticky header.
   await page.addStyleTag({ content: ".site-header { visibility: hidden; }" });
@@ -170,7 +171,7 @@ try {
     if (path === "/")
       assert.equal(
         await page
-          .locator('.contact-panel a[href="mailto:contact-test@example.com"]')
+          .locator('.store-details a[href="mailto:contact-test@example.com"]')
           .count(),
         1,
       );
