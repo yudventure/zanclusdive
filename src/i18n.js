@@ -76,7 +76,7 @@ const id = {
     closeMenu: "Tutup menu",
     mainNav: "Navigasi utama",
     experiences: "Pengalaman",
-    exploreOcean: "Jelajahi laut",
+    exploreOcean: "Galeri",
     contact: "Kontak",
     diveSites: "Dive site",
     quickChat: "Chat WhatsApp untuk bantuan cepat",
@@ -143,6 +143,20 @@ const id = {
     whatsappHelp:
       "Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.",
     whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
+  },
+  gallery: {
+    eyebrow: "GALERI PENYELAMAN ZANCLUS",
+    open: "Buka galeri",
+    close: "Tutup galeri",
+    count: (n) => `${n} foto penyelaman`,
+    view: (name) => `Lihat foto ${name}`,
+    lightbox: "Foto galeri",
+    closePhoto: "Tutup foto",
+    previous: "Foto sebelumnya",
+    next: "Foto berikutnya",
+    position: (n, total) => `${n} dari ${total}`,
+    demoNote:
+      "Foto contoh. Ganti dengan foto penyelaman Zanclus lewat panel admin.",
   },
   diveSites: {
     title: "Titik selam di Selat Dampier.",
@@ -534,7 +548,7 @@ const en = {
     closeMenu: "Close menu",
     mainNav: "Main navigation",
     experiences: "Experiences",
-    exploreOcean: "Explore the ocean",
+    exploreOcean: "Gallery",
     contact: "Contact",
     diveSites: "Dive sites",
     quickChat: "Chat on WhatsApp for quick help",
@@ -601,6 +615,20 @@ const en = {
     whatsappHelp:
       "Hi Zanclus! I'd like some help with diving experiences and available dates.",
     whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
+  },
+  gallery: {
+    eyebrow: "ZANCLUS DIVE GALLERY",
+    open: "Open the gallery",
+    close: "Close the gallery",
+    count: (n) => `${n} dive photos`,
+    view: (name) => `View photo ${name}`,
+    lightbox: "Gallery photo",
+    closePhoto: "Close photo",
+    previous: "Previous photo",
+    next: "Next photo",
+    position: (n, total) => `${n} of ${total}`,
+    demoNote:
+      "Sample photos. Replace them with Zanclus dive photos in the admin panel.",
   },
   diveSites: {
     title: "Dive sites of the Dampier Strait.",

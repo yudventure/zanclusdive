@@ -8,6 +8,7 @@ import ScrollEffects from "./components/ScrollEffects.jsx";
 import HeroWeather from "./components/HeroWeather.jsx";
 import PricePanel from "./components/PricePanel.jsx";
 import DiveSiteMap from "./components/DiveSiteMap.jsx";
+import DiveGallery from "./components/DiveGallery.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
@@ -305,7 +306,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               data-reveal
             >
               <div>
-                <p className="eyebrow">{"A DIFFERENT WORLD, JUST BELOW"}</p>
+                <p className="eyebrow">{t.gallery.eyebrow}</p>
                 <h2>
                   {content.text.oceanTitle1}
                   <br />
@@ -354,6 +355,11 @@ export default function HomePage({ content, locale = "en", demo = false }) {
                 </h3>
               </article>
             </div>
+            <DiveGallery
+              gallery={content.gallery}
+              demo={demo}
+              locale={locale}
+            />
           </section>
           <DiveSiteMap locale={locale} />
           <ShopTeaser
