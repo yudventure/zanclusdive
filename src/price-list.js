@@ -3,7 +3,6 @@
 export const priceGroups = ["diving", "snorkeling", "trip"];
 // Gear rental lists shown in the homepage Dive Shop section.
 export const rentalGroups = [
-  "rentalSets",
   "rentalBasics",
   "rentalScuba",
   "rentalTank",
@@ -13,7 +12,6 @@ export const rentalGroups = [
 export const allPriceGroups = [...priceGroups, ...rentalGroups];
 // Admin labels for the rental lists.
 export const rentalLabels = {
-  rentalSets: "Sewa paket alat",
   rentalBasics: "Sewa masker, snorkel & fin",
   rentalScuba: "Sewa BCD, regulator & wetsuit",
   rentalTank: "Tabung & isi ulang",
@@ -183,24 +181,6 @@ export const defaultPriceList = {
       1000000,
       "/ malam",
       "/ night",
-    ),
-  ],
-  rentalSets: [
-    item(
-      "Perlengkapan scuba",
-      "Scuba equipment",
-      "Mask, fins, BCD, regulator, wetsuit",
-      "Mask, fins, BCD, regulator, wetsuit",
-      600000,
-      ...day,
-    ),
-    item(
-      "Set snorkeling",
-      "Snorkeling set",
-      "Masker, snorkel, fins",
-      "Mask, snorkel, fins",
-      150000,
-      ...day,
     ),
   ],
   rentalBasics: [

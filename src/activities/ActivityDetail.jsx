@@ -219,7 +219,7 @@ export default function ActivityDetail({
                 {labels[key]}
               </a>
             ))}
-          <a href={href("/dive-shop")}>Dive Shop</a>
+          <a href={href("/#dive-shop")}>Dive Shop</a>
           <a href={href("/#contact")}>{dict.common.contact}</a>
         </nav>
         <div className="header-actions">

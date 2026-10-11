@@ -188,11 +188,77 @@ test("package price list validates, migrates and keeps both languages", async ()
   const migrated = withPriceList(older).priceList;
   assert.deepEqual(migrated.diving, []);
   assert.deepEqual(migrated.rentalBasics, defaultPriceList.rentalBasics);
-  assert.equal(defaultPriceList.rentalSets[0].price, 600000);
+  assert.equal(defaultPriceList.rentalBasics[0].price, 50000);
+  assert.equal(defaultPriceList.rentalSets, undefined);
   assert.equal(withPriceList({ priceList: migrated }).priceList, migrated);
   assert.equal(priceText({ id: "Pelampung", en: "" }, "en"), "Pelampung");
   assert.equal(
     priceText({ id: "Pelampung", en: "Life jacket" }, "en"),
     "Life jacket",
   );
+});
+
+test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
+  const { addLine, cartTotals, checkoutMessage } =
+    await import("../src/shop/cart.js");
+  const mask = {
+    key: "rentalBasics:0",
+    name: "Masker",
+    price: 50000,
+    mode: "rental",
+  };
+  const fins = {
+    key: "buy:fins",
+    name: "Open heel fins",
+    price: 1250000,
+    mode: "sale",
+  };
+  const quote = { key: "buy:tank", name: "Tabung", price: null, mode: "sale" };
+  let cart = addLine(addLine(addLine([], mask), mask), fins);
+  assert.equal(cart.find((l) => l.key === mask.key).quantity, 2);
+  assert.deepEqual(
+    { ...cartTotals(cart, 3), hasRental: undefined },
+    {
+      count: 3,
+      sale: 1250000,
+      rental: 300000,
+      total: 1550000,
+      hasRental: undefined,
+      needsQuote: false,
+    },
+  );
+  assert.equal(addLine(cart, mask, -2).length, 1);
+  assert.equal(addLine([], { ...mask }, 20)[0].quantity, 10);
+  cart = addLine(cart, quote);
+  assert.equal(cartTotals(cart).needsQuote, true);
+  const details = {
+    name: "Alex",
+    startDate: "2030-01-02",
+    days: 2,
+    notes: "Ukuran L",
+  };
+  const text = checkoutMessage(cart, details, "2030-01-01", "id");
+  assert.match(text, /^Halo Zanclus! Saya Alex/);
+  assert.match(text, /SEWA · Masker × 2 · Rp\s?50\.000 \/ hari/);
+  assert.match(text, /BELI · Tabung × 1 · Tanya harga/);
+  assert.match(text, /Lama sewa 2 hari, mulai 2030-01-02/);
+  assert.match(text, /Catatan Ukuran L/);
+  assert.match(
+    checkoutMessage(cart, details, "2030-01-01", "en"),
+    /RENT · Masker × 2 · IDR\s?50,000 \/ day/,
+  );
+  assert.throws(() =>
+    checkoutMessage(cart, { ...details, name: " " }, "2030-01-01"),
+  );
+  assert.throws(() =>
+    checkoutMessage(
+      cart,
+      { ...details, startDate: "2029-12-31" },
+      "2030-01-01",
+    ),
+  );
+  assert.throws(() =>
+    checkoutMessage(cart, { ...details, days: 31 }, "2030-01-01"),
+  );
+  assert.ok(checkoutMessage([fins], { name: "Alex" }, "2030-01-01"));
 });

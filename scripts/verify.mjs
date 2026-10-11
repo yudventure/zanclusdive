@@ -151,7 +151,7 @@ await page.locator('input[name="people"]').fill("2");
 await page
   .locator('input[name="date"]')
   .fill(await page.locator('input[name="date"]').getAttribute("min"));
-await page.locator("textarea").fill("Saya ingin info diving.");
+await page.locator("#booking-dialog textarea").fill("Saya ingin info diving.");
 await page.locator('#booking-form button[type="submit"]').click();
 await page.locator("#booking-result").waitFor({ state: "visible" });
 await assertCentered("#booking-dialog");
