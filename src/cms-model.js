@@ -1,6 +1,10 @@
 import { experiences } from "./domain.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
-import { blankSocials, socialPlatforms } from "./contact-model.js";
+import {
+  blankSocials,
+  socialPlatforms,
+  defaultMapQuery,
+} from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import {
   defaultPriceList,
@@ -37,16 +41,13 @@ export const defaultContent = {
     oceanTitle2: "untuk membuatmu takjub.",
     oceanDescription:
       "Dari warna terumbu hingga tenangnya laut terbuka. Pelan-pelan, temukan hal yang belum pernah kamu lihat.",
-    contactTitle1: "Petualangan berikutnya",
-    contactTitle2: "dimulai dari satu langkah.",
-    contactDescription:
-      "Ceritakan pengalamanmu, pilih tanggal, dan susun rencana penyelaman.",
   },
   contact: {
     ...blankSocials,
     whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190849237",
     email: "halo@zanclusdive.com",
     location: "",
+    mapQuery: defaultMapQuery,
     instagram: "",
   },
   images: { ...defaultSiteImages },
@@ -82,9 +83,6 @@ export const textFields = [
   ["oceanTitle1", "Judul laut — baris 1"],
   ["oceanTitle2", "Judul laut — baris 2"],
   ["oceanDescription", "Deskripsi bagian laut"],
-  ["contactTitle1", "Judul kontak — baris 1"],
-  ["contactTitle2", "Judul kontak — baris 2"],
-  ["contactDescription", "Deskripsi kontak"],
 ];
 export const statuses = {
   pending: "Belum dikonfirmasi",
@@ -165,6 +163,7 @@ export function validateContent(input) {
     email,
     ...socials,
     location: plain(c.location, "Lokasi", 500, false),
+    mapQuery: plain(c.mapQuery ?? "", "Pencarian peta", 200, false),
   };
   const images = Object.fromEntries(
     siteImageFields.map(([k]) => [

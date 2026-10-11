@@ -4,7 +4,7 @@ import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
-import { socialPlatforms } from "../contact-model.js";
+import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
 import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
@@ -1102,6 +1102,16 @@ export default function Dashboard({ section, email, today, demo = false }) {
                           value={view.contact.location}
                           onChange={(e) =>
                             mutateContent("contact", "location", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Pencarian Google Maps untuk peta toko">
+                        <input
+                          maxLength={200}
+                          placeholder={defaultMapQuery}
+                          value={content.contact.mapQuery ?? ""}
+                          onChange={(e) =>
+                            mutateContent("contact", "mapQuery", e.target.value)
                           }
                         />
                       </Field>

@@ -35,9 +35,6 @@ const textKeys = [
   "oceanTitle1",
   "oceanTitle2",
   "oceanDescription",
-  "contactTitle1",
-  "contactTitle2",
-  "contactDescription",
 ];
 
 const common = {
@@ -59,10 +56,6 @@ export const englishDefaults = {
     oceanTitle2: "of leaving you in awe.",
     oceanDescription:
       "From colorful reefs to the calm of open water. Take it slowly and discover things you've never seen before.",
-    contactTitle1: "Your next adventure",
-    contactTitle2: "starts with a single step.",
-    contactDescription:
-      "Tell us about your experience, pick a date and plan your dive.",
   },
   contact: { location: "" },
   experiences: {

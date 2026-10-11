@@ -248,7 +248,7 @@ try {
     assert.equal(await fallbackPage.locator(".reveal-pending").count(), 0);
     assert.equal(
       await fallbackPage
-        .locator(".contact-panel")
+        .locator(".store-map")
         .evaluate((el) => getComputedStyle(el).opacity),
       "1",
     );
