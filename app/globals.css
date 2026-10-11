@@ -159,31 +159,29 @@ img {
 }
 .language-switch {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border: 1px solid #b3d8e526;
-  border-radius: 30px;
-  background: #072c3a5c;
-  backdrop-filter: blur(15px);
+  align-items: center;
 }
 .language-switch a {
   min-width: 34px;
   min-height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 24px;
-  color: #dbe7eb;
-  font-size: 11px;
+  color: #a9c3cb;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
 }
-.language-switch a:hover {
+.language-switch a + a {
+  border-left: 1px solid #ffffff33;
+}
+.language-switch a:hover,
+.language-switch a[aria-current] {
   color: white;
-  background: #cadde319;
 }
 .language-switch a[aria-current] {
-  background: #bef4a5;
-  color: #062b3b;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 }
 .quick-service {
   background: #bef4a5;
@@ -215,24 +213,41 @@ img {
 }
 nav {
   display: flex;
-  gap: 3px;
-  border: 1px solid #b3d8e526;
-  border-radius: 30px;
-  padding: 4px;
-  background: #072c3a5c;
-  backdrop-filter: blur(15px);
+  gap: 6px;
 }
+/* Plain links; the active page is marked with an underline. */
 nav a {
-  padding: 10px 15px;
-  font-size: 12px;
+  position: relative;
+  padding: 10px 14px;
+  font-size: 13px;
   color: #dbe7eb;
-  border-radius: 24px;
+  transition: color 0.2s ease;
+}
+nav a::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
 }
 nav a:hover,
 nav a.active {
-  background: #cadde319;
-  box-shadow: inset 0 0 0 1px #c9e4e524;
   color: white;
+}
+nav a.active::after {
+  transform: scaleX(1);
+}
+/* In the opened mobile menu the underline is a short accent. */
+nav.open a::after {
+  right: auto;
+  width: 24px;
+  bottom: 6px;
+  transform-origin: left;
 }
 .button {
   display: inline-flex;
@@ -1468,6 +1483,9 @@ nav a.active {
 @media (max-width: 420px) {
   .language-switch a[aria-current] {
     display: none;
+  }
+  .language-switch a + a {
+    border-left: 0;
   }
 }
 @media (max-width: 360px) {
