@@ -172,6 +172,23 @@ export default function ProductVisual({ product }) {
               />
             </g>
           )}
+          {product.category === "camera" && (
+            <>
+              <rect
+                x="62"
+                y="74"
+                width="156"
+                height="100"
+                rx="18"
+                fill="#164f61"
+              />
+              <path d="M96 74l10-20h48l10 20" fill="#164f61" />
+              <circle cx="140" cy="124" r="34" fill="#0f3d4c" />
+              <circle cx="140" cy="124" r="22" fill="#a2e4dc" />
+              <circle cx="131" cy="115" r="6" fill="white" stroke="none" />
+              <path d="M188 92h14" stroke="#20b8b1" strokeWidth="8" />
+            </>
+          )}
           {product.category === "light" && (
             <g transform="rotate(38 140 110)">
               <path d="m116 89-7-33h62l-7 33v84q-24 12-48 0Z" fill="#164f61" />

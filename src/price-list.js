@@ -1,6 +1,25 @@
 // Package prices shown beside the experience cards, from the Zanclus Dive
 // Center 2025 price list. Editable in the CMS; each text has both languages.
 export const priceGroups = ["diving", "snorkeling", "trip"];
+// Gear rental lists shown in the homepage Dive Shop section.
+export const rentalGroups = [
+  "rentalSets",
+  "rentalBasics",
+  "rentalScuba",
+  "rentalTank",
+  "rentalTools",
+  "rentalCamera",
+];
+export const allPriceGroups = [...priceGroups, ...rentalGroups];
+// Admin labels for the rental lists.
+export const rentalLabels = {
+  rentalSets: "Sewa paket alat",
+  rentalBasics: "Sewa masker, snorkel & fin",
+  rentalScuba: "Sewa BCD, regulator & wetsuit",
+  rentalTank: "Tabung & isi ulang",
+  rentalTools: "Dive computer, senter & pelampung",
+  rentalCamera: "Sewa kamera bawah air",
+};
 
 const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
   name: { id: nameId, en: nameEn },
@@ -166,13 +185,115 @@ export const defaultPriceList = {
       "/ night",
     ),
   ],
+  rentalSets: [
+    item(
+      "Perlengkapan scuba",
+      "Scuba equipment",
+      "Mask, fins, BCD, regulator, wetsuit",
+      "Mask, fins, BCD, regulator, wetsuit",
+      600000,
+      ...day,
+    ),
+    item(
+      "Set snorkeling",
+      "Snorkeling set",
+      "Masker, snorkel, fins",
+      "Mask, snorkel, fins",
+      150000,
+      ...day,
+    ),
+  ],
+  rentalBasics: [
+    item("Masker", "Mask", "", "", 50000, ...day),
+    item("Snorkel", "Snorkel", "", "", 50000, ...day),
+    item("Fin full foot", "Full-foot fins", "", "", 50000, ...day),
+    item("Fin open heel", "Open-heel fins", "", "", 100000, ...day),
+    item("Booties", "Booties", "", "", 50000, ...day),
+  ],
+  rentalScuba: [
+    item("BCD", "BCD", "", "", 150000, ...day),
+    item("Regulator", "Regulator", "", "", 150000, ...day),
+    item("Wetsuit", "Wetsuit", "", "", 100000, ...day),
+    item(
+      "Weight belt",
+      "Weight belt",
+      "Pemberat 5 kg",
+      "5 kg of weights",
+      50000,
+      ...day,
+    ),
+  ],
+  rentalTank: [
+    item(
+      "Tabung + isi ulang",
+      "Tank + refill",
+      "Satu tabung penuh (200 bar)",
+      "One full tank (200 bar)",
+      100000,
+      "/ tabung",
+      "/ tank",
+    ),
+    item(
+      "Isi ulang",
+      "Refill",
+      "Untuk tabung kosong milikmu",
+      "For your own empty tank",
+      60000,
+      "/ tabung",
+      "/ tank",
+    ),
+  ],
+  rentalTools: [
+    item("Dive computer D4i", "Dive computer D4i", "", "", 500000, ...day),
+    item("Senter selam", "Dive torch", "", "", 100000, ...day),
+    item("Pelampung", "Life jacket", "", "", 50000, ...day),
+  ],
+  rentalCamera: [
+    item(
+      "Kamera bawah air TG-5",
+      "Underwater camera TG-5",
+      "",
+      "",
+      650000,
+      ...day,
+    ),
+    item(
+      "Kamera TG-5 + perlengkapan",
+      "TG-5 camera + gear",
+      "",
+      "",
+      1500000,
+      ...day,
+    ),
+    item(
+      "GoPro Hero 11 + housing",
+      "GoPro Hero 11 + housing",
+      "",
+      "",
+      500000,
+      ...day,
+    ),
+  ],
 };
 
-// Older CMS documents gain the default price list once.
+// Older CMS documents gain the default price list, and lists added later,
+// without losing saved prices.
 export function withPriceList(content) {
-  return content.priceList
-    ? content
-    : { ...content, priceList: structuredClone(defaultPriceList) };
+  const saved = content.priceList || {};
+  const missing = allPriceGroups.filter((group) => !saved[group]);
+  if (!missing.length) return content;
+  return {
+    ...content,
+    priceList: {
+      ...saved,
+      ...Object.fromEntries(
+        missing.map((group) => [
+          group,
+          structuredClone(defaultPriceList[group]),
+        ]),
+      ),
+    },
+  };
 }
 
 function text(value, label, max, required) {
@@ -192,10 +313,10 @@ function text(value, label, max, required) {
 
 export function validatePriceList(input) {
   return Object.fromEntries(
-    priceGroups.map((group) => {
+    allPriceGroups.map((group) => {
       const items = input?.[group];
       if (!Array.isArray(items) || items.length > 8)
-        throw new Error("Daftar harga berisi maksimal 8 item per aktivitas.");
+        throw new Error("Daftar harga berisi maksimal 8 item per daftar.");
       return [
         group,
         items.map((entry) => {

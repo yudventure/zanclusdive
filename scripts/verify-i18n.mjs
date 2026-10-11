@@ -67,6 +67,21 @@ try {
     await page.textContent(".experience-item.is-open .price-list"),
     /IDR\s?8,000,000/,
   );
+  // Dive Shop services: buying first, rentals from the price list.
+  assert.equal(
+    await page.textContent(".shop-service-panel h3"),
+    "Buy dive gear & accessories",
+  );
+  await page.getByRole("tab", { name: "Tanks & refills" }).click();
+  assert.match(
+    await page.textContent(".shop-service-list"),
+    /Tank \+ refill[\s\S]*IDR\s?100,000/,
+  );
+  await page.keyboard.press("ArrowDown");
+  assert.equal(
+    await page.textContent(".shop-service-panel h3"),
+    "Dive computers, torches & life jackets",
+  );
   await page.locator("#open-quiz").click();
   assert.equal(
     await page.textContent("#quiz-content h2"),

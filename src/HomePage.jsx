@@ -354,7 +354,13 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               </article>
             </div>
           </section>
-          <ShopTeaser shop={content.shop} demo={demo} locale={locale} />
+          <ShopTeaser
+            shop={content.shop}
+            priceList={content.priceList}
+            whatsapp={content.contact.whatsapp}
+            demo={demo}
+            locale={locale}
+          />
           <section
             className="contact-section"
             id="contact"

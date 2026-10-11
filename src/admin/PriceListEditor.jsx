@@ -1,6 +1,6 @@
 "use client";
 import { cloneElement, useId, useState } from "react";
-import { priceGroups } from "../price-list.js";
+import { allPriceGroups, rentalLabels } from "../price-list.js";
 import { activityLabels } from "../activity-model.js";
 
 function Field({ label, children }) {
@@ -19,7 +19,10 @@ const blank = () => ({
   unit: { id: "/ hari", en: "/ day" },
 });
 
-// Package prices beside the homepage cards, one list per activity.
+const labels = { ...activityLabels, ...rentalLabels };
+
+// Package prices beside the homepage cards, one list per activity, and the
+// gear rental lists in the homepage Dive Shop section.
 export default function PriceListEditor({ priceList, update, onSave, busy }) {
   const [group, setGroup] = useState("diving");
   const items = priceList[group];
@@ -60,23 +63,25 @@ export default function PriceListEditor({ priceList, update, onSave, busy }) {
         role="group"
         aria-label="Pilih daftar harga"
       >
-        {priceGroups.map((key) => (
+        {allPriceGroups.map((key) => (
           <button
             type="button"
             key={key}
             aria-pressed={group === key}
             onClick={() => setGroup(key)}
           >
-            {activityLabels[key]}
+            {labels[key]}
           </button>
         ))}
       </div>
       <section className="admin-card">
-        <h2>Daftar harga {activityLabels[group]}</h2>
+        <h2>Daftar harga {labels[group]}</h2>
         <p className="admin-subtle">
-          Tampil di samping kartu {activityLabels[group]} di beranda. Isi nama
-          dan keterangan dalam dua bahasa; kolom English yang kosong memakai
-          teks Indonesia. Maksimal 8 item; harga dalam rupiah.
+          {activityLabels[group]
+            ? `Tampil di samping kartu ${activityLabels[group]} di beranda.`
+            : "Tampil di bagian Dive Shop beranda."}{" "}
+          Isi nama dan keterangan dalam dua bahasa; kolom English yang kosong
+          memakai teks Indonesia. Maksimal 8 item; harga dalam rupiah.
         </p>
         {items.map((item, index) => (
           <fieldset className="admin-price-item" key={index}>
