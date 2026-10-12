@@ -139,6 +139,14 @@ export default function PetaRajaAmpat({ bahasa = "id", teks: timpa, wilayah = WI
   }, []);
 
   const pilihWilayah = (id) => { setPilih(id); setTitikPilih(null); };
+  // Di ponsel, wilayah terpilih digeser ke tengah baris pilihan.
+  const barisHp = useRef(null);
+  useEffect(() => {
+    const baris = barisHp.current;
+    const tombol = pilih && baris?.querySelector(`[data-pilih-wilayah="${pilih}"]`);
+    if (!tombol || baris.scrollWidth <= baris.clientWidth) return;
+    baris.scrollTo({ left: tombol.offsetLeft - (baris.clientWidth - tombol.offsetWidth) / 2, behavior: "smooth" });
+  }, [pilih]);
   const pilihTitik = (x) => { setPilih(x.wilayah); setTitikPilih(x.id); };
   const mundur = () => { if (titikPilih) setTitikPilih(null); else pilihWilayah(null); };
   useEffect(() => {
@@ -318,12 +326,15 @@ export default function PetaRajaAmpat({ bahasa = "id", teks: timpa, wilayah = WI
             <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="prj-atribusi" data-atribusi-osm>{t("atribusi")}</a>
           </div>
 
-          {/* Ponsel: pilihan wilayah sebagai baris tombol di bawah peta. */}
-          <div role="group" aria-label={t("pilihWilayah")} className="prj-pilihan-hp">
-            {wilayah.map((w) => (
-              <button key={w.id} type="button" onClick={() => pilihWilayah(w.id)} aria-pressed={w.id === aktif?.id} data-pilih-wilayah={w.id}
-                className={`prj-chip ${w.id === aktif?.id ? "prj-chip-on" : ""}`}>{w.nama}</button>
-            ))}
+          {/* Ponsel: pilihan wilayah sebagai satu baris yang digeser di bawah peta. */}
+          <div className="prj-pilihan-hp">
+            <p className="prj-pilihan-hp-judul" aria-hidden>{t("pilihWilayah")}</p>
+            <div role="group" aria-label={t("pilihWilayah")} className="prj-pilihan-hp-baris" ref={barisHp}>
+              {wilayah.map((w) => (
+                <button key={w.id} type="button" onClick={() => pilihWilayah(w.id)} aria-pressed={w.id === aktif?.id} data-pilih-wilayah={w.id}
+                  className={`prj-chip ${w.id === aktif?.id ? "prj-chip-on" : ""}`}>{w.nama}</button>
+              ))}
+            </div>
           </div>
 
           {/* Legenda sekaligus saringan. */}
