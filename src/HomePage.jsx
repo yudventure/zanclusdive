@@ -128,8 +128,8 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               {t.common.home}
             </a>
             <a href="#experiences">{t.common.experiences}</a>
-            <a href="#ocean">{t.common.exploreOcean}</a>
             <a href="#dive-sites">{t.common.diveSites}</a>
+            <a href="#ocean">{t.common.exploreOcean}</a>
             <a href="#dive-shop">{"Dive Shop"}</a>
             <a href="#contact">{t.common.contact}</a>
           </nav>
@@ -300,6 +300,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               </button>
             </div>
           </section>
+          <DiveSiteMap locale={locale} />
           <section className="ocean-section" id="ocean">
             <div
               className="section-heading flex items-center justify-between gap-5"
@@ -359,7 +360,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               locale={locale}
             />
           </section>
-          <DiveSiteMap locale={locale} />
           <ShopTeaser
             shop={content.shop}
             priceList={content.priceList}

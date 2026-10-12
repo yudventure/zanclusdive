@@ -1,3 +1,4 @@
+import { cleanWhatsApp, cleanEmail } from "./contact-fields.js";
 import { activityPhotos } from "./photography.js";
 import { dictionary } from "./i18n.js";
 export const activityLabels = {
@@ -228,6 +229,10 @@ export function activityInquiry(
   const participants = Number(details.participants);
   const date = details.date;
   if (!name || name.length > 120) throw new Error(t.name);
+  const whatsapp = cleanWhatsApp(details.whatsapp);
+  if (!whatsapp) throw new Error(t.whatsapp);
+  const email = cleanEmail(details.email);
+  if (email === null) throw new Error(t.email);
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
     Number.isNaN(new Date(date + "T12:00:00Z").valueOf()) ||
@@ -242,6 +247,8 @@ export function activityInquiry(
     t.greeting(label),
     `${t.program}: ${activity.title}`,
     `${t.name_}: ${name}`,
+    `WhatsApp: ${whatsapp}`,
+    ...(email ? [`Email: ${email}`] : []),
     `${t.proposedDate}: ${date}`,
     t.people(participants),
     ...(notes ? [`${t.notesLabel}: ${notes}`] : []),

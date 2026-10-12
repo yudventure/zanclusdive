@@ -68,10 +68,11 @@ try {
     })
     .click();
   await page.getByLabel("Jumlah Open heel fins rental").selectOption("2");
-  await page.getByLabel("Durasi (hari)", { exact: true }).fill("3");
-  await page.getByLabel("Nama kamu", { exact: true }).fill("Tamu Uji Shop");
+  await page.getByLabel("Durasi (hari)").fill("3");
+  await page.getByLabel("Nama kamu").fill("Tamu Uji Shop");
+  await page.getByLabel("Nomor WhatsApp").fill("081234567890");
   await page
-    .getByLabel("Ukuran / catatan (opsional)")
+    .getByLabel("Ukuran / catatan", { exact: false })
     .fill("Fin ukuran M, ambil di dive center");
   assert.match(await page.locator(".shop-total").textContent(), /1\.100\.000/);
   await page.getByRole("button", { name: "Siapkan pesan pesanan" }).click();
@@ -86,7 +87,7 @@ try {
   assert.match(message, /Fin ukuran M/);
   assert.match(message, /contoh demo/);
   // Do not send or navigate to WhatsApp during verification.
-  await page.getByLabel("Durasi (hari)", { exact: true }).fill("2");
+  await page.getByLabel("Durasi (hari)").fill("2");
   assert.equal(
     await page.locator(".shop-send").count(),
     0,

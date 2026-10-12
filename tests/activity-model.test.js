@@ -84,6 +84,8 @@ test("CMS round trips all activity content and rejects malformed pages, prices, 
 test("WhatsApp inquiries retain the selected activity and guest details without promising reservations", () => {
   const details = {
     name: "  Tamu Uji  ",
+    whatsapp: " +62 812 3456 7890 ",
+    email: "tamu@example.com",
     date: "2028-02-29",
     participants: "4",
     notes: "Butuh rental fins",
@@ -99,6 +101,8 @@ test("WhatsApp inquiries retain the selected activity and guest details without 
     assert.ok(message.includes(activityLabels[key]));
     assert.ok(message.includes(defaultActivities[key].title));
     assert.ok(message.includes("Nama: Tamu Uji"));
+    assert.ok(message.includes("WhatsApp: +62 812 3456 7890"));
+    assert.ok(message.includes("Email: tamu@example.com"));
     assert.ok(message.includes("2028-02-29"));
     assert.ok(message.includes("4 orang"));
     assert.ok(message.includes(details.notes));
@@ -107,6 +111,10 @@ test("WhatsApp inquiries retain the selected activity and guest details without 
   }
   for (const invalid of [
     { name: " " },
+    { whatsapp: "" },
+    { whatsapp: "12345" },
+    { whatsapp: "call me maybe" },
+    { email: "not-an-email" },
     { date: "2028-02-30" },
     { date: "2027-01-01" },
     { participants: 0 },
@@ -122,6 +130,15 @@ test("WhatsApp inquiries retain the selected activity and guest details without 
         "2028-02-28",
       ),
     );
+  assert.ok(
+    !activityInquiry(
+      "diving",
+      defaultActivities.diving,
+      { ...details, email: " " },
+      "2028-02-28",
+    ).includes("Email"),
+    "email stays optional",
+  );
   assert.throws(() =>
     activityInquiry("unknown", defaultActivities.diving, details, "2028-02-28"),
   );
