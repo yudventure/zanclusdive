@@ -1,7 +1,11 @@
 // English versions of CMS-managed copy. The main CMS fields stay Indonesian;
 // `content.en` holds the English overlay. Empty English fields fall back to
 // the Indonesian value so the English site never shows blanks.
-import { activityKeys } from "./activity-model.js";
+import {
+  activityKeys,
+  defaultActivities,
+  legacyActivityDefaults,
+} from "./activity-model.js";
 
 export const translatableFields = {
   experiences: ["title", "description", "cardDescription", "duration", "items"],
@@ -37,9 +41,26 @@ const textKeys = [
   "oceanDescription",
 ];
 
-const common = {
+const legacyEnglish = {
   duration: "Tailored to your activity plan",
   meetingPoint: "Confirmed with the Zanclus team",
+  divingItineraryTitles: [
+    "Get to know your plan",
+    "Preparation & briefing",
+    "Explore underwater",
+    "Take home a story",
+  ],
+};
+const facts = {
+  diving: {
+    duration: "Half day · 2 dives",
+    meetingPoint: "Zanclus dive center, Waisai",
+  },
+  snorkeling: {
+    duration: "2 to 4 hours",
+    meetingPoint: "Waisai beach or jetty",
+  },
+  trip: { duration: "A full day or longer", meetingPoint: "Waisai harbour" },
 };
 export const englishDefaults = {
   text: {
@@ -99,7 +120,7 @@ export const englishDefaults = {
   },
   activities: {
     diving: {
-      ...common,
+      ...facts.diving,
       title: "Find the story beneath the surface.",
       summary:
         "From your very first dive to your next adventure, plan a dive that suits you.",
@@ -121,24 +142,24 @@ export const englishDefaults = {
       ],
       itinerary: [
         {
-          title: "Get to know your plan",
+          title: "Briefing at the dive center",
           description:
-            "Talk through your experience, goals and preferred dates with our team.",
+            "Check certification and gear, then go through the dive site and safety rules with your guide.",
         },
         {
-          title: "Preparation & briefing",
+          title: "Out to the dive site",
           description:
-            "Confirm equipment and receive activity guidance for your chosen program.",
+            "Take the boat into the Dampier Strait. Your guide picks a site that suits the current and your experience.",
         },
         {
-          title: "Explore underwater",
+          title: "Two dives",
           description:
-            "The activity follows the confirmed plan and the sea conditions on the day.",
+            "Dive with your guide, with a surface interval to rest between the two dives.",
         },
         {
-          title: "Take home a story",
+          title: "Back & log book",
           description:
-            "Share your experience and talk about your next step with our team.",
+            "Rinse the gear, log your dives and talk about your next dive.",
         },
       ],
       faqs: [
@@ -160,7 +181,7 @@ export const englishDefaults = {
       ],
     },
     snorkeling: {
-      ...common,
+      ...facts.snorkeling,
       title: "Close to the ocean, from its surface.",
       summary:
         "Enjoy the colors and life of the sea with a snorkeling plan that's comfortable for you and your travel companions.",
@@ -221,7 +242,7 @@ export const englishDefaults = {
       ],
     },
     trip: {
-      ...common,
+      ...facts.trip,
       title: "One trip, many ocean stories.",
       summary:
         "Plan a sea trip with friends or family, with activities and routes that follow the way you like to travel.",
@@ -373,6 +394,49 @@ export function withRajaAmpatTitle(content) {
     updated.en = {
       ...content.en,
       text: { ...content.en.text, heroTitle1: englishDefaults.text.heroTitle1 },
+    };
+  return updated;
+}
+
+// Older versions gave all three activity pages the same duration, meeting
+// point and a generic diving day. Values the owner never changed are swapped
+// for the page's own defaults; edited values stay.
+export function withActivityRefresh(content) {
+  if (!content.activities) return content;
+  const titles = (list) => (list || []).map((step) => step?.title);
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const refresh = (activity, key, legacy, defaults) => {
+    if (!activity) return activity;
+    const next = { ...activity };
+    if (next.duration === legacy.duration)
+      next.duration = defaults[key].duration;
+    if (next.meetingPoint === legacy.meetingPoint)
+      next.meetingPoint = defaults[key].meetingPoint;
+    if (
+      key === "diving" &&
+      same(titles(next.itinerary), legacy.divingItineraryTitles)
+    )
+      next.itinerary = structuredClone(defaults[key].itinerary);
+    return next;
+  };
+  const updated = {
+    ...content,
+    activities: Object.fromEntries(
+      Object.entries(content.activities).map(([key, a]) => [
+        key,
+        refresh(a, key, legacyActivityDefaults, defaultActivities),
+      ]),
+    ),
+  };
+  if (content.en?.activities)
+    updated.en = {
+      ...content.en,
+      activities: Object.fromEntries(
+        Object.entries(content.en.activities).map(([key, a]) => [
+          key,
+          refresh(a, key, legacyEnglish, englishDefaults.activities),
+        ]),
+      ),
     };
   return updated;
 }

@@ -212,7 +212,15 @@ try {
           await page.locator("#activity-navigation").isVisible(),
           true,
         );
-        assert.equal(await page.locator("#activity-navigation a").count(), 6);
+        // Six main links plus the three activity pages under Experiences.
+        assert.equal(await page.locator("#activity-navigation a").count(), 9);
+        assert.equal(
+          await page
+            .locator("#activity-navigation")
+            .getByRole("link", { name: "Dive Shop", exact: true })
+            .getAttribute("href"),
+          "/id/dive-shop",
+        );
         await page
           .getByRole("button", { name: "Tutup menu", exact: true })
           .click();

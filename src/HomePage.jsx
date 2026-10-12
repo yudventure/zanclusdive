@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import SiteNavLinks from "./components/SiteNavLinks.jsx";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
@@ -125,14 +126,11 @@ export default function HomePage({ content, locale = "en" }) {
             <span></span>
           </button>
           <nav id="navigation" aria-label={t.common.mainNav}>
-            <a href="#" className="active">
-              {t.common.home}
-            </a>
-            <a href="#experiences">{t.common.experiences}</a>
-            <a href="#dive-sites">{t.common.diveSites}</a>
-            <a href="#ocean">{t.common.exploreOcean}</a>
-            <a href="#dive-shop">{"Dive Shop"}</a>
-            <a href="#contact">{t.common.contact}</a>
+            <SiteNavLinks
+              locale={locale}
+              page="home"
+              activities={content.activities}
+            />
           </nav>
           <div className="header-actions">
             <LanguageSwitch locale={locale} path="/" />

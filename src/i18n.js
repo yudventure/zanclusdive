@@ -289,6 +289,90 @@ const id = {
     },
   },
   activity: {
+    banners: {
+      diving: {
+        about: [
+          "MENYELAM BERSAMA ZANCLUS",
+          "Kenali penyelamanmu.",
+          "Dari Discovery Dive pertama sampai fun dive di Selat Dampier.",
+        ],
+        prices: [
+          "PAKET DIVING",
+          "Paket & harga diving.",
+          "Pilih paket, lalu tim menyesuaikan dengan pengalaman menyelammu.",
+        ],
+        itinerary: [
+          "SATU HARI MENYELAM",
+          "Alur hari menyelam.",
+          "Dari briefing di dive center sampai mengisi log book.",
+        ],
+        prep: [
+          "SEBELUM TURUN",
+          "Persiapan menyelam.",
+          "Sertifikat, kesehatan, dan alat yang perlu dicek.",
+        ],
+        faq: [
+          "TANYA SOAL DIVING",
+          "Pertanyaan seputar diving.",
+          "Pemula, sertifikasi, dan alat selam.",
+        ],
+      },
+      snorkeling: {
+        about: [
+          "DI PERMUKAAN LAUT",
+          "Kenali snorkelingmu.",
+          "Cukup masker, snorkel, dan fin untuk melihat terumbu dari atas.",
+        ],
+        prices: [
+          "PAKET SNORKELING",
+          "Paket & harga snorkeling.",
+          "Pemandu dan alat bisa dipilih sesuai kebutuhan kelompokmu.",
+        ],
+        itinerary: [
+          "SATU HARI SNORKELING",
+          "Alur snorkeling.",
+          "Santai dari pantai atau perahu, mengikuti kenyamanan peserta.",
+        ],
+        prep: [
+          "BAWA YANG RINGAN",
+          "Persiapan snorkeling.",
+          "Alat, pelindung matahari, dan kemampuan berenang.",
+        ],
+        faq: [
+          "TANYA SOAL SNORKELING",
+          "Pertanyaan seputar snorkeling.",
+          "Berenang, anak-anak, dan sewa alat.",
+        ],
+      },
+      trip: {
+        about: [
+          "MENJELAJAH PULAU",
+          "Kenali perjalananmu.",
+          "Pulau, laguna, dan titik snorkel dalam satu rute.",
+        ],
+        prices: [
+          "PAKET TRIP",
+          "Paket & harga trip laut.",
+          "Kapal, rute, dan penginapan untuk rombonganmu.",
+        ],
+        itinerary: [
+          "RUTE PERJALANAN",
+          "Alur trip laut.",
+          "Dari pelabuhan Waisai sampai kembali membawa cerita.",
+        ],
+        prep: [
+          "SIAP BERLAYAR",
+          "Persiapan trip.",
+          "Peserta, transportasi, dan rencana saat cuaca berubah.",
+        ],
+        faq: [
+          "TANYA SOAL TRIP",
+          "Pertanyaan seputar trip laut.",
+          "Rute khusus, biaya, dan cuaca.",
+        ],
+      },
+    },
+    pricesNav: "Paket & harga",
     planKicker: "AYO SUSUN RENCANA",
     planTitle: (label) => `Rencanakan ${label.toLowerCase()}.`,
     priceLabel: "BIAYA KEGIATAN",
@@ -831,6 +915,90 @@ const en = {
     },
   },
   activity: {
+    banners: {
+      diving: {
+        about: [
+          "DIVE WITH ZANCLUS",
+          "Get to know your dive.",
+          "From your first Discovery Dive to fun dives in the Dampier Strait.",
+        ],
+        prices: [
+          "DIVING PACKAGES",
+          "Diving packages & prices.",
+          "Pick a package and our team fits it to your diving experience.",
+        ],
+        itinerary: [
+          "A DAY OF DIVING",
+          "How a dive day goes.",
+          "From the briefing at the dive center to filling in your log book.",
+        ],
+        prep: [
+          "BEFORE YOU DESCEND",
+          "Getting ready to dive.",
+          "Certification, health and the gear to check.",
+        ],
+        faq: [
+          "DIVING QUESTIONS",
+          "Questions about diving.",
+          "Beginners, certification and dive gear.",
+        ],
+      },
+      snorkeling: {
+        about: [
+          "AT THE SURFACE",
+          "Get to know your snorkel.",
+          "A mask, snorkel and fins are all it takes to see the reef from above.",
+        ],
+        prices: [
+          "SNORKELING PACKAGES",
+          "Snorkeling packages & prices.",
+          "Choose a guide and gear to suit your group.",
+        ],
+        itinerary: [
+          "A DAY OF SNORKELING",
+          "How a snorkel day goes.",
+          "Relaxed, from the beach or a boat, at everyone's own pace.",
+        ],
+        prep: [
+          "PACK LIGHT",
+          "Getting ready to snorkel.",
+          "Gear, sun protection and swimming ability.",
+        ],
+        faq: [
+          "SNORKELING QUESTIONS",
+          "Questions about snorkeling.",
+          "Swimming, children and gear rental.",
+        ],
+      },
+      trip: {
+        about: [
+          "ISLAND HOPPING",
+          "Get to know your trip.",
+          "Islands, lagoons and snorkel spots on one route.",
+        ],
+        prices: [
+          "TRIP PACKAGES",
+          "Sea trip packages & prices.",
+          "Boats, routes and stays for your group.",
+        ],
+        itinerary: [
+          "THE ROUTE",
+          "How a sea trip goes.",
+          "From Waisai harbour and back again with new stories.",
+        ],
+        prep: [
+          "READY TO SAIL",
+          "Getting ready for the trip.",
+          "Participants, transport and a plan for changing weather.",
+        ],
+        faq: [
+          "TRIP QUESTIONS",
+          "Questions about sea trips.",
+          "Custom routes, costs and weather.",
+        ],
+      },
+    },
+    pricesNav: "Packages & prices",
     planKicker: "LET'S MAKE A PLAN",
     planTitle: (label) => `Plan your ${label.toLowerCase()}.`,
     priceLabel: "ACTIVITY PRICE",

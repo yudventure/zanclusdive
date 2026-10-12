@@ -11,8 +11,18 @@ export const activityKeys = Object.keys(activityLabels);
 const common = {
   enabled: true,
   price: null,
+};
+// Values older versions shared by all three pages; replaced once by
+// withActivityRefresh in content-i18n.js when the owner never changed them.
+export const legacyActivityDefaults = {
   duration: "Disesuaikan dengan rencana kegiatan",
   meetingPoint: "Dikonfirmasi bersama tim Zanclus",
+  divingItineraryTitles: [
+    "Kenali rencanamu",
+    "Persiapan & briefing",
+    "Jelajahi bawah laut",
+    "Bawa pulang cerita",
+  ],
 };
 export const defaultActivities = {
   diving: {
@@ -24,6 +34,8 @@ export const defaultActivities = {
       "Mulai dengan bercerita tentang pengalamanmu di air dan apa yang ingin kamu jelajahi. Tim Zanclus akan membantu mendiskusikan pilihan aktivitas, kebutuhan peralatan, dan persiapan sebelum menyelam. Program, lokasi, serta persyaratan peserta dikonfirmasi sebelum perjalanan.",
     ...activityPhotos.diving,
     audience: "Pemula & penyelam berpengalaman",
+    duration: "Setengah hari · 2 penyelaman",
+    meetingPoint: "Dive center Zanclus, Waisai",
     highlights: [
       "Rencana sesuai pengalaman menyelam",
       "Diskusi peralatan dan persiapan",
@@ -37,24 +49,24 @@ export const defaultActivities = {
     ],
     itinerary: [
       {
-        title: "Kenali rencanamu",
+        title: "Briefing di dive center",
         description:
-          "Diskusikan pengalaman, tujuan, dan pilihan tanggal bersama tim.",
+          "Cek sertifikat dan alat, lalu bahas titik selam dan aturan keselamatan bersama pemandu.",
       },
       {
-        title: "Persiapan & briefing",
+        title: "Menuju titik selam",
         description:
-          "Konfirmasi perlengkapan serta arahan kegiatan sesuai program yang dipilih.",
+          "Naik perahu ke Selat Dampier. Pemandu memilih titik sesuai arus dan pengalamanmu.",
       },
       {
-        title: "Jelajahi bawah laut",
+        title: "Dua penyelaman",
         description:
-          "Aktivitas mengikuti rencana yang sudah dikonfirmasi dan kondisi laut saat itu.",
+          "Menyelam bersama pemandu, dengan waktu istirahat di permukaan di antara keduanya.",
       },
       {
-        title: "Bawa pulang cerita",
+        title: "Kembali & isi log book",
         description:
-          "Berbagi pengalaman dan mendiskusikan langkah berikutnya bersama tim.",
+          "Bilas alat, catat penyelaman, dan bahas rencana menyelam berikutnya.",
       },
     ],
     faqs: [
@@ -84,6 +96,8 @@ export const defaultActivities = {
       "Snorkeling membuka cara lain untuk menikmati laut. Ceritakan tingkat kenyamananmu di air, jumlah peserta, dan kebutuhan kelompokmu. Kita diskusikan area aktivitas, perlengkapan, serta pendampingan yang sesuai sebelum menentukan rencana bersama.",
     ...activityPhotos.snorkeling,
     audience: "Individu, teman & keluarga",
+    duration: "2 sampai 4 jam",
+    meetingPoint: "Pantai atau dermaga Waisai",
     highlights: [
       "Menikmati kehidupan laut dari permukaan",
       "Rencana sesuai kenyamanan di air",
@@ -143,6 +157,8 @@ export const defaultActivities = {
       "Mulai dari ide sederhana: ingin menikmati laut, snorkeling, atau menyelam dalam satu perjalanan. Ceritakan jumlah peserta, waktu yang tersedia, serta tujuanmu. Tim Zanclus membantu mendiskusikan rute, transportasi, dan aktivitas; rincian akhir disepakati sebelum keberangkatan.",
     ...activityPhotos.trip,
     audience: "Trip pribadi & kelompok",
+    duration: "Satu hari penuh atau lebih",
+    meetingPoint: "Pelabuhan Waisai",
     highlights: [
       "Diskusi rute dan tujuan perjalanan",
       "Pilihan aktivitas untuk kelompokmu",

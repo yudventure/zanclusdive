@@ -10,7 +10,11 @@ import { withShop } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
-import { withTranslations, withRajaAmpatTitle } from "../content-i18n.js";
+import {
+  withTranslations,
+  withRajaAmpatTitle,
+  withActivityRefresh,
+} from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
 import {
   assertBookable,
@@ -62,11 +66,13 @@ export async function getContent() {
   );
   return {
     content: withPriceList(
-      withRajaAmpatTitle(
-        withTranslations(
-          withActivities(
-            withPhotography(
-              withContactFields(withShop(JSON.parse(rows[0].payload))),
+      withActivityRefresh(
+        withRajaAmpatTitle(
+          withTranslations(
+            withActivities(
+              withPhotography(
+                withContactFields(withShop(JSON.parse(rows[0].payload))),
+              ),
             ),
           ),
         ),

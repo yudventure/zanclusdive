@@ -16,7 +16,11 @@ import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
-import { withTranslations, withRajaAmpatTitle } from "../content-i18n.js";
+import {
+  withTranslations,
+  withRajaAmpatTitle,
+  withActivityRefresh,
+} from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
 import {
   assertBookable,
@@ -119,7 +123,9 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
-      const titled = withPriceList(withRajaAmpatTitle(state.content));
+      const titled = withPriceList(
+        withActivityRefresh(withRajaAmpatTitle(state.content)),
+      );
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;
         state.version++;
