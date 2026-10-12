@@ -27,6 +27,7 @@ export default async function AdminPage({ params }) {
       "shop",
       "activities",
       "prices",
+      "events",
     ].includes(active)
   )
     notFound();

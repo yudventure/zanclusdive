@@ -220,6 +220,7 @@ export default function ActivityDetail({
               </a>
             ))}
           <a href={href("/#dive-shop")}>Dive Shop</a>
+          <a href={href("/calendar")}>{dict.calendarPage.nav}</a>
           <a href={href("/#contact")}>{dict.common.contact}</a>
         </nav>
         <div className="header-actions">

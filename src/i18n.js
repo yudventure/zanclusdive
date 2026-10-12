@@ -142,6 +142,62 @@ const id = {
       "Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.",
     whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
   },
+  calendarPage: {
+    nav: "Kalender",
+    metaTitle: "Kalender kegiatan | Zanclus Dive Center",
+    metaDescription:
+      "Jadwal trip selam, kelas, dan kegiatan peduli lingkungan Zanclus di Raja Ampat, lengkap dengan panduan musim dan spot selam populer.",
+    skip: "Lewati ke kalender",
+    eyebrow: "ZANCLUS CALENDAR",
+    title: "Kalender kegiatan Zanclus.",
+    summary:
+      "Trip selam, kelas, dan kegiatan menjaga laut Raja Ampat. Pilih tanggal, ajak teman, dan bergabung bersama tim.",
+    sections: "Bagian halaman",
+    jump: ["Kalender", "Musim terbaik", "Spot populer", "Peduli lingkungan"],
+    demoNote:
+      "Jadwal di halaman ini adalah contoh. Tim Zanclus memperbarui jadwal lewat panel admin.",
+    calendarEyebrow: "WHAT'S ON",
+    calendarTitle: "Jadwal kegiatan.",
+    calendarIntro:
+      "Pilih bulan dan tanggal untuk melihat kegiatan. Kuota terbatas, jadi kabari tim lebih awal.",
+    weekdays: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
+    previous: "Bulan sebelumnya",
+    next: "Bulan berikutnya",
+    types: {
+      dive: "Trip selam",
+      course: "Kelas & kursus",
+      eco: "Peduli lingkungan",
+      community: "Acara komunitas",
+    },
+    eventsIn: (month) => `Kegiatan ${month}`,
+    eventsOn: (date) => `Kegiatan ${date}`,
+    showMonth: "Lihat semua bulan ini",
+    noEvents:
+      "Belum ada kegiatan di bulan ini. Tanyakan jadwal pribadi lewat WhatsApp.",
+    dayLabel: (date, n) => (n ? `${date}, ${n} kegiatan` : date),
+    join: "Ikut kegiatan",
+    joinMessage: (title, date) =>
+      `Halo Zanclus! Saya ingin ikut kegiatan ${title} pada ${date}. Apakah masih ada tempat?`,
+    seasonEyebrow: "WHEN TO COME",
+    seasonTitle: "Musim terbaik untuk menyelam.",
+    seasonIntro:
+      "Raja Ampat bisa diselami sepanjang tahun. Suhu air sekitar 27 sampai 30 °C dan jarak pandang umumnya 10 sampai 30 meter. Panduan ini bersifat umum, kondisi harian selalu dicek tim sebelum berangkat.",
+    ratings: { best: "Terbaik", good: "Baik", windy: "Berangin" },
+    spotsEyebrow: "POPULAR DIVE SPOTS",
+    spotsTitle: "Spot selam paling populer.",
+    spotsIntro:
+      "Titik yang paling sering diminta tamu, beserta waktu terbaik untuk mengunjunginya.",
+    bestTime: "Waktu terbaik",
+    onMap: "Lihat di peta dive site",
+    ecoEyebrow: "CARE FOR THE OCEAN",
+    ecoTitle: "Rencana peduli lingkungan.",
+    ecoIntro:
+      "Laut yang sehat adalah alasan kami menyelam. Ini rencana kegiatan Zanclus untuk menjaganya, dan kamu bisa ikut serta.",
+    ecoJoin: "Ikut peduli lingkungan",
+    ecoMessage:
+      "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
+    breadcrumb: "Kalender",
+  },
   gallery: {
     eyebrow: "GALERI PENYELAMAN ZANCLUS",
     open: "Buka galeri",
@@ -611,6 +667,63 @@ const en = {
     whatsappHelp:
       "Hi Zanclus! I'd like some help with diving experiences and available dates.",
     whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
+  },
+  calendarPage: {
+    nav: "Calendar",
+    metaTitle: "Activity calendar | Zanclus Dive Center",
+    metaDescription:
+      "Zanclus dive trips, classes and ocean care activities in Raja Ampat, with a season guide and the most popular dive spots.",
+    skip: "Skip to the calendar",
+    eyebrow: "ZANCLUS CALENDAR",
+    title: "The Zanclus activity calendar.",
+    summary:
+      "Dive trips, classes and days caring for the Raja Ampat sea. Pick a date, bring friends and join the team.",
+    sections: "Page sections",
+    jump: ["Calendar", "Best season", "Popular spots", "Ocean care"],
+    demoNote:
+      "The schedule on this page is a sample. The Zanclus team updates it in the admin panel.",
+    calendarEyebrow: "WHAT'S ON",
+    calendarTitle: "Upcoming activities.",
+    calendarIntro:
+      "Pick a month and a date to see what's on. Places are limited, so let the team know early.",
+    weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    previous: "Previous month",
+    next: "Next month",
+    types: {
+      dive: "Dive trip",
+      course: "Class & course",
+      eco: "Ocean care",
+      community: "Community event",
+    },
+    eventsIn: (month) => `Activities in ${month}`,
+    eventsOn: (date) => `Activities on ${date}`,
+    showMonth: "Show the whole month",
+    noEvents:
+      "Nothing scheduled this month yet. Ask about a private date on WhatsApp.",
+    dayLabel: (date, n) =>
+      n ? `${date}, ${n} ${n === 1 ? "activity" : "activities"}` : date,
+    join: "Join this activity",
+    joinMessage: (title, date) =>
+      `Hi Zanclus! I'd like to join ${title} on ${date}. Are there places left?`,
+    seasonEyebrow: "WHEN TO COME",
+    seasonTitle: "The best season to dive.",
+    seasonIntro:
+      "Raja Ampat can be dived all year. The water is around 27 to 30 °C and visibility is usually 10 to 30 metres. This is a general guide, and the team checks each day's conditions before heading out.",
+    ratings: { best: "Best", good: "Good", windy: "Windy" },
+    spotsEyebrow: "POPULAR DIVE SPOTS",
+    spotsTitle: "The most popular dive spots.",
+    spotsIntro:
+      "The sites guests ask for most, with the best time to visit each one.",
+    bestTime: "Best time",
+    onMap: "See it on the dive site map",
+    ecoEyebrow: "CARE FOR THE OCEAN",
+    ecoTitle: "Ocean care plans.",
+    ecoIntro:
+      "A healthy sea is the reason we dive. These are the Zanclus plans to look after it, and you are welcome to join in.",
+    ecoJoin: "Join an ocean care day",
+    ecoMessage:
+      "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
+    breadcrumb: "Calendar",
   },
   gallery: {
     eyebrow: "ZANCLUS DIVE GALLERY",
