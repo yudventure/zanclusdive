@@ -28,8 +28,18 @@ function secret() {
 // Accounts that may sign in. MySQL mode uses the environment account only.
 function accounts() {
   if (!isDemo()) return [envAccount()].filter(Boolean);
-  const own = envAccount() ?? operatorAccount;
-  return demoLoginEnabled() ? [own, demoAccount] : [own];
+  // The operator account always works; an ADMIN_EMAIL/ADMIN_PASSWORD pair
+  // left in the hosting panel is accepted as well, not instead.
+  const own = [operatorAccount, envAccount()].filter(
+    (account, i, list) =>
+      account &&
+      list.findIndex(
+        (other) =>
+          other?.email.trim().toLowerCase() ===
+          account.email.trim().toLowerCase(),
+      ) === i,
+  );
+  return demoLoginEnabled() ? [...own, demoAccount] : own;
 }
 export function authConfigured() {
   return isDemo() || configurationIssues().length === 0;
@@ -55,12 +65,17 @@ function passwordOf(account, password) {
   });
   return timingSafeEqual(actual, Buffer.from(account.hash, "base64url"));
 }
+// Spaces picked up when a password is pasted are forgiven.
+const passwordMatchesAccount = (account, password) =>
+  passwordOf(account, password) ||
+  (String(password).trim() !== String(password) &&
+    passwordOf(account, String(password).trim()));
 const sameEmail = (account, email) =>
   equal(String(email).trim().toLowerCase(), account.email.trim().toLowerCase());
 // Returns the matching account, or null.
 export function passwordMatches(email, password) {
   const account = accounts().find((a) => sameEmail(a, email));
-  return account && passwordOf(account, password) ? account : null;
+  return account && passwordMatchesAccount(account, password) ? account : null;
 }
 // A session for the account returned by passwordMatches.
 export function sessionToken(account) {
