@@ -351,7 +351,7 @@ export default function PetaRajaAmpat({ bahasa = "id", teks: timpa, wilayah = WI
           {titik ? (
             <KartuTanda key={titik.id} x={titik} bahasa={bahasa} t={t} wilayah={wilayahDi.get(titik.wilayah)} href={tautan?.(titik)} onKembali={mundur} />
           ) : aktif ? (
-            <InfoWilayah key={aktif.id} w={aktif} bahasa={bahasa} t={t} tanda={tandaWilayah} onPilih={pilihTitik} />
+            <InfoWilayah key={aktif.id} w={aktif} bahasa={bahasa} t={t} tanda={tandaWilayah} onPilih={pilihTitik} onPetaPenuh={() => pilihWilayah(null)} />
           ) : (
             <div className="prj-kartu" data-peta-awal>
               <p className="prj-kartu-judul">{t("awalJudul")}</p>
@@ -403,7 +403,7 @@ function Gulir({ children, ...lain }) {
   );
 }
 
-function InfoWilayah({ w, bahasa, t, tanda, onPilih }) {
+function InfoWilayah({ w, bahasa, t, tanda, onPilih, onPetaPenuh }) {
   const ket = dalam(w.keterangan, bahasa);
   return (
     <div className="prj-kartu prj-kartu-wilayah" data-info-wilayah={w.id}>
@@ -433,6 +433,9 @@ function InfoWilayah({ w, bahasa, t, tanda, onPilih }) {
           </ul>
         </Gulir>
       )}
+      <button type="button" onClick={onPetaPenuh} className="prj-kembali prj-kembali-penuh" data-kembali-peta-penuh>
+        <span className="prj-putar-90"><IkonPanah size={13} /></span>{t("kembaliPetaPenuh")}
+      </button>
     </div>
   );
 }

@@ -173,6 +173,8 @@
 .prj-tombol-garis:hover { border-color: var(--prj-biru); }
 .prj-kembali { margin-top: 12px; display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--prj-biru); }
 .prj-kembali:hover { text-decoration: underline; text-underline-offset: 2px; }
+.prj-kembali-penuh { margin-top: 16px; padding: 8px 14px; border: 1px solid var(--prj-bingkai); border-radius: 999px; background: var(--prj-kartu); }
+.prj-kembali-penuh:hover { border-color: var(--prj-biru); text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .prj *, .prj *::before, .prj *::after { transition: none; }

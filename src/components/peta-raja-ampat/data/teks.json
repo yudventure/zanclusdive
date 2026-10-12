@@ -28,6 +28,7 @@
    "andauMkun": "Andau Mkun"
   },
   "petaPenuh": "Peta penuh",
+  "kembaliPetaPenuh": "Kembali ke peta penuh",
   "legenda": "Tanda di peta",
   "tampilSemua": "Tampilkan semua",
   "mitra": "Mitra DAMPIER",
@@ -94,6 +95,7 @@
    "andauMkun": "Andau Mkun"
   },
   "petaPenuh": "Full map",
+  "kembaliPetaPenuh": "Back to the full map",
   "legenda": "Map markers",
   "tampilSemua": "Show all",
   "mitra": "DAMPIER partner",
@@ -166,6 +168,7 @@
    "andauMkun": "Andau Mkun岛"
   },
   "petaPenuh": "完整地图",
+  "kembaliPetaPenuh": "返回完整地图",
   "legenda": "地图标记",
   "tampilSemua": "全部显示",
   "mitra": "DAMPIER合作伙伴",
@@ -232,6 +235,7 @@
    "andauMkun": "Андау-Мкун"
   },
   "petaPenuh": "Вся карта",
+  "kembaliPetaPenuh": "Вернуться ко всей карте",
   "legenda": "Значки на карте",
   "tampilSemua": "Показать все",
   "mitra": "Партнёр DAMPIER",

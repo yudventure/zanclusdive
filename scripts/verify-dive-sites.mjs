@@ -47,6 +47,12 @@ try {
     const box = await map.locator("[data-peta-wadah]").boundingBox();
     const info = await map.locator("[data-info-wilayah]").boundingBox();
     assert.ok(info.height <= box.height + 1, "card taller than map");
+    // The island card offers a way back to the full map.
+    await map.locator("[data-kembali-peta-penuh]").click();
+    await page.waitForTimeout(900);
+    assert.equal(await map.getAttribute("data-peta-wilayah"), "");
+    await map.locator('[data-label-wilayah="kri"]').click();
+    await page.waitForTimeout(1100);
     await map.locator('[data-tanda="cape-kri"]').click();
     await map.locator("[data-kartu-tanda]").waitFor();
     const link = map.locator("[data-kartu-tanda] a", { hasText: card });
