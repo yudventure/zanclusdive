@@ -200,7 +200,7 @@ export function orderMessage(
   const notes = details.notes?.trim() || "";
   if (notes.length > 500) throw new Error(t.notes);
   return [
-    t.greeting(name, demo),
+    t.greeting(name),
     `WhatsApp: ${whatsapp}`,
     ...(email ? [`Email: ${email}`] : []),
     "",

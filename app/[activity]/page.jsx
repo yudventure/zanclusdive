@@ -6,7 +6,6 @@ import { publicContent } from "../../src/server/store.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
-import { isDemo } from "../../src/cms-mode.js";
 import { withCalendar } from "../../src/calendar-model.js";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +49,6 @@ export default async function Page({ params }) {
       activityKey={key}
       content={content}
       locale={locale}
-      demo={isDemo()}
       today={new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Jayapura",
       })}

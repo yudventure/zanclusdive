@@ -14,7 +14,6 @@ export default function DiveShop({
   contact,
   images,
   activities,
-  demo,
   initialMode,
   today,
   tagline,
@@ -94,7 +93,7 @@ export default function DiveShop({
     event.preventDefault();
     try {
       if (hasRental && details.startDate < today) throw new Error(t.pastDate);
-      setMessage(orderMessage(shop.products, cart, details, demo, locale));
+      setMessage(orderMessage(shop.products, cart, details, false, locale));
       setError("");
     } catch (err) {
       setError(err.message);
@@ -180,12 +179,6 @@ export default function DiveShop({
             <span>READY FOR YOUR NEXT DIVE</span>
           </div>
         </section>
-        {demo && (
-          <div className="shop-demo-note">
-            <strong>{t.demoTitle}</strong>
-            {t.demoNote}
-          </div>
-        )}
         <section
           className="shop-catalog"
           id="catalog"
@@ -589,7 +582,6 @@ export default function DiveShop({
         contact={contact}
         activities={activities}
         tagline={tagline}
-        demo={demo}
         locale={locale}
       />
       {count > 0 && (

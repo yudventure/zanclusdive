@@ -22,7 +22,6 @@ export default function CalendarSections({
   calendar,
   whatsapp,
   locale = "en",
-  demo,
   today,
 }) {
   const t = dictionary(locale).calendarPage;
@@ -61,11 +60,6 @@ export default function CalendarSections({
   const helpURL = wa(t.ecoMessage);
   return (
     <>
-      {demo && (
-        <p className="activity-demo-note activity-demo-banner calendar-demo">
-          {t.demoNote}
-        </p>
-      )}
       <section className="calendar-section" id="calendar" data-reveal>
         <div className="calendar-heading">
           <div>

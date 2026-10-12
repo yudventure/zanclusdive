@@ -3,7 +3,6 @@ import { publicContent } from "../../src/server/store.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary } from "../../src/i18n.js";
-import { isDemo } from "../../src/cms-mode.js";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -29,7 +28,6 @@ export default async function ShopPage({ searchParams }) {
       activities={content.activities}
       tagline={content.text.tagline}
       locale={locale}
-      demo={isDemo()}
       initialMode={query.mode === "rental" ? "rental" : "sale"}
       today={new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Jayapura",

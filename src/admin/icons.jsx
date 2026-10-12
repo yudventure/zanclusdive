@@ -21,6 +21,8 @@ const paths = {
   arrow: "M7 17L17 7M9 7h8v8",
   bell: "M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4",
   menu: "M4 7h16M4 12h16M4 17h16",
+  upload: "M12 16V4M7 9l5-5 5 5M4 16v4h16v-4",
+  check: "M5 12.5l4.5 4.5L19 7",
   logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10",
 };
 

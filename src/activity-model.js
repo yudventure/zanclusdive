@@ -252,7 +252,6 @@ export function activityInquiry(
     `${t.proposedDate}: ${date}`,
     t.people(participants),
     ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
-    ...(demo ? [t.demo] : []),
     t.closing,
   ].join("\n");
 }

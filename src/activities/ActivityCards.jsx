@@ -5,7 +5,6 @@ import { dictionary, localeHref } from "../i18n.js";
 export default function ActivityCards({
   activities,
   exclude,
-  demo = false,
   locale = "en",
 }) {
   const t = dictionary(locale).activity;
@@ -69,7 +68,6 @@ export default function ActivityCards({
             );
           })}
         </div>
-        {demo && <p className="activity-demo-note">{t.cardsDemo}</p>}
       </div>
     </section>
   );

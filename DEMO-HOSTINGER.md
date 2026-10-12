@@ -8,9 +8,13 @@ Deploy branch `main` dengan Node.js 22/24, build `npm run build`, dan start `npm
 
 Untuk menambah akun admin tanpa mengubah kode, isi `ADMIN_EMAIL` dan `ADMIN_PASSWORD` (dan sebaiknya `SESSION_SECRET` minimal 32 karakter) di hPanel. Akun itu bisa dipakai di samping akun operator; akun operator tetap berlaku.
 
-Akun demo publik (`demo@zanclusdive.com`) **tidak lagi bisa dipakai** di server publik. Akun itu hanya aktif bila `CMS_DEMO_LOGIN=true`, yang dipakai untuk pengujian lokal. Gunakan nama/data tamu contoh saja. Tampilan memberi label demo; harga, lokasi, dan reservasi awal merupakan contoh, bukan informasi operasional terverifikasi.
+Akun demo publik (`demo@zanclusdive.com`) **tidak lagi bisa dipakai** di server publik. Akun itu hanya aktif bila `CMS_DEMO_LOGIN=true`, yang dipakai untuk pengujian lokal. Website tidak menampilkan label demo. Reservasi contoh hanya dibuat di server pengujian lokal (`CMS_DEMO_LOGIN=true`); di server publik daftar reservasi dimulai kosong, dan reservasi contoh dari versi lama dihapus otomatis.
 
-Penyimpanan demo berupa JSON dan gambar base64 pada direktori `/tmp/zanclus-demo-cms-v1` di server aplikasi. Perubahan bertahan setelah reload dan restart proses jika direktori masih ada. Redeploy, penggantian instance, atau pembersihan `/tmp` dapat menghapus data demo; ini bukan penyimpanan produksi atau sistem untuk beberapa instance. Direktori lain dapat diatur melalui `CMS_DEMO_DATA_DIR` jika tersedia volume persisten dari hosting. Total gambar demo dibatasi 24 MB; setiap upload tetap maksimal 4 MB.
+Data CMS (teks, harga, reservasi) disimpan sebagai JSON di folder `~/zanclus-cms-data` pada akun hosting, di luar folder aplikasi, supaya tidak hilang saat redeploy. Setiap foto yang diunggah disimpan sebagai file terpisah di `~/zanclus-cms-data/media`. Data lama di `/tmp/zanclus-demo-cms-v1` disalin otomatis satu kali saat aplikasi pertama kali berjalan dengan versi ini. Jika folder home tidak bisa ditulis, aplikasi kembali memakai `/tmp/zanclus-demo-cms-v1`. Folder lain dapat diatur melalui `CMS_DEMO_DATA_DIR`. Total foto dibatasi 400 MB; foto dari kamera otomatis dikecilkan di browser sebelum diunggah (maksimal 4 MB per file setelah dikecilkan).
+
+## Upload foto
+
+Di admin, setiap tempat foto (Foto & media, galeri, Dive Shop, halaman aktivitas) punya tombol **Ganti foto / Upload dari PC / HP**. Pilih foto dari komputer atau HP, foto langsung diunggah, terpasang, dan tersimpan; tidak perlu tombol Simpan dan tidak perlu masuk hPanel.
 
 Login memakai sesi cookie. Tanpa `SESSION_SECRET`, secret sesi dibuat acak di proses server, sehingga restart dapat mengakhiri sesi dan operator perlu masuk lagi. API perubahan tetap memerlukan sesi dan origin yang sesuai. Demo tidak membuka data MySQL, tidak menjalankan pemeriksaan MySQL, dan tidak menulis ke tabel produksi.
 

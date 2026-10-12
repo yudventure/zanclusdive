@@ -8,6 +8,9 @@ import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
+import ImageUpload from "./ImageUpload.jsx";
+import { prepareImage } from "./image-upload.js";
+import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
@@ -248,7 +251,7 @@ function BookingEditor({
     </section>
   );
 }
-export default function Dashboard({ section, email, today, demo = false }) {
+export default function Dashboard({ section, email, today }) {
   const [data, setData] = useState(null),
     [content, setContent] = useState(structuredClone(defaultContent)),
     [busy, setBusy] = useState(false),
@@ -263,7 +266,8 @@ export default function Dashboard({ section, email, today, demo = false }) {
     [booking, setBooking] = useState(blankBooking(today)),
     [editing, setEditing] = useState(null),
     [editLocale, setEditLocale] = useState("id"),
-    [siteOpen, setSiteOpen] = useState(siteSections.includes(section));
+    [siteOpen, setSiteOpen] = useState(siteSections.includes(section)),
+    [autoSave, setAutoSave] = useState(0);
   // Copy sections can be edited per language; prices, photos and visibility
   // are shared by both versions of the website.
   const bilingual = [
@@ -325,8 +329,11 @@ export default function Dashboard({ section, email, today, demo = false }) {
     );
     setNotice("");
   }
-  async function saveSettings(event) {
-    event.preventDefault();
+  async function saveSettings(
+    event,
+    message = "Perubahan sudah tersimpan dan tampil di website.",
+  ) {
+    event?.preventDefault();
     setBusy(true);
     setNotice("");
     setError("");
@@ -337,7 +344,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
       });
       setData((current) => ({ ...current, ...result }));
       setContent(result.content);
-      setNotice("Perubahan sudah tersimpan dan tampil di website.");
+      setNotice(message);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -400,23 +407,33 @@ export default function Dashboard({ section, email, today, demo = false }) {
       setBusy(false);
     }
   }
-  async function upload(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    setBusy(true);
-    setNotice("");
+  // Uploads a photo from a computer or phone into the media library.
+  async function uploadPhoto(file) {
     setError("");
+    setNotice("");
     try {
-      await request("/api/admin/media", "POST", new FormData(form));
-      await refresh();
-      form.reset();
-      setNotice("Gambar diunggah. Pilih sebagai gambar website lalu simpan.");
+      const form = new FormData();
+      const prepared = await prepareImage(file);
+      form.append("file", prepared, prepared.name);
+      const media = await request("/api/admin/media", "POST", form);
+      setData((current) => ({ ...current, media: [media, ...current.media] }));
+      return media.url;
     } catch (e) {
       setError(e.message);
-    } finally {
-      setBusy(false);
+      throw e;
     }
   }
+  // Upload, place the photo with apply(url) and save at once, so the new
+  // photo is live without a separate save step.
+  async function placePhoto(file, apply) {
+    const url = await uploadPhoto(file);
+    apply(url);
+    setAutoSave((n) => n + 1);
+  }
+  useEffect(() => {
+    if (autoSave)
+      saveSettings(null, "Foto terpasang dan sudah tampil di website.");
+  }, [autoSave]);
   async function logout() {
     try {
       await request("/api/admin/logout", "POST", {});
@@ -625,13 +642,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
           </div>
         </div>
       </header>
-      {demo && (
-        <div className="admin-demo-banner">
-          <strong>Mode demo</strong> · Data dan harga contoh. Perubahan disimpan
-          pada server demo, terpisah dari MySQL. Data demo dapat hilang saat
-          redeploy; gunakan data contoh saja.
-        </div>
-      )}
+
       <div className="admin-workspace">
         <aside className={"admin-sidebar " + (mobileMenu ? "open" : "")}>
           <p className="admin-eyebrow">MENU</p>
@@ -925,7 +936,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                 <section className="admin-card">
                   <h2>Daftar tamu</h2>
                   <p className="admin-subtle">
-                    Dihimpun dari catatan reservasi, tanpa data tamu contoh.
+                    Dihimpun dari catatan reservasi.
                   </p>
                   <div className="admin-table-scroll">
                     <table className="admin-table">
@@ -1083,7 +1094,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                       tanpa rebuild. WhatsApp, email, dan sosial media tampil di
                       footer seluruh website. Isi tautan akun resmi dengan
                       HTTPS; kosongkan tautan sosial untuk menyembunyikan
-                      ikonnya. Tautan platform pada demo hanya contoh.
+                      ikonnya.
                     </p>
                     <button className="admin-button" disabled={busy}>
                       {busy ? "Menyimpan…" : "Simpan kontak"}
@@ -1100,6 +1111,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
+                  placePhoto={placePhoto}
                 />
               )}
               {section === "events" && (
@@ -1127,6 +1139,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
+                  placePhoto={placePhoto}
                 />
               )}
               {section === "experiences" && (
@@ -1239,46 +1252,63 @@ export default function Dashboard({ section, email, today, demo = false }) {
                     <section className="admin-card">
                       <h2>Gambar website</h2>
                       <p className="admin-subtle">
-                        Pakai URL HTTPS atau pilih gambar yang sudah diunggah.
+                        Tekan Ganti foto, lalu pilih foto dari komputer atau HP.
+                        Foto langsung terpasang dan tampil di website.
                       </p>
                       <div className="admin-image-grid">
                         {siteImageFields.map(([key, label]) => (
-                          <div key={key}>
+                          <div key={key} className="admin-image-slot">
                             <img
                               src={content.images[key]}
-                              alt={"Preview " + key}
+                              alt={"Preview " + label}
                             />
-                            <Field label={label}>
-                              <input
-                                required
-                                value={content.images[key]}
+                            <strong>{label}</strong>
+                            <ImageUpload
+                              label="Ganti foto"
+                              onFile={(file) =>
+                                placePhoto(file, (url) =>
+                                  mutateContent("images", key, url),
+                                )
+                              }
+                            />
+                            <details className="admin-more">
+                              <summary>Pilih foto lain atau tempel URL</summary>
+                              <Field label={"URL foto " + label}>
+                                <input
+                                  required
+                                  value={content.images[key]}
+                                  onChange={(e) =>
+                                    mutateContent("images", key, e.target.value)
+                                  }
+                                />
+                              </Field>
+                              <select
+                                aria-label={"Pilih gambar " + key}
+                                value=""
                                 onChange={(e) =>
+                                  e.target.value &&
                                   mutateContent("images", key, e.target.value)
                                 }
-                              />
-                            </Field>
-                            <select
-                              aria-label={"Pilih gambar " + key}
-                              value=""
-                              onChange={(e) =>
-                                e.target.value &&
-                                mutateContent("images", key, e.target.value)
-                              }
-                            >
-                              <option value="">Pilih foto…</option>
-                              <optgroup label="Visual konsep bawaan">
-                                {builtInPhotos.map(([url, title]) => (
-                                  <option value={url} key={url}>
-                                    {title}
-                                  </option>
-                                ))}
-                              </optgroup>
-                              {data.media.map((m) => (
-                                <option value={m.url} key={m.id}>
-                                  {m.name}
-                                </option>
-                              ))}
-                            </select>
+                              >
+                                <option value="">Pilih dari koleksi…</option>
+                                {data.media.length > 0 && (
+                                  <optgroup label="Foto yang diunggah">
+                                    {data.media.map((m) => (
+                                      <option value={m.url} key={m.id}>
+                                        {m.name}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                )}
+                                <optgroup label="Foto bawaan website">
+                                  {builtInPhotos.map(([url, title]) => (
+                                    <option value={url} key={url}>
+                                      {title}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              </select>
+                            </details>
                           </div>
                         ))}
                       </div>
@@ -1293,43 +1323,48 @@ export default function Dashboard({ section, email, today, demo = false }) {
                     update={(items) => mutateContent("gallery", "items", items)}
                     onSave={saveSettings}
                     busy={busy}
+                    placePhoto={placePhoto}
+                    addPhoto={(url) =>
+                      setContent((current) => ({
+                        ...current,
+                        gallery: {
+                          ...current.gallery,
+                          items: [
+                            ...current.gallery.items,
+                            { src: url, caption: { id: "", en: "" } },
+                          ].slice(0, galleryLimit),
+                        },
+                      }))
+                    }
                   />
                   <section className="admin-card">
-                    <h2>Media library</h2>
-                    <form className="admin-upload" onSubmit={upload}>
-                      <Field label="Upload PNG, JPEG, atau WebP · maksimal 4 MB">
-                        <input
-                          type="file"
-                          name="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          required
-                        />
-                      </Field>
-                      <button
-                        className="admin-button secondary"
-                        disabled={busy}
-                      >
-                        {busy ? "Mengunggah…" : "Unggah gambar ↑"}
-                      </button>
-                    </form>
+                    <h2>Koleksi foto</h2>
                     <p className="admin-subtle">
-                      Gambar disimpan dalam database agar tetap tersedia setelah
-                      redeploy. Upload bukan otomatis publikasi gambar pada
-                      halaman.
+                      Semua foto yang pernah diunggah. Bisa memilih beberapa
+                      foto sekaligus, lalu memakainya di galeri, Dive Shop, atau
+                      halaman aktivitas.
                     </p>
+                    <ImageUpload
+                      multiple
+                      label="Upload beberapa foto"
+                      hint="Foto besar dari kamera otomatis dikecilkan"
+                      onFile={async (file) => {
+                        await uploadPhoto(file);
+                        setNotice("Foto masuk ke koleksi.");
+                      }}
+                    />
                     <div className="admin-media-grid">
                       {data.media.map((m) => (
                         <article key={m.id}>
                           <img src={m.url} alt={m.name} />
                           <strong>{m.name}</strong>
                           <small>{Math.round(m.bytes / 1024)} KB</small>
-                          <code>{m.url}</code>
                         </article>
                       ))}
                     </div>
                     {!data.media.length && (
                       <p className="admin-empty">
-                        Belum ada gambar yang diunggah.
+                        Belum ada foto yang diunggah.
                       </p>
                     )}
                   </section>

@@ -6,7 +6,6 @@ import { dictionary, localeHref } from "../i18n.js";
 export default function SiteFooter({
   contact,
   tagline,
-  demo = false,
   home = false,
   activities = defaultActivities,
   locale = "en",
@@ -114,12 +113,6 @@ export default function SiteFooter({
               {t.startChat}
             </a>
           )}
-          {demo &&
-            socials.some(
-              ([key, platform]) => contact[key] === platform.url,
-            ) && (
-              <small className="site-footer-social-note">{t.socialDemo}</small>
-            )}
         </section>
       </div>
       <div className="site-footer-bottom">

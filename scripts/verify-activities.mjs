@@ -134,9 +134,7 @@ try {
       future.setDate(future.getDate() + 8);
       return future.toLocaleDateString("en-CA");
     });
-    await page
-      .getByLabel("Nama kamu")
-      .fill("Tamu Uji Aktivitas");
+    await page.getByLabel("Nama kamu").fill("Tamu Uji Aktivitas");
     // Required fields are marked; WhatsApp is checked before the message.
     assert.equal(
       await page.locator(".activity-form .form-required").count(),
@@ -149,9 +147,7 @@ try {
       await page.locator(".activity-error").textContent(),
       /nomor WhatsApp/,
     );
-    await page
-      .getByLabel("Nomor WhatsApp")
-      .fill("+62 812 3456 7890");
+    await page.getByLabel("Nomor WhatsApp").fill("+62 812 3456 7890");
     await page.getByLabel("Email", { exact: false }).fill("tamu@example.com");
     await page.getByLabel("Jumlah peserta").fill("3");
     await page
@@ -256,10 +252,10 @@ try {
     .getByLabel("Titik temu", { exact: true })
     .fill("Titik temu contoh dari CMS");
   await page
-    .getByLabel("Pilih dari media atau aset website", { exact: true })
+    .getByLabel("Atau pilih dari koleksi", { exact: true })
     .selectOption("/assets/photos/fan-beach.webp");
   await page
-    .getByLabel("Pilih foto kartu dari media atau aset website", {
+    .getByLabel("Atau pilih foto kartu dari koleksi", {
       exact: true,
     })
     .selectOption("/assets/reef.webp");

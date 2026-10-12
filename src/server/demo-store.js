@@ -1,8 +1,17 @@
 import "server-only";
-import { mkdir, readFile, writeFile, rename, unlink } from "node:fs/promises";
+import {
+  mkdir,
+  readFile,
+  writeFile,
+  rename,
+  unlink,
+  copyFile,
+} from "node:fs/promises";
 import { join } from "node:path";
+import { homedir } from "node:os";
+import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { demoSeed, withDemoEnglish } from "../demo-data.js";
+import { demoSeed, withDemoEnglish, withoutSamples } from "../demo-data.js";
 import { demoShop, withShop } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
@@ -25,14 +34,41 @@ async function writeState(directory, state) {
   }
 }
 
+// Older versions kept everything in /tmp, which a redeploy can wipe. Data now
+// lives in the hosting account's home folder; the old /tmp copy is moved over
+// once on first start.
+const legacyDirectory = "/tmp/zanclus-demo-cms-v1";
+async function dataDirectory() {
+  if (process.env.CMS_DEMO_DATA_DIR) return process.env.CMS_DEMO_DATA_DIR;
+  const directory = join(homedir(), "zanclus-cms-data");
+  try {
+    await mkdir(join(directory, "media"), { recursive: true, mode: 0o700 });
+  } catch {
+    return legacyDirectory;
+  }
+  try {
+    await copyFile(
+      join(legacyDirectory, "state.json"),
+      join(directory, "state.json"),
+      constants.COPYFILE_EXCL,
+    );
+  } catch {}
+  return directory;
+}
+
+// Local test servers (CMS_DEMO_LOGIN=true) keep the sample bookings.
+const sampleMode = () => process.env.CMS_DEMO_LOGIN === "true";
+
 function store() {
-  const directory = process.env.CMS_DEMO_DATA_DIR || "/tmp/zanclus-demo-cms-v1";
+  const key = process.env.CMS_DEMO_DATA_DIR || "default";
   globalThis.__zanclusDemoStores ||= new Map();
-  let current = globalThis.__zanclusDemoStores.get(directory);
+  let current = globalThis.__zanclusDemoStores.get(key);
   if (!current) {
-    current = { directory, tail: Promise.resolve() };
+    current = { tail: Promise.resolve() };
     current.ready = (async () => {
-      await mkdir(directory, { recursive: true, mode: 0o700 });
+      const directory = await dataDirectory();
+      current.directory = directory;
+      await mkdir(join(directory, "media"), { recursive: true, mode: 0o700 });
       let state;
       try {
         state = JSON.parse(
@@ -40,7 +76,7 @@ function store() {
         );
       } catch (error) {
         if (error.code !== "ENOENT") throw error;
-        state = demoSeed();
+        state = demoSeed(new Date(), { sampleBookings: sampleMode() });
         await writeState(directory, state);
       }
       if (
@@ -78,6 +114,11 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
+      if (!sampleMode() && !state.samplesRemoved) {
+        state = { ...withoutSamples(state), samplesRemoved: true };
+        state.version++;
+        await writeState(directory, state);
+      }
       const titled = withPriceList(withRajaAmpatTitle(state.content));
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;
@@ -86,8 +127,8 @@ function store() {
       }
       return state;
     })();
-    globalThis.__zanclusDemoStores.set(directory, current);
-    current.ready.catch(() => globalThis.__zanclusDemoStores.delete(directory));
+    globalThis.__zanclusDemoStores.set(key, current);
+    current.ready.catch(() => globalThis.__zanclusDemoStores.delete(key));
   }
   return current;
 }
@@ -99,7 +140,7 @@ async function mutate(callback) {
   const current = store();
   const task = current.tail.then(async () => {
     const state = structuredClone(await current.ready);
-    const result = callback(state);
+    const result = await callback(state);
     await writeState(current.directory, state);
     current.ready = Promise.resolve(state);
     return result;
@@ -159,7 +200,7 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
       id: randomUUID(),
       updatedAt: new Date().toISOString(),
     };
-    const receipt = bookingReceipt(booking, true);
+    const receipt = bookingReceipt(booking, false);
     state.bookings.push(booking);
     state.bookingRequests[requestId] = { fingerprint, receipt };
     return { receipt, created: true };
@@ -176,14 +217,21 @@ export async function deleteBooking(id) {
 export async function listMedia() {
   return (await read()).media.map(({ data, ...item }) => item);
 }
+// Photos are stored as files next to state.json; older uploads may still be
+// base64 inside the state.
+export const mediaLimit = 400 * 1024 * 1024;
 export async function addMedia(name, mime, data) {
-  return mutate((state) => {
+  const current = store();
+  await current.ready;
+  const id = randomUUID();
+  const file = join(current.directory, "media", id);
+  const item = await mutate(async (state) => {
     if (
       state.media.reduce((total, item) => total + item.bytes, 0) + data.length >
-      24 * 1024 * 1024
+      mediaLimit
     )
       throw new Error("DEMO_MEDIA_LIMIT");
-    const id = randomUUID();
+    await writeFile(file, data, { mode: 0o600 });
     const item = {
       id,
       name,
@@ -192,15 +240,25 @@ export async function addMedia(name, mime, data) {
       url: "/api/media/" + id,
       created_at: new Date().toISOString(),
     };
-    state.media.unshift({ ...item, data: data.toString("base64") });
+    state.media.unshift(item);
     return item;
   });
+  return item;
 }
 export async function getMedia(id) {
+  const current = store();
   const item = (await read()).media.find((media) => media.id === id);
-  return item
-    ? { mime: item.mime, data: Buffer.from(item.data, "base64") }
-    : null;
+  if (!item) return null;
+  if (item.data)
+    return { mime: item.mime, data: Buffer.from(item.data, "base64") };
+  try {
+    return {
+      mime: item.mime,
+      data: await readFile(join(current.directory, "media", id)),
+    };
+  } catch {
+    return null;
+  }
 }
 export async function loginBlocked() {
   const { failures } = await read();

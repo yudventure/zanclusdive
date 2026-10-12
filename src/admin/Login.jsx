@@ -108,15 +108,9 @@ export default function Login({
             width="176"
             height="44"
           />
-          <p className="admin-eyebrow">
-            {demo ? "ZANCLUS DEMO WORKSPACE" : "OPERATOR SIGN IN"}
-          </p>
-          <h1>{demo ? "Coba CMS Zanclus." : "Selamat datang kembali."}</h1>
-          <p>
-            {demo
-              ? "Demo siap digunakan. Coba kalender, reservasi, konten website, foto, dan harga tanpa konfigurasi database."
-              : "Masuk dengan akun operator untuk mengelola website Zanclus."}
-          </p>
+          <p className="admin-eyebrow">OPERATOR SIGN IN</p>
+          <h1>Selamat datang kembali.</h1>
+          <p>Masuk dengan akun operator untuk mengelola website Zanclus.</p>
           {configured ? (
             <form onSubmit={login}>
               <FormField id="login-email" label="Email operator" icon="email">
@@ -160,11 +154,7 @@ export default function Login({
                 </p>
               )}
               <button className="admin-button" disabled={busy}>
-                {busy
-                  ? "Memeriksa…"
-                  : demo
-                    ? "Masuk ke demo →"
-                    : "Masuk ke dashboard →"}
+                {busy ? "Memeriksa…" : "Masuk ke dashboard →"}
               </button>
               {database && (
                 <details className="admin-db-password-test">
@@ -283,9 +273,7 @@ export default function Login({
             </div>
           )}
           <small>
-            {demo
-              ? "Demo bersama dengan data contoh. Akun demo terisi otomatis dan tidak mengakses database produksi."
-              : "Area khusus tim Zanclus. Lupa password? Hubungi pengelola website."}
+            Area khusus tim Zanclus. Lupa password? Hubungi pengelola website.
           </small>
         </section>
       </main>
