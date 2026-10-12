@@ -34,7 +34,6 @@ export const formatLongDate = (key, locale = "id") =>
 
 const id = {
   meta: {
-    title: "Zanclus Dive Center — Diving & snorkeling di Raja Ampat",
     description:
       "Diving, snorkeling, dan trip laut di Raja Ampat bersama Zanclus Dive Center. Jelajahi kehidupan bawah laut dan susun rencana penyelamanmu.",
     ogDescription: "Jelajahi laut. Temukan cerita.",
@@ -143,19 +142,9 @@ const id = {
     whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
   },
   calendarPage: {
-    nav: "Kalender",
-    metaTitle: "Kalender kegiatan | Zanclus Dive Center",
-    metaDescription:
-      "Jadwal trip selam, kelas, dan kegiatan peduli lingkungan Zanclus di Raja Ampat, lengkap dengan panduan musim dan spot selam populer.",
-    skip: "Lewati ke kalender",
-    eyebrow: "ZANCLUS CALENDAR",
-    title: "Kalender kegiatan Zanclus.",
-    summary:
-      "Trip selam, kelas, dan kegiatan menjaga laut Raja Ampat. Pilih tanggal, ajak teman, dan bergabung bersama tim.",
-    sections: "Bagian halaman",
     jump: ["Kalender", "Musim terbaik", "Spot populer", "Peduli lingkungan"],
     demoNote:
-      "Jadwal di halaman ini adalah contoh. Tim Zanclus memperbarui jadwal lewat panel admin.",
+      "Jadwal kegiatan di bawah ini adalah contoh. Tim Zanclus memperbarui jadwal lewat panel admin.",
     calendarEyebrow: "WHAT'S ON",
     calendarTitle: "Jadwal kegiatan.",
     calendarIntro:
@@ -196,10 +185,8 @@ const id = {
     ecoJoin: "Ikut peduli lingkungan",
     ecoMessage:
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
-    breadcrumb: "Kalender",
   },
   gallery: {
-    eyebrow: "GALERI PENYELAMAN ZANCLUS",
     open: "Buka galeri",
     close: "Tutup galeri",
     count: (n) => `${n} foto penyelaman`,
@@ -213,7 +200,6 @@ const id = {
       "Foto contoh. Ganti dengan foto penyelaman Zanclus lewat panel admin.",
   },
   diveSites: {
-    title: "Titik selam di Selat Dampier.",
     intro:
       "Lima belas titik selam di sekitar Waisai, dari Cape Kri dan Blue Magic sampai Manta Sandy dan Melissa's Garden. Ketuk pulau atau tanda di peta untuk memperbesar dan membaca keterangannya.",
     note: "Letak titik di peta adalah perkiraan. Tim Zanclus memilih titik yang sesuai dengan cuaca, arus, dan pengalamanmu.",
@@ -313,10 +299,8 @@ const id = {
       `Halo Zanclus! Saya ingin bertanya tentang ${label}.`,
     helpMessage: (label) =>
       `Halo Zanclus! Saya ingin bantuan untuk merencanakan ${label}.`,
-    skip: "Lewati ke detail aktivitas",
     demoHero: "MODE DEMO · CONTOH AKTIVITAS",
     tagline: "JELAJAHI LAUT. TEMUKAN CERITA.",
-    sections: "Bagian halaman",
     about: "Tentang kegiatan",
     itinerary: "Alur kegiatan",
     preparation: "Persiapan",
@@ -384,7 +368,6 @@ const id = {
       `${name} ditambahkan untuk ${sale ? "dibeli" : "rental"}.`,
     pastDate: "Tanggal rental harus hari ini atau setelahnya.",
     help: "Halo Zanclus! Saya ingin bantuan untuk membeli atau menyewa perlengkapan diving.",
-    skip: "Lewati ke katalog",
     gearHelp: "Bantuan alat ↗",
     back: "← Kembali ke laut",
     heroNote: "Pilih alat. Susun kebutuhan. Konfirmasi bersama tim.",
@@ -560,7 +543,6 @@ const id = {
 
 const en = {
   meta: {
-    title: "Zanclus Dive Center — Diving & snorkeling in Raja Ampat",
     description:
       "Diving, snorkeling and sea trips in Raja Ampat with Zanclus Dive Center. Explore underwater life and plan your next dive.",
     ogDescription: "Explore the ocean. Find your story.",
@@ -669,19 +651,9 @@ const en = {
     whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
   },
   calendarPage: {
-    nav: "Calendar",
-    metaTitle: "Activity calendar | Zanclus Dive Center",
-    metaDescription:
-      "Zanclus dive trips, classes and ocean care activities in Raja Ampat, with a season guide and the most popular dive spots.",
-    skip: "Skip to the calendar",
-    eyebrow: "ZANCLUS CALENDAR",
-    title: "The Zanclus activity calendar.",
-    summary:
-      "Dive trips, classes and days caring for the Raja Ampat sea. Pick a date, bring friends and join the team.",
-    sections: "Page sections",
     jump: ["Calendar", "Best season", "Popular spots", "Ocean care"],
     demoNote:
-      "The schedule on this page is a sample. The Zanclus team updates it in the admin panel.",
+      "The schedule below is a sample. The Zanclus team updates it in the admin panel.",
     calendarEyebrow: "WHAT'S ON",
     calendarTitle: "Upcoming activities.",
     calendarIntro:
@@ -723,10 +695,8 @@ const en = {
     ecoJoin: "Join an ocean care day",
     ecoMessage:
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
-    breadcrumb: "Calendar",
   },
   gallery: {
-    eyebrow: "ZANCLUS DIVE GALLERY",
     open: "Open the gallery",
     close: "Close the gallery",
     count: (n) => `${n} dive photos`,
@@ -740,7 +710,6 @@ const en = {
       "Sample photos. Replace them with Zanclus dive photos in the admin panel.",
   },
   diveSites: {
-    title: "Dive sites of the Dampier Strait.",
     intro:
       "Fifteen dive sites around Waisai, from Cape Kri and Blue Magic to Manta Sandy and Melissa's Garden. Tap an island or a marker on the map to zoom in and read about it.",
     note: "Marker positions are approximate. The Zanclus team picks sites that suit the weather, the current and your experience.",
@@ -838,10 +807,8 @@ const en = {
     askFirst: "Ask us first:",
     askMessage: (label) => `Hi Zanclus! I have a question about ${label}.`,
     helpMessage: (label) => `Hi Zanclus! I'd like help planning ${label}.`,
-    skip: "Skip to activity details",
     demoHero: "DEMO MODE · SAMPLE ACTIVITY",
     tagline: "EXPLORE THE OCEAN. FIND YOUR STORY.",
-    sections: "Page sections",
     about: "About the activity",
     itinerary: "How it goes",
     preparation: "Preparation",
@@ -909,7 +876,6 @@ const en = {
     added: (name, sale) => `${name} added to ${sale ? "buy" : "rent"}.`,
     pastDate: "The rental date must be today or later.",
     help: "Hi Zanclus! I'd like help buying or renting diving gear.",
-    skip: "Skip to catalog",
     gearHelp: "Gear help ↗",
     back: "← Back to the ocean",
     heroNote: "Choose gear. Plan what you need. Confirm with our team.",

@@ -21,22 +21,30 @@ const today = new Date().toLocaleDateString("en-CA", {
   timeZone: "Asia/Jayapura",
 });
 try {
-  // Linked from the homepage menu, in both languages.
-  for (const [path, link, heading] of [
-    ["/", "/calendar", "The Zanclus activity calendar."],
-    ["/id", "/id/calendar", "Kalender kegiatan Zanclus."],
+  // The calendar lives on the diving page; the old address redirects there.
+  for (const [path, target] of [
+    ["/calendar", "/diving#calendar"],
+    ["/id/calendar", "/id/diving#calendar"],
   ]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
-    await page.locator(`#navigation a[href="${link}"]`).click();
-    await page.waitForURL(base + link);
-    assert.equal(await page.locator("h1").textContent(), heading);
-    assert.equal(
-      await page
-        .locator('#calendar-navigation a[aria-current="page"]')
-        .getAttribute("href"),
-      link,
-    );
+    assert.equal(page.url(), base + target);
   }
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  assert.equal(
+    await page.locator('#navigation a[href$="/calendar"]').count(),
+    0,
+  );
+  await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
+  await page.locator('.activity-jump-links a[href="#calendar"]').click();
+  assert.equal(
+    await page.locator("#calendar h2").textContent(),
+    "Jadwal kegiatan.",
+  );
+  for (const path of ["/snorkeling", "/trip"]) {
+    await page.goto(base + path, { waitUntil: "networkidle" });
+    assert.equal(await page.locator("#calendar").count(), 0, path);
+  }
+  await page.goto(base + "/diving", { waitUntil: "networkidle" });
   assert.equal(await page.locator(".season-strip li").count(), 12);
   assert.equal(await page.locator(".season-strip li.is-current").count(), 1);
   assert.equal(await page.locator(".spot-grid li").count(), 6);
@@ -69,7 +77,7 @@ try {
     .fill("Waisai jetty clean-up");
   await page.getByRole("button", { name: "Simpan kalender" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
-  await page.goto(base + "/calendar", { waitUntil: "networkidle" });
+  await page.goto(base + "/diving", { waitUntil: "networkidle" });
   const cell = page.locator(".calendar-day.is-today");
   assert.match(await cell.getAttribute("class"), /has-events/);
   await cell.click();
@@ -101,7 +109,7 @@ try {
     await page.locator(".calendar-month-bar h3").textContent(),
     before,
   );
-  await page.goto(base + "/id/calendar", { waitUntil: "networkidle" });
+  await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
   await page.locator(".calendar-day.is-today").click();
   assert.equal(
     await page
@@ -124,7 +132,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS calendar: menu link in both languages, season guide, spots, ocean care, admin adds an activity shown on today's cell and in the list, WhatsApp join link, month navigation, mobile without horizontal scroll.",
+    "PASS calendar on the diving page: old address redirects, not on other activities or in the menu, season guide, spots, ocean care, admin adds an activity shown on today's cell and in the list, WhatsApp join link, month navigation, mobile without horizontal scroll.",
   );
 } finally {
   await browser.close();
