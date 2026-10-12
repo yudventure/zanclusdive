@@ -6,6 +6,7 @@ import { activityInquiry, activityKeys } from "../activity-model.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import ActivityCards from "./ActivityCards.jsx";
+import CalendarSections from "../calendar/CalendarSections.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
@@ -154,6 +155,7 @@ export default function ActivityDetail({
   activityKey,
   content,
   demo,
+  today,
   locale = "en",
 }) {
   const dict = dictionary(locale);
@@ -162,6 +164,8 @@ export default function ActivityDetail({
   const href = (path) => localeHref(locale, path);
   const motionRoot = useRef(null);
   const activity = content.activities[activityKey];
+  // The activity calendar lives on the diving page.
+  const calendar = activityKey === "diving" ? content.calendar : null;
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -220,7 +224,6 @@ export default function ActivityDetail({
               </a>
             ))}
           <a href={href("/#dive-shop")}>Dive Shop</a>
-          <a href={href("/calendar")}>{dict.calendarPage.nav}</a>
           <a href={href("/#contact")}>{dict.common.contact}</a>
         </nav>
         <div className="header-actions">
@@ -279,6 +282,13 @@ export default function ActivityDetail({
               <a href="#itinerary">{t.itinerary}</a>
               <a href="#preparation">{t.preparation}</a>
               <a href="#faq">{t.faq}</a>
+              {calendar && (
+                <>
+                  <a href="#calendar">{dict.calendarPage.jump[0]}</a>
+                  <a href="#seasons">{dict.calendarPage.jump[1]}</a>
+                  <a href="#ocean-care">{dict.calendarPage.jump[3]}</a>
+                </>
+              )}
             </div>
             {demo && (
               <p className="activity-demo-note activity-demo-banner">
@@ -393,6 +403,15 @@ export default function ActivityDetail({
                 locale={locale}
               />
             </div>
+            {calendar && (
+              <CalendarSections
+                calendar={calendar}
+                whatsapp={content.contact.whatsapp}
+                demo={demo}
+                today={today}
+                locale={locale}
+              />
+            )}
           </div>
         </div>
         <ActivityCards

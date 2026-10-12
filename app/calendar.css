@@ -1,5 +1,5 @@
-.calendar-hero {
-  min-height: 560px;
+.calendar-demo {
+  margin-top: 84px;
 }
 .calendar-section {
   padding-top: 84px;
@@ -425,9 +425,6 @@
   }
 }
 @media (max-width: 600px) {
-  .calendar-hero {
-    min-height: 480px;
-  }
   .calendar-section {
     padding-top: 56px;
   }
