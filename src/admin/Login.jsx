@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
 import { demoAccount } from "../demo-data.js";
-export default function Login({ configured, issues = [], demo = false }) {
+export default function Login({
+  configured,
+  issues = [],
+  demo = false,
+  database = false,
+}) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [diagnostic, setDiagnostic] = useState(null);
@@ -34,7 +39,7 @@ export default function Login({ configured, issues = [], demo = false }) {
     setDiagnostic(null);
     try {
       const form = new FormData(event.currentTarget);
-      const data = demo ? demoAccount : { email: form.get("email"), password: form.get("password") };
+      const data = { email: form.get("email"), password: form.get("password") };
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,7 +104,7 @@ export default function Login({ configured, issues = [], demo = false }) {
             <button className="admin-button" disabled={busy}>
               {busy ? "Memeriksa…" : demo ? "Masuk ke demo →" : "Masuk ke dashboard →"}
             </button>
-            {!demo && <details className="admin-db-password-test">
+            {database && <details className="admin-db-password-test">
               <summary>Uji dengan password MySQL langsung</summary>
               <p>Opsional: masukkan password user database dari hPanel untuk dibandingkan dengan konfigurasi aktif. Password hanya dipakai sekali untuk pemeriksaan, tidak disimpan.</p>
               <label>
@@ -107,7 +112,7 @@ export default function Login({ configured, issues = [], demo = false }) {
                 <input type="password" name="mysqlPassword" autoComplete="off" maxLength={500} />
               </label>
             </details>}
-            {!demo && <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
+            {database && <button type="button" className="admin-button secondary" disabled={busy} onClick={diagnose}>
               Periksa koneksi database
             </button>}
             {diagnostic && (

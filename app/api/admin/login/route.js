@@ -41,7 +41,8 @@ export async function POST(request) {
         { error: "Terlalu banyak percobaan. Coba lagi dalam 15 menit." },
         { status: 429, headers: { "Retry-After": "900" } },
       );
-    if (!passwordMatches(data.email, data.password)) {
+    const account = passwordMatches(data.email, data.password);
+    if (!account) {
       await failLogin();
       return Response.json(
         { error: "Email atau password tidak sesuai." },
@@ -49,7 +50,7 @@ export async function POST(request) {
       );
     }
     await clearLoginFailures();
-    (await cookies()).set(COOKIE, sessionToken(), cookieOptions());
+    (await cookies()).set(COOKIE, sessionToken(account), cookieOptions());
     return Response.json({ ok: true });
   } catch (error) {
     return apiFailure(error);

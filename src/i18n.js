@@ -357,8 +357,7 @@ const id = {
     startChat: "Mulai percakapan ↗",
     socialDemo: "Tautan platform contoh untuk demo.",
     rights: "Zanclus Dive Center. All rights reserved.",
-    demo: "Mode demo · CMS ↗",
-    top: "Kembali ke atas",
+    operator: "Masuk operator",
     whatsapp:
       "Halo Zanclus! Saya ingin informasi tentang diving, snorkeling, trip, atau perlengkapan.",
   },
@@ -866,8 +865,7 @@ const en = {
     startChat: "Start a conversation ↗",
     socialDemo: "Sample platform links for the demo.",
     rights: "Zanclus Dive Center. All rights reserved.",
-    demo: "Demo mode · CMS ↗",
-    top: "Back to top",
+    operator: "Operator sign in",
     whatsapp:
       "Hi Zanclus! I'd like information about diving, snorkeling, trips or gear.",
   },

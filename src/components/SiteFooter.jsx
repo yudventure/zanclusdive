@@ -128,13 +128,25 @@ export default function SiteFooter({
           <span id={home ? "year" : undefined}>{new Date().getFullYear()}</span>{" "}
           {t.rights}
         </p>
-        {demo && (
-          <a className="site-footer-demo" href="/admin">
-            <span /> {t.demo}
-          </a>
-        )}
-        <a className="site-footer-top" href={home ? "#main" : "#"}>
-          {t.top} <span aria-hidden="true">↑</span>
+        <a className="site-footer-operator" href="/admin" rel="nofollow">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect
+              x="5"
+              y="10.5"
+              width="14"
+              height="9.5"
+              rx="2.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+            <path
+              d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
+          {t.operator}
         </a>
       </div>
     </footer>
