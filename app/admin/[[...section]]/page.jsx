@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { currentAdmin } from "../../../src/server/auth.js";
+import { currentAdmin, demoLoginEnabled } from "../../../src/server/auth.js";
 import { configurationIssues } from "../../../src/cms-config.js";
 import { isDemo } from "../../../src/cms-mode.js";
 import Login from "../../../src/admin/Login.jsx";
@@ -36,7 +36,12 @@ export default async function AdminPage({ params }) {
     const demo = isDemo();
     const issues = demo ? [] : configurationIssues();
     return (
-      <Login configured={issues.length === 0} issues={issues} demo={demo} />
+      <Login
+        configured={issues.length === 0}
+        issues={issues}
+        demo={demoLoginEnabled()}
+        database={!demo}
+      />
     );
   }
   return (

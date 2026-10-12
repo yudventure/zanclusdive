@@ -1,23 +1,44 @@
 import "server-only";
-import { createHmac, createHash, timingSafeEqual, randomBytes } from "node:crypto";
+import {
+  createHmac,
+  createHash,
+  timingSafeEqual,
+  randomBytes,
+  scryptSync,
+} from "node:crypto";
 import { cookies } from "next/headers";
 import { configurationIssues } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import { demoAccount } from "../demo-data.js";
+import { operatorAccount } from "./operator-account.js";
 export const COOKIE = "zanclus_admin_session";
-function account() {
-  if (!isDemo()) return { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD, secret: process.env.SESSION_SECRET };
-  globalThis.__zanclusDemoSecret ||= randomBytes(48).toString("base64url");
-  return { ...demoAccount, secret: globalThis.__zanclusDemoSecret };
+// The public demo login only works when CMS_DEMO_LOGIN=true (local tests).
+export const demoLoginEnabled = () =>
+  isDemo() && process.env.CMS_DEMO_LOGIN === "true";
+const envAccount = () =>
+  process.env.ADMIN_EMAIL?.trim() && process.env.ADMIN_PASSWORD
+    ? { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }
+    : null;
+function secret() {
+  if (process.env.SESSION_SECRET?.trim()) return process.env.SESSION_SECRET;
+  globalThis.__zanclusSessionSecret ||= randomBytes(48).toString("base64url");
+  return globalThis.__zanclusSessionSecret;
+}
+// Accounts that may sign in. MySQL mode uses the environment account only.
+function accounts() {
+  if (!isDemo()) return [envAccount()].filter(Boolean);
+  const own = envAccount() ?? operatorAccount;
+  return demoLoginEnabled() ? [own, demoAccount] : [own];
 }
 export function authConfigured() {
   return isDemo() || configurationIssues().length === 0;
 }
-function sign(value) {
-  const credentials = account();
-  return createHmac("sha256", credentials.secret)
-    .update(credentials.password + "|" + value)
+// Each account's secret part, so a password change ends its sessions.
+const fingerprint = (account) => account.hash ?? account.password;
+function sign(account, value) {
+  return createHmac("sha256", secret())
+    .update(fingerprint(account) + "|" + value)
     .digest("base64url");
 }
 function equal(a, b) {
@@ -25,22 +46,31 @@ function equal(a, b) {
     bb = createHash("sha256").update(b).digest();
   return timingSafeEqual(aa, bb);
 }
-export function passwordMatches(email, password) {
-  return (
-    equal(
-      String(email).trim().toLowerCase(),
-      account().email.trim().toLowerCase(),
-    ) && equal(String(password), account().password)
-  );
+function passwordOf(account, password) {
+  if (!account.hash) return equal(String(password), account.password);
+  const actual = scryptSync(String(password), account.salt, 64, {
+    N: 16384,
+    r: 8,
+    p: 1,
+  });
+  return timingSafeEqual(actual, Buffer.from(account.hash, "base64url"));
 }
-export function sessionToken() {
+const sameEmail = (account, email) =>
+  equal(String(email).trim().toLowerCase(), account.email.trim().toLowerCase());
+// Returns the matching account, or null.
+export function passwordMatches(email, password) {
+  const account = accounts().find((a) => sameEmail(a, email));
+  return account && passwordOf(account, password) ? account : null;
+}
+// A session for the account returned by passwordMatches.
+export function sessionToken(account) {
   const data = Buffer.from(
     JSON.stringify({
-      email: account().email,
+      email: account.email,
       expires: Date.now() + 8 * 3600000,
     }),
   ).toString("base64url");
-  return data + "." + sign(data);
+  return data + "." + sign(account, data);
 }
 export async function currentAdmin() {
   if (!authConfigured()) return null;
@@ -48,9 +78,11 @@ export async function currentAdmin() {
   if (!token || token.length > 1500) return null;
   try {
     const [data, sig, ...rest] = token.split(".");
-    if (rest.length || !sig || !equal(sign(data), sig)) return null;
+    if (rest.length || !sig) return null;
     const value = JSON.parse(Buffer.from(data, "base64url").toString());
-    return value.email === account().email &&
+    const account = accounts().find((a) => a.email === value.email);
+    return account &&
+      equal(sign(account, data), sig) &&
       Number.isFinite(value.expires) &&
       value.expires > Date.now()
       ? { email: value.email }
@@ -108,7 +140,14 @@ export async function jsonBody(request) {
 export function apiFailure(error) {
   if (isDemo()) {
     const limit = error?.message === "DEMO_MEDIA_LIMIT";
-    return Response.json({ error: limit ? "Total gambar demo maksimal 24 MB." : "Penyimpanan demo belum dapat diakses. Coba lagi atau restart aplikasi demo." }, { status: limit ? 413 : 503 });
+    return Response.json(
+      {
+        error: limit
+          ? "Total gambar demo maksimal 24 MB."
+          : "Penyimpanan demo belum dapat diakses. Coba lagi atau restart aplikasi demo.",
+      },
+      { status: limit ? 413 : 503 },
+    );
   }
   const failure = databaseFailure(error);
   console.error("CMS database failure:", failure.code);
