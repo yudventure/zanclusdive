@@ -6,6 +6,8 @@ import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
 import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
+import Overview, { displayName, dailySchedule } from "./Overview.jsx";
+import { AdminIcon } from "./icons.jsx";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
@@ -18,8 +20,8 @@ import {
   defaultContent,
 } from "../cms-model.js";
 const sections = {
-  overview: "Overview",
-  calendar: "Kalender",
+  overview: "Ringkasan cepat",
+  calendar: "Kalender reservasi",
   reservations: "Reservasi",
   customers: "Tamu",
   website: "Teks website",
@@ -31,20 +33,22 @@ const sections = {
   prices: "Daftar harga",
   events: "Kalender kegiatan",
 };
-const icons = {
-  overview: "▦",
-  calendar: "▣",
-  reservations: "☷",
-  customers: "♙",
-  website: "Aa",
-  media: "▧",
-  experiences: "◈",
-  contact: "↗",
-  shop: "◇",
-  activities: "≋",
-  prices: "Rp",
-  events: "◷",
-};
+const mainSections = [
+  "overview",
+  "calendar",
+  "reservations",
+  "customers",
+  "events",
+];
+const siteSections = [
+  "media",
+  "website",
+  "experiences",
+  "activities",
+  "prices",
+  "shop",
+  "contact",
+];
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -258,7 +262,8 @@ export default function Dashboard({ section, email, today, demo = false }) {
     [month, setMonth] = useState(today.slice(0, 7)),
     [booking, setBooking] = useState(blankBooking(today)),
     [editing, setEditing] = useState(null),
-    [editLocale, setEditLocale] = useState("id");
+    [editLocale, setEditLocale] = useState("id"),
+    [siteOpen, setSiteOpen] = useState(siteSections.includes(section));
   // Copy sections can be edited per language; prices, photos and visibility
   // are shared by both versions of the website.
   const bilingual = [
@@ -271,6 +276,23 @@ export default function Dashboard({ section, email, today, demo = false }) {
   const view =
     bilingual && editLocale === "en" ? localizeContent(content, "en") : content;
   const pending = data?.bookings.filter((b) => b.status === "pending") || [];
+  const todayGuests = data
+    ? dailySchedule(data.bookings, today, 1)[0].guests
+    : 0;
+  const ownerName =
+    displayName(email) === "tim Zanclus" ? "Operator" : displayName(email);
+  const initials = ownerName.slice(0, 2).toUpperCase();
+  const link = (key) => (
+    <Link
+      key={key}
+      href={"/admin/" + key}
+      aria-current={section === key ? "page" : undefined}
+      className={section === key ? "active" : ""}
+    >
+      <AdminIcon name={key} />
+      {sections[key]}
+    </Link>
+  );
   async function refresh() {
     try {
       const next = await request("/api/admin/state");
@@ -288,6 +310,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
   useEffect(() => {
     setMobileMenu(false);
     setOwnerMenu(false);
+    if (siteSections.includes(section)) setSiteOpen(true);
     setNotification(false);
     setNotice("");
   }, [section]);
@@ -534,7 +557,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
               rel="noopener noreferrer"
               className="admin-button secondary back-site"
             >
-              Lihat website ↗
+              Kembali ke situs <AdminIcon name="arrow" size={15} />
             </a>
             <div className="admin-menu-anchor">
               <button
@@ -546,21 +569,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   setOwnerMenu(false);
                 }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="19"
-                  height="19"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <AdminIcon name="bell" />
                 {pending.length > 0 && (
                   <span className="admin-notification-count">
                     {pending.length}
@@ -585,19 +594,22 @@ export default function Dashboard({ section, email, today, demo = false }) {
             <div className="admin-menu-anchor">
               <button
                 className="admin-owner"
+                aria-label="Akun"
                 aria-expanded={ownerMenu}
                 onClick={() => {
                   setOwnerMenu(!ownerMenu);
                   setNotification(false);
                 }}
               >
-                <span>O</span>Owner⌄
+                <span>{initials}</span>
+                <b>{ownerName}</b>
+                <AdminIcon name="chevron" size={15} />
               </button>
               {ownerMenu && (
                 <div className="admin-popover">
                   <p>{email}</p>
                   <button className="admin-inline" onClick={logout}>
-                    Keluar dari admin
+                    <AdminIcon name="logout" size={15} /> Keluar dari admin
                   </button>
                 </div>
               )}
@@ -608,7 +620,7 @@ export default function Dashboard({ section, email, today, demo = false }) {
               aria-expanded={mobileMenu}
               onClick={() => setMobileMenu(!mobileMenu)}
             >
-              ☰
+              <AdminIcon name="menu" />
             </button>
           </div>
         </div>
@@ -623,54 +635,55 @@ export default function Dashboard({ section, email, today, demo = false }) {
       <div className="admin-workspace">
         <aside className={"admin-sidebar " + (mobileMenu ? "open" : "")}>
           <p className="admin-eyebrow">MENU</p>
-          <div className="admin-links">
-            {["overview", "calendar", "reservations", "customers"].map(
-              (key) => (
-                <Link
-                  key={key}
-                  href={"/admin/" + key}
-                  aria-current={section === key ? "page" : undefined}
-                  className={section === key ? "active" : ""}
-                >
-                  <span aria-hidden="true">{icons[key]}</span>
-                  {sections[key]}
-                </Link>
-              ),
+          <div
+            className="admin-links"
+            role="navigation"
+            aria-label="Menu admin"
+          >
+            {mainSections.map(link)}
+            <button
+              type="button"
+              className={
+                "admin-group-toggle" +
+                (siteSections.includes(section) ? " current" : "")
+              }
+              aria-expanded={siteOpen}
+              onClick={() => setSiteOpen(!siteOpen)}
+            >
+              <AdminIcon name="settings" />
+              Pengaturan situs
+              <AdminIcon name="chevron" size={16} className="admin-chevron" />
+            </button>
+            {siteOpen && (
+              <div className="admin-sublinks">{siteSections.map(link)}</div>
             )}
           </div>
-          <p className="admin-eyebrow sidebar-group">WEBSITE</p>
-          <div className="admin-links">
-            {[
-              "media",
-              "website",
-              "experiences",
-              "activities",
-              "prices",
-              "shop",
-              "contact",
-            ].map((key) => (
-              <Link
-                key={key}
-                href={"/admin/" + key}
-                aria-current={section === key ? "page" : undefined}
-                className={section === key ? "active" : ""}
-              >
-                <span aria-hidden="true">{icons[key]}</span>
-                {sections[key]}
-              </Link>
-            ))}
-          </div>
-          <div className="admin-sidebar-note">
-            <strong>Zanclus workspace</strong>
+          <div
+            className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
+          >
+            <strong>STATUS HARI INI</strong>
             <p>
-              Kelola konten dan catatan reservasi. Booking final dikonfirmasi
-              bersama tamu.
+              {!data
+                ? "Memuat catatan…"
+                : pending.length
+                  ? `${pending.length} reservasi menunggu konfirmasi.`
+                  : "Semua reservasi sudah dikonfirmasi."}{" "}
+              {todayGuests
+                ? `${todayGuests} tamu ke laut hari ini.`
+                : data
+                  ? "Belum ada tamu ke laut hari ini."
+                  : ""}
             </p>
           </div>
         </aside>
         <main className="admin-main">
-          <p className="admin-eyebrow">ZANCLUS / OWNER WORKSPACE</p>
-          <div className="admin-title-row">
+          {section !== "overview" && (
+            <p className="admin-eyebrow">ZANCLUS / RUANG KERJA</p>
+          )}
+          <div
+            className="admin-title-row"
+            hidden={section === "overview" && !!data}
+          >
             <h1>{sections[section]}</h1>
             {section === "calendar" && (
               <span>
@@ -703,85 +716,15 @@ export default function Dashboard({ section, email, today, demo = false }) {
           ) : (
             <>
               {section === "overview" && (
-                <>
-                  <div className="admin-stat-grid">
-                    <div className="admin-stat">
-                      <span>Menunggu konfirmasi</span>
-                      <strong>{pending.length}</strong>
-                      <Link href="/admin/reservations">Lihat reservasi ↗</Link>
-                    </div>
-                    <div className="admin-stat">
-                      <span>Reservasi dikonfirmasi</span>
-                      <strong>
-                        {
-                          bookings.filter((b) => b.status === "confirmed")
-                            .length
-                        }
-                      </strong>
-                      <small>Seluruh catatan</small>
-                    </div>
-                    <div className="admin-stat">
-                      <span>Pengalaman aktif</span>
-                      <strong>
-                        {
-                          Object.values(content.experiences).filter(
-                            (e) => e.enabled,
-                          ).length
-                        }
-                      </strong>
-                      <Link href="/admin/experiences">Kelola pengalaman ↗</Link>
-                    </div>
-                    <div className="admin-stat">
-                      <span>Nilai terkonfirmasi</span>
-                      <strong className="currency">
-                        {money(
-                          bookings
-                            .filter((b) => b.status === "confirmed")
-                            .reduce((n, b) => n + b.amount, 0),
-                        )}
-                      </strong>
-                      <small>Nilai catatan, bukan pembayaran diterima</small>
-                    </div>
-                  </div>
-                  <section className="admin-card">
-                    <div className="admin-card-heading">
-                      <h2>Reservasi terbaru</h2>
-                      <Link
-                        href="/admin/calendar"
-                        className="admin-button secondary"
-                      >
-                        Buka kalender ↗
-                      </Link>
-                    </div>
-                    {bookingTable(bookings.slice(0, 5))}
-                  </section>
-                  <div className="admin-two-column">
-                    <section className="admin-card">
-                      <h2>Website kamu, selalu terbaru.</h2>
-                      <p className="admin-subtle">
-                        Ubah teks dan gambar tanpa mengedit kode. Perubahan
-                        tersimpan di database dan langsung tampil pada kunjungan
-                        berikutnya.
-                      </p>
-                      <Link href="/admin/website" className="admin-button">
-                        Kelola teks website ↗
-                      </Link>
-                    </section>
-                    <section className="admin-card">
-                      <h2>Catat konfirmasi dari WhatsApp.</h2>
-                      <p className="admin-subtle">
-                        Pesan WhatsApp tidak otomatis menjadi reservasi.
-                        Tambahkan catatan setelah berdiskusi dengan tamu.
-                      </p>
-                      <Link
-                        href="/admin/calendar"
-                        className="admin-button secondary"
-                      >
-                        Tambah reservasi ↗
-                      </Link>
-                    </section>
-                  </div>
-                </>
+                <Overview
+                  bookings={bookings}
+                  content={content}
+                  customers={customers}
+                  pending={pending}
+                  today={today}
+                  email={email}
+                  table={bookingTable(bookings.slice(0, 5))}
+                />
               )}
               {section === "calendar" && (
                 <>

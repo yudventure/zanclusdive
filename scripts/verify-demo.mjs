@@ -32,7 +32,14 @@ try {
   assert.equal(await page.locator('input[name="email"]').inputValue(), demoAccount.email);
   assert.equal(await page.getByRole("button", { name: "Periksa koneksi database", exact: true }).count(), 0);
   await page.getByRole("button", { name: "Masuk ke demo" }).click();
-  await page.getByRole("heading", { name: "Overview", exact: true }).waitFor();
+  await page.getByRole("heading", { name: /^Selamat (pagi|siang|sore|malam), tim Zanclus\.$/ }).waitFor();
+  assert.equal(await page.locator(".admin-kpi-grid .admin-stat").count(), 6);
+  assert.equal(await page.locator(".admin-bar").count(), 7);
+  await page.getByRole("button", { name: "30 hari", exact: true }).click();
+  assert.equal(await page.locator(".admin-bar").count(), 30);
+  assert.ok(await page.getByRole("link", { name: "Kalender kegiatan", exact: true }).first().isVisible());
+  assert.equal(await page.getByRole("link", { name: "Teks website", exact: true }).count(), 0);
+  await page.getByRole("button", { name: "Pengaturan situs", exact: true }).click();
   assert.ok(await page.locator(".admin-demo-banner").isVisible());
   const initial = await state();
   assert.equal(initial.mode, "demo");
@@ -79,7 +86,7 @@ try {
   await publicPage.reload({ waitUntil: "networkidle" });
   assert.ok((await publicPage.locator(".page-shell").getAttribute("style")).includes(media.url));
 
-  await page.getByRole("link", { name: "Kalender", exact: true }).click();
+  await page.getByRole("link", { name: "Kalender reservasi", exact: true }).click();
   const month = await page.locator(".admin-title-row>span").textContent();
   await page.getByRole("button", { name: "Bulan berikut" }).click();
   assert.notEqual(await page.locator(".admin-title-row>span").textContent(), month);

@@ -5,6 +5,7 @@ import { isDemo } from "../../../src/cms-mode.js";
 import Login from "../../../src/admin/Login.jsx";
 import Dashboard from "../../../src/admin/Dashboard.jsx";
 import "../admin.css";
+import "../admin-shell.css";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Zanclus Admin",
