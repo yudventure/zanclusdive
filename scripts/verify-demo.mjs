@@ -28,10 +28,10 @@ try {
   assert.equal((await api.get(base + "/api/admin/state")).status(), 401);
   assert.equal((await api.post(base + "/api/admin/login", { headers: { Origin: "https://other.example" }, data: demoAccount })).status(), 403);
   await page.goto(base + "/admin", { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "Coba CMS Zanclus." }).waitFor();
+  await page.getByRole("heading", { name: "Selamat datang kembali." }).waitFor();
   assert.equal(await page.locator('input[name="email"]').inputValue(), demoAccount.email);
   assert.equal(await page.getByRole("button", { name: "Periksa koneksi database", exact: true }).count(), 0);
-  await page.getByRole("button", { name: "Masuk ke demo" }).click();
+  await page.getByRole("button", { name: "Masuk ke dashboard" }).click();
   await page.getByRole("heading", { name: /^Selamat (pagi|siang|sore|malam), tim Zanclus\.$/ }).waitFor();
   assert.equal(await page.locator(".admin-kpi-grid .admin-stat").count(), 6);
   assert.equal(await page.locator(".admin-bar").count(), 7);
@@ -40,7 +40,16 @@ try {
   assert.ok(await page.getByRole("link", { name: "Kalender kegiatan", exact: true }).first().isVisible());
   assert.equal(await page.getByRole("link", { name: "Teks website", exact: true }).count(), 0);
   await page.getByRole("button", { name: "Pengaturan situs", exact: true }).click();
-  assert.ok(await page.locator(".admin-demo-banner").isVisible());
+  // Nothing in the admin or on the public pages reads as a demo.
+  assert.equal(await page.locator(".admin-demo-banner").count(), 0);
+  assert.doesNotMatch((await page.locator(".admin-root").innerText()).replace(/Tamu Demo \d+/g, ""), /\bdemo\b|contoh/i);
+  for (const path of ["/", "/id", "/diving", "/id/snorkeling", "/dive-shop", "/id/dive-shop"]) {
+    const visitor = await context.newPage();
+    await visitor.goto(base + path, { waitUntil: "domcontentloaded" });
+    const text = (await visitor.locator("body").innerText()).replace(/Tamu Demo \d+/g, "");
+    assert.doesNotMatch(text, /\bdemo\b|contoh demo|sample demo/i, path);
+    await visitor.close();
+  }
   const initial = await state();
   assert.equal(initial.mode, "demo");
   assert.equal(initial.bookings.length, 3);

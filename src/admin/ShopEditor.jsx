@@ -1,4 +1,5 @@
 "use client";
+import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useId, useState } from "react";
 import ProductVisual from "../shop/ProductVisual.jsx";
 import { shopCategories, availabilityLabels, rupiah } from "../shop-model.js";
@@ -12,7 +13,14 @@ function Field({ label, children }) {
     </div>
   );
 }
-export default function ShopEditor({ shop, update, onSave, busy, media }) {
+export default function ShopEditor({
+  shop,
+  update,
+  onSave,
+  busy,
+  media,
+  placePhoto,
+}) {
   const [selectedID, setSelectedID] = useState(shop.products[0]?.id);
   const product =
     shop.products.find((p) => p.id === selectedID) || shop.products[0];
@@ -268,6 +276,14 @@ export default function ShopEditor({ shop, update, onSave, busy, media }) {
                 <ProductVisual product={product} />
               </div>
               <div>
+                <ImageUpload
+                  label={
+                    product.image ? "Ganti foto produk" : "Upload foto produk"
+                  }
+                  onFile={(file) =>
+                    placePhoto(file, (url) => edit("image", url))
+                  }
+                />
                 <Field label="URL foto produk (opsional)">
                   <input
                     placeholder="URL HTTPS atau /api/media/…"
@@ -276,7 +292,7 @@ export default function ShopEditor({ shop, update, onSave, busy, media }) {
                     onChange={(e) => edit("image", e.target.value)}
                   />
                 </Field>
-                <Field label="Pilih foto dari media">
+                <Field label="Atau pilih dari koleksi">
                   <select
                     value=""
                     onChange={(e) => {
@@ -292,8 +308,8 @@ export default function ShopEditor({ shop, update, onSave, busy, media }) {
                   </select>
                 </Field>
                 <p className="admin-subtle">
-                  Upload foto di menu Foto & media, lalu pilih di sini. Tanpa
-                  foto, website menampilkan ilustrasi alat.
+                  Foto langsung terpasang setelah diupload. Tanpa foto, website
+                  menampilkan ilustrasi alat.
                 </p>
                 {product.image && (
                   <button

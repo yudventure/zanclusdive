@@ -2,6 +2,7 @@
 import { cloneElement, useId } from "react";
 import { builtInPhotos } from "../photography.js";
 import { defaultGallery, galleryLimit } from "../gallery.js";
+import ImageUpload from "./ImageUpload.jsx";
 
 function Field({ label, children }) {
   const id = useId();
@@ -20,6 +21,8 @@ export default function GalleryEditor({
   update,
   onSave,
   busy,
+  placePhoto,
+  addPhoto,
 }) {
   const items = (gallery ?? defaultGallery).items;
   const change = (index, patch) =>
@@ -38,9 +41,17 @@ export default function GalleryEditor({
         <h2>Galeri penyelaman</h2>
         <p className="admin-subtle">
           Foto yang terbuka saat pengunjung menekan Buka galeri di bagian
-          Jelajahi laut. Unggah foto di Media library, lalu pilih di sini.
-          Maksimal {galleryLimit} foto, keterangan English boleh kosong.
+          Jelajahi laut. Upload foto dari komputer atau HP, langsung tampil di
+          galeri. Maksimal {galleryLimit} foto, keterangan English boleh kosong.
         </p>
+        {items.length < galleryLimit && (
+          <ImageUpload
+            multiple
+            label="Tambah foto ke galeri"
+            hint="Bisa pilih beberapa foto sekaligus · langsung tampil"
+            onFile={(file) => placePhoto(file, addPhoto)}
+          />
+        )}
         <div className="admin-gallery-list">
           {items.map((item, index) => (
             <fieldset className="admin-price-item" key={index}>
@@ -75,9 +86,18 @@ export default function GalleryEditor({
                 </span>
               </legend>
               <div className="admin-gallery-item">
-                {item.src && (
-                  <img src={item.src} alt={"Preview foto " + (index + 1)} />
-                )}
+                <div className="admin-gallery-photo">
+                  {item.src && (
+                    <img src={item.src} alt={"Preview foto " + (index + 1)} />
+                  )}
+                  <ImageUpload
+                    compact
+                    label={item.src ? "Ganti foto" : "Upload foto"}
+                    onFile={(file) =>
+                      placePhoto(file, (url) => change(index, { src: url }))
+                    }
+                  />
+                </div>
                 <div className="admin-form-grid">
                   <Field label="URL foto">
                     <input
@@ -88,7 +108,7 @@ export default function GalleryEditor({
                       onChange={(e) => change(index, { src: e.target.value })}
                     />
                   </Field>
-                  <Field label="Pilih dari media">
+                  <Field label="Atau pilih dari koleksi">
                     <select
                       value=""
                       onChange={(e) =>

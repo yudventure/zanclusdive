@@ -107,7 +107,7 @@ test("WhatsApp inquiries retain the selected activity and guest details without 
     assert.ok(message.includes("4 orang"));
     assert.ok(message.includes(details.notes));
     assert.ok(message.includes("belum menjadi reservasi"));
-    assert.ok(message.includes("halaman demo"));
+    assert.ok(!/demo|contoh/i.test(message));
   }
   for (const invalid of [
     { name: " " },

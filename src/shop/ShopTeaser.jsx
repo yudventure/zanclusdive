@@ -70,7 +70,6 @@ export default function ShopTeaser({
   shop,
   priceList,
   whatsapp,
-  demo,
   locale = "en",
 }) {
   const t = dictionary(locale).shop;
@@ -294,7 +293,6 @@ export default function ShopTeaser({
       </div>
       <div className="shop-teaser-bottom">
         <p>{s.note}</p>
-        {demo && <small>{t.teaserDemo}</small>}
       </div>
       <dialog
         ref={dialog}

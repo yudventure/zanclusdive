@@ -5,7 +5,7 @@ import { defaultGallery, galleryCaption } from "../gallery.js";
 
 // The Zanclus dive gallery. It stays rolled up under the ocean cards until
 // the visitor opens it; a photo opens larger in a lightbox.
-export default function DiveGallery({ gallery, demo, locale }) {
+export default function DiveGallery({ gallery, locale }) {
   const t = dictionary(locale).gallery;
   const items = (gallery ?? defaultGallery).items;
   const [open, setOpen] = useState(false);
@@ -87,7 +87,6 @@ export default function DiveGallery({ gallery, demo, locale }) {
               </li>
             ))}
           </ul>
-          {demo && <p className="dive-gallery-note">{t.demoNote}</p>}
         </div>
       </div>
       <dialog

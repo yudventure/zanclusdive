@@ -144,7 +144,7 @@ try {
   assert.equal(booking.source, "website");
   assert.equal(booking.amount, 0);
   assert.equal(receipts[0].reference, bookingReference(booking.id));
-  assert.equal(receipts[0].demo, process.env.CMS_MODE !== "mysql");
+  assert.equal(receipts[0].demo, false);
   for (const field of ["guestName", "phone", "notes", "id", "bookings"])
     assert.equal(receipts[0][field], undefined);
   assert.equal((await post({ ...duplicate, name: "Changed" })).status(), 409);

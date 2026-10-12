@@ -127,7 +127,6 @@ const id = {
     experience: "Pengalaman yang diminati",
     notes: "Ceritakan sedikit tentangmu",
     notesPlaceholder: "Pengalaman diving, pertanyaan, atau kebutuhan lainnya",
-    demoData: "Mode demo: gunakan data contoh. ",
     privacy:
       "Data ini digunakan tim untuk menghubungimu terkait booking. Pengajuan belum merupakan konfirmasi atau pembayaran.",
     submit: "Kirim permintaan booking",
@@ -144,8 +143,6 @@ const id = {
   },
   calendarPage: {
     jump: ["Kalender", "Musim terbaik", "Spot populer", "Peduli lingkungan"],
-    demoNote:
-      "Jadwal kegiatan di bawah ini adalah contoh. Tim Zanclus memperbarui jadwal lewat panel admin.",
     calendarEyebrow: "WHAT'S ON",
     calendarTitle: "Jadwal kegiatan.",
     calendarIntro:
@@ -198,8 +195,6 @@ const id = {
     previous: "Foto sebelumnya",
     next: "Foto berikutnya",
     position: (n, total) => `${n} dari ${total}`,
-    demoNote:
-      "Foto contoh. Ganti dengan foto penyelaman Zanclus lewat panel admin.",
   },
   diveSites: {
     title: "Titik selam di Selat Dampier.",
@@ -261,11 +256,11 @@ const id = {
     saveFailed: "Booking belum dapat disimpan.",
     offline:
       "Koneksi terputus. Periksa internet lalu kirim ulang; booking yang sama tidak akan dibuat dua kali.",
-    reference: (ref, demo) => `Referensi: ${ref}${demo ? " · DEMO" : ""}`,
+    reference: (ref) => `Referensi: ${ref}`,
     whatsapp: (ref, summary) =>
       `Halo Zanclus! Saya ingin konfirmasi booking ${ref}.\nStatus: menunggu konfirmasi tim.\n\n${summary}`,
-    download: (ref, demo, summary) =>
-      `ZANCLUS DIVE CENTER\nPERMINTAAN BOOKING${demo ? " DEMO" : ""}\nReferensi: ${ref}\nStatus: menunggu konfirmasi tim\n\n${summary}\n\nJadwal, biaya, dan program perlu dikonfirmasi dengan tim Zanclus. Belum ada pembayaran.\n`,
+    download: (ref, _status, summary) =>
+      `ZANCLUS DIVE CENTER\nPERMINTAAN BOOKING\nReferensi: ${ref}\nStatus: menunggu konfirmasi tim\n\n${summary}\n\nJadwal, biaya, dan program perlu dikonfirmasi dengan tim Zanclus. Belum ada pembayaran.\n`,
     fileName: (date) => `zanclus-rencana-${date}.txt`,
     summary: {
       name: "Nama",
@@ -280,7 +275,6 @@ const id = {
     planKicker: "LET'S MAKE A PLAN",
     planTitle: (label) => `Rencanakan ${label.toLowerCase()}.`,
     priceLabel: "BIAYA KEGIATAN",
-    demoPrice: "HARGA CONTOH DEMO / ORANG",
     fromPrice: "MULAI DARI / ORANG",
     priceNote:
       "Jadwal, rincian biaya, dan ketersediaan dikonfirmasi melalui WhatsApp.",
@@ -309,20 +303,16 @@ const id = {
     helpMessage: (label) =>
       `Halo Zanclus! Saya ingin bantuan untuk merencanakan ${label}.`,
     skip: "Lewati ke detail aktivitas",
-    demoHero: "MODE DEMO · CONTOH AKTIVITAS",
     tagline: "JELAJAHI LAUT. TEMUKAN CERITA.",
     sections: "Bagian halaman",
     about: "Tentang kegiatan",
     itinerary: "Alur kegiatan",
     preparation: "Persiapan",
     faq: "Pertanyaan umum",
-    demoBanner:
-      "Ini halaman demo. Aktivitas dan alur adalah contoh; jadwal, lokasi, serta biaya perlu dikonfirmasi.",
     overviewTitle: "Kenali pengalamanmu.",
     audience: "Untuk siapa",
     duration: "Durasi",
     meetingPoint: "Titik temu",
-    demoItinerary: "Contoh alur kegiatan.",
     itineraryTitle: "Rencana aktivitas.",
     itineraryIntro:
       "Susun rincian bersama tim; alur akhir mengikuti program dan kondisi laut.",
@@ -335,8 +325,6 @@ const id = {
     cardsIntro:
       "Lihat detail kegiatan, temukan pilihanmu, lalu susun rencana bersama tim Zanclus.",
     cardLink: (label) => `Lihat detail ${label.toLowerCase()}`,
-    cardsDemo:
-      "Contoh aktivitas untuk demo. Lokasi, jadwal, dan biaya dikonfirmasi bersama tim.",
   },
   inquiry: {
     unavailable: "Aktivitas belum tersedia.",
@@ -352,7 +340,6 @@ const id = {
     proposedDate: "Usulan tanggal",
     people: (n) => `Peserta: ${n} orang`,
     notesLabel: "Catatan",
-    demo: "Permintaan dari halaman demo; rincian aktivitas adalah contoh.",
     closing:
       "Mohon konfirmasi jadwal, persyaratan, perlengkapan, dan biaya. Ini belum menjadi reservasi.",
   },
@@ -368,7 +355,6 @@ const id = {
     followDescription:
       "Cerita dari laut, inspirasi dive, dan kabar dari Zanclus.",
     startChat: "Mulai percakapan ↗",
-    socialDemo: "Tautan platform contoh untuk demo.",
     rights: "Zanclus Dive Center. All rights reserved.",
     operator: "Masuk operator",
     whatsapp:
@@ -386,8 +372,6 @@ const id = {
     heroNote: "Pilih alat. Susun kebutuhan. Konfirmasi bersama tim.",
     heroAlt:
       "Visual konsep perlengkapan diving dan snorkeling untuk beli atau rental",
-    demoTitle: "Mode demo",
-    demoNote: " · Produk dan harga contoh untuk mencoba Dive Shop.",
     catalogTitle: "Temukan perlengkapanmu.",
     yourOrder: "Pesananmu",
     serviceType: "Jenis layanan",
@@ -542,7 +526,6 @@ const id = {
         ],
       },
     },
-    teaserDemo: "Produk & harga contoh demo",
   },
   order: {
     pickGear: "Pilih perlengkapan terlebih dahulu.",
@@ -555,8 +538,8 @@ const id = {
     email: "Format email belum benar, contoh nama@email.com.",
     startDate: "Pilih tanggal mulai rental yang valid.",
     notes: "Catatan maksimal 500 karakter.",
-    greeting: (name, demo) =>
-      `Halo Zanclus! Saya ${name}, ingin konfirmasi pesanan Dive Shop${demo ? " (contoh demo)" : ""}.`,
+    greeting: (name) =>
+      `Halo Zanclus! Saya ${name}, ingin konfirmasi pesanan Dive Shop.`,
     sale: "BELI",
     rental: "RENTAL",
     askPrice: "minta harga",
@@ -665,7 +648,6 @@ const en = {
     experience: "Experience you're interested in",
     notes: "Tell us a little about yourself",
     notesPlaceholder: "Diving experience, questions or other needs",
-    demoData: "Demo mode: please use sample data. ",
     privacy:
       "Our team uses this information to contact you about your booking. Submitting is not a confirmation or a payment.",
     submit: "Send booking request",
@@ -682,8 +664,6 @@ const en = {
   },
   calendarPage: {
     jump: ["Calendar", "Best season", "Popular spots", "Ocean care"],
-    demoNote:
-      "The schedule below is a sample. The Zanclus team updates it in the admin panel.",
     calendarEyebrow: "WHAT'S ON",
     calendarTitle: "Upcoming activities.",
     calendarIntro:
@@ -737,8 +717,6 @@ const en = {
     previous: "Previous photo",
     next: "Next photo",
     position: (n, total) => `${n} of ${total}`,
-    demoNote:
-      "Sample photos. Replace them with Zanclus dive photos in the admin panel.",
   },
   diveSites: {
     title: "Dive sites of the Dampier Strait.",
@@ -800,11 +778,11 @@ const en = {
     saveFailed: "The booking couldn't be saved.",
     offline:
       "Connection lost. Check your internet and send again; the same booking won't be created twice.",
-    reference: (ref, demo) => `Reference: ${ref}${demo ? " · DEMO" : ""}`,
+    reference: (ref) => `Reference: ${ref}`,
     whatsapp: (ref, summary) =>
       `Hi Zanclus! I'd like to confirm booking ${ref}.\nStatus: awaiting team confirmation.\n\n${summary}`,
-    download: (ref, demo, summary) =>
-      `ZANCLUS DIVE CENTER\nBOOKING REQUEST${demo ? " DEMO" : ""}\nReference: ${ref}\nStatus: awaiting team confirmation\n\n${summary}\n\nSchedule, price and program must be confirmed with the Zanclus team. No payment has been made.\n`,
+    download: (ref, _status, summary) =>
+      `ZANCLUS DIVE CENTER\nBOOKING REQUEST\nReference: ${ref}\nStatus: awaiting team confirmation\n\n${summary}\n\nSchedule, price and program must be confirmed with the Zanclus team. No payment has been made.\n`,
     fileName: (date) => `zanclus-plan-${date}.txt`,
     summary: {
       name: "Name",
@@ -819,7 +797,6 @@ const en = {
     planKicker: "LET'S MAKE A PLAN",
     planTitle: (label) => `Plan your ${label.toLowerCase()}.`,
     priceLabel: "ACTIVITY PRICE",
-    demoPrice: "DEMO SAMPLE PRICE / PERSON",
     fromPrice: "FROM / PERSON",
     priceNote:
       "Schedule, price details and availability are confirmed on WhatsApp.",
@@ -846,20 +823,16 @@ const en = {
     askMessage: (label) => `Hi Zanclus! I have a question about ${label}.`,
     helpMessage: (label) => `Hi Zanclus! I'd like help planning ${label}.`,
     skip: "Skip to activity details",
-    demoHero: "DEMO MODE · SAMPLE ACTIVITY",
     tagline: "EXPLORE THE OCEAN. FIND YOUR STORY.",
     sections: "Page sections",
     about: "About the activity",
     itinerary: "How it goes",
     preparation: "Preparation",
     faq: "FAQ",
-    demoBanner:
-      "This is a demo page. Activities and itineraries are examples; schedule, location and price need to be confirmed.",
     overviewTitle: "Get to know your experience.",
     audience: "Who it's for",
     duration: "Duration",
     meetingPoint: "Meeting point",
-    demoItinerary: "Sample itinerary.",
     itineraryTitle: "Activity plan.",
     itineraryIntro:
       "Work out the details with our team; the final itinerary depends on the program and sea conditions.",
@@ -872,8 +845,6 @@ const en = {
     cardsIntro:
       "See the activity details, find your pick, then plan it together with the Zanclus team.",
     cardLink: (label) => `View ${label.toLowerCase()} details`,
-    cardsDemo:
-      "Sample activities for the demo. Location, schedule and price are confirmed with our team.",
   },
   inquiry: {
     unavailable: "This activity isn't available yet.",
@@ -890,7 +861,6 @@ const en = {
     people: (n) =>
       `Participants: ${n} ${Number(n) === 1 ? "person" : "people"}`,
     notesLabel: "Notes",
-    demo: "Request sent from the demo page; activity details are examples.",
     closing:
       "Please confirm the schedule, requirements, gear and price. This is not a reservation yet.",
   },
@@ -906,7 +876,6 @@ const en = {
     followDescription:
       "Stories from the sea, dive inspiration and news from Zanclus.",
     startChat: "Start a conversation ↗",
-    socialDemo: "Sample platform links for the demo.",
     rights: "Zanclus Dive Center. All rights reserved.",
     operator: "Operator sign in",
     whatsapp:
@@ -922,8 +891,6 @@ const en = {
     back: "← Back to the ocean",
     heroNote: "Choose gear. Plan what you need. Confirm with our team.",
     heroAlt: "Concept visual of diving and snorkeling gear to buy or rent",
-    demoTitle: "Demo mode",
-    demoNote: " · Sample products and prices to try the Dive Shop.",
     catalogTitle: "Find your gear.",
     yourOrder: "Your order",
     serviceType: "Service type",
@@ -1077,7 +1044,6 @@ const en = {
         ],
       },
     },
-    teaserDemo: "Sample demo products & prices",
   },
   order: {
     pickGear: "Choose some gear first.",
@@ -1090,8 +1056,8 @@ const en = {
     email: "That email doesn't look right, for example name@email.com.",
     startDate: "Choose a valid rental start date.",
     notes: "Notes can be up to 500 characters.",
-    greeting: (name, demo) =>
-      `Hi Zanclus! I'm ${name} and I'd like to confirm a Dive Shop order${demo ? " (demo sample)" : ""}.`,
+    greeting: (name) =>
+      `Hi Zanclus! I'm ${name} and I'd like to confirm a Dive Shop order.`,
     sale: "BUY",
     rental: "RENTAL",
     askPrice: "price on request",

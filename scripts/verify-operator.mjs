@@ -51,7 +51,9 @@ try {
   await page.fill('input[name="password"]', ` ${password} `);
   await page.getByRole("button", { name: /Masuk/ }).click();
   await page.waitForURL(base + "/admin");
-  await page.getByRole("link", { name: "Ringkasan cepat", exact: true }).waitFor();
+  await page
+    .getByRole("link", { name: "Ringkasan cepat", exact: true })
+    .waitFor();
   assert.equal(
     (await context.request.get(base + "/api/admin/state")).status(),
     200,

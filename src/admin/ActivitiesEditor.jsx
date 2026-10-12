@@ -1,4 +1,5 @@
 "use client";
+import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useId, useState } from "react";
 import { activityKeys, activityLabels } from "../activity-model.js";
 import { builtInPhotos } from "../photography.js";
@@ -18,6 +19,7 @@ export default function ActivitiesEditor({
   onSave,
   busy,
   media,
+  placePhoto,
 }) {
   const [active, setActive] = useState("diving");
   const activity = activities[active];
@@ -162,6 +164,13 @@ export default function ActivitiesEditor({
       <section className="admin-card">
         <h2>Sampul halaman detail</h2>
         <div className="admin-form">
+          <div className="admin-image-slot wide">
+            <img src={activity.image} alt="Preview sampul" />
+            <ImageUpload
+              label="Ganti foto sampul"
+              onFile={(file) => placePhoto(file, (url) => change("image", url))}
+            />
+          </div>
           <Field label="URL foto">
             <input
               required
@@ -170,7 +179,7 @@ export default function ActivitiesEditor({
               onChange={(e) => change("image", e.target.value)}
             />
           </Field>
-          <Field label="Pilih dari media atau aset website">
+          <Field label="Atau pilih dari koleksi">
             <select
               value=""
               onChange={(e) =>
@@ -199,8 +208,8 @@ export default function ActivitiesEditor({
             />
           </Field>
           <p className="admin-subtle">
-            Unggah foto di Foto & media terlebih dahulu, lalu pilih di sini.
-            Deskripsi foto tampil sebagai caption dan teks alternatif gambar.
+            Foto langsung terpasang setelah diupload. Deskripsi foto tampil
+            sebagai caption dan teks alternatif gambar.
           </p>
         </div>
       </section>
@@ -211,6 +220,15 @@ export default function ActivitiesEditor({
           rekomendasi aktivitas.
         </p>
         <div className="admin-form">
+          <div className="admin-image-slot wide">
+            <img src={activity.cardImage} alt="Preview foto kartu" />
+            <ImageUpload
+              label="Ganti foto kartu"
+              onFile={(file) =>
+                placePhoto(file, (url) => change("cardImage", url))
+              }
+            />
+          </div>
           <Field label="URL foto kartu">
             <input
               required
@@ -219,7 +237,7 @@ export default function ActivitiesEditor({
               onChange={(e) => change("cardImage", e.target.value)}
             />
           </Field>
-          <Field label="Pilih foto kartu dari media atau aset website">
+          <Field label="Atau pilih foto kartu dari koleksi">
             <select
               value=""
               onChange={(e) =>

@@ -26,6 +26,7 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
     >
       <img
         className="course-photo"
+        data-depth
         src={activity.cardImage}
         srcSet={photoSrcSet(activity.cardImage)}
         sizes={
@@ -60,7 +61,7 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
     </a>
   );
 }
-export default function HomePage({ content, locale = "en", demo = false }) {
+export default function HomePage({ content, locale = "en" }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
@@ -320,6 +321,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               <article className="ocean-card reef-card" data-reveal>
                 <img
                   className="ocean-photo"
+                  data-depth
                   src={content.images.reef}
                   alt={h.reefAlt}
                   width="1200"
@@ -339,6 +341,7 @@ export default function HomePage({ content, locale = "en", demo = false }) {
               >
                 <img
                   className="ocean-photo"
+                  data-depth
                   src={content.images.ocean}
                   srcSet={photoSrcSet(content.images.ocean)}
                   sizes="(max-width: 700px) 90vw, 45vw"
@@ -356,7 +359,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             </div>
             <DiveGallery
               gallery={content.gallery}
-              demo={demo}
               locale={locale}
             />
           </section>
@@ -364,7 +366,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             shop={content.shop}
             priceList={content.priceList}
             whatsapp={content.contact.whatsapp}
-            demo={demo}
             locale={locale}
           />
           <section
@@ -466,7 +467,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
           contact={content.contact}
           activities={content.activities}
           tagline={content.text.tagline}
-          demo={demo}
           locale={locale}
           home
         />
@@ -562,7 +562,6 @@ export default function HomePage({ content, locale = "en", demo = false }) {
             hidden
           ></p>
           <p className="booking-privacy">
-            {demo ? h.demoData : ""}
             {h.privacy}
           </p>
           <button className="button dark" type="submit">

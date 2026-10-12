@@ -85,7 +85,7 @@ try {
   assert.match(message, /RENTAL · Open heel fins × 2/);
   assert.match(message, /selama 3 hari/);
   assert.match(message, /Fin ukuran M/);
-  assert.match(message, /contoh demo/);
+  assert.doesNotMatch(message, /demo|contoh/i);
   // Do not send or navigate to WhatsApp during verification.
   await page.getByLabel("Durasi (hari)").fill("2");
   assert.equal(
@@ -238,7 +238,7 @@ try {
   assert.equal(upload.status(), 201);
   const picture = await upload.json();
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByLabel("Pilih foto dari media").selectOption(picture.url);
+  await page.getByLabel("Atau pilih dari koleksi").selectOption(picture.url);
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();

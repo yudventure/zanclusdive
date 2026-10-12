@@ -13,6 +13,19 @@
 .motion-active > .scroll-progress {
   display: block;
 }
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
 [data-reveal].reveal-pending {
   opacity: 0;
   translate: 0 18px;
@@ -26,7 +39,7 @@
   opacity: 1;
   translate: 0 0;
   transition:
-    opacity 600ms ease,
+    opacity 700ms cubic-bezier(0.33, 1, 0.68, 1),
     translate 600ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 250ms ease;
   transition-delay: var(--reveal-delay, 0ms), var(--reveal-delay, 0ms), 0ms;
@@ -38,6 +51,36 @@
 .motion-active [data-parallax] > .hero-photo,
 .motion-active [data-parallax] > .activity-hero-photo {
   transform: translate3d(0, var(--hero-drift, 0px), 0) scale(1.055);
+}
+/* Hero: the copy lifts away and the photo settles closer while scrolling. */
+.motion-active [data-parallax] > .hero-content,
+.motion-active [data-parallax] > .hero-footer {
+  opacity: calc(1 - var(--hero-progress, 0) * 1.6);
+  translate: 0 calc(var(--hero-progress, 0) * -90px);
+  will-change: opacity, translate;
+}
+.motion-active [data-parallax] > .hero-photo {
+  scale: calc(1 + var(--hero-progress, 0) * 0.14);
+}
+/* Card photos drift against the scroll and zoom out as they appear. */
+.motion-active [data-depth] {
+  scale: 1.1;
+  translate: 0 var(--depth, 0px);
+}
+.motion-active .reveal-pending [data-depth] {
+  scale: 1.24;
+}
+.motion-active .is-revealed [data-depth] {
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 1600ms cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms);
+}
+/* Section titles rise out of a soft blur. */
+.motion-active .reveal-pending :is(h2, .eyebrow) {
+  filter: blur(8px);
+}
+.motion-active .is-revealed :is(h2, .eyebrow) {
+  transition: filter 1000ms ease var(--reveal-delay, 0ms);
 }
 @media (max-width: 899px), (pointer: coarse) {
   .motion-active [data-parallax] > .hero-photo,

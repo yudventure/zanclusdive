@@ -12,7 +12,7 @@ import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
 import FormField from "../components/FormField.jsx";
 
-function Inquiry({ activityKey, activity, contact, demo, locale }) {
+function Inquiry({ activityKey, activity, contact, locale }) {
   const t = dictionary(locale).activity;
   const label = dictionary(locale).activityLabels[activityKey];
   const [today, setToday] = useState("");
@@ -36,7 +36,7 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
     event.preventDefault();
     try {
       setMessage(
-        activityInquiry(activityKey, activity, details, today, demo, locale),
+        activityInquiry(activityKey, activity, details, today, false, locale),
       );
       setError("");
     } catch (err) {
@@ -55,9 +55,7 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
         <small>
           {activity.price === null
             ? t.priceLabel
-            : demo
-              ? t.demoPrice
-              : t.fromPrice}
+            : t.fromPrice}
         </small>
         <strong>
           {activity.price === null
@@ -205,7 +203,6 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
 export default function ActivityDetail({
   activityKey,
   content,
-  demo,
   today,
   locale = "en",
 }) {
@@ -321,7 +318,7 @@ export default function ActivityDetail({
             <h1 id="activity-title">{activity.title}</h1>
             <p className="activity-hero-summary">{activity.summary}</p>
             <div className="activity-hero-bottom">
-              <span>{demo ? t.demoHero : t.tagline}</span>
+              <span>{t.tagline}</span>
               <span>{activity.imageAlt}</span>
             </div>
           </div>
@@ -341,11 +338,6 @@ export default function ActivityDetail({
                 </>
               )}
             </div>
-            {demo && (
-              <p className="activity-demo-note activity-demo-banner">
-                {t.demoBanner}
-              </p>
-            )}
             <div className="activity-layout">
               <div className="activity-details">
                 <section
@@ -381,7 +373,7 @@ export default function ActivityDetail({
                 </section>
                 <section className="activity-content-section" id="itinerary">
                   <p className="eyebrow">ONE STEP AT A TIME</p>
-                  <h2>{demo ? t.demoItinerary : t.itineraryTitle}</h2>
+                  <h2>{t.itineraryTitle}</h2>
                   <p className="activity-section-intro">{t.itineraryIntro}</p>
                   <ol className="activity-timeline">
                     {activity.itinerary.map((step, index) => (
@@ -450,7 +442,6 @@ export default function ActivityDetail({
                 activityKey={activityKey}
                 activity={activity}
                 contact={content.contact}
-                demo={demo}
                 locale={locale}
               />
             </div>
@@ -458,7 +449,6 @@ export default function ActivityDetail({
               <CalendarSections
                 calendar={calendar}
                 whatsapp={content.contact.whatsapp}
-                demo={demo}
                 today={today}
                 locale={locale}
               />
@@ -468,7 +458,6 @@ export default function ActivityDetail({
         <ActivityCards
           activities={content.activities}
           exclude={activityKey}
-          demo={demo}
           locale={locale}
         />
       </main>
@@ -476,7 +465,6 @@ export default function ActivityDetail({
         contact={content.contact}
         activities={content.activities}
         tagline={content.text.tagline}
-        demo={demo}
         locale={locale}
       />
     </div>

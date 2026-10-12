@@ -158,8 +158,8 @@ export function apiFailure(error) {
     return Response.json(
       {
         error: limit
-          ? "Total gambar demo maksimal 24 MB."
-          : "Penyimpanan demo belum dapat diakses. Coba lagi atau restart aplikasi demo.",
+          ? "Ruang foto penuh (maksimal 400 MB)."
+          : "Penyimpanan belum dapat diakses. Coba lagi sebentar lagi.",
       },
       { status: limit ? 413 : 503 },
     );

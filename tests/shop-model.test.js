@@ -35,7 +35,7 @@ test("mixed orders charge sales once and rental per unit per day", () => {
     },
     true,
   );
-  assert.match(message, /contoh demo/);
+  assert.doesNotMatch(message, /demo|contoh/i);
   assert.match(message, /RENTAL · Open heel fins × 3/);
   assert.match(message, /2026-10-25, selama 4 hari/);
   assert.match(message, /2\.200\.000/);

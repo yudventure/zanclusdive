@@ -274,11 +274,18 @@ try {
   );
   for (const [key, label] of siteImageFields)
     assert.equal(
-      await page.getByLabel(label, { exact: true }).inputValue(),
+      await page.getByLabel("URL foto " + label, { exact: true }).inputValue(),
       original.content.images[key],
     );
   await page
-    .getByLabel("Galeri — penyu", { exact: true })
+    .locator(".admin-image-slot")
+    .filter({
+      has: page.locator(":scope > strong", { hasText: /^Galeri — penyu$/ }),
+    })
+    .locator("summary")
+    .click();
+  await page
+    .getByLabel("URL foto Galeri — penyu", { exact: true })
     .fill("/assets/photos/fan-coral.webp");
   await page
     .getByRole("button", { name: "Simpan gambar website", exact: true })
@@ -290,7 +297,9 @@ try {
     .waitFor();
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(
-    await page.getByLabel("Galeri — penyu", { exact: true }).inputValue(),
+    await page
+      .getByLabel("URL foto Galeri — penyu", { exact: true })
+      .inputValue(),
     "/assets/photos/fan-coral.webp",
   );
   await page.goto(site, { waitUntil: "networkidle" });

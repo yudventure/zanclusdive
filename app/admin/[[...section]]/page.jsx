@@ -49,7 +49,6 @@ export default async function AdminPage({ params }) {
     <Dashboard
       section={active}
       email={admin.email}
-      demo={isDemo()}
       today={new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Jayapura",
       })}
