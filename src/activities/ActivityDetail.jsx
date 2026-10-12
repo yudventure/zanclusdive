@@ -11,6 +11,7 @@ import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
 import FormField from "../components/FormField.jsx";
+import SectionBanner from "./SectionBanner.jsx";
 
 function Inquiry({ activityKey, activity, contact, locale }) {
   const t = dictionary(locale).activity;
@@ -52,11 +53,7 @@ function Inquiry({ activityKey, activity, contact, locale }) {
       <p className="eyebrow">{t.planKicker}</p>
       <h2 id="inquiry-title">{t.planTitle(label)}</h2>
       <div className="activity-price">
-        <small>
-          {activity.price === null
-            ? t.priceLabel
-            : t.fromPrice}
-        </small>
+        <small>{activity.price === null ? t.priceLabel : t.fromPrice}</small>
         <strong>
           {activity.price === null
             ? dictionary(locale).common.requestQuote
@@ -200,6 +197,42 @@ function Inquiry({ activityKey, activity, contact, locale }) {
   );
 }
 
+// Small line icons for the hero facts and the section menu.
+const iconPaths = {
+  audience:
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14c2.2.6 3.5 2.6 3.5 6",
+  duration: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2",
+  meeting:
+    "M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
+  overview: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5h.01",
+  itinerary:
+    "M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 17h6a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h6",
+  preparation: "M5 12.5l4.5 4.5L19 7",
+  faq: "M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z",
+  calendar: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",
+  seasons:
+    "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
+  "ocean-care":
+    "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z",
+};
+function LineIcon({ name }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={iconPaths[name]} />
+    </svg>
+  );
+}
+
 export default function ActivityDetail({
   activityKey,
   content,
@@ -313,92 +346,99 @@ export default function ActivityDetail({
               <span>{labels[activityKey]}</span>
             </div>
             <p className="eyebrow">
-              ZANCLUS EXPERIENCES / {labels[activityKey].toUpperCase()}
+              {dict.kickers.experiences} · {labels[activityKey].toUpperCase()}
             </p>
             <h1 id="activity-title">{activity.title}</h1>
             <p className="activity-hero-summary">{activity.summary}</p>
-            <div className="activity-hero-bottom">
-              <span>{t.tagline}</span>
-              <span>{activity.imageAlt}</span>
-            </div>
+            <dl className="activity-hero-facts">
+              {[
+                ["audience", t.audience, activity.audience],
+                ["duration", t.duration, activity.duration],
+                ["meeting", t.meetingPoint, activity.meetingPoint],
+              ].map(([icon, label, value]) => (
+                <div key={icon}>
+                  <LineIcon name={icon} />
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
         <div className="activity-body">
           <div className="activity-container">
             <div className="activity-jump-links" aria-label={t.sections}>
-              <a href="#overview">{t.about}</a>
-              <a href="#itinerary">{t.itinerary}</a>
-              <a href="#preparation">{t.preparation}</a>
-              <a href="#faq">{t.faq}</a>
-              {calendar && (
-                <>
-                  <a href="#calendar">{dict.calendarPage.jump[0]}</a>
-                  <a href="#seasons">{dict.calendarPage.jump[1]}</a>
-                  <a href="#ocean-care">{dict.calendarPage.jump[3]}</a>
-                </>
-              )}
+              {[
+                ["overview", t.about],
+                ["itinerary", t.itinerary],
+                ["preparation", t.preparation],
+                ["faq", t.faq],
+                ...(calendar
+                  ? [
+                      ["calendar", dict.calendarPage.jump[0]],
+                      ["seasons", dict.calendarPage.jump[1]],
+                      ["ocean-care", dict.calendarPage.jump[3]],
+                    ]
+                  : []),
+              ].map(([id, label]) => (
+                <a href={"#" + id} key={id}>
+                  <LineIcon name={id} />
+                  {label}
+                </a>
+              ))}
             </div>
             <div className="activity-layout">
               <div className="activity-details">
-                <section
-                  className="activity-overview"
-                  id="overview"
-                  data-reveal
-                >
-                  <p className="eyebrow">A LITTLE CLOSER TO THE OCEAN</p>
-                  <h2>{t.overviewTitle}</h2>
+                <section className="activity-block" id="overview" data-reveal>
+                  <SectionBanner
+                    kind="about"
+                    eyebrow={dict.kickers.about}
+                    title={t.overviewTitle}
+                    intro={t.aboutIntro}
+                  />
                   <p className="activity-description">{activity.description}</p>
-                  <dl className="activity-facts">
-                    <div>
-                      <dt>{t.audience}</dt>
-                      <dd>{activity.audience}</dd>
-                    </div>
-                    <div>
-                      <dt>{t.duration}</dt>
-                      <dd>{activity.duration}</dd>
-                    </div>
-                    <div>
-                      <dt>{t.meetingPoint}</dt>
-                      <dd>{activity.meetingPoint}</dd>
-                    </div>
-                  </dl>
-                  <div className="activity-highlights">
+                  <ul className="activity-highlights">
                     {activity.highlights.map((item, index) => (
-                      <div key={index}>
-                        <span aria-hidden="true">↗</span>
-                        <p>{item}</p>
-                      </div>
+                      <li key={index}>
+                        <span aria-hidden="true">✓</span>
+                        {item}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </section>
-                <section className="activity-content-section" id="itinerary">
-                  <p className="eyebrow">ONE STEP AT A TIME</p>
-                  <h2>{t.itineraryTitle}</h2>
-                  <p className="activity-section-intro">{t.itineraryIntro}</p>
-                  <ol className="activity-timeline">
+                <section className="activity-block" id="itinerary" data-reveal>
+                  <SectionBanner
+                    kind="itinerary"
+                    eyebrow={dict.kickers.itinerary}
+                    title={t.itineraryTitle}
+                    intro={t.itineraryIntro}
+                  />
+                  <ol className="activity-steps">
                     {activity.itinerary.map((step, index) => (
-                      <li key={index} data-reveal>
+                      <li key={index}>
                         <span
                           className="activity-step-number"
                           aria-hidden="true"
                         >
-                          {String(index + 1).padStart(2, "0")}
+                          {index + 1}
                         </span>
-                        <div>
-                          <h3>{step.title}</h3>
-                          <p>{step.description}</p>
-                        </div>
+                        <h3>{step.title}</h3>
+                        <p>{step.description}</p>
                       </li>
                     ))}
                   </ol>
                 </section>
                 <section
-                  className="activity-content-section"
+                  className="activity-block"
                   id="preparation"
                   data-reveal
                 >
-                  <p className="eyebrow">COME PREPARED, ENJOY MORE</p>
-                  <h2>{t.preparationTitle}</h2>
+                  <SectionBanner
+                    kind="prep"
+                    eyebrow={dict.kickers.prep}
+                    title={t.preparationTitle}
+                    intro={t.prepIntro}
+                  />
                   <ul className="activity-preparations">
                     {activity.preparations.map((item, index) => (
                       <li key={index}>
@@ -418,13 +458,13 @@ export default function ActivityDetail({
                     <span aria-hidden="true">↗</span>
                   </a>
                 </section>
-                <section
-                  className="activity-content-section"
-                  id="faq"
-                  data-reveal
-                >
-                  <p className="eyebrow">GOOD TO KNOW</p>
-                  <h2>{t.faqTitle}</h2>
+                <section className="activity-block" id="faq" data-reveal>
+                  <SectionBanner
+                    kind="faq"
+                    eyebrow={dict.kickers.faq}
+                    title={t.faqTitle}
+                    intro={t.faqIntro}
+                  />
                   <div className="activity-faqs">
                     {activity.faqs.map((item, index) => (
                       <details key={index}>

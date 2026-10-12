@@ -214,7 +214,7 @@ export default function ShopTeaser({
                 const count = quantity(item.key);
                 return (
                   <li className="shop-item" key={item.key}>
-                    <ProductVisual product={item.visual} />
+                    <ProductVisual product={item.visual} locale={locale} />
                     <div className="shop-item-body">
                       <p className="shop-service-tag">
                         {buying ? s.buyTag : s.rentalTag}

@@ -2,11 +2,7 @@ import { activityKeys } from "../activity-model.js";
 import { photoSrcSet } from "../photography.js";
 import { dictionary, localeHref } from "../i18n.js";
 
-export default function ActivityCards({
-  activities,
-  exclude,
-  locale = "en",
-}) {
+export default function ActivityCards({ activities, exclude, locale = "en" }) {
   const t = dictionary(locale).activity;
   const labels = dictionary(locale).activityLabels;
   const visible = activityKeys.filter(
@@ -22,7 +18,7 @@ export default function ActivityCards({
       <div className="activity-container">
         <div className="activity-section-heading" data-reveal>
           <div>
-            <p className="eyebrow">CHOOSE YOUR OCEAN STORY</p>
+            <p className="eyebrow">{dictionary(locale).kickers.chooseStory}</p>
             <h2 id="activity-discovery-title">
               {exclude ? t.otherTitle : t.allTitle}
             </h2>

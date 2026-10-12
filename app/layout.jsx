@@ -6,6 +6,7 @@ import "./motion.css";
 import "./dive-sites.css";
 import "./gallery.css";
 import "./calendar.css";
+import "./activity-page.css";
 import "./forms.css";
 import "../src/components/peta-raja-ampat/peta-raja-ampat.css";
 import { dictionary, htmlLang } from "../src/i18n.js";

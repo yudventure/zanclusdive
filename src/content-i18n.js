@@ -363,6 +363,12 @@ export function withRajaAmpatTitle(content) {
   const updated = { ...content };
   if (content.text?.heroTitle1 === "Di bawah laut,")
     updated.text = { ...content.text, heroTitle1: "Di bawah laut Raja Ampat," };
+  // The Indonesian site used to carry the English hero line.
+  if (content.text?.heroEyebrow === "YOUR NEXT STORY STARTS UNDERWATER")
+    updated.text = {
+      ...updated.text,
+      heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT",
+    };
   if (content.en?.text?.heroTitle1 === "Beneath the sea,")
     updated.en = {
       ...content.en,

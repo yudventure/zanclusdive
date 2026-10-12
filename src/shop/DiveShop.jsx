@@ -176,7 +176,7 @@ export default function DiveShop({
               height="667"
               fetchPriority="high"
             />
-            <span>READY FOR YOUR NEXT DIVE</span>
+            <span>{dict.kickers.shopReady}</span>
           </div>
         </section>
         <section
@@ -186,7 +186,7 @@ export default function DiveShop({
         >
           <div className="shop-catalog-top" data-reveal>
             <div>
-              <p className="eyebrow">GEAR UP, DIVE IN</p>
+              <p className="eyebrow">{dict.kickers.shopGearUp}</p>
               <h2 id="catalog-title">{t.catalogTitle}</h2>
             </div>
             <a className="shop-order-shortcut" href="#order">
@@ -262,7 +262,7 @@ export default function DiveShop({
                       data-reveal
                     >
                       <div className="shop-product-image">
-                        <ProductVisual product={product} />
+                        <ProductVisual product={product} locale={locale} />
                         <span
                           className={"shop-stock stock-" + product.availability}
                         >
@@ -323,7 +323,7 @@ export default function DiveShop({
               id="order"
               aria-labelledby="order-title"
             >
-              <p className="eyebrow">YOUR GEAR, YOUR PLAN</p>
+              <p className="eyebrow">{dict.kickers.shopYourGear}</p>
               <h2 id="order-title">{t.orderTitle}</h2>
               <p className="shop-order-intro">{t.orderIntro}</p>
               {!cart.length ? (
@@ -562,7 +562,7 @@ export default function DiveShop({
         </section>
         <section className="shop-how">
           <div>
-            <p className="eyebrow">MADE SIMPLE</p>
+            <p className="eyebrow">{dict.kickers.shopSimple}</p>
             <h2>
               {t.howTitle[0]}
               <br />

@@ -16,6 +16,29 @@ const page = await context.newPage(),
   errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 try {
+  // No mixed languages: English kickers never show on Indonesian pages and
+  // Indonesian copy never shows on English pages (dialogs included).
+  const englishOnly =
+    /A LITTLE CLOSER|ONE STEP AT A TIME|COME PREPARED|GOOD TO KNOW|LET'S MAKE A PLAN|WHAT'S ON|WHEN TO COME|POPULAR DIVE SPOTS|CARE FOR THE OCEAN|CHOOSE YOUR OCEAN STORY|FIND YOUR|READY FOR YOUR NEXT DIVE|GEAR UP, DIVE IN|YOUR GEAR, YOUR PLAN|MADE SIMPLE|ZANCLUS EXPERIENCES|STARTS UNDERWATER|All rights reserved/;
+  const indonesianOnly =
+    /Ilustrasi alat|Wajib diisi|opsional|Hak cipta|LEBIH DEKAT DENGAN LAUT|PENGALAMAN ZANCLUS|Kenali pengalamanmu/;
+  for (const [path, pattern] of [
+    ["/id", englishOnly],
+    ["/id/diving", englishOnly],
+    ["/id/snorkeling", englishOnly],
+    ["/id/dive-shop", englishOnly],
+    ["/", indonesianOnly],
+    ["/diving", indonesianOnly],
+    ["/dive-shop", indonesianOnly],
+  ]) {
+    await page.goto(base + path, { waitUntil: "networkidle" });
+    const text = await page.evaluate(() => {
+      const copy = document.body.cloneNode(true);
+      copy.querySelectorAll("script, style").forEach((el) => el.remove());
+      return copy.textContent;
+    });
+    assert.doesNotMatch(text, pattern, "mixed language on " + path);
+  }
   // English is the default language at the root URLs.
   const pages = {
     "/": ["en", "Beneath the waters of Raja Ampat,"],

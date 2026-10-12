@@ -1,4 +1,5 @@
 "use client";
+import SectionBanner from "../activities/SectionBanner.jsx";
 import { useState } from "react";
 import { dictionary, intlLocale, localeHref } from "../i18n.js";
 import { calendarText, eventsInMonth, monthGrid } from "../calendar-model.js";
@@ -61,13 +62,12 @@ export default function CalendarSections({
   return (
     <>
       <section className="calendar-section" id="calendar" data-reveal>
-        <div className="calendar-heading">
-          <div>
-            <p className="eyebrow">{t.calendarEyebrow}</p>
-            <h2>{t.calendarTitle}</h2>
-          </div>
-          <p>{t.calendarIntro}</p>
-        </div>
+        <SectionBanner
+          kind="calendar"
+          eyebrow={t.calendarEyebrow}
+          title={t.calendarTitle}
+          intro={t.calendarIntro}
+        />
         <div className="calendar-layout">
           <div className="calendar-month">
             <div className="calendar-month-bar">
@@ -181,13 +181,12 @@ export default function CalendarSections({
       </section>
 
       <section className="calendar-section" id="seasons" data-reveal>
-        <div className="calendar-heading">
-          <div>
-            <p className="eyebrow">{t.seasonEyebrow}</p>
-            <h2>{t.seasonTitle}</h2>
-          </div>
-          <p>{t.seasonIntro}</p>
-        </div>
+        <SectionBanner
+          kind="season"
+          eyebrow={t.seasonEyebrow}
+          title={t.seasonTitle}
+          intro={t.seasonIntro}
+        />
         <ol className="season-strip">
           {calendar.seasons.map((s, i) => (
             <li
@@ -205,13 +204,12 @@ export default function CalendarSections({
       </section>
 
       <section className="calendar-section" id="spots" data-reveal>
-        <div className="calendar-heading">
-          <div>
-            <p className="eyebrow">{t.spotsEyebrow}</p>
-            <h2>{t.spotsTitle}</h2>
-          </div>
-          <p>{t.spotsIntro}</p>
-        </div>
+        <SectionBanner
+          kind="spots"
+          eyebrow={t.spotsEyebrow}
+          title={t.spotsTitle}
+          intro={t.spotsIntro}
+        />
         <ul className="spot-grid">
           {calendar.spots.map((s, i) => (
             <li key={i}>
@@ -239,13 +237,12 @@ export default function CalendarSections({
         id="ocean-care"
         data-reveal
       >
-        <div className="calendar-heading">
-          <div>
-            <p className="eyebrow">{t.ecoEyebrow}</p>
-            <h2>{t.ecoTitle}</h2>
-          </div>
-          <p>{t.ecoIntro}</p>
-        </div>
+        <SectionBanner
+          kind="eco"
+          eyebrow={t.ecoEyebrow}
+          title={t.ecoTitle}
+          intro={t.ecoIntro}
+        />
         <ul className="eco-grid">
           {calendar.eco.map((e, i) => (
             <li key={i}>

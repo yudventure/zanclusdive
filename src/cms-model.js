@@ -30,7 +30,7 @@ export const defaultContent = {
   activities: structuredClone(defaultActivities),
   shop: structuredClone(emptyShop),
   text: {
-    heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
+    heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT",
     heroTitle1: "Di bawah laut Raja Ampat,",
     heroTitle2: "cerita dimulai.",
     tagline: "Jelajahi laut. Temukan cerita.",
