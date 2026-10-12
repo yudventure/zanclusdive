@@ -68,6 +68,23 @@ const id = {
     label: "Pilih bahasa",
     switchTo: "Switch to English",
   },
+  kickers: {
+    adventure: "TEMUKAN PETUALANGANMU",
+    quiz: "AYO CARI PENYELAMAN BERIKUTNYA",
+    findNext: "PENYELAMAN BERIKUTNYA",
+    planGood: "AYO RENCANAKAN BERSAMA",
+    chooseStory: "PILIH CERITA LAUTMU",
+    shopReady: "SIAP UNTUK PENYELAMAN BERIKUTNYA",
+    shopGearUp: "SIAPKAN ALAT, LANGSUNG MENYELAM",
+    shopYourGear: "ALATMU, RENCANAMU",
+    shopSimple: "MUDAH DAN JELAS",
+    experiences: "PENGALAMAN ZANCLUS",
+    about: "LEBIH DEKAT DENGAN LAUT",
+    itinerary: "SELANGKAH DEMI SELANGKAH",
+    prep: "SIAP BERANGKAT",
+    faq: "PERLU DIKETAHUI",
+    gearIllustration: "Ilustrasi alat",
+  },
   common: {
     skipToContent: "Lewati ke konten",
     home: "Beranda",
@@ -143,7 +160,7 @@ const id = {
   },
   calendarPage: {
     jump: ["Kalender", "Musim terbaik", "Spot populer", "Peduli lingkungan"],
-    calendarEyebrow: "WHAT'S ON",
+    calendarEyebrow: "AGENDA ZANCLUS",
     calendarTitle: "Jadwal kegiatan.",
     calendarIntro:
       "Pilih bulan dan tanggal untuk melihat kegiatan. Kuota terbatas, jadi kabari tim lebih awal.",
@@ -165,18 +182,18 @@ const id = {
     join: "Ikut kegiatan",
     joinMessage: (title, date) =>
       `Halo Zanclus! Saya ingin ikut kegiatan ${title} pada ${date}. Apakah masih ada tempat?`,
-    seasonEyebrow: "WHEN TO COME",
+    seasonEyebrow: "KAPAN SEBAIKNYA DATANG",
     seasonTitle: "Musim terbaik untuk menyelam.",
     seasonIntro:
       "Raja Ampat bisa diselami sepanjang tahun. Suhu air sekitar 27 sampai 30 °C dan jarak pandang umumnya 10 sampai 30 meter. Panduan ini bersifat umum, kondisi harian selalu dicek tim sebelum berangkat.",
     ratings: { best: "Terbaik", good: "Baik", windy: "Berangin" },
-    spotsEyebrow: "POPULAR DIVE SPOTS",
+    spotsEyebrow: "SPOT SELAM POPULER",
     spotsTitle: "Spot selam paling populer.",
     spotsIntro:
       "Titik yang paling sering diminta tamu, beserta waktu terbaik untuk mengunjunginya.",
     bestTime: "Waktu terbaik",
     onMap: "Lihat di peta dive site",
-    ecoEyebrow: "CARE FOR THE OCEAN",
+    ecoEyebrow: "PEDULI LAUT",
     ecoTitle: "Rencana peduli lingkungan.",
     ecoIntro:
       "Laut yang sehat adalah alasan kami menyelam. Ini rencana kegiatan Zanclus untuk menjaganya, dan kamu bisa ikut serta.",
@@ -272,7 +289,7 @@ const id = {
     },
   },
   activity: {
-    planKicker: "LET'S MAKE A PLAN",
+    planKicker: "AYO SUSUN RENCANA",
     planTitle: (label) => `Rencanakan ${label.toLowerCase()}.`,
     priceLabel: "BIAYA KEGIATAN",
     fromPrice: "MULAI DARI / ORANG",
@@ -320,6 +337,9 @@ const id = {
     needGear: "Butuh perlengkapan?",
     rentalLink: "Lihat pilihan rental di Dive Shop",
     faqTitle: "Sebelum kamu bertanya.",
+    faqIntro: "Jawaban singkat untuk pertanyaan yang paling sering muncul.",
+    prepIntro: "Hal kecil yang membuat hari di laut lebih nyaman.",
+    aboutIntro: "Gambaran singkat sebelum kamu memilih tanggal.",
     otherTitle: "Masih banyak cerita untuk dijelajahi.",
     allTitle: "Tiga cara menikmati laut.",
     cardsIntro:
@@ -355,7 +375,7 @@ const id = {
     followDescription:
       "Cerita dari laut, inspirasi dive, dan kabar dari Zanclus.",
     startChat: "Mulai percakapan ↗",
-    rights: "Zanclus Dive Center. All rights reserved.",
+    rights: "Zanclus Dive Center. Hak cipta dilindungi.",
     operator: "Masuk operator",
     whatsapp:
       "Halo Zanclus! Saya ingin informasi tentang diving, snorkeling, trip, atau perlengkapan.",
@@ -588,6 +608,23 @@ const en = {
   language: {
     label: "Choose language",
     switchTo: "Ganti ke Bahasa Indonesia",
+  },
+  kickers: {
+    adventure: "FIND YOUR KIND OF ADVENTURE",
+    quiz: "LET'S FIND YOUR NEXT DIVE",
+    findNext: "FIND YOUR NEXT DIVE",
+    planGood: "LET'S PLAN SOMETHING GOOD",
+    chooseStory: "CHOOSE YOUR OCEAN STORY",
+    shopReady: "READY FOR YOUR NEXT DIVE",
+    shopGearUp: "GEAR UP, DIVE IN",
+    shopYourGear: "YOUR GEAR, YOUR PLAN",
+    shopSimple: "MADE SIMPLE",
+    experiences: "ZANCLUS EXPERIENCES",
+    about: "A LITTLE CLOSER TO THE OCEAN",
+    itinerary: "ONE STEP AT A TIME",
+    prep: "COME PREPARED, ENJOY MORE",
+    faq: "GOOD TO KNOW",
+    gearIllustration: "Gear illustration",
   },
   common: {
     skipToContent: "Skip to content",
@@ -840,6 +877,9 @@ const en = {
     needGear: "Need gear?",
     rentalLink: "See rental options in the Dive Shop",
     faqTitle: "Before you ask.",
+    faqIntro: "Short answers to the questions guests ask most.",
+    prepIntro: "Small things that make a day at sea more comfortable.",
+    aboutIntro: "A quick picture before you choose a date.",
     otherTitle: "More stories to explore.",
     allTitle: "Three ways to enjoy the ocean.",
     cardsIntro:

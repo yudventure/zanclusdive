@@ -202,7 +202,7 @@ export default function HomePage({ content, locale = "en" }) {
               data-reveal
             >
               <div>
-                <p className="eyebrow">{"FIND YOUR KIND OF ADVENTURE"}</p>
+                <p className="eyebrow">{t.kickers.adventure}</p>
                 <h2 id="experiences-title">
                   {content.text.experiencesHeading}
                 </h2>
@@ -263,7 +263,7 @@ export default function HomePage({ content, locale = "en" }) {
               })}
             </div>
             <div className="quiz-panel" data-reveal>
-              <p className="eyebrow">{"LET'S FIND YOUR NEXT DIVE"}</p>
+              <p className="eyebrow">{t.kickers.quiz}</p>
               <h2>{content.text.quizTitle}</h2>
               <p>{content.text.quizDescription}</p>
               <button className="button quiz-button" id="open-quiz">
@@ -357,10 +357,7 @@ export default function HomePage({ content, locale = "en" }) {
                 </h3>
               </article>
             </div>
-            <DiveGallery
-              gallery={content.gallery}
-              locale={locale}
-            />
+            <DiveGallery gallery={content.gallery} locale={locale} />
           </section>
           <ShopTeaser
             shop={content.shop}
@@ -475,14 +472,14 @@ export default function HomePage({ content, locale = "en" }) {
         <button className="close-modal" aria-label={h.closeQuiz}>
           {"×"}
         </button>
-        <p className="eyebrow">{"FIND YOUR NEXT DIVE"}</p>
+        <p className="eyebrow">{t.kickers.findNext}</p>
         <div id="quiz-content"></div>
       </dialog>
       <dialog id="booking-dialog" className="modal booking-modal">
         <button className="close-modal" aria-label={h.closeForm}>
           {"×"}
         </button>
-        <p className="eyebrow">{"LET'S PLAN SOMETHING GOOD"}</p>
+        <p className="eyebrow">{t.kickers.planGood}</p>
         <h2>{h.bookingTitle}</h2>
         <p className="muted">{h.bookingIntro}</p>
         <form id="booking-form">
@@ -561,9 +558,7 @@ export default function HomePage({ content, locale = "en" }) {
             tabIndex="-1"
             hidden
           ></p>
-          <p className="booking-privacy">
-            {h.privacy}
-          </p>
+          <p className="booking-privacy">{h.privacy}</p>
           <button className="button dark" type="submit">
             {h.submit + " "}
             <span>{"↗"}</span>

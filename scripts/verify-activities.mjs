@@ -108,7 +108,7 @@ try {
       true,
     );
     assert.equal(
-      await page.locator(".activity-timeline li").count(),
+      await page.locator(".activity-steps li").count(),
       activity.itinerary.length,
     );
     assert.equal(
@@ -299,7 +299,7 @@ try {
     /450\.000/,
   );
   assert.ok(
-    (await page.locator(".activity-facts").textContent()).includes(
+    (await page.locator(".activity-hero-facts").textContent()).includes(
       "Setengah hari · contoh uji",
     ),
   );
@@ -308,7 +308,7 @@ try {
     "/assets/photos/fan-beach.webp",
   );
   assert.equal(
-    await page.locator(".activity-timeline h3").first().textContent(),
+    await page.locator(".activity-steps h3").first().textContent(),
     "Briefing snorkeling dari CMS",
   );
   await page.locator(".activity-faqs summary").first().click();

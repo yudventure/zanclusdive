@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
+import { dictionary } from "../i18n.js";
 
 // Lightweight illustrations are placeholders until the owner uploads product photos.
-export default function ProductVisual({ product }) {
+export default function ProductVisual({ product, locale = "id" }) {
   const [failedURL, setFailedURL] = useState("");
   if (product.image && failedURL !== product.image)
     return (
@@ -200,7 +201,7 @@ export default function ProductVisual({ product }) {
           )}
         </g>
       </svg>
-      <span>Ilustrasi alat</span>
+      <span>{dictionary(locale).kickers.gearIllustration}</span>
     </div>
   );
 }
