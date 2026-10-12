@@ -2,7 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
-import { activityInquiry, activityKeys } from "../activity-model.js";
+import { activityInquiry } from "../activity-model.js";
+import { priceText } from "../price-list.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import ActivityCards from "./ActivityCards.jsx";
@@ -12,6 +13,7 @@ import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
 import FormField from "../components/FormField.jsx";
 import SectionBanner from "./SectionBanner.jsx";
+import SiteNavLinks from "../components/SiteNavLinks.jsx";
 
 function Inquiry({ activityKey, activity, contact, locale }) {
   const t = dictionary(locale).activity;
@@ -205,6 +207,7 @@ const iconPaths = {
   meeting:
     "M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
   overview: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5h.01",
+  prices: "M3 12V4h8l9 9-8 8zM7.5 8h.01",
   itinerary:
     "M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 17h6a3 3 0 0 0 0-6h-2a3 3 0 0 1 0-6h6",
   preparation: "M5 12.5l4.5 4.5L19 7",
@@ -255,9 +258,22 @@ export default function ActivityDetail({
     window.addEventListener("scroll", scroll, { passive: true });
     return () => window.removeEventListener("scroll", scroll);
   }, []);
+  const banner = (kind) => {
+    const [eyebrow, title, intro] = t.banners[activityKey][kind];
+    return (
+      <SectionBanner
+        theme={activityKey}
+        kind={kind}
+        eyebrow={eyebrow}
+        title={title}
+        intro={intro}
+      />
+    );
+  };
+  const prices = content.priceList?.[activityKey] || [];
   const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(t.helpMessage(labels[activityKey]))}`;
   return (
-    <div className="activity-page" ref={motionRoot}>
+    <div className="activity-page" data-theme={activityKey} ref={motionRoot}>
       <ScrollEffects rootRef={motionRoot} />
       <a className="skip-link" href="#activity-main">
         {t.skip}
@@ -290,22 +306,13 @@ export default function ActivityDetail({
           className={menu ? "open" : ""}
           aria-label={dict.common.mainNav}
         >
-          <a href={href("/")}>{dict.common.home}</a>
-          {activityKeys
-            .filter((key) => content.activities[key].enabled)
-            .map((key) => (
-              <a
-                href={href(`/${key}`)}
-                key={key}
-                className={key === activityKey ? "active" : ""}
-                aria-current={key === activityKey ? "page" : undefined}
-                onClick={() => setMenu(false)}
-              >
-                {labels[key]}
-              </a>
-            ))}
-          <a href={href("/#dive-shop")}>Dive Shop</a>
-          <a href={href("/#contact")}>{dict.common.contact}</a>
+          <SiteNavLinks
+            locale={locale}
+            page="activity"
+            activityKey={activityKey}
+            activities={content.activities}
+            onNavigate={() => setMenu(false)}
+          />
         </nav>
         <div className="header-actions">
           <LanguageSwitch locale={locale} path={`/${activityKey}`} />
@@ -370,6 +377,7 @@ export default function ActivityDetail({
             <div className="activity-jump-links" aria-label={t.sections}>
               {[
                 ["overview", t.about],
+                ...(prices.length > 0 ? [["prices", t.pricesNav]] : []),
                 ["itinerary", t.itinerary],
                 ["preparation", t.preparation],
                 ["faq", t.faq],
@@ -390,12 +398,7 @@ export default function ActivityDetail({
             <div className="activity-layout">
               <div className="activity-details">
                 <section className="activity-block" id="overview" data-reveal>
-                  <SectionBanner
-                    kind="about"
-                    eyebrow={dict.kickers.about}
-                    title={t.overviewTitle}
-                    intro={t.aboutIntro}
-                  />
+                  {banner("about")}
                   <p className="activity-description">{activity.description}</p>
                   <ul className="activity-highlights">
                     {activity.highlights.map((item, index) => (
@@ -406,13 +409,32 @@ export default function ActivityDetail({
                     ))}
                   </ul>
                 </section>
+                {prices.length > 0 && (
+                  <section className="activity-block" id="prices" data-reveal>
+                    {banner("prices")}
+                    <ul className="activity-prices">
+                      {prices.map((item, index) => (
+                        <li key={index}>
+                          <span>
+                            <strong>{priceText(item.name, locale)}</strong>
+                            {priceText(item.info, locale) && (
+                              <small>{priceText(item.info, locale)}</small>
+                            )}
+                          </span>
+                          <b>
+                            {formatIDR(item.price, locale)}
+                            {priceText(item.unit, locale) && (
+                              <small>{priceText(item.unit, locale)}</small>
+                            )}
+                          </b>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="activity-price-note">{dict.prices.note}</p>
+                  </section>
+                )}
                 <section className="activity-block" id="itinerary" data-reveal>
-                  <SectionBanner
-                    kind="itinerary"
-                    eyebrow={dict.kickers.itinerary}
-                    title={t.itineraryTitle}
-                    intro={t.itineraryIntro}
-                  />
+                  {banner("itinerary")}
                   <ol className="activity-steps">
                     {activity.itinerary.map((step, index) => (
                       <li key={index}>
@@ -433,12 +455,7 @@ export default function ActivityDetail({
                   id="preparation"
                   data-reveal
                 >
-                  <SectionBanner
-                    kind="prep"
-                    eyebrow={dict.kickers.prep}
-                    title={t.preparationTitle}
-                    intro={t.prepIntro}
-                  />
+                  {banner("prep")}
                   <ul className="activity-preparations">
                     {activity.preparations.map((item, index) => (
                       <li key={index}>
@@ -459,12 +476,7 @@ export default function ActivityDetail({
                   </a>
                 </section>
                 <section className="activity-block" id="faq" data-reveal>
-                  <SectionBanner
-                    kind="faq"
-                    eyebrow={dict.kickers.faq}
-                    title={t.faqTitle}
-                    intro={t.faqIntro}
-                  />
+                  {banner("faq")}
                   <div className="activity-faqs">
                     {activity.faqs.map((item, index) => (
                       <details key={index}>

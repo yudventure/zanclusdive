@@ -1,5 +1,6 @@
 "use client";
 import FormField from "../components/FormField.jsx";
+import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
@@ -134,12 +135,12 @@ export default function DiveShop({
           className={menu ? "open" : ""}
           aria-label={dict.common.mainNav}
         >
-          <a href={href("/")}>{dict.common.home}</a>
-          <a href={href("/#experiences")}>{dict.common.experiences}</a>
-          <a href="#catalog" className="active" onClick={() => setMenu(false)}>
-            Dive Shop
-          </a>
-          <a href={href("/#contact")}>{dict.common.contact}</a>
+          <SiteNavLinks
+            locale={locale}
+            page="shop"
+            activities={activities}
+            onNavigate={() => setMenu(false)}
+          />
         </nav>
         <div className="header-actions">
           <LanguageSwitch locale={locale} path="/dive-shop" />

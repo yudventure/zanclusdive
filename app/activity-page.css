@@ -386,3 +386,190 @@
     padding: 12px 20px;
   }
 }
+
+/* Main menu: Experiences opens the three activity pages. */
+.nav-group {
+  position: relative;
+  display: flex;
+}
+.nav-group > a {
+  padding-right: 28px;
+}
+.nav-group > a::before {
+  content: "";
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  opacity: 0.8;
+}
+.nav-sub {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid #ffffff1f;
+  border-radius: 16px;
+  background: #042a3cf5;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 40px #01121b59;
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 6px;
+  transition:
+    opacity 0.18s ease,
+    translate 0.18s ease,
+    visibility 0.18s;
+}
+.nav-sub::before {
+  content: "";
+  position: absolute;
+  inset: -8px 0 auto;
+  height: 8px;
+}
+.nav-group:hover .nav-sub,
+.nav-group:focus-within .nav-sub {
+  opacity: 1;
+  visibility: visible;
+  translate: 0 0;
+}
+nav .nav-sub a {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+nav .nav-sub a::after {
+  display: none;
+}
+nav .nav-sub a:hover,
+nav .nav-sub a.current {
+  background: #ffffff17;
+  color: #fff;
+}
+nav .nav-sub a.current {
+  color: #bef4a5;
+}
+nav.open .nav-group {
+  flex-direction: column;
+}
+nav.open .nav-group > a::before {
+  display: none;
+}
+nav.open .nav-sub {
+  position: static;
+  min-width: 0;
+  padding: 0 0 6px 14px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  opacity: 1;
+  visibility: visible;
+  translate: none;
+}
+nav.open .nav-sub a {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #b7cdd4;
+}
+
+/* Each activity page has its own accent. */
+.activity-page {
+  --act-accent: #1f8f8a;
+  --act-soft: #eff7f4;
+  --act-ink: #062b3b;
+}
+.activity-page[data-theme="diving"] {
+  --act-accent: #2b6cb0;
+  --act-soft: #eaf1fb;
+  --act-ink: #0d2c4f;
+}
+.activity-page[data-theme="snorkeling"] {
+  --act-accent: #0f9b8e;
+  --act-soft: #e4f6f2;
+  --act-ink: #07403b;
+}
+.activity-page[data-theme="trip"] {
+  --act-accent: #c26a1f;
+  --act-soft: #fbf0e3;
+  --act-ink: #4a2a0f;
+}
+.activity-page .section-banner .eyebrow,
+.activity-page .activity-jump-links a svg,
+.activity-page .activity-highlights li span {
+  color: var(--act-accent);
+}
+.activity-page .activity-highlights li {
+  background: var(--act-soft);
+}
+.activity-page .activity-jump-links a:hover {
+  border-color: var(--act-accent);
+  background: var(--act-soft);
+}
+.activity-page .activity-steps .activity-step-number {
+  background: var(--act-ink);
+}
+.activity-page .activity-hero .eyebrow,
+.activity-page .activity-hero-facts svg {
+  color: color-mix(in srgb, var(--act-accent) 45%, white);
+}
+
+/* Package prices for the activity */
+.activity-prices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+.activity-prices li {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid #e3ecea;
+  border-left: 4px solid var(--act-accent, #1f8f8a);
+  border-radius: 16px;
+  background: #fff;
+}
+.activity-prices strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+.activity-prices span small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.activity-prices b {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--act-ink, #062b3b);
+}
+.activity-prices b small {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #57717a;
+}
+.activity-price-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #6b8289;
+}
+@media (max-width: 700px) {
+  .activity-prices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
