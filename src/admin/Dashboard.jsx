@@ -5,6 +5,7 @@ import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
 import GalleryEditor from "./GalleryEditor.jsx";
+import CalendarEditor from "./CalendarEditor.jsx";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
@@ -28,6 +29,7 @@ const sections = {
   shop: "Dive Shop",
   activities: "Halaman aktivitas",
   prices: "Daftar harga",
+  events: "Kalender kegiatan",
 };
 const icons = {
   overview: "▦",
@@ -41,6 +43,7 @@ const icons = {
   shop: "◇",
   activities: "≋",
   prices: "Rp",
+  events: "◷",
 };
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
@@ -1154,6 +1157,14 @@ export default function Dashboard({ section, email, today, demo = false }) {
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
+                />
+              )}
+              {section === "events" && (
+                <CalendarEditor
+                  calendar={content.calendar}
+                  update={(key, value) => mutateContent("calendar", key, value)}
+                  onSave={saveSettings}
+                  busy={busy}
                 />
               )}
               {section === "prices" && (

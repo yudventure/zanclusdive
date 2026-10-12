@@ -288,3 +288,59 @@ test("dive gallery validates photos and captions", async () => {
   assert.equal(own.items[0].caption.id, "Manta di Arborek");
   assert.equal(galleryCaption(own.items[0], "en"), "Manta di Arborek");
 });
+
+test("activity calendar validates, sorts events and fills missing parts", async () => {
+  const {
+    validateCalendar,
+    defaultCalendar,
+    monthGrid,
+    eventsInMonth,
+    calendarText,
+  } = await import("../src/calendar-model.js");
+  assert.deepEqual(validateCalendar(defaultCalendar), defaultCalendar);
+  assert.equal(validateCalendar(undefined).seasons.length, 12);
+  const partial = validateCalendar({
+    events: [
+      {
+        date: "2027-02-01",
+        type: "eco",
+        place: "",
+        title: { id: "B", en: "" },
+        description: {},
+      },
+      {
+        date: "2027-01-05",
+        type: "dive",
+        place: "Kri",
+        title: { id: "A", en: "A en" },
+        description: {},
+      },
+    ],
+  });
+  assert.deepEqual(
+    partial.events.map((e) => e.title.id),
+    ["A", "B"],
+  );
+  assert.deepEqual(partial.spots, defaultCalendar.spots);
+  assert.equal(calendarText(partial.events[1].title, "en"), "B");
+  assert.throws(() =>
+    validateCalendar({
+      events: [{ date: "2027-02-30", type: "eco", title: { id: "X" } }],
+    }),
+  );
+  assert.throws(() =>
+    validateCalendar({
+      events: [{ date: "2027-02-01", type: "party", title: { id: "X" } }],
+    }),
+  );
+  assert.throws(() =>
+    validateCalendar({ seasons: defaultCalendar.seasons.slice(1) }),
+  );
+  // October 2026 starts on a Thursday: three blanks in a Monday-first grid.
+  assert.equal(monthGrid(2026, 9).filter((d) => d === null).length, 3);
+  assert.equal(monthGrid(2026, 9).length, 3 + 31);
+  assert.equal(eventsInMonth(defaultCalendar.events, 2026, 10).length, 2);
+  const legacy = structuredClone(defaultContent);
+  delete legacy.calendar;
+  assert.equal(validateContent(legacy).calendar.eco.length, 5);
+});

@@ -1,5 +1,6 @@
 import { experiences } from "./domain.js";
 import { defaultGallery, galleryLimit } from "./gallery.js";
+import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -54,6 +55,7 @@ export const defaultContent = {
   images: { ...defaultSiteImages },
   priceList: structuredClone(defaultPriceList),
   gallery: structuredClone(defaultGallery),
+  calendar: structuredClone(defaultCalendar),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -239,6 +241,7 @@ export function validateContent(input) {
     shop,
     activities: validateActivities(input.activities),
     gallery: validateGallery(input.gallery),
+    calendar: validateCalendar(input.calendar),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }

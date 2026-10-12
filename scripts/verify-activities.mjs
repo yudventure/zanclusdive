@@ -199,7 +199,7 @@ try {
           await page.locator("#activity-navigation").isVisible(),
           true,
         );
-        assert.equal(await page.locator("#activity-navigation a").count(), 6);
+        assert.equal(await page.locator("#activity-navigation a").count(), 7);
         await page
           .getByRole("button", { name: "Tutup menu", exact: true })
           .click();

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 // English is served at the root; the Indonesian site lives under /id and is
 // rewritten to the same pages with a locale request header.
-const indonesianPages = /^\/id(\/(diving|snorkeling|trip|dive-shop))?\/?$/;
+const indonesianPages =
+  /^\/id(\/(diving|snorkeling|trip|dive-shop|calendar))?\/?$/;
 
 export function proxy(request) {
   const { pathname } = request.nextUrl;
