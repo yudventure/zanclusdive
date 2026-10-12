@@ -99,6 +99,12 @@ try {
     "Please enter your name.",
   );
   await checkout.getByLabel("Name").fill("Alex");
+  await checkout.getByRole("button", { name: "Review my order" }).click();
+  assert.match(
+    await checkout.locator(".booking-error").textContent(),
+    /WhatsApp number/,
+  );
+  await checkout.getByLabel("WhatsApp number").fill("+44 7700 900123");
   await checkout.getByLabel("Rental days").fill("2");
   await checkout.getByRole("button", { name: "Review my order" }).click();
   const order2 = await checkout.locator("pre").textContent();
@@ -137,6 +143,7 @@ try {
   });
   await page.goto(base + "/trip", { waitUntil: "networkidle" });
   await page.fill("#inquiry-name", "Alex");
+  await page.fill("#inquiry-whatsapp", "+44 7700 900123");
   await page.fill("#inquiry-date", today);
   await page.fill("#inquiry-participants", "3");
   await page.locator(".activity-form button[type=submit]").click();
@@ -148,7 +155,8 @@ try {
     waitUntil: "networkidle",
   });
   await page.locator(".shop-product-card button").first().click();
-  await page.locator(".shop-order-form input").first().fill("Alex");
+  await page.fill("#order-name", "Alex");
+  await page.fill("#order-whatsapp", "+44 7700 900123");
   await page.locator(".shop-submit").click();
   const order = await page.textContent(".shop-message pre");
   assert.ok(order.includes("RENTAL · Mask & snorkel set × 1 — IDR"));

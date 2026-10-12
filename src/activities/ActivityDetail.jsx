@@ -10,6 +10,7 @@ import CalendarSections from "../calendar/CalendarSections.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import { phoneLabel } from "../contact-model.js";
+import FormField from "../components/FormField.jsx";
 
 function Inquiry({ activityKey, activity, contact, demo, locale }) {
   const t = dictionary(locale).activity;
@@ -17,6 +18,8 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
+    whatsapp: "",
+    email: "",
     date: "",
     participants: 1,
     notes: "",
@@ -63,21 +66,61 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
         </strong>
         <p>{t.priceNote}</p>
       </div>
-      <form className="activity-form" onSubmit={prepare}>
-        <label htmlFor="inquiry-name">{t.name}</label>
-        <input
-          id="inquiry-name"
-          name="name"
-          autoComplete="name"
-          maxLength={120}
+      <form className="activity-form" onSubmit={prepare} noValidate>
+        <p className="form-required-note">
+          <span aria-hidden="true">*</span> {t.requiredNote}
+        </p>
+        <FormField id="inquiry-name" label={t.name} icon="user" required>
+          <input
+            id="inquiry-name"
+            name="name"
+            autoComplete="name"
+            maxLength={120}
+            required
+            value={details.name}
+            onChange={(e) => change("name", e.target.value)}
+            placeholder={t.namePlaceholder}
+          />
+        </FormField>
+        <FormField
+          id="inquiry-whatsapp"
+          label={t.whatsapp}
+          icon="whatsapp"
           required
-          value={details.name}
-          onChange={(e) => change("name", e.target.value)}
-          placeholder={t.namePlaceholder}
-        />
-        <div className="activity-form-row">
-          <div>
-            <label htmlFor="inquiry-date">{t.date}</label>
+        >
+          <input
+            id="inquiry-whatsapp"
+            name="whatsapp"
+            type="tel"
+            inputMode="tel"
+            pattern="\+?[0-9 \(\)\.\-]{8,30}"
+            autoComplete="tel"
+            maxLength={30}
+            required
+            value={details.whatsapp}
+            onChange={(e) => change("whatsapp", e.target.value)}
+            placeholder={t.whatsappPlaceholder}
+          />
+        </FormField>
+        <FormField
+          id="inquiry-email"
+          label={t.email}
+          icon="email"
+          optional={t.optional}
+        >
+          <input
+            id="inquiry-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            maxLength={200}
+            value={details.email}
+            onChange={(e) => change("email", e.target.value)}
+            placeholder={t.emailPlaceholder}
+          />
+        </FormField>
+        <div className="form-row">
+          <FormField id="inquiry-date" label={t.date} icon="calendar" required>
             <input
               id="inquiry-date"
               name="date"
@@ -87,9 +130,13 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
               value={details.date}
               onChange={(e) => change("date", e.target.value)}
             />
-          </div>
-          <div>
-            <label htmlFor="inquiry-participants">{t.participants}</label>
+          </FormField>
+          <FormField
+            id="inquiry-participants"
+            label={t.participants}
+            icon="people"
+            required
+          >
             <input
               id="inquiry-participants"
               name="participants"
@@ -100,20 +147,24 @@ function Inquiry({ activityKey, activity, contact, demo, locale }) {
               value={details.participants}
               onChange={(e) => change("participants", e.target.value)}
             />
-          </div>
+          </FormField>
         </div>
-        <label htmlFor="inquiry-notes">
-          {t.notes} <span>{t.optional}</span>
-        </label>
-        <textarea
+        <FormField
           id="inquiry-notes"
-          name="notes"
-          rows="3"
-          maxLength={1000}
-          value={details.notes}
-          onChange={(e) => change("notes", e.target.value)}
-          placeholder={t.notesPlaceholder}
-        />
+          label={t.notes}
+          icon="note"
+          optional={t.optional}
+        >
+          <textarea
+            id="inquiry-notes"
+            name="notes"
+            rows="3"
+            maxLength={1000}
+            value={details.notes}
+            onChange={(e) => change("notes", e.target.value)}
+            placeholder={t.notesPlaceholder}
+          />
+        </FormField>
         {error && (
           <p className="activity-error" role="alert">
             {error}

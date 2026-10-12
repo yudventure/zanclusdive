@@ -1,5 +1,6 @@
 import { dictionary } from "../i18n.js";
 import { rupiah } from "../shop-model.js";
+import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 
 // Homepage Dive Shop cart. A line is
 // { key, name, price (rupiah or null), mode: "sale" | "rental", quantity }.
@@ -38,6 +39,10 @@ export function checkoutMessage(cart, details, today, locale = "id") {
   const m = t.message;
   const name = details.name?.trim() ?? "";
   if (!name || name.length > 80) throw new Error(t.errName);
+  const whatsapp = cleanWhatsApp(details.whatsapp);
+  if (!whatsapp) throw new Error(t.errWhatsapp);
+  const email = cleanEmail(details.email);
+  if (email === null) throw new Error(t.errEmail);
   const totals = cartTotals(cart, details.days);
   if (totals.hasRental) {
     if (
@@ -60,6 +65,8 @@ export function checkoutMessage(cart, details, today, locale = "id") {
   const notes = details.notes?.trim().slice(0, 500);
   return [
     m.greeting(name),
+    `WhatsApp ${whatsapp}`,
+    ...(email ? [`Email ${email}`] : []),
     "",
     ...cart.map(
       (line) =>

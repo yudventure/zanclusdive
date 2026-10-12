@@ -1,4 +1,5 @@
 "use client";
+import FormField from "../components/FormField.jsx";
 import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
@@ -31,6 +32,8 @@ export default function DiveShop({
   const [cart, setCart] = useState([]),
     [details, setDetails] = useState({
       name: "",
+      whatsapp: "",
+      email: "",
       startDate: today,
       days: 1,
       notes: "",
@@ -406,22 +409,77 @@ export default function DiveShop({
                       );
                     })}
                   </ul>
-                  <form className="shop-order-form" onSubmit={prepare}>
-                    <label>
-                      {t.name}
+                  <form
+                    className="shop-order-form"
+                    onSubmit={prepare}
+                    noValidate
+                  >
+                    <p className="form-required-note">
+                      <span aria-hidden="true">*</span> {t.requiredNote}
+                    </p>
+                    <FormField
+                      id="order-name"
+                      label={t.name}
+                      icon="user"
+                      required
+                    >
                       <input
+                        id="order-name"
                         required
                         maxLength={80}
                         autoComplete="name"
+                        placeholder={t.namePlaceholder}
                         value={details.name}
                         onChange={(e) => changeDetails("name", e.target.value)}
                       />
-                    </label>
+                    </FormField>
+                    <FormField
+                      id="order-whatsapp"
+                      label={t.whatsapp}
+                      icon="whatsapp"
+                      required
+                    >
+                      <input
+                        id="order-whatsapp"
+                        type="tel"
+                        inputMode="tel"
+                        pattern="\+?[0-9 \(\)\.\-]{8,30}"
+                        autoComplete="tel"
+                        required
+                        maxLength={30}
+                        placeholder="+62 812 3456 7890"
+                        value={details.whatsapp}
+                        onChange={(e) =>
+                          changeDetails("whatsapp", e.target.value)
+                        }
+                      />
+                    </FormField>
+                    <FormField
+                      id="order-email"
+                      label={t.email}
+                      icon="email"
+                      optional={t.optional}
+                    >
+                      <input
+                        id="order-email"
+                        type="email"
+                        autoComplete="email"
+                        maxLength={200}
+                        placeholder={t.emailPlaceholder}
+                        value={details.email}
+                        onChange={(e) => changeDetails("email", e.target.value)}
+                      />
+                    </FormField>
                     {hasRental && (
-                      <div className="shop-rental-dates">
-                        <label>
-                          {t.rentalStart}
+                      <div className="form-row">
+                        <FormField
+                          id="order-start"
+                          label={t.rentalStart}
+                          icon="calendar"
+                          required
+                        >
                           <input
+                            id="order-start"
                             type="date"
                             required
                             min={today}
@@ -430,10 +488,15 @@ export default function DiveShop({
                               changeDetails("startDate", e.target.value)
                             }
                           />
-                        </label>
-                        <label>
-                          {t.days}
+                        </FormField>
+                        <FormField
+                          id="order-days"
+                          label={t.days}
+                          icon="days"
+                          required
+                        >
                           <input
+                            id="order-days"
                             type="number"
                             required
                             min={1}
@@ -444,19 +507,24 @@ export default function DiveShop({
                               changeDetails("days", Number(e.target.value))
                             }
                           />
-                        </label>
+                        </FormField>
                       </div>
                     )}
-                    <label>
-                      {t.notes}
+                    <FormField
+                      id="order-notes"
+                      label={t.notes}
+                      icon="note"
+                      optional={t.optional}
+                    >
                       <textarea
+                        id="order-notes"
                         rows={2}
                         maxLength={500}
                         placeholder={t.notesPlaceholder}
                         value={details.notes}
                         onChange={(e) => changeDetails("notes", e.target.value)}
                       />
-                    </label>
+                    </FormField>
                     <div className="shop-total">
                       <span>{t.estimate(quote?.needsQuote)}</span>
                       <strong>

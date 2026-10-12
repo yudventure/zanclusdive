@@ -1,4 +1,5 @@
 import { dictionary, formatIDR } from "./i18n.js";
+import { cleanWhatsApp, cleanEmail } from "./contact-fields.js";
 export const shopCategories = {
   mask: "Mask & snorkel",
   fins: "Fins",
@@ -190,12 +191,18 @@ export function orderMessage(
   const quote = quoteOrder(products, cart, details.days, locale);
   const name = details.name?.trim();
   if (!name || name.length > 80) throw new Error(t.name);
+  const whatsapp = cleanWhatsApp(details.whatsapp);
+  if (!whatsapp) throw new Error(t.whatsapp);
+  const email = cleanEmail(details.email);
+  if (email === null) throw new Error(t.email);
   if (quote.hasRental && !validDate(details.startDate))
     throw new Error(t.startDate);
   const notes = details.notes?.trim() || "";
   if (notes.length > 500) throw new Error(t.notes);
   return [
     t.greeting(name, demo),
+    `WhatsApp: ${whatsapp}`,
+    ...(email ? [`Email: ${email}`] : []),
     "",
     ...quote.lines.map(
       (line) =>

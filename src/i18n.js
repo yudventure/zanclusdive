@@ -34,6 +34,7 @@ export const formatLongDate = (key, locale = "id") =>
 
 const id = {
   meta: {
+    title: "Zanclus Dive Center — Diving & snorkeling di Raja Ampat",
     description:
       "Diving, snorkeling, dan trip laut di Raja Ampat bersama Zanclus Dive Center. Jelajahi kehidupan bawah laut dan susun rencana penyelamanmu.",
     ogDescription: "Jelajahi laut. Temukan cerita.",
@@ -187,6 +188,7 @@ const id = {
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
   },
   gallery: {
+    eyebrow: "GALERI PENYELAMAN ZANCLUS",
     open: "Buka galeri",
     close: "Tutup galeri",
     count: (n) => `${n} foto penyelaman`,
@@ -200,6 +202,7 @@ const id = {
       "Foto contoh. Ganti dengan foto penyelaman Zanclus lewat panel admin.",
   },
   diveSites: {
+    title: "Titik selam di Selat Dampier.",
     intro:
       "Lima belas titik selam di sekitar Waisai, dari Cape Kri dan Blue Magic sampai Manta Sandy dan Melissa's Garden. Ketuk pulau atau tanda di peta untuk memperbesar dan membaca keterangannya.",
     note: "Letak titik di peta adalah perkiraan. Tim Zanclus memilih titik yang sesuai dengan cuaca, arus, dan pengalamanmu.",
@@ -283,10 +286,16 @@ const id = {
       "Jadwal, rincian biaya, dan ketersediaan dikonfirmasi melalui WhatsApp.",
     name: "Nama kamu",
     namePlaceholder: "Nama lengkap",
+    whatsapp: "Nomor WhatsApp",
+    whatsappPlaceholder: "+62 812 3456 7890",
+    email: "Email",
+    emailPlaceholder: "nama@email.com",
+    required: "wajib diisi",
+    requiredNote: "Wajib diisi",
     date: "Usulan tanggal",
     participants: "Jumlah peserta",
     notes: "Ceritakan rencanamu",
-    optional: "(opsional)",
+    optional: "opsional",
     notesPlaceholder:
       "Pengalaman di air, pilihan aktivitas, atau kebutuhan kelompok…",
     prepare: "Siapkan pesan WhatsApp",
@@ -299,8 +308,10 @@ const id = {
       `Halo Zanclus! Saya ingin bertanya tentang ${label}.`,
     helpMessage: (label) =>
       `Halo Zanclus! Saya ingin bantuan untuk merencanakan ${label}.`,
+    skip: "Lewati ke detail aktivitas",
     demoHero: "MODE DEMO · CONTOH AKTIVITAS",
     tagline: "JELAJAHI LAUT. TEMUKAN CERITA.",
+    sections: "Bagian halaman",
     about: "Tentang kegiatan",
     itinerary: "Alur kegiatan",
     preparation: "Persiapan",
@@ -330,6 +341,8 @@ const id = {
   inquiry: {
     unavailable: "Aktivitas belum tersedia.",
     name: "Isi nama, maksimal 120 karakter.",
+    whatsapp: "Isi nomor WhatsApp yang aktif, termasuk kode negara.",
+    email: "Format email belum benar, contoh nama@email.com.",
     date: "Pilih tanggal yang valid, hari ini atau setelahnya.",
     participants: "Jumlah peserta harus 1–100 orang.",
     notes: "Catatan maksimal 1.000 karakter.",
@@ -367,6 +380,7 @@ const id = {
       `${name} ditambahkan untuk ${sale ? "dibeli" : "rental"}.`,
     pastDate: "Tanggal rental harus hari ini atau setelahnya.",
     help: "Halo Zanclus! Saya ingin bantuan untuk membeli atau menyewa perlengkapan diving.",
+    skip: "Lewati ke katalog",
     gearHelp: "Bantuan alat ↗",
     back: "← Kembali ke laut",
     heroNote: "Pilih alat. Susun kebutuhan. Konfirmasi bersama tim.",
@@ -406,9 +420,15 @@ const id = {
     quantity: "Jumlah",
     quantityOf: (name, sale) => `Jumlah ${name} ${sale ? "beli" : "rental"}`,
     name: "Nama kamu",
+    namePlaceholder: "Nama lengkap",
+    whatsapp: "Nomor WhatsApp",
+    email: "Email",
+    emailPlaceholder: "nama@email.com",
+    optional: "opsional",
+    requiredNote: "Wajib diisi",
     rentalStart: "Tanggal mulai rental",
     days: "Durasi (hari)",
-    notes: "Ukuran / catatan (opsional)",
+    notes: "Ukuran / catatan",
     notesPlaceholder: "Ukuran, lokasi pengambilan, atau kebutuhan lain",
     estimate: (needsQuote) =>
       `Estimasi ${needsQuote ? "harga tercantum" : "total"}`,
@@ -463,6 +483,12 @@ const id = {
       estimate: "Perkiraan total",
       quoteNote: "Harga beberapa alat dikonfirmasi tim.",
       name: "Nama",
+      namePlaceholder: "Nama lengkap",
+      whatsapp: "Nomor WhatsApp",
+      email: "Email",
+      emailPlaceholder: "nama@email.com",
+      optional: "opsional",
+      requiredNote: "Wajib diisi",
       startDate: "Tanggal mulai sewa",
       days: "Lama sewa (hari)",
       notes: "Catatan",
@@ -471,6 +497,8 @@ const id = {
       send: "Kirim pesanan lewat WhatsApp",
       edit: "Ubah pesanan",
       errName: "Isi namamu terlebih dahulu.",
+      errWhatsapp: "Isi nomor WhatsApp yang aktif, termasuk kode negara.",
+      errEmail: "Format email belum benar, contoh nama@email.com.",
       errDate: "Pilih tanggal mulai sewa hari ini atau setelahnya.",
       errDays: "Lama sewa 1 sampai 30 hari.",
       message: {
@@ -523,6 +551,8 @@ const id = {
     quantity: "Jumlah setiap perlengkapan harus 1–10.",
     price: "Harga perlengkapan belum valid.",
     name: "Isi nama, maksimal 80 karakter.",
+    whatsapp: "Isi nomor WhatsApp yang aktif, termasuk kode negara.",
+    email: "Format email belum benar, contoh nama@email.com.",
     startDate: "Pilih tanggal mulai rental yang valid.",
     notes: "Catatan maksimal 500 karakter.",
     greeting: (name, demo) =>
@@ -542,6 +572,7 @@ const id = {
 
 const en = {
   meta: {
+    title: "Zanclus Dive Center — Diving & snorkeling in Raja Ampat",
     description:
       "Diving, snorkeling and sea trips in Raja Ampat with Zanclus Dive Center. Explore underwater life and plan your next dive.",
     ogDescription: "Explore the ocean. Find your story.",
@@ -696,6 +727,7 @@ const en = {
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
   },
   gallery: {
+    eyebrow: "ZANCLUS DIVE GALLERY",
     open: "Open the gallery",
     close: "Close the gallery",
     count: (n) => `${n} dive photos`,
@@ -709,6 +741,7 @@ const en = {
       "Sample photos. Replace them with Zanclus dive photos in the admin panel.",
   },
   diveSites: {
+    title: "Dive sites of the Dampier Strait.",
     intro:
       "Fifteen dive sites around Waisai, from Cape Kri and Blue Magic to Manta Sandy and Melissa's Garden. Tap an island or a marker on the map to zoom in and read about it.",
     note: "Marker positions are approximate. The Zanclus team picks sites that suit the weather, the current and your experience.",
@@ -792,10 +825,16 @@ const en = {
       "Schedule, price details and availability are confirmed on WhatsApp.",
     name: "Your name",
     namePlaceholder: "Full name",
+    whatsapp: "WhatsApp number",
+    whatsappPlaceholder: "+62 812 3456 7890",
+    email: "Email",
+    emailPlaceholder: "name@email.com",
+    required: "required",
+    requiredNote: "Required",
     date: "Preferred date",
     participants: "Number of participants",
     notes: "Tell us about your plans",
-    optional: "(optional)",
+    optional: "optional",
     notesPlaceholder:
       "Experience in the water, preferred activities or group needs…",
     prepare: "Prepare WhatsApp message",
@@ -806,8 +845,10 @@ const en = {
     askFirst: "Ask us first:",
     askMessage: (label) => `Hi Zanclus! I have a question about ${label}.`,
     helpMessage: (label) => `Hi Zanclus! I'd like help planning ${label}.`,
+    skip: "Skip to activity details",
     demoHero: "DEMO MODE · SAMPLE ACTIVITY",
     tagline: "EXPLORE THE OCEAN. FIND YOUR STORY.",
+    sections: "Page sections",
     about: "About the activity",
     itinerary: "How it goes",
     preparation: "Preparation",
@@ -837,6 +878,8 @@ const en = {
   inquiry: {
     unavailable: "This activity isn't available yet.",
     name: "Enter your name, up to 120 characters.",
+    whatsapp: "Enter an active WhatsApp number, including the country code.",
+    email: "That email doesn't look right, for example name@email.com.",
     date: "Choose a valid date, today or later.",
     participants: "Participants must be between 1 and 100.",
     notes: "Notes can be up to 1,000 characters.",
@@ -874,6 +917,7 @@ const en = {
     added: (name, sale) => `${name} added to ${sale ? "buy" : "rent"}.`,
     pastDate: "The rental date must be today or later.",
     help: "Hi Zanclus! I'd like help buying or renting diving gear.",
+    skip: "Skip to catalog",
     gearHelp: "Gear help ↗",
     back: "← Back to the ocean",
     heroNote: "Choose gear. Plan what you need. Confirm with our team.",
@@ -911,9 +955,15 @@ const en = {
     quantityOf: (name, sale) =>
       `Quantity of ${name} (${sale ? "buy" : "rental"})`,
     name: "Your name",
+    namePlaceholder: "Full name",
+    whatsapp: "WhatsApp number",
+    email: "Email",
+    emailPlaceholder: "name@email.com",
+    optional: "optional",
+    requiredNote: "Required",
     rentalStart: "Rental start date",
     days: "Duration (days)",
-    notes: "Sizes / notes (optional)",
+    notes: "Sizes / notes",
     notesPlaceholder: "Sizes, pick-up location or other needs",
     estimate: (needsQuote) =>
       `Estimated ${needsQuote ? "listed prices" : "total"}`,
@@ -967,6 +1017,12 @@ const en = {
       estimate: "Estimated total",
       quoteNote: "Some prices are confirmed by our team.",
       name: "Name",
+      namePlaceholder: "Full name",
+      whatsapp: "WhatsApp number",
+      email: "Email",
+      emailPlaceholder: "name@email.com",
+      optional: "optional",
+      requiredNote: "Required",
       startDate: "Rental start date",
       days: "Rental days",
       notes: "Notes",
@@ -975,6 +1031,9 @@ const en = {
       send: "Send order on WhatsApp",
       edit: "Edit order",
       errName: "Please enter your name.",
+      errWhatsapp:
+        "Enter an active WhatsApp number, including the country code.",
+      errEmail: "That email doesn't look right, for example name@email.com.",
       errDate: "Choose a rental start date of today or later.",
       errDays: "Rentals run from 1 to 30 days.",
       message: {
@@ -1027,6 +1086,8 @@ const en = {
     quantity: "Each item's quantity must be 1–10.",
     price: "The gear price isn't valid yet.",
     name: "Enter your name, up to 80 characters.",
+    whatsapp: "Enter an active WhatsApp number, including the country code.",
+    email: "That email doesn't look right, for example name@email.com.",
     startDate: "Choose a valid rental start date.",
     notes: "Notes can be up to 500 characters.",
     greeting: (name, demo) =>

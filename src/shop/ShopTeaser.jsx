@@ -5,6 +5,7 @@ import { rupiah } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
+import FormField from "../components/FormField.jsx";
 
 const tabs = ["buy", ...rentalGroups];
 
@@ -78,6 +79,8 @@ export default function ShopTeaser({
   const [cart, setCart] = useState([]);
   const [form, setForm] = useState({
     name: "",
+    whatsapp: "",
+    email: "",
     startDate: "",
     days: 1,
     notes: "",
@@ -386,31 +389,101 @@ export default function ShopTeaser({
           </div>
         ) : (
           <form onSubmit={review} noValidate>
-            <label>
-              {s.name}
-              <input maxLength={80} autoComplete="name" {...field("name")} />
-            </label>
+            <p className="form-required-note">
+              <span aria-hidden="true">*</span> {s.requiredNote}
+            </p>
+            <FormField id={`${id}-name`} label={s.name} icon="user" required>
+              <input
+                id={`${id}-name`}
+                maxLength={80}
+                autoComplete="name"
+                required
+                placeholder={s.namePlaceholder}
+                {...field("name")}
+              />
+            </FormField>
+            <div className="form-row">
+              <FormField
+                id={`${id}-whatsapp`}
+                label={s.whatsapp}
+                icon="whatsapp"
+                required
+              >
+                <input
+                  id={`${id}-whatsapp`}
+                  type="tel"
+                  inputMode="tel"
+                  pattern="\+?[0-9 \(\)\.\-]{8,30}"
+                  autoComplete="tel"
+                  maxLength={30}
+                  required
+                  placeholder="+62 812 3456 7890"
+                  {...field("whatsapp")}
+                />
+              </FormField>
+              <FormField
+                id={`${id}-email`}
+                label={s.email}
+                icon="email"
+                optional={s.optional}
+              >
+                <input
+                  id={`${id}-email`}
+                  type="email"
+                  autoComplete="email"
+                  maxLength={200}
+                  placeholder={s.emailPlaceholder}
+                  {...field("email")}
+                />
+              </FormField>
+            </div>
             {totals.hasRental && (
               <div className="form-row">
-                <label>
-                  {s.startDate}
-                  <input type="date" min={today()} {...field("startDate")} />
-                </label>
-                <label>
-                  {s.days}
-                  <input type="number" min="1" max="30" {...field("days")} />
-                </label>
+                <FormField
+                  id={`${id}-start`}
+                  label={s.startDate}
+                  icon="calendar"
+                  required
+                >
+                  <input
+                    id={`${id}-start`}
+                    type="date"
+                    min={today()}
+                    required
+                    {...field("startDate")}
+                  />
+                </FormField>
+                <FormField
+                  id={`${id}-days`}
+                  label={s.days}
+                  icon="days"
+                  required
+                >
+                  <input
+                    id={`${id}-days`}
+                    type="number"
+                    min="1"
+                    max="30"
+                    required
+                    {...field("days")}
+                  />
+                </FormField>
               </div>
             )}
-            <label>
-              {s.notes}
+            <FormField
+              id={`${id}-notes`}
+              label={s.notes}
+              icon="note"
+              optional={s.optional}
+            >
               <textarea
+                id={`${id}-notes`}
                 rows="3"
                 maxLength={500}
                 placeholder={s.notesPlaceholder}
                 {...field("notes")}
               />
-            </label>
+            </FormField>
             {error && (
               <p className="booking-error" role="alert">
                 {error}

@@ -28,6 +28,7 @@ test("mixed orders charge sales once and rental per unit per day", () => {
     cart,
     {
       name: "Tamu Uji",
+      whatsapp: "081234567890",
       days: 4,
       startDate: "2026-10-25",
       notes: "Fin ukuran M",
@@ -39,6 +40,14 @@ test("mixed orders charge sales once and rental per unit per day", () => {
   assert.match(message, /2026-10-25, selama 4 hari/);
   assert.match(message, /2\.200\.000/);
   assert.match(message, /Fin ukuran M/);
+  assert.match(message, /WhatsApp: 081234567890/);
+  assert.throws(() =>
+    orderMessage(products, cart, {
+      name: "Tamu",
+      days: 1,
+      startDate: "2026-10-25",
+    }),
+  );
 });
 test("requests for prices stay distinct from a zero-price total", () => {
   const products = demoShop().products;
@@ -46,7 +55,11 @@ test("requests for prices stay distinct from a zero-price total", () => {
   const cart = [{ id: "demo-mask", mode: "sale", quantity: 1 }];
   assert.equal(quoteOrder(products, cart).needsQuote, true);
   assert.match(
-    orderMessage(products, cart, { name: "Tamu", days: 1 }),
+    orderMessage(products, cart, {
+      name: "Tamu",
+      whatsapp: "081234567890",
+      days: 1,
+    }),
     /minta harga/,
   );
 });

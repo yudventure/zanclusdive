@@ -89,7 +89,12 @@ test("documents saved before translations still render English defaults", () => 
 
 test("WhatsApp messages and booking errors follow the visitor's language", () => {
   const activity = defaultContent.activities.snorkeling;
-  const details = { name: "Alex", date: "2030-01-01", participants: 2 };
+  const details = {
+    name: "Alex",
+    whatsapp: "+44 7700 900123",
+    date: "2030-01-01",
+    participants: 2,
+  };
   assert.match(
     activityInquiry("snorkeling", activity, details, "2029-12-31", false, "en"),
     /^Hi Zanclus! I'd like to ask about Snorkeling\./,
@@ -103,7 +108,7 @@ test("WhatsApp messages and booking errors follow the visitor's language", () =>
     orderMessage(
       products,
       [{ id: "demo-mask", mode: "sale", quantity: 1 }],
-      { name: "Alex", days: 1 },
+      { name: "Alex", whatsapp: "+44 7700 900123", days: 1 },
       false,
       "en",
     ),
@@ -233,6 +238,8 @@ test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
   assert.equal(cartTotals(cart).needsQuote, true);
   const details = {
     name: "Alex",
+    whatsapp: "+62 812 3456 7890",
+    email: "alex@example.com",
     startDate: "2030-01-02",
     days: 2,
     notes: "Ukuran L",
@@ -243,6 +250,13 @@ test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
   assert.match(text, /BELI · Tabung × 1 · Tanya harga/);
   assert.match(text, /Lama sewa 2 hari, mulai 2030-01-02/);
   assert.match(text, /Catatan Ukuran L/);
+  assert.match(text, /WhatsApp \+62 812 3456 7890\nEmail alex@example\.com/);
+  assert.throws(() =>
+    checkoutMessage(cart, { ...details, whatsapp: "" }, "2030-01-01"),
+  );
+  assert.throws(() =>
+    checkoutMessage(cart, { ...details, email: "alex@" }, "2030-01-01"),
+  );
   assert.match(
     checkoutMessage(cart, details, "2030-01-01", "en"),
     /RENT · Masker × 2 · IDR\s?50,000 \/ day/,
@@ -260,7 +274,13 @@ test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
   assert.throws(() =>
     checkoutMessage(cart, { ...details, days: 31 }, "2030-01-01"),
   );
-  assert.ok(checkoutMessage([fins], { name: "Alex" }, "2030-01-01"));
+  assert.ok(
+    checkoutMessage(
+      [fins],
+      { name: "Alex", whatsapp: "081234567890" },
+      "2030-01-01",
+    ),
+  );
 });
 
 test("dive gallery validates photos and captions", async () => {
@@ -343,4 +363,20 @@ test("activity calendar validates, sorts events and fills missing parts", async 
   const legacy = structuredClone(defaultContent);
   delete legacy.calendar;
   assert.equal(validateContent(legacy).calendar.eco.length, 5);
+});
+
+test("texts the pages rely on are present in both languages", () => {
+  for (const locale of ["en", "id"]) {
+    const t = messages[locale];
+    for (const [path, value] of Object.entries({
+      "meta.title": t.meta.title,
+      "gallery.eyebrow": t.gallery.eyebrow,
+      "diveSites.title": t.diveSites.title,
+      "activity.skip": t.activity.skip,
+      "activity.sections": t.activity.sections,
+      "shop.skip": t.shop.skip,
+      "activity.requiredNote": t.activity.requiredNote,
+    }))
+      assert.ok(typeof value === "string" && value.trim(), `${locale} ${path}`);
+  }
 });

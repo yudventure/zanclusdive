@@ -135,10 +135,25 @@ try {
       return future.toLocaleDateString("en-CA");
     });
     await page
-      .getByLabel("Nama kamu", { exact: true })
+      .getByLabel("Nama kamu")
       .fill("Tamu Uji Aktivitas");
-    await page.getByLabel("Usulan tanggal", { exact: true }).fill(date);
-    await page.getByLabel("Jumlah peserta", { exact: true }).fill("3");
+    // Required fields are marked; WhatsApp is checked before the message.
+    assert.equal(
+      await page.locator(".activity-form .form-required").count(),
+      4,
+    );
+    await page.getByLabel("Usulan tanggal").fill(date);
+    await page.getByLabel("Jumlah peserta").fill("3");
+    await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
+    assert.match(
+      await page.locator(".activity-error").textContent(),
+      /nomor WhatsApp/,
+    );
+    await page
+      .getByLabel("Nomor WhatsApp")
+      .fill("+62 812 3456 7890");
+    await page.getByLabel("Email", { exact: false }).fill("tamu@example.com");
+    await page.getByLabel("Jumlah peserta").fill("3");
     await page
       .getByLabel("Ceritakan rencanamu", { exact: false })
       .fill("Perlu fins ukuran M");
@@ -158,10 +173,12 @@ try {
       date,
       "3 orang",
       "Perlu fins ukuran M",
+      "WhatsApp: +62 812 3456 7890",
+      "Email: tamu@example.com",
       "belum menjadi reservasi",
     ])
       assert.ok(message.includes(value), value);
-    await page.getByLabel("Jumlah peserta", { exact: true }).fill("4");
+    await page.getByLabel("Jumlah peserta").fill("4");
     assert.equal(
       await page.locator(".activity-message").count(),
       0,
