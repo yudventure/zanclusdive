@@ -47,7 +47,8 @@ try {
   await page.getByRole("button", { name: /Masuk/ }).click();
   await page.getByText("Email atau password tidak sesuai.").waitFor();
   await page.fill('input[name="email"]', " Operator@ZanclusDive.com ");
-  await page.fill('input[name="password"]', password);
+  // Pasted with a stray space, and with an old ADMIN_EMAIL left on the host.
+  await page.fill('input[name="password"]', ` ${password} `);
   await page.getByRole("button", { name: /Masuk/ }).click();
   await page.waitForURL(base + "/admin");
   await page.getByRole("link", { name: /Foto & media/ }).waitFor();
@@ -55,6 +56,23 @@ try {
     (await context.request.get(base + "/api/admin/state")).status(),
     200,
   );
+  // An ADMIN_EMAIL/ADMIN_PASSWORD pair on the host works alongside it.
+  if (process.env.EXTRA_ADMIN_EMAIL) {
+    const extra = await browser.newContext();
+    assert.equal(
+      (
+        await extra.request.post(base + "/api/admin/login", {
+          headers,
+          data: {
+            email: process.env.EXTRA_ADMIN_EMAIL,
+            password: process.env.EXTRA_ADMIN_PASSWORD,
+          },
+        })
+      ).status(),
+      200,
+    );
+    await extra.close();
+  }
   // A forged cookie for another email is rejected.
   const forged = Buffer.from(
     JSON.stringify({ email: demoAccount.email, expires: Date.now() + 3600000 }),

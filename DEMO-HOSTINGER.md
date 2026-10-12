@@ -6,7 +6,7 @@ Deploy branch `main` dengan Node.js 22/24, build `npm run build`, dan start `npm
 2. Masuk dengan akun operator `operator@zanclusdive.com` dan password yang diberikan kepada pemilik. Password tidak disimpan di repository, hanya hash scrypt-nya (`src/server/operator-account.js`).
 3. Kelola kalender, reservasi, tamu, teks, harga, kontak, gambar, galeri, dan **Dive Shop**.
 
-Untuk mengganti akun operator tanpa mengubah kode, isi `ADMIN_EMAIL` dan `ADMIN_PASSWORD` (dan sebaiknya `SESSION_SECRET` minimal 32 karakter) di hPanel. Jika keduanya terisi, akun itu menggantikan akun operator bawaan.
+Untuk menambah akun admin tanpa mengubah kode, isi `ADMIN_EMAIL` dan `ADMIN_PASSWORD` (dan sebaiknya `SESSION_SECRET` minimal 32 karakter) di hPanel. Akun itu bisa dipakai di samping akun operator; akun operator tetap berlaku.
 
 Akun demo publik (`demo@zanclusdive.com`) **tidak lagi bisa dipakai** di server publik. Akun itu hanya aktif bila `CMS_DEMO_LOGIN=true`, yang dipakai untuk pengujian lokal. Gunakan nama/data tamu contoh saja. Tampilan memberi label demo; harga, lokasi, dan reservasi awal merupakan contoh, bukan informasi operasional terverifikasi.
 
