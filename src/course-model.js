@@ -255,6 +255,79 @@ export function validateCourses(input) {
 }
 
 // WhatsApp message for a course request.
+// Answers a course sign-up asks for besides name and contact. Option keys
+// are stored; their words come from the dictionary.
+export const courseChoices = {
+  dives: ["0", "1-20", "21-50", "50+"],
+  swim: ["comfortable", "basic", "no"],
+  health: ["fit", "condition"],
+  wetsuit: ["", "XS", "S", "M", "L", "XL", "XXL"],
+  language: ["id", "en"],
+};
+function validDate(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return false;
+  const day = new Date(date + "T12:00:00Z");
+  return (
+    !Number.isNaN(day.valueOf()) && day.toISOString().slice(0, 10) === date
+  );
+}
+// Whole years from a birth date to a day, both YYYY-MM-DD.
+export function ageOn(birth, day) {
+  const [by, bm, bd] = birth.split("-").map(Number);
+  const [y, m, d] = day.split("-").map(Number);
+  return y - by - (m < bm || (m === bm && d < bd) ? 1 : 0);
+}
+// The minimum age written on the course ("Usia 10+"), or 8.
+export const courseMinAge = (course) =>
+  Number(/(\d+)\s*\+/.exec(course?.age?.id ?? "")?.[1]) || 8;
+
+// The course questions, checked, as [label, value] lines in the page
+// language. details.date is the start date. Throws with the reason.
+export function courseProfile(course, details, locale = "id") {
+  const t = dictionary(locale).course;
+  const pick = (key) =>
+    courseChoices[key].includes(details[key]) ? details[key] : null;
+  const birth = details.birthDate;
+  if (!validDate(birth) || birth < "1900-01-01" || birth >= details.date)
+    throw new Error(t.errBirth);
+  const min = courseMinAge(course);
+  if (ageOn(birth, details.date) < min) throw new Error(t.errAge(min));
+  const text = (value, max) => {
+    const out = typeof value === "string" ? value.trim() : "";
+    if (out.length > max) throw new Error(t.errLong);
+    return out;
+  };
+  const nationality = text(details.nationality, 60);
+  const dives = pick("dives") ?? "0";
+  const swim = pick("swim");
+  if (!swim) throw new Error(t.errSwim);
+  const health = pick("health");
+  if (!health) throw new Error(t.errHealth);
+  if (health === "condition" && !text(details.notes, 1000))
+    throw new Error(t.errHealthNotes);
+  const wetsuit = pick("wetsuit") ?? "";
+  const fins =
+    details.fins === "" || details.fins === undefined || details.fins === null
+      ? ""
+      : Number(details.fins);
+  if (fins !== "" && (!Number.isInteger(fins) || fins < 30 || fins > 50))
+    throw new Error(t.errFins);
+  const stay = text(details.stay, 120);
+  const language = pick("language") ?? "id";
+  const m = t.message;
+  return [
+    [m.birth, birth],
+    ...(nationality ? [[m.nationality, nationality]] : []),
+    [m.dives, t.diveOptions[dives]],
+    [m.swim, t.swimOptions[swim]],
+    [m.health, t.healthOptions[health]],
+    ...(wetsuit ? [[m.wetsuit, wetsuit]] : []),
+    ...(fins ? [[m.fins, String(fins)]] : []),
+    ...(stay ? [[m.stay, stay]] : []),
+    [m.language, t.languageOptions[language]],
+  ];
+}
+
 export function courseInquiry(course, details, today, locale = "id") {
   const t = dictionary(locale).course;
   if (!course?.enabled) throw new Error(t.errCourse);
@@ -264,6 +337,7 @@ export function courseInquiry(course, details, today, locale = "id") {
   if (!whatsapp) throw new Error(t.errWhatsapp);
   const email = cleanEmail(details.email);
   if (email === null) throw new Error(t.errEmail);
+  if (!email) throw new Error(t.errEmailRequired);
   const date = details.date;
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
@@ -277,16 +351,18 @@ export function courseInquiry(course, details, today, locale = "id") {
     throw new Error(t.errParticipants);
   const notes = typeof details.notes === "string" ? details.notes.trim() : "";
   if (notes.length > 1000) throw new Error(t.errNotes);
+  const profile = courseProfile(course, details, locale);
   return [
     t.message.greeting(courseText(course.name, locale)),
     `${t.message.name}: ${name}`,
     `WhatsApp: ${whatsapp}`,
-    ...(email ? [`Email: ${email}`] : []),
+    `Email: ${email}`,
     `${t.message.date}: ${date}`,
     t.message.people(participants),
     ...(details.certification
       ? [`${t.message.license}: ${String(details.certification).slice(0, 80)}`]
       : []),
+    ...profile.map(([label, value]) => `${label}: ${value}`),
     ...(notes ? [`${t.message.notes}: ${notes}`] : []),
     t.message.closing,
   ].join("\n");

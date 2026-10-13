@@ -85,15 +85,19 @@ try {
     "Kursus selam",
   );
 
-  // The button opens /course; a #course link chooses it in the form.
+  // The button opens /course; a #course link marks that course.
   await cta.click();
   await page.waitForURL(base + "/id/course");
-  // Wait for the page to be interactive (the date field gets today's date as
-  // its minimum): a hash set before that is reset by the router.
-  await page.locator("#course-date[min]").waitFor({ state: "attached" });
+  // Wait for React to take over the page: a hash set before that is reset
+  // by the router.
+  await page.waitForFunction(() =>
+    Object.keys(document.querySelector(".course-item") ?? {}).some((key) =>
+      key.startsWith("__reactFiber"),
+    ),
+  );
   await page.goto(base + "/id/course#open-water", { waitUntil: "networkidle" });
-  await page.waitForFunction(
-    () => document.querySelector("#course-select").value === "open-water",
+  await page.waitForFunction(() =>
+    document.querySelector("#open-water").classList.contains("is-selected"),
   );
   assert.equal(await page.locator(".course-item").count(), 4);
   assert.equal(
@@ -102,32 +106,128 @@ try {
       .textContent(),
     "Kursus selam",
   );
-  await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
-  await page.getByText("Isi nama, maksimal 120 karakter.").waitFor();
+  // No side panel: the courses use the full width, and "Choose this course"
+  // opens the sign-up in a window.
+  assert.equal(await page.locator(".course-signup, aside#inquiry").count(), 0);
+  assert.ok(
+    (await page.locator(".course-path").boundingBox()).width > 900,
+    "courses use the full width",
+  );
+  await page
+    .locator("#advanced")
+    .getByRole("button", { name: "Pilih kursus ini" })
+    .click();
+  const signup = page.locator(".course-checkout");
+  await signup.locator("#course-date").waitFor({ state: "visible" });
+  assert.equal(
+    await signup.locator("h2").textContent(),
+    "Daftar Advanced Open Water.",
+  );
+  assert.equal(await page.locator("#course-select").inputValue(), "advanced");
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.id),
+    "course-date",
+  );
+  assert.deepEqual(
+    await signup.locator(".course-group > legend").allTextContents(),
+    [
+      "Jadwal & peserta",
+      "Data peserta utama",
+      "Pengalaman & kesehatan",
+      "Perlengkapan & penjemputan",
+    ],
+  );
+  const next = signup.getByRole("button", { name: "Lanjut ke ringkasan" });
+  const refused = async (text) => {
+    await next.click();
+    assert.equal(await signup.locator(".activity-error").textContent(), text);
+  };
+  await refused("Isi nama, maksimal 120 karakter.");
   await page.locator("#course-name").fill("Tamu Kursus");
   await page.locator("#course-whatsapp").fill("081234567890");
-  await page.locator("#course-certification").selectOption("Belum punya");
   const date = await page.evaluate(() => {
     const d = new Date(Date.now() + 9 * 864e5);
     return d.toLocaleDateString("en-CA");
   });
   await page.locator("#course-date").fill(date);
   await page.locator("#course-participants").fill("2");
-  // "Choose this course" switches the form to that course.
-  await page
-    .locator("#advanced")
-    .getByRole("button", { name: "Pilih kursus ini" })
-    .click();
-  assert.equal(await page.locator("#course-select").inputValue(), "advanced");
-  await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
-  const link = page.getByRole("link", { name: "Lanjutkan ke WhatsApp" });
+  assert.match(
+    await signup.locator(".slot-note").textContent(),
+    /slot tersisa di tanggal ini/,
+  );
+  await refused(
+    "Isi email: dipakai untuk pendaftaran sertifikasi dan materi belajar.",
+  );
+  await page.locator("#course-email").fill("tamu.kursus@example.com");
+  await refused("Isi tanggal lahir peserta utama dengan benar.");
+  // Advanced Open Water starts at 12.
+  const young = await page.evaluate((start) => {
+    const d = new Date(start + "T12:00:00Z");
+    d.setUTCFullYear(d.getUTCFullYear() - 11);
+    return d.toISOString().slice(0, 10);
+  }, date);
+  await page.locator("#course-birth").fill(young);
+  await refused("Usia minimal 12 tahun pada tanggal mulai kursus ini.");
+  await page.locator("#course-birth").fill("1995-04-12");
+  await refused("Pilih kemampuan berenang.");
+  await page.locator("#course-swim").selectOption("comfortable");
+  await refused("Pilih kondisi kesehatan.");
+  await signup.getByLabel(/^Ada kondisi medis/).check();
+  await refused(
+    "Ceritakan kondisi medisnya di catatan, supaya instruktur bisa menyiapkan.",
+  );
+  await signup.getByLabel("Sehat, tidak ada kondisi medis").check();
+  await page.locator("#course-certification").selectOption("Open Water");
+  await page.locator("#course-dives").selectOption("1-20");
+  await page.locator("#course-nationality").fill("Indonesia");
+  await page.locator("#course-wetsuit").selectOption("M");
+  await page.locator("#course-fins").fill("42");
+  await page.locator("#course-stay").fill("Homestay Waisai");
+  await page.locator("#course-language").selectOption("en");
+  assert.match(
+    await signup.locator(".pay-total").textContent(),
+    /Rp\s?[\d.]+ × 2 orang/,
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(
+    (await signup.boundingBox()).width <= 390,
+    "sign-up window fits a phone",
+  );
+  await page.screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/course-signup-mobile.png",
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/course-signup-desktop.png",
+  });
+  await next.click();
+  assert.equal(
+    await signup.locator("#plan-summary-title").textContent(),
+    "Ringkasan rencana",
+  );
+  assert.match(
+    await signup.locator(".plan-summary-list").textContent(),
+    /KursusAdvanced Open Water[\s\S]*Emailtamu\.kursus@example\.com[\s\S]*Lisensi yang dimilikiOpen Water[\s\S]*Tanggal lahir1995-04-12[\s\S]*KewarganegaraanIndonesia[\s\S]*Penyelaman tercatat1–20 kali[\s\S]*BerenangNyaman berenang 200 m[\s\S]*KesehatanSehat, tidak ada kondisi medis[\s\S]*Ukuran wetsuitM[\s\S]*Ukuran kaki42[\s\S]*Menginap diHomestay Waisai[\s\S]*Bahasa pengantarEnglish/,
+  );
+  const link = signup.getByRole("link", { name: "Lanjutkan ke WhatsApp" });
   const message = new URL(await link.getAttribute("href")).searchParams.get(
     "text",
   );
   assert.match(message, /daftar kursus Advanced Open Water/);
   assert.match(message, /Peserta: 2 orang/);
-  assert.match(message, /Lisensi saat ini: Belum punya/);
+  assert.match(message, /Lisensi saat ini: Open Water/);
+  assert.match(message, /Tanggal lahir: 1995-04-12/);
+  assert.match(message, /Berenang: Nyaman berenang 200 m/);
+  assert.match(message, /Menginap di: Homestay Waisai/);
   assert.doesNotMatch(message, /demo|contoh/i);
+  // Editing keeps the answers; Escape closes the window.
+  await signup.getByRole("button", { name: "← Ubah data" }).click();
+  assert.equal(
+    await page.locator("#course-stay").inputValue(),
+    "Homestay Waisai",
+  );
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator(".course-checkout[open]").count(), 0);
 
   // English page uses English course copy.
   await page.goto(base + "/course", { waitUntil: "networkidle" });

@@ -25,7 +25,7 @@ import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 import { priceText } from "../price-list.js";
 import { visitorLocks } from "../developer.js";
 import { isDemo } from "../cms-mode.js";
-import { withCourses } from "../course-model.js";
+import { withCourses, courseProfile } from "../course-model.js";
 import { withService } from "../service-model.js";
 
 // Online payment is offered when the owner switched it on and the hosting
@@ -100,6 +100,19 @@ export async function startPayment(input, { origin, locale = "id" }) {
     order.program === "course" && typeof input.certification === "string"
       ? input.certification.trim().slice(0, 80)
       : "";
+  // A course sign-up's answers (birth date, swimming, health, sizes…) go
+  // into the booking notes for the team.
+  let profile = [];
+  if (order.program === "course")
+    try {
+      profile = courseProfile(
+        content.courses.items.find((c) => c.id === input.course),
+        { ...input, date: order.startDate },
+        "id",
+      );
+    } catch (error) {
+      throw fail(error.message);
+    }
   const { amount, lines } = order;
   const single = lines.length === 1 ? lines[0] : null;
   let payload;
@@ -118,6 +131,7 @@ export async function startPayment(input, { origin, locale = "id" }) {
       notes: [
         `Bayar online: ${orderLabel(lines, "id")}`,
         certification && `Lisensi: ${certification}`,
+        ...profile.map(([label, value]) => `${label}: ${value}`),
         notes,
       ]
         .filter(Boolean)

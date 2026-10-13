@@ -358,18 +358,40 @@ try {
 
   // Dive course: two people, paid for both.
   await page.goto(base + "/id/course", { waitUntil: "networkidle" });
-  await page.locator("#course-date[min]").waitFor({ state: "attached" });
+  await page.waitForFunction(() =>
+    Object.keys(document.querySelector(".course-item") ?? {}).some((key) =>
+      key.startsWith("__reactFiber"),
+    ),
+  );
+  // "Choose this course" opens the full sign-up; when sure, pay in full.
+  await page.getByRole("button", { name: "Pilih kursus ini" }).first().click();
+  await page.locator("#course-date").waitFor({ state: "visible" });
   const courseName = await page
     .locator("#course-select option:checked")
     .textContent();
-  await page.locator("#course-name").fill("Tamu Kursus");
-  await page.locator("#course-whatsapp").fill("081234567890");
   await page.locator("#course-date").fill(plusDays(3));
   await page.locator("#course-participants").fill("2");
-  await page.getByRole("button", { name: /Lanjut ke pembayaran/ }).click();
+  await page.locator("#course-name").fill("Tamu Kursus");
+  await page.locator("#course-birth").fill("1998-02-03");
+  await page.locator("#course-whatsapp").fill("081234567890");
+  await page.locator("#course-email").fill("tamu.kursus@example.com");
+  await page.locator("#course-swim").selectOption("basic");
+  await page.getByLabel("Sehat, tidak ada kondisi medis").check();
+  await page.locator("#course-wetsuit").selectOption("L");
+  await page
+    .getByRole("button", { name: "Lanjut ke ringkasan pembayaran" })
+    .click();
   assert.equal(
-    await page.locator(".activity-message h3").textContent(),
+    await page.locator("#plan-summary-title").textContent(),
     "Ringkasan pembayaran",
+  );
+  assert.match(
+    await page.locator(".course-checkout .pay-submit").textContent(),
+    /^Yakin\? Bayar penuh Rp/,
+  );
+  assert.match(
+    await page.locator(".course-checkout .pay-unsure").textContent(),
+    /^Belum yakin\? Tanya dulu lewat WhatsApp/,
   );
   const courseId = await pay(page);
   const courseOrder = mock.orders.get(courseId);
@@ -380,6 +402,12 @@ try {
     [booking.experience, booking.startDate, booking.participants],
     ["course", plusDays(3), 2],
   );
+  // The answers are kept on the booking for the team.
+  assert.match(
+    booking.notes,
+    /Tanggal lahir: 1998-02-03[\s\S]*Berenang: Bisa, tapi belum lancar[\s\S]*Kesehatan: Sehat, tidak ada kondisi medis[\s\S]*Ukuran wetsuit: L/,
+  );
+  assert.equal(booking.email, "tamu.kursus@example.com");
 
   // Gear service: the regulator, dropped off in two days.
   await page.goto(base + "/id/service#regulator", { waitUntil: "networkidle" });
@@ -581,7 +609,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS payments: daily limit of 30 divers in the calendar, checkout and server, off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package cart from the price cards and the panel (like the Dive Shop) with the cart bar, per-person quantity following participants, 30-participant limit, a two-package order, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
+    "PASS payments: daily limit of 30 divers in the calendar, checkout and server, off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package cart from the price cards and the panel (like the Dive Shop) with the cart bar, per-person quantity following participants, 30-participant limit, a two-package order, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two from the sign-up window with its answers on the booking, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
   );
 } finally {
   await browser.close();

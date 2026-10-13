@@ -190,7 +190,16 @@
   font-size: 12px;
   color: #6b8289;
 }
-.course-signup select {
+/* No side panel: the courses use the full width. */
+.activity-layout.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Course sign-up window. */
+.course-checkout {
+  width: min(680px, calc(100% - 24px));
+}
+.course-checkout select {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
@@ -200,6 +209,154 @@
   font: inherit;
   font-size: 14px;
   color: #062b3b;
+}
+.course-checkout-intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5d7770;
+}
+.course-pick {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #f1f7f5;
+}
+.course-pick img {
+  flex: none;
+  width: 96px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.course-pick div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.course-pick small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2c7a74;
+}
+.course-pick strong {
+  font-size: 18px;
+  color: #062b3b;
+}
+.course-pick span {
+  font-size: 13px;
+  color: #4f6b64;
+}
+.course-group {
+  display: grid;
+  gap: 14px;
+  margin: 6px 0 0;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid #e3ecea;
+}
+.course-group > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2c7a74;
+}
+.course-group > legend + * {
+  clear: both;
+}
+.course-choice {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.course-choice legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #062b3b;
+}
+.course-choice legend .form-required {
+  margin-left: 4px;
+}
+.course-choice label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #d5e3e0;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.course-choice label:has(input:checked) {
+  border-color: #1f8f8a;
+  background: #eef8f6;
+}
+.course-choice input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #0d6f73;
+}
+.course-hint {
+  margin: -6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6b8289;
+}
+.course-choice .course-hint {
+  margin-top: 2px;
+}
+/* The summary has longer labels than the activity checkout. */
+.course-checkout .plan-summary-list div {
+  grid-template-columns: 150px minmax(0, 1fr);
+}
+.course-checkout .plan-summary-list dt {
+  overflow-wrap: anywhere;
+}
+/* Not sure yet: a clear second choice next to paying in full. */
+.course-checkout .pay-unsure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1.5px solid #1f8f8a;
+  border-radius: 999px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 13px;
+}
+.course-checkout .pay-unsure:hover {
+  background: #eef8f6;
+}
+@media (max-width: 560px) {
+  .course-checkout .plan-summary-list div {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+  .course-checkout .form-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .course-pick img {
+    width: 72px;
+    height: 56px;
+  }
 }
 
 @media (max-width: 900px) {

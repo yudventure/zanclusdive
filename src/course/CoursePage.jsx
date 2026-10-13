@@ -1,18 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useReveal } from "../components/useReveal.js";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
-import FormField from "../components/FormField.jsx";
-import PayPanel from "../components/PayPanel.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
 import PartnerMarquee from "./PartnerMarquee.jsx";
+import CourseCheckout from "./CourseCheckout.jsx";
 import { photoSrcSet } from "../photography.js";
-import { phoneLabel } from "../contact-model.js";
-import { courseInquiry, courseText } from "../course-model.js";
+import { courseText } from "../course-model.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
 
 const icons = {
@@ -48,245 +45,14 @@ function Icon({ name, size = 18 }) {
   );
 }
 
-function SignUp({ courses, selected, onSelect, contact, payments, locale }) {
-  const c = dictionary(locale).course;
-  const a = dictionary(locale).activity;
-  const p = dictionary(locale).payment;
-  const ready = Boolean(payments?.ready);
-  const [today, setToday] = useState("");
-  const [details, setDetails] = useState({
-    name: "",
-    whatsapp: "",
-    email: "",
-    date: "",
-    participants: 1,
-    certification: c.certOptions[0],
-    notes: "",
-  });
-  const [message, setMessage] = useState("");
-  const messageRef = useReveal(message);
-  const [error, setError] = useState("");
-  useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
-  useEffect(() => setMessage(""), [selected]);
-  const course = courses.find((x) => x.id === selected) || courses[0];
-  function change(key, value) {
-    setDetails((current) => ({ ...current, [key]: value }));
-    setMessage("");
-    setError("");
-  }
-  function prepare(event) {
-    event.preventDefault();
-    try {
-      setMessage(courseInquiry(course, details, today, locale));
-      setError("");
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-  return (
-    <aside
-      className="activity-inquiry course-signup"
-      id="inquiry"
-      aria-labelledby="inquiry-title"
-    >
-      <p className="eyebrow">{c.planKicker}</p>
-      <h2 id="inquiry-title">{c.planTitle}</h2>
-      <div className="activity-price">
-        <small>{courseText(course.name, locale)}</small>
-        <strong>{formatIDR(course.price, locale)}</strong>
-        <p>{c.note}</p>
-      </div>
-      <form className="activity-form" onSubmit={prepare} noValidate>
-        <p className="form-required-note">
-          <span aria-hidden="true">*</span> {a.requiredNote}
-        </p>
-        <div className="form-field">
-          <label htmlFor="course-select">{c.course}</label>
-          <select
-            id="course-select"
-            value={course.id}
-            onChange={(e) => onSelect(e.target.value)}
-          >
-            {courses.map((x) => (
-              <option key={x.id} value={x.id}>
-                {courseText(x.name, locale)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-field">
-          <label htmlFor="course-certification">{c.certification}</label>
-          <select
-            id="course-certification"
-            value={details.certification}
-            onChange={(e) => change("certification", e.target.value)}
-          >
-            {c.certOptions.map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-        </div>
-        <FormField id="course-name" label={a.name} icon="user" required>
-          <input
-            id="course-name"
-            name="name"
-            autoComplete="name"
-            maxLength={120}
-            required
-            value={details.name}
-            onChange={(e) => change("name", e.target.value)}
-            placeholder={a.namePlaceholder}
-          />
-        </FormField>
-        <FormField
-          id="course-whatsapp"
-          label={a.whatsapp}
-          icon="whatsapp"
-          required
-        >
-          <input
-            id="course-whatsapp"
-            name="whatsapp"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            maxLength={30}
-            required
-            value={details.whatsapp}
-            onChange={(e) => change("whatsapp", e.target.value)}
-            placeholder={a.whatsappPlaceholder}
-          />
-        </FormField>
-        <FormField
-          id="course-email"
-          label={a.email}
-          icon="email"
-          optional={a.optional}
-        >
-          <input
-            id="course-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            maxLength={200}
-            value={details.email}
-            onChange={(e) => change("email", e.target.value)}
-            placeholder={a.emailPlaceholder}
-          />
-        </FormField>
-        <div className="form-row">
-          <FormField
-            id="course-date"
-            label={c.dateLabel}
-            icon="calendar"
-            required
-          >
-            <input
-              id="course-date"
-              name="date"
-              type="date"
-              min={today || undefined}
-              required
-              value={details.date}
-              onChange={(e) => change("date", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            id="course-participants"
-            label={a.participants}
-            icon="people"
-            required
-          >
-            <input
-              id="course-participants"
-              name="participants"
-              type="number"
-              min="1"
-              max="20"
-              required
-              value={details.participants}
-              onChange={(e) => change("participants", e.target.value)}
-            />
-          </FormField>
-        </div>
-        <FormField
-          id="course-notes"
-          label={a.notes}
-          icon="note"
-          optional={a.optional}
-        >
-          <textarea
-            id="course-notes"
-            name="notes"
-            rows="3"
-            maxLength={1000}
-            value={details.notes}
-            onChange={(e) => change("notes", e.target.value)}
-            placeholder={a.notesPlaceholder}
-          />
-        </FormField>
-        {error && (
-          <p className="activity-error" role="alert">
-            {error}
-          </p>
-        )}
-        <button className="button dark" type="submit">
-          {ready ? p.toPay : a.prepare} <span aria-hidden="true">↗</span>
-        </button>
-      </form>
-      {message && ready && (
-        <div className="activity-message" role="status" ref={messageRef}>
-          <h3>{p.summaryPay}</h3>
-          <PayPanel
-            order={{
-              kind: "course",
-              course: course.id,
-              participants: Number(details.participants),
-              date: details.date,
-              certification: details.certification,
-              name: details.name,
-              whatsapp: details.whatsapp,
-              email: details.email,
-              notes: details.notes,
-            }}
-            total={course.price * Number(details.participants)}
-            breakdown={`${formatIDR(course.price, locale)} × ${p.people(Number(details.participants))}`}
-            message={message}
-            whatsapp={contact.whatsapp}
-            sandbox={payments.sandbox}
-            locale={locale}
-          />
-        </div>
-      )}
-      {message && !ready && (
-        <div className="activity-message" role="status" ref={messageRef}>
-          <h3>{a.ready}</h3>
-          <p className="activity-message-preview">{message}</p>
-          <a
-            className="button lime"
-            href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {a.continueWhatsApp} <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      )}
-      <p className="activity-form-note">{ready ? p.paidNote : c.formNote}</p>
-      <a
-        className="activity-inquiry-contact"
-        href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(c.message.greeting(courseText(course.name, locale)))}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <ContactIcon name="whatsapp" /> {a.askFirst}{" "}
-        {phoneLabel(contact.whatsapp)} <span aria-hidden="true">↗</span>
-      </a>
-    </aside>
-  );
-}
-
-export default function CoursePage({ content, locale = "en", payments }) {
+export default function CoursePage({
+  content,
+  locale = "en",
+  payments,
+  slots,
+  today,
+  lastDate,
+}) {
   const dict = dictionary(locale);
   const c = dict.course;
   const href = (path) => localeHref(locale, path);
@@ -301,8 +67,8 @@ export default function CoursePage({ content, locale = "en", payments }) {
     window.addEventListener("scroll", scroll, { passive: true });
     return () => window.removeEventListener("scroll", scroll);
   }, []);
-  // A link such as /course#open-water preselects that course in the form,
-  // also when the visitor is already on the page.
+  // A link such as /course#open-water marks that course, also when the
+  // visitor is already on the page.
   useEffect(() => {
     const pick = () => {
       const id = window.location.hash.slice(1);
@@ -312,11 +78,16 @@ export default function CoursePage({ content, locale = "en", payments }) {
     window.addEventListener("hashchange", pick);
     return () => window.removeEventListener("hashchange", pick);
   }, []);
+  // "Choose this course" opens the sign-up window on its first empty field.
+  const checkoutRef = useRef(null);
   function choose(id) {
     setSelected(id);
-    document
-      .getElementById("inquiry")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    checkoutRef.current?.showModal();
+    setTimeout(() =>
+      [...document.querySelectorAll("#inquiry input[required]")]
+        .find((input) => !input.value)
+        ?.focus(),
+    );
   }
   const banner = (kind, [eyebrow, title, intro]) => (
     <SectionBanner
@@ -443,7 +214,7 @@ export default function CoursePage({ content, locale = "en", payments }) {
                 </a>
               ))}
             </div>
-            <div className="activity-layout">
+            <div className="activity-layout is-single">
               <div className="activity-details">
                 <section className="activity-block" id="why" data-reveal>
                   {banner("why", c.why)}
@@ -563,17 +334,34 @@ export default function CoursePage({ content, locale = "en", payments }) {
                   </div>
                 </section>
               </div>
-              {courses.length > 0 && (
-                <SignUp
+            </div>
+            {courses.length > 0 && (
+              <dialog
+                ref={checkoutRef}
+                className="modal activity-checkout course-checkout"
+                aria-labelledby="inquiry-title"
+              >
+                <button
+                  type="button"
+                  className="close-modal"
+                  aria-label={c.close}
+                  onClick={() => checkoutRef.current?.close()}
+                >
+                  ×
+                </button>
+                <CourseCheckout
                   courses={courses}
                   selected={selected}
                   onSelect={setSelected}
                   contact={content.contact}
                   payments={payments}
+                  slots={slots}
+                  today={today}
+                  lastDate={lastDate}
                   locale={locale}
                 />
-              )}
-            </div>
+              </dialog>
+            )}
           </div>
         </div>
       </main>

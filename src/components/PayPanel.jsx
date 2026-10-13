@@ -14,6 +14,8 @@ export default function PayPanel({
   sandbox,
   locale,
   showTotal = true,
+  submitText,
+  unsureText,
 }) {
   const p = dictionary(locale).payment;
   const [paying, setPaying] = useState(false);
@@ -58,7 +60,9 @@ export default function PayPanel({
         disabled={paying}
         onClick={pay}
       >
-        {paying ? p.redirecting : p.submit(formatIDR(total, locale))}{" "}
+        {paying
+          ? p.redirecting
+          : submitText || p.submit(formatIDR(total, locale))}{" "}
         <span aria-hidden="true">↗</span>
       </button>
       <div className="pay-notes">
@@ -77,7 +81,7 @@ export default function PayPanel({
         target="_blank"
         rel="noopener noreferrer"
       >
-        {p.askWhatsApp} <span aria-hidden="true">↗</span>
+        {unsureText || p.askWhatsApp} <span aria-hidden="true">↗</span>
       </a>
     </div>
   );

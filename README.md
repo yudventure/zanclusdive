@@ -189,7 +189,13 @@ Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
 
 - **Paket Diving, Snorkeling, Trip laut**: seperti Dive Shop. Setiap kartu di **Paket & harga** punya tombol **Keranjang** (lalu − / + untuk jumlah), dan bilah keranjang di bawah daftar harga menampilkan jumlah paket, total, serta tombol **Checkout** yang membuka jendela checkout. Jendela itu menampilkan **Paket dipilih** (bisa diubah atau ditambah dari pilihan **+ Tambah paket…**), lalu tiga langkah **Isi data → Ringkasan → Pembayaran**. Paket per orang mengikuti jumlah peserta; beberapa paket dibayar dalam satu transaksi. Pembayaran online dibatasi 30 peserta dan sisa slot tanggal yang dipilih.
 - **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp.
-- **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20).
+- **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20). Halaman kursus tidak punya panel samping lagi. Tombol **Pilih kursus ini** membuka jendela pendaftaran lengkap:
+  - **Jadwal & peserta**: tanggal mulai (dengan sisa slot diving harian) dan jumlah peserta.
+  - **Data peserta utama**: nama, tanggal lahir (dicek terhadap syarat usia kursus, mis. 12+), kewarganegaraan, WhatsApp, dan email (wajib, untuk sertifikasi).
+  - **Pengalaman & kesehatan**: lisensi, jumlah penyelaman, kemampuan berenang, dan kondisi kesehatan (kondisi medis wajib dijelaskan di catatan).
+  - **Perlengkapan & penjemputan**: ukuran wetsuit dan kaki, penginapan, bahasa pengantar, dan catatan.
+
+  Setelah ringkasan, tamu yang yakin memilih **Yakin? Bayar penuh Rp …**. Yang belum yakin memilih **Belum yakin? Tanya dulu lewat WhatsApp**. Jawaban pendaftaran ikut tersimpan di catatan reservasi.
 - **Servis alat** (`/service`): jumlah harga servis yang dipilih.
 
 Setiap formulir menampilkan ringkasan dan tombol **Bayar Rp …** yang membuka halaman pembayaran Midtrans (QRIS, e-wallet, virtual account, kartu, dll. sesuai akun Midtrans). Tamu yang masih ragu memilih **Masih ragu? Kirim lewat WhatsApp** dengan ringkasan yang sama. Selama pembayaran online belum aktif, semua formulir tetap berakhir di WhatsApp seperti sebelumnya. Harga selalu dihitung ulang di server dari CMS, bukan dari browser. Pesanan Dive Shop, kursus, dan servis tercatat sebagai reservasi **Dive Shop**, **Kursus selam**, dan **Servis alat** pada tanggalnya (sewa: tanggal mulai sampai selesai; beli saja: tanggal pemesanan); pesanan Dive Shop dan servis tidak dikirim ke kalender travel agent.
