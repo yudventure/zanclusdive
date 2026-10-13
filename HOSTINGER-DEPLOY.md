@@ -31,8 +31,10 @@ File ZIP lama di repository hanya arsip dan tidak diperlukan untuk build. Tidak 
 
 ## Alternatif upload ZIP
 
+Buat ZIP dari commit terakhir dengan `npm run zip:hostinger`. Hasilnya `Zanclus-Nextjs-Hostinger.zip` di root proyek: `package.json` dan `package-lock.json` ada di akar arsip, tanpa `node_modules`, `.next`, `.git`, tes, atau ZIP lama (lihat `.gitattributes`). Perubahan yang belum di-commit tidak ikut.
+
 1. Di hPanel, tambahkan website melalui **Node.js Web App**.
-2. Pilih sumber upload file jika tersedia, lalu unggah `Zanclus-Nextjs-Hostinger.zip`. Arsip ini menaruh `package.json` di akar arsip. Jangan unggah ZIP Vite lama.
+2. Pilih **Upload file** → **Lanjutkan**, lalu unggah `Zanclus-Nextjs-Hostinger.zip`. Jangan ekstrak dulu dan jangan unggah ZIP Vite lama (`Zanclus-Website-Source.zip`).
 3. Pilih Next.js dan Node.js 22.x, lalu periksa pengaturan build di tabel.
 4. Tambahkan environment variable publik berikut sebelum build:
    - `NEXT_PUBLIC_WHATSAPP_NUMBER=6285190849237`
@@ -50,6 +52,8 @@ Variabel `NEXT_PUBLIC_*` ditanam ke bundle pada waktu build. Perubahan memerluka
 ## Kompatibilitas build Hostinger
 
 Script `npm run build` memakai `next build --webpack`. Turbopack default Next.js 16 dapat gagal pada host Linux yang tidak memenuhi versi GLIBC native compiler. Webpack dipilih melalui flag CLI resmi; tidak perlu menambahkan `webpack: true` atau `turbopack: false` ke konfigurasi Next.js. Jika build command pada hPanel diatur manual ke `next build`, ganti menjadi `npm run build` atau `next build --webpack`.
+
+Tailwind CSS dan PostCSS berada di `dependencies`, bukan `devDependencies`, karena dibutuhkan saat build. Build tetap berhasil walaupun hosting memasang paket tanpa devDependencies.
 
 ## Diagnosis singkat
 
