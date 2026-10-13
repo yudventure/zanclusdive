@@ -1684,3 +1684,32 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* Midtrans connection test and last refusal. */
+.admin-pay-test {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 18px;
+}
+.admin-pay-test-result {
+  flex: 1 1 280px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.admin-pay-test-result.ok {
+  background: #e7f6ec;
+  color: #1f6b47;
+}
+.admin-pay-test-result.warn {
+  background: #fff0ec;
+  color: #a73428;
+}
+.admin-pay-last-error span {
+  display: block;
+  margin-top: 4px;
+}

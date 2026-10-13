@@ -48,6 +48,20 @@ const englishErrors = {
   "Isi nama, maksimal 80 karakter.": "Enter your name, up to 80 characters.",
   "Format email belum benar.": "That email doesn't look right.",
   "Catatan maksimal 1.000 karakter.": "Notes can be up to 1,000 characters.",
+  "Pilih alat terlebih dahulu.": "Choose your gear first.",
+  "Lama sewa harus 1–30 hari.": "Rental days must be between 1 and 30.",
+  "Jumlah setiap alat harus 1–10.": "Each item can be 1 to 10 units.",
+  "Ada alat yang belum tersedia. Muat ulang halaman.":
+    "Some gear isn't available. Please reload the page.",
+  "Ada alat yang harganya dikonfirmasi tim. Kirim pesanan lewat WhatsApp.":
+    "Some gear is priced by our team. Please send the order on WhatsApp.",
+  "Kursus ini belum bisa dibayar online.":
+    "This course can't be paid online yet.",
+  "Jumlah peserta kursus harus 1–20.":
+    "Course participants must be between 1 and 20.",
+  "Pilih servis terlebih dahulu.": "Choose a service first.",
+  "Servis ini belum bisa dibayar online.":
+    "This service can't be paid online yet.",
   "Pembayaran belum bisa dibuat. Coba lagi sebentar, atau chat tim kami lewat WhatsApp.":
     "The payment couldn't be created. Try again shortly, or chat with our team on WhatsApp.",
 };
@@ -131,9 +145,10 @@ export function validateBookingRequest(input, now) {
 }
 
 export function assertBookable(content, bookings, booking) {
-  const program =
-    content.experiences?.[booking.experience] ??
-    content.activities?.[booking.experience];
+  const program = ["course", "shop", "service"].includes(booking.experience)
+    ? { enabled: true }
+    : (content.experiences?.[booking.experience] ??
+      content.activities?.[booking.experience]);
   if (!program?.enabled)
     throw new BookingError(
       "Program ini belum menerima booking. Pilih program lain.",

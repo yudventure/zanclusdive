@@ -84,6 +84,9 @@ try {
   await a.locator(".admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
+  // The admin checks that Midtrans accepts the server key.
+  await a.getByRole("button", { name: "Tes koneksi Midtrans" }).click();
+  await a.getByText("Berhasil: Midtrans menerima server key ini.").waitFor();
 
   // A guest who is sure pays for two Discovery Dives for today.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
@@ -240,6 +243,159 @@ try {
   await a.getByText("Status pembayaran diperbarui dari Midtrans.").waitFor();
   assert.equal((await order(checkId)).payment.status, "paid");
 
+  // Every other form pays with Midtrans too. pay() opens the payment page
+  // from a summary and returns the Midtrans order.
+  async function pay(tab, settle = true) {
+    await tab.locator(".pay-panel .pay-submit").click();
+    await tab.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
+    const id = new URL(tab.url()).pathname.split("/").pop();
+    if (settle) {
+      await tab.locator("#settle").click();
+      await tab.waitForURL(/\/payment\/finish/);
+      assert.equal(
+        await tab.locator("[data-status]").getAttribute("data-status"),
+        "paid",
+      );
+    }
+    return id;
+  }
+  const plusDays = (n) =>
+    new Date(Date.parse(today + "T00:00:00Z") + n * 864e5)
+      .toISOString()
+      .slice(0, 10);
+
+  // Homepage Dive Shop: buy a dive computer and rent a mask for 2 days.
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
+  await page.locator("#dive-shop").scrollIntoViewIfNeeded();
+  await page
+    .locator(".shop-item", { hasText: "Dive computer" })
+    .locator("button")
+    .first()
+    .click();
+  await page.getByRole("tab").nth(1).click();
+  const rental = page.locator(".shop-item").first();
+  const rentalName = await rental.locator("h4").textContent();
+  await rental.locator("button").first().click();
+  await page.locator(".shop-cart-bar .button").click();
+  const checkout = page.locator(".shop-checkout");
+  await checkout.waitFor({ state: "visible" });
+  assert.match(await checkout.textContent(), /bayar online lewat Midtrans/);
+  await checkout.locator('input[autocomplete="name"]').fill("Tamu Toko");
+  await checkout.locator('input[type="tel"]').fill("081234567890");
+  await checkout.locator('input[type="number"]').fill("2");
+  await checkout.getByRole("button", { name: "Lanjut ke pembayaran" }).click();
+  assert.equal(await checkout.locator(".pay-total").count(), 0);
+  const shopTotal = await checkout
+    .locator(".shop-checkout-totals div")
+    .last()
+    .textContent();
+  assert.match(shopTotal, /^Total dibayar/);
+  const shopId = await pay(page);
+  const shopOrder = mock.orders.get(shopId);
+  assert.equal(shopOrder.items.length, 2);
+  assert.deepEqual(
+    [
+      shopOrder.items[0].name,
+      shopOrder.items[0].price,
+      shopOrder.items[0].quantity,
+    ],
+    ["Beli Dive computer", 4200000, 1],
+  );
+  assert.equal(
+    shopOrder.items[1].name,
+    `Sewa ${rentalName} (2 hari)`.slice(0, 50),
+  );
+  assert.equal(
+    shopOrder.amount,
+    shopOrder.items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+  );
+  assert.equal(shopTotal.replace(/\D/g, ""), String(shopOrder.amount));
+  assert.match(
+    await page.locator(".zs-details").textContent(),
+    /Dive Shop[\s\S]*Beli Dive computer × 1, Sewa/,
+  );
+  booking = await order(shopId);
+  assert.deepEqual(
+    [booking.experience, booking.status, booking.startDate, booking.endDate],
+    ["shop", "confirmed", today, plusDays(1)],
+  );
+
+  // Dive course: two people, paid for both.
+  await page.goto(base + "/id/course", { waitUntil: "networkidle" });
+  await page.locator("#course-date[min]").waitFor({ state: "attached" });
+  const courseName = await page
+    .locator("#course-select option:checked")
+    .textContent();
+  await page.locator("#course-name").fill("Tamu Kursus");
+  await page.locator("#course-whatsapp").fill("081234567890");
+  await page.locator("#course-date").fill(plusDays(3));
+  await page.locator("#course-participants").fill("2");
+  await page.getByRole("button", { name: /Lanjut ke pembayaran/ }).click();
+  assert.equal(
+    await page.locator(".activity-message h3").textContent(),
+    "Ringkasan pembayaran",
+  );
+  const courseId = await pay(page);
+  const courseOrder = mock.orders.get(courseId);
+  assert.equal(courseOrder.items[0].quantity, 2);
+  assert.ok(courseName.startsWith(courseOrder.items[0].name));
+  booking = await order(courseId);
+  assert.deepEqual(
+    [booking.experience, booking.startDate, booking.participants],
+    ["course", plusDays(3), 2],
+  );
+
+  // Gear service: the regulator, dropped off in two days.
+  await page.goto(base + "/id/service#regulator", { waitUntil: "networkidle" });
+  await page.waitForFunction(
+    () => document.querySelector('input[value="regulator"]')?.checked,
+  );
+  await page.locator("#service-name").fill("Tamu Servis");
+  await page.locator("#service-whatsapp").fill("081234567890");
+  await page.locator("#service-date").fill(plusDays(2));
+  await page.getByRole("button", { name: /Lanjut ke pembayaran/ }).click();
+  const serviceId = await pay(page, false);
+  assert.equal(mock.orders.get(serviceId).amount, 650000);
+  booking = await order(serviceId);
+  assert.deepEqual(
+    [booking.experience, booking.status, booking.payment.status],
+    ["service", "pending", "pending"],
+  );
+
+  // Dive Shop page: a refused transaction shows in the admin with its cause.
+  await page.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", {
+      name: "Tambahkan Mask & snorkel set untuk dibeli",
+      exact: true,
+    })
+    .click();
+  await page.getByLabel("Nama kamu").fill("Tamu Halaman Shop");
+  await page.getByLabel("Nomor WhatsApp").fill("081234567890");
+  await page.getByRole("button", { name: "Lanjut ke pembayaran" }).click();
+  mock.failNext = {
+    status: 401,
+    message:
+      "Access denied due to unauthorized transaction, please check client or server key",
+  };
+  await page.locator(".pay-panel .pay-submit").click();
+  await page
+    .locator(".pay-panel .activity-error", {
+      hasText: "Pembayaran belum bisa dibuat",
+    })
+    .waitFor();
+  await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
+  assert.match(
+    await a.locator(".admin-pay-last-error").textContent(),
+    /saat membuat pembayaran[\s\S]*401 · Access denied[\s\S]*Midtrans menolak server key/,
+  );
+  // Trying again goes through, and the refusal is no longer shown.
+  const pageShopId = await pay(page, false);
+  assert.equal(mock.orders.get(pageShopId).amount, 650000);
+  assert.equal((await order(pageShopId)).experience, "shop");
+  await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
+  assert.equal(await a.locator(".admin-pay-last-error").count(), 0);
+
   // Still unsure: the same summary goes to WhatsApp instead.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
   await fillForm("Tamu Ragu", "3");
@@ -285,7 +441,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS payments: off by default (summary then WhatsApp), admin switch with key status and Midtrans URLs, package card with price and total, per-person quantity, 30-participant limit, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
+    "PASS payments: off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package card with price and total, per-person quantity, 30-participant limit, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
   );
 } finally {
   await browser.close();

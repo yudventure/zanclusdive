@@ -35,18 +35,28 @@ import {
 } from "./photography.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 // Reservations are for a diving program or, when booked and paid from an
-// activity page, for the activity itself.
+// activity page, for the activity itself. Paid Dive Shop orders, courses
+// and gear servicing are kept as reservations on their date too.
 export const activityPrograms = {
   diving: "Diving",
   snorkeling: "Snorkeling",
   trip: "Trip laut",
 };
+export const orderPrograms = {
+  course: "Kursus selam",
+  shop: "Dive Shop",
+  service: "Servis alat",
+};
 export const bookingPrograms = [
   ...experienceKeys,
   ...Object.keys(activityPrograms),
+  ...Object.keys(orderPrograms),
 ];
 export const programTitle = (content, key) =>
-  content.experiences?.[key]?.title ?? activityPrograms[key] ?? key;
+  content.experiences?.[key]?.title ??
+  activityPrograms[key] ??
+  orderPrograms[key] ??
+  key;
 export const defaultContent = {
   photographyVersion,
   en: structuredClone(englishDefaults),

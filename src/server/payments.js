@@ -13,13 +13,8 @@ import {
   transactionStatus,
   validSignature,
 } from "./midtrans.js";
-import {
-  payableItems,
-  paymentActivities,
-  paymentOutcome,
-  quantityLimit,
-  withPaymentStatus,
-} from "../payment-model.js";
+import { paymentOutcome, withPaymentStatus } from "../payment-model.js";
+import { priceOrder, PricingError, orderLabel } from "../order-pricing.js";
 import {
   BookingError,
   bookingDates,
@@ -28,8 +23,10 @@ import {
 import { validateBooking } from "../cms-model.js";
 import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 import { priceText } from "../price-list.js";
-import { visitorLocks, pageLocked } from "../developer.js";
+import { visitorLocks } from "../developer.js";
 import { isDemo } from "../cms-mode.js";
+import { withCourses } from "../course-model.js";
+import { withService } from "../service-model.js";
 
 // Online payment is offered when the owner switched it on and the hosting
 // has a Midtrans server key. Real payments need the MySQL database: demo
@@ -39,6 +36,12 @@ export const paymentsReady = (content) =>
   content.payments?.enabled === true &&
   midtransConfigured() &&
   !paymentsBlockedByDemo();
+
+// What the forms need to know: whether to offer payment, and test mode.
+export const paymentOptions = (content) => ({
+  ready: paymentsReady(content),
+  sandbox: !midtransProduction(),
+});
 
 // The public address of the website, for the page Midtrans returns to.
 export function siteOrigin(request) {
@@ -55,41 +58,33 @@ export function siteOrigin(request) {
 
 const fail = (message, status = 400) => new BookingError(message, status);
 
-// Checks a pay-now request against the current CMS prices, saves the
-// booking as waiting for payment and opens a Midtrans transaction for it.
+// Checks a pay request against the current CMS prices (activity package,
+// Dive Shop order, course or gear service), saves the booking as waiting
+// for payment and opens a Midtrans transaction for it.
 export async function startPayment(input, { origin, locale = "id" }) {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw fail("Data pembayaran tidak valid.");
   if (input.website) throw fail("Permintaan tidak dapat diproses.");
-  const { content } = await getContent();
+  // Courses and services saved before those parts existed use defaults,
+  // as on their pages.
+  const content = withService(withCourses((await getContent()).content));
   if (!paymentsReady(content))
     throw fail(
       "Pembayaran online belum tersedia. Silakan chat tim kami lewat WhatsApp.",
       409,
     );
-  const activity = input.activity;
-  if (
-    !paymentActivities.includes(activity) ||
-    !content.activities?.[activity]?.enabled ||
-    pageLocked(visitorLocks(content.developer), activity)
-  )
-    throw fail("Aktivitas ini belum bisa dibayar online.", 409);
-  const item = payableItems(content.priceList, activity).find(
-    (entry) => entry.index === Number(input.item),
-  );
-  if (!item || priceText(item.name, "id") !== input.itemName)
-    throw fail("Daftar harga baru saja diperbarui. Muat ulang halaman.", 409);
-  const quantity = Number(input.quantity);
-  const participants = Number(input.participants);
-  if (
-    !Number.isInteger(quantity) ||
-    quantity < 1 ||
-    quantity > quantityLimit ||
-    !Number.isInteger(participants) ||
-    participants < 1 ||
-    participants > quantityLimit
-  )
-    throw fail("Jumlah paket dan peserta harus 1–30.");
+  let order;
+  try {
+    order = priceOrder(
+      content,
+      input,
+      bookingDates(),
+      visitorLocks(content.developer),
+    );
+  } catch (error) {
+    if (error instanceof PricingError) throw fail(error.message, error.status);
+    throw error;
+  }
   const name = typeof input.name === "string" ? input.name.trim() : "";
   if (!name || name.length > 80) throw fail("Isi nama, maksimal 80 karakter.");
   const whatsapp = cleanWhatsApp(input.whatsapp);
@@ -101,32 +96,28 @@ export async function startPayment(input, { origin, locale = "id" }) {
   if (email === null) throw fail("Format email belum benar.");
   const notes = typeof input.notes === "string" ? input.notes.trim() : "";
   if (notes.length > 1000) throw fail("Catatan maksimal 1.000 karakter.");
-  const dates = bookingDates();
-  if (
-    typeof input.date !== "string" ||
-    input.date < dates.today ||
-    input.date > dates.last
-  )
-    throw fail(
-      "Pilih tanggal mulai hari ini hingga satu tahun ke depan (WIT).",
-    );
-  const amount = item.price * quantity;
-  const unit = priceText(item.unit, "id");
+  const certification =
+    order.program === "course" && typeof input.certification === "string"
+      ? input.certification.trim().slice(0, 80)
+      : "";
+  const { amount, lines } = order;
+  const single = lines.length === 1 ? lines[0] : null;
   let payload;
   try {
     payload = validateBooking({
-      experience: activity,
+      experience: order.program,
       status: "pending",
       source: "website",
-      startDate: input.date,
-      endDate: input.date,
+      startDate: order.startDate,
+      endDate: order.endDate,
       guestName: name,
       phone: whatsapp,
       email,
-      participants,
+      participants: order.participants,
       amount,
       notes: [
-        `Bayar online: ${priceText(item.name, "id")} × ${quantity}${unit ? " " + unit : ""}`,
+        `Bayar online: ${orderLabel(lines, "id")}`,
+        certification && `Lisensi: ${certification}`,
         notes,
       ]
         .filter(Boolean)
@@ -143,24 +134,39 @@ export async function startPayment(input, { origin, locale = "id" }) {
       orderId,
       status: "created",
       amount,
-      item: priceText(item.name, "id"),
-      itemEn: priceText(item.name, "en"),
-      quantity,
-      unit,
+      // One line keeps the item, quantity and unit fields of earlier
+      // payments; every payment also lists its lines.
+      ...(single
+        ? {
+            item: priceText(single.name, "id"),
+            itemEn: priceText(single.name, "en"),
+            quantity: single.quantity,
+            unit: single.unit ? priceText(single.unit, "id") : "",
+          }
+        : {
+            item: orderLabel(lines, "id"),
+            itemEn: orderLabel(lines, "en"),
+          }),
+      lines: lines.map((line) => ({
+        name: {
+          id: priceText(line.name, "id"),
+          en: priceText(line.name, "en"),
+        },
+        price: line.price,
+        quantity: line.quantity,
+      })),
       createdAt: new Date().toISOString(),
     },
   });
   try {
     const snap = await createTransaction({
       transaction_details: { order_id: orderId, gross_amount: amount },
-      item_details: [
-        {
-          id: `${activity}-${item.index}`,
-          price: item.price,
-          quantity,
-          name: priceText(item.name, locale).slice(0, 50),
-        },
-      ],
+      item_details: lines.map((line) => ({
+        id: line.id.slice(0, 50),
+        price: line.price,
+        quantity: line.quantity,
+        name: priceText(line.name, locale).slice(0, 50),
+      })),
       customer_details: {
         first_name: name.slice(0, 50),
         phone: whatsapp,

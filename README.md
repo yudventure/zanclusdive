@@ -169,7 +169,14 @@ Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-book
 
 ## Pembayaran online (Midtrans)
 
-Formulir di halaman Diving, Snorkeling, dan Trip laut berjalan dalam tiga langkah: **Isi data → Ringkasan → Pembayaran**. Di atas formulir ada kartu **Paket & biaya**: tamu memilih paket dari daftar harga CMS, melihat harga per satuan dan totalnya (untuk harga per orang, jumlah mengikuti jumlah peserta; untuk satuan lain seperti hari ada kolom jumlah). Tombol **Lanjut ke ringkasan pembayaran** menampilkan ringkasan aktivitas, paket, tanggal, peserta, kontak, dan total, lalu **Bayar** membuka halaman pembayaran Midtrans (QRIS, e-wallet, virtual account, kartu, dll. sesuai akun Midtrans). Tamu yang masih ragu memilih **Kirim ringkasan ini lewat WhatsApp**; pesannya memuat paket dan perkiraan biaya. Selama pembayaran online belum aktif, langkah terakhir adalah WhatsApp dengan ringkasan yang sama. Pembayaran online dibatasi 30 peserta; grup lebih besar diarahkan ke WhatsApp. Harga selalu dihitung ulang di server dari daftar harga, bukan dari browser.
+Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
+
+- **Paket Diving, Snorkeling, Trip laut**: tiga langkah **Isi data → Ringkasan → Pembayaran** dengan kartu **Paket & biaya** (paket dari daftar harga CMS; harga per orang mengikuti jumlah peserta, satuan lain punya kolom jumlah). Pembayaran online dibatasi 30 peserta.
+- **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp.
+- **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20).
+- **Servis alat** (`/service`): jumlah harga servis yang dipilih.
+
+Setiap formulir menampilkan ringkasan dan tombol **Bayar Rp …** yang membuka halaman pembayaran Midtrans (QRIS, e-wallet, virtual account, kartu, dll. sesuai akun Midtrans). Tamu yang masih ragu memilih **Masih ragu? Kirim lewat WhatsApp** dengan ringkasan yang sama. Selama pembayaran online belum aktif, semua formulir tetap berakhir di WhatsApp seperti sebelumnya. Harga selalu dihitung ulang di server dari CMS, bukan dari browser. Pesanan Dive Shop, kursus, dan servis tercatat sebagai reservasi **Dive Shop**, **Kursus selam**, dan **Servis alat** pada tanggalnya (sewa: tanggal mulai sampai selesai; beli saja: tanggal pemesanan); pesanan Dive Shop dan servis tidak dikirim ke kalender travel agent.
 
 Saat tombol bayar ditekan, reservasi tersimpan dengan status **Belum dikonfirmasi** dan pembayaran **Menunggu**. Begitu Midtrans mengirim notifikasi lunas (`settlement`, atau `capture` dengan fraud `accept`), reservasi otomatis menjadi **Dikonfirmasi** pada tanggal kegiatan yang dipilih, tampil dengan tanda ✓ di kalender reservasi, dan masuk riwayat di `/admin/payments`. Pembayaran kedaluwarsa atau gagal membatalkan reservasinya. Notifikasi wajib bertanda tangan SHA512 yang sah, jumlahnya harus sama dengan tagihan, dan status lunas dicek ulang ke API Midtrans. Jika notifikasi terlambat, tombol **Cek status** di riwayat pembayaran menarik status terbaru.
 
@@ -182,6 +189,8 @@ Aktifkan dari `/admin/payments` setelah environment berikut diisi di hPanel (lal
 | `NEXT_PUBLIC_SITE_URL` | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar. |
 
 Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-kamu/api/payments/midtrans`. Halaman kembali `/payment/finish` dikirim otomatis pada setiap transaksi; mengisinya juga sebagai Finish Redirect URL tidak masalah. Pembayaran sungguhan (`MIDTRANS_PRODUCTION=true`) hanya ditawarkan bila `CMS_MODE=mysql`, karena penyimpanan demo bersifat sementara. Tidak ada tabel baru; data pembayaran tersimpan di catatan reservasi.
+
+**Jika tamu melihat "Pembayaran belum bisa dibuat"**, buka `/admin/payments`. Di sana tampil peringatan bila server key keliru (Client Key, atau key sandbox/production tidak sesuai mode), **penolakan terakhir dari Midtrans** beserta kodenya, dan tombol **Tes koneksi Midtrans** untuk mengecek server key langsung dari server website. Kode 401 berarti server key ditolak: pakai Server Key (bukan Client Key), key sandbox berawalan `SB-Mid-server-` tanpa `MIDTRANS_PRODUCTION`, key production berawalan `Mid-server-` dengan `MIDTRANS_PRODUCTION=true`, tanpa spasi atau tanda kutip, lalu deploy ulang. Tanda kutip atau spasi di awal/akhir key diabaikan otomatis.
 
 Uji tanpa menghubungi Midtrans: jalankan server demo dengan `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499`, lalu `BASE_URL=… node scripts/verify-payments.mjs`. Tes memakai Midtrans tiruan (`scripts/mock-midtrans.mjs`).
 

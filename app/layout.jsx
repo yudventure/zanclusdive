@@ -7,6 +7,7 @@ import "./dive-sites.css";
 import "./gallery.css";
 import "./calendar.css";
 import "./activity-page.css";
+import "./pay.css";
 import "./course.css";
 import "./about-service.css";
 import "./forms.css";

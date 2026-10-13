@@ -4,6 +4,7 @@ import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary } from "../../src/i18n.js";
 import { developerGate } from "../../src/server/developer-gate.jsx";
+import { paymentOptions } from "../../src/server/payments.js";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -26,6 +27,7 @@ export default async function ShopPage({ searchParams }) {
   return (
     <DiveShop
       locks={locks}
+      payments={paymentOptions(content)}
       shop={content.shop}
       contact={content.contact}
       images={content.images}

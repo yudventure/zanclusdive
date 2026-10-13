@@ -29,6 +29,7 @@ import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
   experienceKeys,
   bookingPrograms,
+  orderPrograms,
   programTitle,
   textFields,
   statuses,
@@ -834,7 +835,8 @@ export default function Dashboard({ section, email, today }) {
                             <th>
                               {programTitle(content, key)}
                               <small>
-                                {(
+                                {orderPrograms[key] ||
+                                (
                                   content.experiences[key] ??
                                   content.activities?.[key]
                                 )?.enabled

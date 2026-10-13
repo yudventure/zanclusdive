@@ -72,6 +72,8 @@ export function agentFeed({
   const stamped = [`DTSTAMP:${stamp}`];
   for (const b of bookings) {
     if (b.endDate < from || b.status === "cancelled") continue;
+    // Gear sales, rentals and servicing are not dive days.
+    if (["shop", "service"].includes(b.experience)) continue;
     // Online payments count once they are paid.
     if (b.payment && b.payment.status !== "paid") continue;
     const title = programTitle(content, b.experience);

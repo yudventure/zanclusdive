@@ -6,6 +6,7 @@ import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
+import PayPanel from "../components/PayPanel.jsx";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
@@ -159,9 +160,11 @@ export default function ShopTeaser({
   whatsapp,
   locale = "en",
   locks = noLocks,
+  payments,
 }) {
   const t = dictionary(locale).shop;
   const s = t.teaser;
+  const p = dictionary(locale).payment;
   const [active, setActive] = useState("buy");
   const [cart, setCart] = useState([]);
   const [form, setForm] = useState({
@@ -202,6 +205,34 @@ export default function ShopTeaser({
         visual: { category: visualFor(item.name.id), image: "" },
       }));
   const totals = cartTotals(cart, form.days || 1);
+  // With online payment on, a cart priced in full is paid with Midtrans.
+  const payable = Boolean(payments?.ready) && !totals.needsQuote;
+  const order = () => ({
+    kind: "shop",
+    lines: cart.map((line) => {
+      const [group, index] = line.key.split(":");
+      return group === "buy"
+        ? {
+            source: "product",
+            id: index,
+            mode: "sale",
+            quantity: line.quantity,
+          }
+        : {
+            source: "price",
+            group,
+            index: Number(index),
+            name: priceText(priceList[group][Number(index)].name, "id"),
+            quantity: line.quantity,
+          };
+    }),
+    days: Number(form.days) || 1,
+    startDate: form.startDate,
+    name: form.name,
+    whatsapp: form.whatsapp,
+    email: form.email,
+    notes: form.notes,
+  });
   const quantity = (key) =>
     cart.find((line) => line.key === key)?.quantity ?? 0;
   const change = (item, delta) => {
@@ -405,7 +436,7 @@ export default function ShopTeaser({
         </button>
         <p className="eyebrow">ZANCLUS DIVE SHOP</p>
         <h2 id={`${id}-checkout`}>{s.checkoutTitle}</h2>
-        <p>{s.checkoutIntro}</p>
+        <p>{payable ? p.shopIntro : s.checkoutIntro}</p>
         <ul className="shop-checkout-lines">
           {cart.map((line) => (
             <li key={line.key}>
@@ -457,13 +488,33 @@ export default function ShopTeaser({
             </div>
           )}
           <div>
-            <dt>{s.estimate}</dt>
+            <dt>{payable ? p.total : s.estimate}</dt>
             <dd>{rupiah(totals.total, locale)}</dd>
           </div>
         </dl>
         {totals.needsQuote && <p className="muted">{s.quoteNote}</p>}
-        {message ? (
+        {message && payable ? (
           <div className="shop-checkout-done">
+            <PayPanel
+              order={order()}
+              total={totals.total}
+              message={message}
+              whatsapp={whatsapp}
+              sandbox={payments.sandbox}
+              locale={locale}
+              showTotal={false}
+            />
+            <button
+              type="button"
+              className="shop-checkout-edit"
+              onClick={() => setMessage("")}
+            >
+              {s.edit}
+            </button>
+          </div>
+        ) : message ? (
+          <div className="shop-checkout-done">
+            {payments?.ready && <p className="muted">{p.quoteOnly}</p>}
             <pre>{message}</pre>
             <a
               className="button dark"
@@ -584,7 +635,7 @@ export default function ShopTeaser({
               </p>
             )}
             <button className="button dark" disabled={!cart.length}>
-              {s.review}
+              {payable ? p.toPay : s.review}
             </button>
           </form>
         )}

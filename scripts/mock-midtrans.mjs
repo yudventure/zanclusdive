@@ -44,6 +44,12 @@ export function startMockMidtrans({ port, serverKey, appUrl }) {
     if (req.method === "POST" && url.pathname === "/snap/v1/transactions") {
       if (req.headers.authorization !== auth)
         return send(401, { error_messages: ["bad key"] });
+      // A test can make the next transaction fail like Midtrans does.
+      if (mock.failNext) {
+        const { status: code, message } = mock.failNext;
+        mock.failNext = null;
+        return send(code, { error_messages: [message] });
+      }
       let raw = "";
       for await (const chunk of req) raw += chunk;
       const body = JSON.parse(raw);
@@ -90,9 +96,8 @@ export function startMockMidtrans({ port, serverKey, appUrl }) {
     }
     send(404, { error: "not found" });
   });
+  const mock = { server, orders, notify, status, failNext: null };
   return new Promise((resolve) =>
-    server.listen(port, "127.0.0.1", () =>
-      resolve({ server, orders, notify, status }),
-    ),
+    server.listen(port, "127.0.0.1", () => resolve(mock)),
   );
 }

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { programTitle } from "../cms-model.js";
-import { paymentStatusLabels } from "../payment-model.js";
+import { paymentStatusLabels, paymentItemLabel } from "../payment-model.js";
 import { bookingReference } from "../booking-model.js";
 
 const money = (n) =>
@@ -41,6 +41,82 @@ function CopyField({ label, value }) {
   );
 }
 
+const stages = {
+  snap: "saat membuat pembayaran",
+  test: "saat tes koneksi",
+  status: "saat cek status",
+};
+const witTime = (value) =>
+  new Date(value).toLocaleString("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Jayapura",
+  }) + " WIT";
+// What a Midtrans refusal usually means, in plain words.
+function explain(status) {
+  if (status === 401)
+    return "Midtrans menolak server key. Pastikan yang diisi Server Key (bukan Client Key), modenya sesuai (sandbox: awalan SB-Mid-server-, production: Mid-server- dengan MIDTRANS_PRODUCTION=true), tanpa spasi atau tanda kutip, lalu deploy ulang.";
+  if (status === 0)
+    return "Server website tidak bisa terhubung ke Midtrans. Coba lagi beberapa menit lagi; jika tetap gagal, tanyakan ke Hostinger apakah koneksi keluar ke midtrans.com diizinkan.";
+  if (status >= 500) return "Midtrans sedang bermasalah. Coba lagi nanti.";
+  return "Midtrans menolak data pembayaran. Kirim pesan ini ke pengembang website.";
+}
+
+// Checks that Midtrans accepts the server key, from the website's server.
+function ConnectionTest({ disabled }) {
+  const [result, setResult] = useState(null);
+  const [testing, setTesting] = useState(false);
+  async function run() {
+    setTesting(true);
+    setResult(null);
+    try {
+      const response = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "test" }),
+      });
+      setResult(await response.json());
+    } catch {
+      setResult({ ok: false, reason: "network", message: "" });
+    } finally {
+      setTesting(false);
+    }
+  }
+  const text = !result
+    ? null
+    : result.ok
+      ? "Berhasil: Midtrans menerima server key ini."
+      : result.reason === "missing"
+        ? "Server key belum diisi di hosting."
+        : result.reason === "key"
+          ? "Gagal (401): " + explain(401)
+          : result.reason === "network"
+            ? "Gagal: " +
+              explain(0) +
+              (result.message ? ` (${result.message})` : "")
+            : `Gagal (${result.status}): ${result.message || explain(result.status)}`;
+  return (
+    <div className="admin-pay-test">
+      <button
+        type="button"
+        className="admin-button secondary"
+        disabled={disabled || testing}
+        onClick={run}
+      >
+        {testing ? "Menguji…" : "Tes koneksi Midtrans"}
+      </button>
+      {text && (
+        <p
+          className={"admin-pay-test-result " + (result.ok ? "ok" : "warn")}
+          role="status"
+        >
+          {text}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // Online payment with Midtrans: switch it on, see whether the hosting has
 // the keys, and follow each payment.
 export default function PaymentsEditor({
@@ -72,12 +148,13 @@ export default function PaymentsEditor({
           <div>
             <h2>Bayar langsung dengan Midtrans</h2>
             <p className="admin-subtle">
-              Saat aktif, formulir di halaman Diving, Snorkeling, dan Trip laut
-              punya pilihan <strong>Tanya dulu</strong> (WhatsApp) dan{" "}
-              <strong>Bayar sekarang</strong>. Tamu memilih paket dari daftar
-              harga dan membayar lunas. Begitu Midtrans melaporkan pembayaran
-              berhasil, reservasi otomatis berstatus Dikonfirmasi pada tanggal
-              kegiatannya dan tampil di kalender.
+              Saat aktif, semua pemesanan dibayar lewat Midtrans: paket Diving,
+              Snorkeling, dan Trip laut, belanja dan sewa alat di Dive Shop,
+              kursus selam, dan servis alat. Tamu melihat ringkasan, lalu
+              membayar lunas. Begitu Midtrans melaporkan pembayaran berhasil,
+              pesanan otomatis berstatus Dikonfirmasi pada tanggalnya dan tampil
+              di kalender. Tamu yang masih ragu tetap bisa mengirim ringkasannya
+              lewat WhatsApp.
             </p>
           </div>
           <label className="admin-dev-switch">
@@ -102,6 +179,23 @@ export default function PaymentsEditor({
               ? "Mode production: pembayaran sungguhan."
               : "Mode sandbox (uji coba): tidak ada uang sungguhan. Isi MIDTRANS_PRODUCTION=true dan server key production saat siap menerima pembayaran."}
           </li>
+          {(status?.issues ?? []).map((issue) => (
+            <li className="warn" key={issue}>
+              {issue}
+            </li>
+          ))}
+          {status?.lastError && (
+            <li className="warn admin-pay-last-error">
+              <strong>
+                Penolakan terakhir dari Midtrans{" "}
+                {stages[status.lastError.stage] ?? ""} (
+                {witTime(status.lastError.at)}):
+              </strong>{" "}
+              {status.lastError.status ? `${status.lastError.status} · ` : ""}
+              {status.lastError.message || "tanpa keterangan"}
+              <span>{explain(status.lastError.status)}</span>
+            </li>
+          )}
           {status?.blockedByDemo && (
             <li className="warn">
               Pembayaran sungguhan butuh database MySQL (CMS_MODE=mysql).
@@ -110,6 +204,7 @@ export default function PaymentsEditor({
             </li>
           )}
         </ul>
+        <ConnectionTest disabled={!configured} />
         {origin && (
           <div className="admin-pay-urls">
             <p className="admin-subtle">
@@ -161,9 +256,7 @@ export default function PaymentsEditor({
                     </td>
                     <td>
                       {programTitle(content, b.experience)}
-                      <small>
-                        {b.payment.item} × {b.payment.quantity}
-                      </small>
+                      <small>{paymentItemLabel(b.payment)}</small>
                     </td>
                     <td>
                       {new Date(b.startDate + "T12:00:00").toLocaleDateString(

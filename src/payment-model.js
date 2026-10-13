@@ -72,6 +72,19 @@ export function withPaymentStatus(booking, outcome, details = {}) {
   return next;
 }
 
+// What was paid for, as one line: "Discovery Dive × 2" or several lines.
+export function paymentItemLabel(payment, locale = "id") {
+  if (payment?.lines?.length > 1)
+    return payment.lines
+      .map(
+        (line) =>
+          `${(locale === "en" && line.name?.en) || line.name?.id} × ${line.quantity}`,
+      )
+      .join(", ");
+  const item = (locale === "en" && payment?.itemEn) || payment?.item || "";
+  return payment?.quantity ? `${item} × ${payment.quantity}` : item;
+}
+
 export const paymentStatusLabels = {
   created: "Dibuat",
   pending: "Menunggu pembayaran",

@@ -9,6 +9,8 @@ import { cmsMode } from "../../../../src/cms-mode.js";
 import {
   midtransConfigured,
   midtransProduction,
+  keyIssues,
+  lastMidtransError,
 } from "../../../../src/server/midtrans.js";
 import { paymentsBlockedByDemo } from "../../../../src/server/payments.js";
 export const dynamic = "force-dynamic";
@@ -33,6 +35,8 @@ export async function GET(request) {
           configured: midtransConfigured(),
           production: midtransProduction(),
           blockedByDemo: paymentsBlockedByDemo(),
+          issues: keyIssues(),
+          lastError: lastMidtransError(),
         },
       },
       { headers: { "Cache-Control": "no-store" } },

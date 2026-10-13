@@ -6,6 +6,7 @@ import PageHeader from "../components/PageHeader.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import FormField from "../components/FormField.jsx";
+import PayPanel from "../components/PayPanel.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
 import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
@@ -51,9 +52,11 @@ function Icon({ name, size = 18 }) {
   );
 }
 
-function Request({ items, chosen, onToggle, contact, locale }) {
+function Request({ items, chosen, onToggle, contact, payments, locale }) {
   const s = dictionary(locale).service;
   const a = dictionary(locale).activity;
+  const p = dictionary(locale).payment;
+  const ready = Boolean(payments?.ready);
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -203,10 +206,31 @@ function Request({ items, chosen, onToggle, contact, locale }) {
           </p>
         )}
         <button className="button dark" type="submit">
-          {a.prepare} <span aria-hidden="true">↗</span>
+          {ready ? p.toPay : a.prepare} <span aria-hidden="true">↗</span>
         </button>
       </form>
-      {message && (
+      {message && ready && (
+        <div className="activity-message" role="status" ref={messageRef}>
+          <h3>{p.summaryPay}</h3>
+          <PayPanel
+            order={{
+              kind: "service",
+              services: picked.map((item) => item.id),
+              date: details.date,
+              name: details.name,
+              whatsapp: details.whatsapp,
+              email: details.email,
+              notes: details.notes,
+            }}
+            total={estimate}
+            message={message}
+            whatsapp={contact.whatsapp}
+            sandbox={payments.sandbox}
+            locale={locale}
+          />
+        </div>
+      )}
+      {message && !ready && (
         <div className="activity-message" role="status" ref={messageRef}>
           <h3>{a.ready}</h3>
           <p className="activity-message-preview">{message}</p>
@@ -220,7 +244,7 @@ function Request({ items, chosen, onToggle, contact, locale }) {
           </a>
         </div>
       )}
-      <p className="activity-form-note">{s.formNote}</p>
+      <p className="activity-form-note">{ready ? p.paidNote : s.formNote}</p>
       <a
         className="activity-inquiry-contact"
         href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(s.askMessage)}`}
@@ -238,6 +262,7 @@ export default function ServicePage({
   content,
   locale = "en",
   locks = noLocks,
+  payments,
 }) {
   const dict = dictionary(locale);
   const s = dict.service;
@@ -461,6 +486,7 @@ export default function ServicePage({
                   chosen={chosen}
                   onToggle={toggle}
                   contact={content.contact}
+                  payments={payments}
                   locale={locale}
                 />
               )}

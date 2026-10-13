@@ -7,6 +7,7 @@ import { localizeContent } from "../../src/content-i18n.js";
 import { withService } from "../../src/service-model.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
 import { developerGate } from "../../src/server/developer-gate.jsx";
+import { paymentOptions } from "../../src/server/payments.js";
 
 export const dynamic = "force-dynamic";
 const readContent = cache(publicContent);
@@ -34,5 +35,12 @@ export default async function Page() {
   const { content, locale } = await servicePage();
   const { locks, blocked } = await developerGate("service", content, locale);
   if (blocked) return blocked;
-  return <ServicePage content={content} locale={locale} locks={locks} />;
+  return (
+    <ServicePage
+      content={content}
+      locale={locale}
+      locks={locks}
+      payments={paymentOptions(content)}
+    />
+  );
 }

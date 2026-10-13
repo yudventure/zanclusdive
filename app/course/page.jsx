@@ -7,6 +7,7 @@ import { localizeContent } from "../../src/content-i18n.js";
 import { withCourses } from "../../src/course-model.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
 import { developerGate } from "../../src/server/developer-gate.jsx";
+import { paymentOptions } from "../../src/server/payments.js";
 
 export const dynamic = "force-dynamic";
 const readContent = cache(publicContent);
@@ -34,5 +35,11 @@ export default async function Page() {
   const { content, locale } = await coursePage();
   const { blocked } = await developerGate("course", content, locale);
   if (blocked) return blocked;
-  return <CoursePage content={content} locale={locale} />;
+  return (
+    <CoursePage
+      content={content}
+      locale={locale}
+      payments={paymentOptions(content)}
+    />
+  );
 }

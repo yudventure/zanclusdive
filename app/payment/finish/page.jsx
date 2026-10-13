@@ -3,6 +3,7 @@ import { publicContent } from "../../../src/server/store.js";
 import { syncPayment } from "../../../src/server/payments.js";
 import { requestLocale } from "../../../src/server/locale.js";
 import { bookingReference } from "../../../src/booking-model.js";
+import { paymentItemLabel } from "../../../src/payment-model.js";
 import { dictionary, formatIDR, localeHref } from "../../../src/i18n.js";
 
 // Midtrans sends the guest back here with ?order_id=. The status is
@@ -47,19 +48,25 @@ export default async function Page({ searchParams }) {
       locale={locale}
       whatsapp={whatsapp}
       whatsappText={p.whatsappAfter(reference)}
-      backHref={localeHref(locale, `/${booking.experience}#inquiry`)}
+      backHref={localeHref(
+        locale,
+        booking.experience === "shop"
+          ? "/dive-shop"
+          : `/${booking.experience}#inquiry`,
+      )}
       details={[
         [p.reference, reference],
         [
           p.activity,
-          t.activityLabels[booking.experience] ?? booking.experience,
+          t.activityLabels[booking.experience] ??
+            p.programs[booking.experience] ??
+            booking.experience,
         ],
-        [
-          p.package,
-          `${(locale === "en" && payment.itemEn) || payment.item} × ${payment.quantity}`,
-        ],
+        [p.package, paymentItemLabel(payment, locale)],
         [p.date, date],
-        [p.participants, String(booking.participants)],
+        ...(["shop", "service"].includes(booking.experience)
+          ? []
+          : [[p.participants, String(booking.participants)]]),
         [p.totalPaid, formatIDR(payment.amount, locale)],
       ]}
     />

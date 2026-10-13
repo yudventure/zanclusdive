@@ -82,7 +82,12 @@ function ExperienceCard({
     </Card>
   );
 }
-export default function HomePage({ content, locale = "en", locks = noLocks }) {
+export default function HomePage({
+  content,
+  locale = "en",
+  locks = noLocks,
+  payments,
+}) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
@@ -467,6 +472,7 @@ export default function HomePage({ content, locale = "en", locks = noLocks }) {
               whatsapp={content.contact.whatsapp}
               locale={locale}
               locks={locks}
+              payments={payments}
             />
           )}
           {sectionLocked(locks, "travel") ? (

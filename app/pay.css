@@ -1,0 +1,98 @@
+/* Shared by every form that pays online with Midtrans. */
+.pay-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px dashed #cfe3d6;
+  font-size: 12px;
+  color: #57717a;
+}
+.pay-total > span {
+  display: grid;
+  gap: 2px;
+}
+.plan-breakdown {
+  font-size: 11.5px;
+  white-space: nowrap;
+  color: #7a8f95;
+}
+.pay-total strong {
+  font-size: 20px;
+  line-height: 1.2;
+  color: #062b3b;
+  white-space: nowrap;
+}
+.pay-submit[disabled] {
+  opacity: 0.7;
+  cursor: progress;
+}
+.pay-notes {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.pay-notes p {
+  margin: 0 0 6px;
+}
+.pay-sandbox {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #7a5a00;
+}
+.plan-message summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: #087873;
+  cursor: pointer;
+}
+.plan-message .activity-message-preview {
+  margin-top: 8px;
+}
+.pay-unsure {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #087873;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.pay-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.pay-panel .pay-total {
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f1f7f3;
+}
+.pay-panel .button {
+  width: 100%;
+  justify-content: center;
+  padding: 16px;
+  font-size: 13px;
+  white-space: normal;
+}
+.pay-panel .activity-error {
+  margin: 0;
+}
+.pay-panel .pay-unsure {
+  justify-self: start;
+}
+.pay-unsure:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+  border-radius: 6px;
+}

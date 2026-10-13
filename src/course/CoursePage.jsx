@@ -7,6 +7,7 @@ import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import FormField from "../components/FormField.jsx";
+import PayPanel from "../components/PayPanel.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
 import PartnerMarquee from "./PartnerMarquee.jsx";
 import { photoSrcSet } from "../photography.js";
@@ -47,9 +48,11 @@ function Icon({ name, size = 18 }) {
   );
 }
 
-function SignUp({ courses, selected, onSelect, contact, locale }) {
+function SignUp({ courses, selected, onSelect, contact, payments, locale }) {
   const c = dictionary(locale).course;
   const a = dictionary(locale).activity;
+  const p = dictionary(locale).payment;
+  const ready = Boolean(payments?.ready);
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -228,10 +231,34 @@ function SignUp({ courses, selected, onSelect, contact, locale }) {
           </p>
         )}
         <button className="button dark" type="submit">
-          {a.prepare} <span aria-hidden="true">↗</span>
+          {ready ? p.toPay : a.prepare} <span aria-hidden="true">↗</span>
         </button>
       </form>
-      {message && (
+      {message && ready && (
+        <div className="activity-message" role="status" ref={messageRef}>
+          <h3>{p.summaryPay}</h3>
+          <PayPanel
+            order={{
+              kind: "course",
+              course: course.id,
+              participants: Number(details.participants),
+              date: details.date,
+              certification: details.certification,
+              name: details.name,
+              whatsapp: details.whatsapp,
+              email: details.email,
+              notes: details.notes,
+            }}
+            total={course.price * Number(details.participants)}
+            breakdown={`${formatIDR(course.price, locale)} × ${p.people(Number(details.participants))}`}
+            message={message}
+            whatsapp={contact.whatsapp}
+            sandbox={payments.sandbox}
+            locale={locale}
+          />
+        </div>
+      )}
+      {message && !ready && (
         <div className="activity-message" role="status" ref={messageRef}>
           <h3>{a.ready}</h3>
           <p className="activity-message-preview">{message}</p>
@@ -245,7 +272,7 @@ function SignUp({ courses, selected, onSelect, contact, locale }) {
           </a>
         </div>
       )}
-      <p className="activity-form-note">{c.formNote}</p>
+      <p className="activity-form-note">{ready ? p.paidNote : c.formNote}</p>
       <a
         className="activity-inquiry-contact"
         href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(c.message.greeting(courseText(course.name, locale)))}`}
@@ -259,7 +286,7 @@ function SignUp({ courses, selected, onSelect, contact, locale }) {
   );
 }
 
-export default function CoursePage({ content, locale = "en" }) {
+export default function CoursePage({ content, locale = "en", payments }) {
   const dict = dictionary(locale);
   const c = dict.course;
   const href = (path) => localeHref(locale, path);
@@ -542,6 +569,7 @@ export default function CoursePage({ content, locale = "en" }) {
                   selected={selected}
                   onSelect={setSelected}
                   contact={content.contact}
+                  payments={payments}
                   locale={locale}
                 />
               )}

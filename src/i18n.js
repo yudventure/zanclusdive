@@ -253,6 +253,19 @@ const id = {
     package: "Paket",
     name: "Nama",
     notes: "Catatan",
+    programs: {
+      shop: "Dive Shop",
+      course: "Kursus selam",
+      service: "Servis alat",
+    },
+    toPay: "Lanjut ke pembayaran",
+    askWhatsApp: "Masih ragu? Kirim lewat WhatsApp",
+    quoteOnly:
+      "Ada alat yang harganya dikonfirmasi tim, jadi pesanan ini dikirim lewat WhatsApp.",
+    shopIntro:
+      "Periksa alat yang kamu pilih, lalu bayar online lewat Midtrans. Pesanan langsung tercatat setelah pembayaran lunas.",
+    paidNote:
+      "Begitu pembayaran lunas, pesananmu otomatis tercatat dan tim kami menghubungimu lewat WhatsApp.",
     edit: "← Ubah data",
     sendSummary: "Masih ragu? Kirim ringkasan ini lewat WhatsApp",
     payInstead: "Sudah yakin? Bayar online sekarang",
@@ -1242,6 +1255,19 @@ const en = {
     package: "Package",
     name: "Name",
     notes: "Notes",
+    programs: {
+      shop: "Dive Shop",
+      course: "Dive course",
+      service: "Gear service",
+    },
+    toPay: "Continue to payment",
+    askWhatsApp: "Still unsure? Send it on WhatsApp",
+    quoteOnly:
+      "Some gear is priced by our team, so this order is sent on WhatsApp.",
+    shopIntro:
+      "Check the gear you picked, then pay online with Midtrans. Your order is recorded as soon as it's paid.",
+    paidNote:
+      "Once the payment is complete, your order is recorded automatically and our team contacts you on WhatsApp.",
     edit: "← Edit details",
     sendSummary: "Still unsure? Send this summary on WhatsApp",
     payInstead: "Ready? Pay online now",

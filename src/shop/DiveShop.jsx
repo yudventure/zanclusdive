@@ -8,6 +8,7 @@ import ProductVisual from "./ProductVisual.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
+import PayPanel from "../components/PayPanel.jsx";
 import { dictionary, intlLocale, localeHref } from "../i18n.js";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked } from "../developer.js";
@@ -22,9 +23,11 @@ export default function DiveShop({
   tagline,
   locale = "en",
   locks = noLocks,
+  payments,
 }) {
   const dict = dictionary(locale);
   const t = dict.shop;
+  const p = dict.payment;
   const shopCategories = dict.shopCategories;
   const href = (path) => localeHref(locale, path);
   const money = (amount) => rupiah(amount, locale);
@@ -69,6 +72,9 @@ export default function DiveShop({
       quote = quoteOrder(shop.products, cart, details.days, locale);
   } catch {}
   const hasRental = cart.some((p) => p.mode === "rental");
+  // With online payment on, an order priced in full is paid with Midtrans.
+  const payable =
+    Boolean(payments?.ready) && Boolean(quote) && !quote.needsQuote;
   const count = cart.reduce((n, p) => n + p.quantity, 0);
   function changeCart(next) {
     setCart(next);
@@ -551,12 +557,42 @@ export default function DiveShop({
                       </p>
                     )}
                     <button className="button dark shop-submit" type="submit">
-                      {t.prepare}
+                      {payable ? p.toPay : t.prepare}
                     </button>
                   </form>
-                  {message && (
+                  {message && payable && (
+                    <div className="shop-message" role="status">
+                      <h3>{p.summaryPay}</h3>
+                      <PayPanel
+                        order={{
+                          kind: "shop",
+                          lines: cart.map((line) => ({
+                            source: "product",
+                            id: line.id,
+                            mode: line.mode,
+                            quantity: line.quantity,
+                          })),
+                          days: Number(details.days) || 1,
+                          startDate: details.startDate,
+                          name: details.name,
+                          whatsapp: details.whatsapp,
+                          email: details.email,
+                          notes: details.notes,
+                        }}
+                        total={quote.total}
+                        message={message}
+                        whatsapp={contact.whatsapp}
+                        sandbox={payments.sandbox}
+                        locale={locale}
+                      />
+                    </div>
+                  )}
+                  {message && !payable && (
                     <div className="shop-message" role="status">
                       <h3>{t.ready}</h3>
+                      {payments?.ready && (
+                        <p className="shop-small">{p.quoteOnly}</p>
+                      )}
                       <details>
                         <summary>{t.viewMessage}</summary>
                         <pre>{message}</pre>
