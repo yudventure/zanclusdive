@@ -4,12 +4,18 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import { privateAddress } from "./net-guard.js";
 import { listAgents, updateAgent } from "./store.js";
-import { parseCalendar } from "../agent-calendar.js";
-import { bookingDates } from "../booking-model.js";
+import {
+  parseCalendar,
+  agentKinds,
+  agentImpacts,
+  feedModes,
+} from "../agent-calendar.js";
+import { bookingDates, capacityPools } from "../booking-model.js";
 
-// Travel agents linked by calendar. Each has a private feed token and may
-// give the address of their own calendar (Google "secret address in iCal
-// format", Outlook or Apple .ics link), which is read every 30 minutes.
+// Travel agents and OTAs linked by calendar. Each has a private feed token
+// and may give the address of their own calendar (Google "secret address in
+// iCal format", Outlook or Apple .ics link, an OTA's iCal export), which is
+// read every 30 minutes.
 const stale = 30 * 60000;
 export const newToken = () => randomBytes(24).toString("base64url");
 
@@ -38,10 +44,19 @@ export function calendarAddress(value) {
     throw new Error("Link kalender agen tidak boleh berisi password.");
   return url.href;
 }
+const oneOf = (value, options, fallback) =>
+  options.includes(value) ? value : fallback;
+function whole(value, fallback, label) {
+  const n = Number(value ?? fallback);
+  if (!Number.isInteger(n) || n < 1 || n > 30)
+    throw new Error(`${label} harus 1–30 orang.`);
+  return n;
+}
 export function validateAgent(input, current = {}) {
   if (!input || typeof input !== "object")
     throw new Error("Data agen tidak valid.");
   const importUrl = calendarAddress(input.importUrl ?? current.importUrl ?? "");
+  const kind = oneOf(input.kind ?? current.kind, agentKinds, "agent");
   return {
     ...current,
     name: text(input.name ?? current.name, "Nama agen", 80, true),
@@ -49,6 +64,30 @@ export function validateAgent(input, current = {}) {
     importUrl,
     enabled: (input.enabled ?? current.enabled ?? true) === true,
     share: (input.share ?? current.share ?? true) === true,
+    // An OTA gets only the days it cannot sell, and its bookings use
+    // Zanclus' daily places; a travel agent sees the schedule.
+    kind,
+    feedMode: oneOf(
+      input.feedMode ?? current.feedMode,
+      feedModes,
+      kind === "ota" ? "blocks" : "detail",
+    ),
+    impact: oneOf(
+      input.impact ?? current.impact,
+      agentImpacts,
+      kind === "ota" ? "places" : "info",
+    ),
+    pool: oneOf(
+      input.pool ?? current.pool,
+      Object.keys(capacityPools),
+      "diving",
+    ),
+    perEvent: whole(input.perEvent ?? current.perEvent, 2, "Slot per acara"),
+    feedMinPlaces: whole(
+      input.feedMinPlaces ?? current.feedMinPlaces,
+      4,
+      "Batas sisa slot",
+    ),
     // A new calendar address is read again.
     ...(importUrl !== current.importUrl
       ? { events: [], syncedAt: null, syncError: "" }
@@ -118,7 +157,8 @@ async function fetchCalendar(address) {
 }
 
 // Reads an agent's calendar when it is older than 30 minutes (or always
-// with force) and saves the events or the error.
+// with force) and saves the events or the error. A read already running for
+// the agent is shared.
 export async function syncAgent(agent, { force = false } = {}) {
   if (!agent.importUrl || !agent.enabled) return agent;
   if (
@@ -127,6 +167,15 @@ export async function syncAgent(agent, { force = false } = {}) {
     Date.now() - Date.parse(agent.syncedAt) < stale
   )
     return agent;
+  const running = (globalThis.__zanclusAgentSyncs ||= new Map());
+  if (!running.has(agent.id))
+    running.set(
+      agent.id,
+      readAgent(agent).finally(() => running.delete(agent.id)),
+    );
+  return running.get(agent.id);
+}
+async function readAgent(agent) {
   const { today, last } = bookingDates();
   const from = new Date(Date.parse(today) - 7 * 86400000)
     .toISOString()

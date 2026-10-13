@@ -47,12 +47,78 @@ function Copy({ label, value, href }) {
   );
 }
 
+const pools = [
+  ["diving", "Diving (termasuk kursus)"],
+  ["snorkeling", "Snorkeling"],
+  ["trip", "Trip laut"],
+];
+const impacts = [
+  ["info", "Hanya tampil di kalender reservasi"],
+  ["places", "Memakai slot harian (jumlah tamu)"],
+  ["block", "Menutup tanggal (penuh)"],
+];
+const feeds = [
+  ["detail", "Jadwal lengkap: jumlah tamu, tutup, kegiatan (agen)"],
+  ["blocks", "Hanya tanggal penuh & tutup (OTA)"],
+];
+// New OTAs start with the settings an OTA needs.
+export const kindDefaults = {
+  agent: { feedMode: "detail", impact: "info" },
+  ota: { feedMode: "blocks", impact: "places" },
+};
+
 function Fields({ value, change }) {
   const id = useId();
+  const select = (key, label, options, wide) => (
+    <div className={"admin-field" + (wide ? " admin-agent-wide" : "")}>
+      <label htmlFor={id + "-" + key}>{label}</label>
+      <select
+        id={id + "-" + key}
+        value={value[key]}
+        onChange={(e) => change({ [key]: e.target.value })}
+      >
+        {options.map(([key, text]) => (
+          <option key={key} value={key}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+  const number = (key, label, hint) => (
+    <div className="admin-field">
+      <label htmlFor={id + "-" + key}>{label}</label>
+      <input
+        id={id + "-" + key}
+        type="number"
+        min="1"
+        max="30"
+        value={value[key]}
+        onChange={(e) => change({ [key]: Number(e.target.value) || 1 })}
+      />
+      {hint && <small className="admin-subtle">{hint}</small>}
+    </div>
+  );
   return (
     <div className="admin-form-grid">
       <div className="admin-field">
-        <label htmlFor={id + "-name"}>Nama agen</label>
+        <label htmlFor={id + "-kind"}>Jenis</label>
+        <select
+          id={id + "-kind"}
+          value={value.kind}
+          onChange={(e) =>
+            change({ kind: e.target.value, ...kindDefaults[e.target.value] })
+          }
+        >
+          <option value="agent">Travel agent / partner</option>
+          <option value="ota">OTA (Booking.com, Airbnb, GetYourGuide…)</option>
+        </select>
+      </div>
+      {select("pool", "Aktivitas & slot harian", pools)}
+      <div className="admin-field">
+        <label htmlFor={id + "-name"}>
+          {value.kind === "ota" ? "Nama OTA" : "Nama agen"}
+        </label>
         <input
           id={id + "-name"}
           required
@@ -71,16 +137,43 @@ function Fields({ value, change }) {
         />
       </div>
       <div className="admin-field admin-agent-wide">
-        <label htmlFor={id + "-url"}>Link kalender agen (opsional)</label>
+        <label htmlFor={id + "-url"}>
+          {value.kind === "ota"
+            ? "Link iCal / ICS dari extranet OTA (impor ke Zanclus)"
+            : "Link kalender agen (opsional)"}
+        </label>
         <input
           id={id + "-url"}
           inputMode="url"
           maxLength={600}
-          placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
+          placeholder={
+            value.kind === "ota"
+              ? "https://…/calendar.ics"
+              : "https://calendar.google.com/calendar/ical/…/basic.ics"
+          }
           value={value.importUrl}
           onChange={(e) => change({ importUrl: e.target.value })}
         />
       </div>
+      {select("impact", "Acara dari link ini", impacts)}
+      {value.impact === "places" &&
+        number(
+          "perEvent",
+          "Slot per acara bila jumlah tamu tidak tertulis",
+          "Jumlah tamu dibaca dari judul atau catatan, mis. “3 pax”.",
+        )}
+      {select(
+        "feedMode",
+        "Isi link kalender Zanclus untuk mereka",
+        feeds,
+        true,
+      )}
+      {value.feedMode === "blocks" &&
+        number(
+          "feedMinPlaces",
+          "Tandai penuh bila sisa slot kurang dari",
+          "Mencegah OTA menjual grup yang tidak muat.",
+        )}
       <label className="admin-dev-choice admin-agent-wide">
         <input
           type="checkbox"
@@ -99,23 +192,24 @@ function Fields({ value, change }) {
   );
 }
 
+// Settings of a saved agent, with the defaults of agents saved before
+// these settings existed.
+const editable = (agent) => ({
+  name: agent.name,
+  contact: agent.contact,
+  importUrl: agent.importUrl,
+  share: agent.share,
+  kind: agent.kind ?? "agent",
+  feedMode: agent.feedMode ?? "detail",
+  impact: agent.impact ?? "info",
+  pool: agent.pool ?? "diving",
+  perEvent: agent.perEvent ?? 2,
+  feedMinPlaces: agent.feedMinPlaces ?? 4,
+});
+
 function AgentCard({ agent, origin, busy, run }) {
-  const [edit, setEdit] = useState({
-    name: agent.name,
-    contact: agent.contact,
-    importUrl: agent.importUrl,
-    share: agent.share,
-  });
-  useEffect(
-    () =>
-      setEdit({
-        name: agent.name,
-        contact: agent.contact,
-        importUrl: agent.importUrl,
-        share: agent.share,
-      }),
-    [agent],
-  );
+  const [edit, setEdit] = useState(editable(agent));
+  useEffect(() => setEdit(editable(agent)), [agent]);
   const url = `/api/admin/agents/${agent.id}`;
   const feed = `${origin}/api/calendar/${agent.token}.ics`;
   const partner = `${origin}/partner/${agent.token}`;
@@ -126,7 +220,12 @@ function AgentCard({ agent, origin, busy, run }) {
     >
       <header className="admin-agent-head">
         <div>
-          <h3>{agent.name}</h3>
+          <h3>
+            {agent.name}{" "}
+            <span className="admin-agent-kind">
+              {agent.kind === "ota" ? "OTA" : "Agen"}
+            </span>
+          </h3>
           <small>{agent.contact || "Kontak belum diisi"}</small>
         </div>
         <span
@@ -136,16 +235,27 @@ function AgentCard({ agent, origin, busy, run }) {
         </span>
       </header>
       <div className="admin-agent-block">
-        <h4>Kalender Zanclus → agen</h4>
-        <p className="admin-subtle">
-          Kirim halaman partner ke agen. Dari sana mereka menambahkan kalender
-          Zanclus ke Google Calendar, Apple, atau Outlook dengan satu klik.
-        </p>
-        <Copy label="Halaman partner" value={partner} href={partner} />
+        <h4>Kalender Zanclus → {agent.kind === "ota" ? "OTA" : "agen"}</h4>
+        {agent.feedMode === "blocks" ? (
+          <p className="admin-subtle">
+            Tempel link ini di extranet OTA, di menu impor kalender iCal / ICS.
+            Isinya hanya tanggal yang penuh (sisa slot kurang dari{" "}
+            {agent.feedMinPlaces ?? 4}) atau tutup, sehingga OTA berhenti
+            menjual tanggal itu. Tanpa nama atau jumlah tamu.
+          </p>
+        ) : (
+          <p className="admin-subtle">
+            Kirim halaman partner ke agen. Dari sana mereka menambahkan kalender
+            Zanclus ke Google Calendar, Apple, atau Outlook dengan satu klik.
+          </p>
+        )}
+        {agent.feedMode !== "blocks" && (
+          <Copy label="Halaman partner" value={partner} href={partner} />
+        )}
         <Copy label="Link kalender (.ics)" value={feed} />
       </div>
       <div className="admin-agent-block">
-        <h4>Kalender agen → Zanclus</h4>
+        <h4>{agent.kind === "ota" ? "OTA" : "Kalender agen"} → Zanclus</h4>
         {agent.importUrl ? (
           <p
             className={
@@ -156,7 +266,7 @@ function AgentCard({ agent, origin, busy, run }) {
             {agent.syncError
               ? `Belum terbaca: ${agent.syncError}`
               : agent.syncedAt
-                ? `Terakhir dibaca ${timeLabel(agent.syncedAt)} · ${agent.events?.length ?? 0} acara`
+                ? `Terakhir dibaca ${timeLabel(agent.syncedAt)} · ${agent.events?.length ?? 0} acara · ${impacts.find(([key]) => key === (agent.impact ?? "info"))[1].toLowerCase()}`
                 : "Menunggu dibaca pertama kali."}
           </p>
         ) : (
@@ -174,6 +284,17 @@ function AgentCard({ agent, origin, busy, run }) {
                   {event.end !== event.start && ` – ${dateLabel(event.end)}`}
                 </time>
                 {event.summary}
+                {agent.impact === "block" && !event.free && (
+                  <small> · tanggal ditutup</small>
+                )}
+                {agent.impact === "places" && !event.free && (
+                  <small>
+                    {" "}
+                    · {event.people ?? agent.perEvent ?? 2} slot
+                    {event.people ? "" : " (perkiraan)"}
+                  </small>
+                )}
+                {event.free && <small> · bebas (tidak memakai slot)</small>}
               </li>
             ))}
           </ul>
@@ -264,7 +385,18 @@ function AgentCard({ agent, origin, busy, run }) {
 // Travel agents whose calendars are linked with Zanclus, both ways.
 export default function AgentsEditor({ agents, busy, run, reload }) {
   const [origin, setOrigin] = useState("");
-  const blank = { name: "", contact: "", importUrl: "", share: true };
+  const blank = {
+    name: "",
+    contact: "",
+    importUrl: "",
+    share: true,
+    kind: "agent",
+    feedMode: "detail",
+    impact: "info",
+    pool: "diving",
+    perEvent: 2,
+    feedMinPlaces: 4,
+  };
   const [draft, setDraft] = useState(blank);
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -273,7 +405,7 @@ export default function AgentsEditor({ agents, busy, run, reload }) {
   return (
     <>
       <section className="admin-card">
-        <h2>Kalender bersama travel agent</h2>
+        <h2>Kalender bersama travel agent & OTA</h2>
         <p className="admin-subtle">
           Setiap agen mendapat link kalender pribadi berisi jadwal tamu Zanclus
           (jumlah tamu, tanpa nama dan nomor), tanggal tutup, dan kegiatan.
@@ -281,6 +413,13 @@ export default function AgentsEditor({ agents, busy, run, reload }) {
           Outlook mereka. Sebaliknya, link kalender agen dibaca setiap 30 menit
           dan tampil di kalender reservasi. Agen yang membagikan kalendernya
           saling melihat hari sibuk satu sama lain.
+        </p>
+        <p className="admin-subtle">
+          <strong>OTA dengan sinkron iCal / ICS</strong>: pilih jenis OTA. Link
+          Zanclus untuk OTA hanya berisi tanggal penuh dan tutup, dan pesanan
+          dari link iCal OTA memakai slot harian (mis. 30 penyelam per hari),
+          sehingga tamu website dan OTA tidak melebihi kuota. OTA tanpa menu
+          iCal / ICS di extranetnya perlu channel manager.
         </p>
         <form
           className="admin-agent-new"

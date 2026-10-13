@@ -1,7 +1,13 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import CoursePage from "../../src/course/CoursePage.jsx";
-import { publicContent, listBookings } from "../../src/server/store.js";
+import {
+  publicContent,
+  listBookings,
+  listAgents,
+} from "../../src/server/store.js";
+import { syncAgents } from "../../src/server/agents.js";
+import { agentHolds } from "../../src/agent-calendar.js";
 import { bookingDates, slotCalendar } from "../../src/booking-model.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
@@ -39,15 +45,20 @@ export default async function Page() {
   // Courses use the daily diving places and their own closed days; without
   // the bookings (database down) every day shows open.
   const window = bookingDates();
-  const bookings = await listBookings().catch(() => []);
+  syncAgents().catch(() => {});
+  const [bookings, agents] = await Promise.all([
+    listBookings().catch(() => []),
+    listAgents().catch(() => []),
+  ]);
+  const held = [...bookings, ...agentHolds(content, agents)];
   return (
     <CoursePage
       content={content}
       locale={locale}
       payments={paymentOptions(content)}
       slots={{
-        ...slotCalendar(content, bookings, "diving", window),
-        closed: slotCalendar(content, bookings, "course", window).closed,
+        ...slotCalendar(content, held, "diving", window),
+        closed: slotCalendar(content, held, "course", window).closed,
       }}
       today={window.today}
       lastDate={window.last}

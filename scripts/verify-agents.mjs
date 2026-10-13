@@ -39,6 +39,11 @@ const ics = (events) =>
   ].join("\r\n");
 const calendars = {
   "/papua.ics": ics([["trip-1@google.com", today, today, "Grup Budi 8 orang"]]),
+  // An OTA's iCal export: a booking with its guests, and one without.
+  "/ota.ics": ics([
+    ["ota-1@ota.example", plus(6), plus(6), "Fun dive Raja Ampat - 26 pax"],
+    ["ota-2@ota.example", plus(7), plus(7), "Reserved"],
+  ]),
 };
 const mock = createServer((req, res) => {
   if (req.url === "/moved") {
@@ -346,6 +351,127 @@ try {
   assert.equal(await papua.count(), 0);
   assert.equal(await agent("Papua Travel"), undefined);
   assert.equal((await feed(papuaAgent.token)).status, 404);
+  // An OTA with iCal sync. Its bookings use the daily places (30 divers),
+  // and its Zanclus link holds only the days it should stop selling.
+  const form = a.locator(".admin-agent-new");
+  await form.getByLabel("Jenis").selectOption("ota");
+  await form.getByLabel("Nama OTA").fill("Booking OTA");
+  await form
+    .getByLabel("Link iCal / ICS dari extranet OTA (impor ke Zanclus)")
+    .fill(`${mockBase}/ota.ics`);
+  assert.equal(
+    await form.getByLabel("Acara dari link ini").inputValue(),
+    "places",
+  );
+  assert.equal(
+    await form
+      .getByLabel("Isi link kalender Zanclus untuk mereka")
+      .inputValue(),
+    "blocks",
+  );
+  await form.getByRole("button", { name: "Tambah agen" }).click();
+  await a
+    .getByText("Agen ditambahkan. Kirim halaman partner ke agen.")
+    .waitFor();
+  const otaCard = card("Booking OTA");
+  await otaCard.waitFor();
+  assert.match(
+    await otaCard.locator(".admin-agent-events").textContent(),
+    /26 pax · 26 slot[\s\S]*Reserved · 2 slot \(perkiraan\)/,
+  );
+  assert.equal(await otaCard.getByText("Halaman partner").count(), 0);
+  const otaAgent = await agent("Booking OTA");
+  assert.deepEqual(
+    [otaAgent.kind, otaAgent.impact, otaAgent.feedMode, otaAgent.pool],
+    ["ota", "places", "blocks", "diving"],
+  );
+  // The diving calendar shows 4 places left on the OTA's day.
+  const showDay = async (date) => {
+    await p.goto(base + "/id/diving", { waitUntil: "networkidle" });
+    if (date.slice(0, 7) !== today.slice(0, 7))
+      await p.getByRole("button", { name: "Bulan berikutnya" }).click();
+    return p.locator(`.slot-day[data-date="${date}"]`);
+  };
+  let otaDay = await showDay(plus(6));
+  assert.equal(await otaDay.locator("small").textContent(), "4");
+  assert.equal(
+    await (await showDay(plus(7))).locator("small").textContent(),
+    "28",
+  );
+  // A website request for 5 divers that day is refused.
+  const crowded = await guest.request.post(base + "/api/bookings", {
+    headers: { Origin: base },
+    data: {
+      requestId: crypto.randomUUID(),
+      name: "Tamu Website",
+      phone: "+62 851 9084 9237",
+      date: plus(6),
+      people: "5",
+      experience: "beginner",
+      notes: "",
+    },
+  });
+  assert.equal(crowded.status(), 409);
+  assert.match((await crowded.json()).error, /tinggal 4 orang/);
+  // The OTA's link: a nearly full day (28 divers: 2 left, under 4) and a
+  // closed day, nothing else; its own booking is not sent back to it.
+  for (const booking of [
+    {
+      experience: "diving",
+      status: "confirmed",
+      source: "whatsapp",
+      startDate: plus(8),
+      endDate: plus(8),
+      guestName: "Rombongan Rahasia",
+      phone: "",
+      participants: 28,
+      amount: 0,
+    },
+    {
+      experience: "diving",
+      status: "closed",
+      source: "walkin",
+      startDate: plus(9),
+      endDate: plus(9),
+      guestName: "",
+      participants: 1,
+      amount: 0,
+    },
+  ])
+    assert.equal(
+      (
+        await admin.request.post(base + "/api/admin/bookings", {
+          headers: { Origin: base },
+          data: booking,
+        })
+      ).status(),
+      201,
+    );
+  const otaFeed = await feed(otaAgent.token);
+  assert.equal(otaFeed.status, 200);
+  assert.match(otaFeed.response.headers()["content-type"], /text\/calendar/);
+  const unavailable = [
+    ...otaFeed.text.matchAll(
+      /DTSTART;VALUE=DATE:(\d{8})\r\nDTEND;VALUE=DATE:(\d{8})\r\nSUMMARY:([^\r]*)/g,
+    ),
+  ].map(([, start, , summary]) => [start, summary]);
+  assert.deepEqual(unavailable, [
+    [compact(plus(8)), "Not available · Zanclus penuh"],
+    [compact(plus(9)), "Not available · Zanclus tutup"],
+  ]);
+  assert.doesNotMatch(otaFeed.text, /Rahasia|tamu|Fun dive/);
+  // Set to close the days it lists, the OTA's days show full.
+  await otaCard.getByLabel("Acara dari link ini").selectOption("block");
+  await otaCard.getByRole("button", { name: "Simpan" }).click();
+  await a.getByText("Data agen tersimpan.").waitFor();
+  otaDay = await showDay(plus(7));
+  assert.equal(await otaDay.locator("small").textContent(), "Penuh");
+  assert.equal(await otaDay.isDisabled(), true);
+  await a.screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/admin-ota.png",
+    fullPage: true,
+  });
+
   // Only the admin may manage agents.
   assert.equal(
     (await guest.request.get(base + "/api/admin/agents")).status(),
@@ -353,7 +479,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS agents: add agents with or without their calendar, read at once, Zanclus feed per agent with bookings as guest counts, closed days and shared agent busy days but no names or numbers, own trips not repeated, partner page with Google Calendar and webcal links and the next 60 days (id/en, no sideways scroll), agent trips in the admin calendar, sharing switch, redirects followed, non-calendar and non-https links refused, new link revokes the old one, disable and delete close the feed, admin only.",
+    "PASS agents: OTA with iCal sync (bookings use the 30 daily dive places with guests read from the event, website request refused when it no longer fits, OTA link with only full and closed days and not its own bookings, closing its days), add agents with or without their calendar, read at once, Zanclus feed per agent with bookings as guest counts, closed days and shared agent busy days but no names or numbers, own trips not repeated, partner page with Google Calendar and webcal links and the next 60 days (id/en, no sideways scroll), agent trips in the admin calendar, sharing switch, redirects followed, non-calendar and non-https links refused, new link revokes the old one, disable and delete close the feed, admin only.",
   );
 } finally {
   await browser.close();

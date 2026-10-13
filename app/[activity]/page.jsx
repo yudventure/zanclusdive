@@ -2,7 +2,13 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import ActivityDetail from "../../src/activities/ActivityDetail.jsx";
 import { activityKeys } from "../../src/activity-model.js";
-import { publicContent, listBookings } from "../../src/server/store.js";
+import {
+  publicContent,
+  listBookings,
+  listAgents,
+} from "../../src/server/store.js";
+import { syncAgents } from "../../src/server/agents.js";
+import { agentHolds } from "../../src/agent-calendar.js";
 import { bookingDates, slotCalendar } from "../../src/booking-model.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
@@ -53,13 +59,20 @@ export default async function Page({ params }) {
   // Daily places and closed days for the calendar beside the page; without
   // the bookings (database down) the calendar shows every day open.
   const window = bookingDates();
-  const bookings = await listBookings().catch(() => []);
+  // Linked agent and OTA calendars use places too; stale ones are read
+  // again in the background.
+  syncAgents().catch(() => {});
+  const [bookings, agents] = await Promise.all([
+    listBookings().catch(() => []),
+    listAgents().catch(() => []),
+  ]);
+  const held = [...bookings, ...agentHolds(content, agents)];
   return (
     <ActivityDetail
       activityKey={key}
       content={content}
       locale={locale}
-      slots={slotCalendar(content, bookings, key, window)}
+      slots={slotCalendar(content, held, key, window)}
       lastDate={window.last}
       payments={{
         ready: paymentsReady(content),

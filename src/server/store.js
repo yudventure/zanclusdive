@@ -17,6 +17,7 @@ import {
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
 import { rememberLocks } from "../developer.js";
+import { agentHolds } from "../agent-calendar.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -177,9 +178,20 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
     const [bookingRows] = await connection.execute(
       "SELECT payload FROM zanclus_records WHERE kind='booking'",
     );
+    // Places used by linked agent and OTA calendars count too.
+    const [agentRows] = await connection.execute(
+      "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+    );
+    const siteContent = JSON.parse(contentRows[0].payload);
     assertBookable(
-      JSON.parse(contentRows[0].payload),
-      bookingRows.map((r) => JSON.parse(r.payload)),
+      siteContent,
+      [
+        ...bookingRows.map((r) => JSON.parse(r.payload)),
+        ...agentHolds(
+          siteContent,
+          agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+        ),
+      ],
       payload,
     );
     const id = randomUUID(),
@@ -213,9 +225,20 @@ export async function createPaymentBooking(payload) {
     const [bookingRows] = await connection.execute(
       "SELECT payload FROM zanclus_records WHERE kind='booking'",
     );
+    // Places used by linked agent and OTA calendars count too.
+    const [agentRows] = await connection.execute(
+      "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+    );
+    const siteContent = JSON.parse(contentRows[0].payload);
     assertBookable(
-      JSON.parse(contentRows[0].payload),
-      bookingRows.map((r) => JSON.parse(r.payload)),
+      siteContent,
+      [
+        ...bookingRows.map((r) => JSON.parse(r.payload)),
+        ...agentHolds(
+          siteContent,
+          agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+        ),
+      ],
       payload,
     );
     const id = randomUUID();

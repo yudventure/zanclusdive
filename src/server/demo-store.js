@@ -27,6 +27,7 @@ import {
   bookingReceipt,
   BookingError,
 } from "../booking-model.js";
+import { agentHolds } from "../agent-calendar.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -200,7 +201,12 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
         );
       return { receipt: previous.receipt, created: false };
     }
-    assertBookable(state.content, state.bookings, payload);
+    // Places used by linked agent and OTA calendars count too.
+    assertBookable(
+      state.content,
+      [...state.bookings, ...agentHolds(state.content, state.agents)],
+      payload,
+    );
     const booking = {
       ...payload,
       id: randomUUID(),
@@ -215,7 +221,12 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
 // A booking paid online: checked like a website request, saved at once.
 export async function createPaymentBooking(payload) {
   return mutate((state) => {
-    assertBookable(state.content, state.bookings, payload);
+    // Places used by linked agent and OTA calendars count too.
+    assertBookable(
+      state.content,
+      [...state.bookings, ...agentHolds(state.content, state.agents)],
+      payload,
+    );
     const booking = {
       ...payload,
       id: randomUUID(),

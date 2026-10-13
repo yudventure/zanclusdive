@@ -224,6 +224,32 @@ Di `/admin/agents` (**Agen & kalender**) tambahkan setiap travel agent. Kalender
 - **Agen → Zanclus.** Isi link kalender agen (Google Calendar: Setelan kalender → *Alamat rahasia dalam format iCal*, atau link `.ics` dari Outlook/Apple). Kalender dibaca saat disimpan, lalu setiap 30 menit saat admin atau feed dibuka, dan tampil sebagai baris **Agen & partner** di kalender reservasi.
 - **Antaragen.** Agen yang mengaktifkan *Bagikan hari sibuk* tampil sebagai “Nama agen · terisi” di kalender agen lain, tanpa detail acara.
 
+### OTA dengan sinkron iCal / ICS
+
+Pilih **Jenis: OTA** saat menambah. Sinkron berjalan dua arah:
+
+1. **Zanclus → OTA.** Salin **Link kalender (.ics)** dari kartu OTA, lalu tempel di extranet OTA pada menu impor kalender (iCal / ICS). Link ini hanya berisi tanggal yang perlu berhenti dijual, sebagai acara seharian “Not available”:
+   - tanggal tutup untuk aktivitas itu;
+   - tanggal dengan sisa slot di bawah **Tandai penuh bila sisa slot kurang dari** (bawaan 4, supaya OTA tidak menjual grup yang tidak muat).
+
+   Pesanan dari OTA itu sendiri tidak dikirim balik kepadanya. Link ini tidak memuat nama atau jumlah tamu.
+2. **OTA → Zanclus.** Ambil link ekspor iCal / ICS dari extranet OTA, lalu isi di **Link iCal / ICS dari extranet OTA**. Atur **Acara dari link ini**:
+   - **Memakai slot harian**: setiap pesanan memakai slot sejumlah tamu yang tertulis di judul atau catatan acara (mis. “3 pax”, “Guests: 2”). Bila tidak tertulis, dipakai **Slot per acara** (bawaan 2).
+   - **Menutup tanggal (penuh)**: setiap tanggal di kalender OTA dianggap penuh.
+   - **Hanya tampil di kalender reservasi**: acara hanya tampil, tidak memakai slot.
+
+Slot yang dipakai OTA ikut dihitung di kalender halaman aktivitas dan kursus, di pembayaran online, dan di permintaan booking website. Jadi gabungan tamu website dan OTA tidak melewati kuota harian (diving 30 orang). Format yang dibaca:
+- acara seharian dengan tanggal akhir eksklusif (gaya Airbnb / Booking.com);
+- acara berjam (dengan TZID atau UTC), termasuk yang berakhir tepat tengah malam;
+- `DURATION`;
+- acara bebas (`TRANSP:TRANSPARENT`, tidak memakai slot);
+- acara batal (`STATUS:CANCELLED`, diabaikan).
+
+Batas sinkron iCal:
+- **Tidak seketika.** Zanclus membaca kalender OTA setiap 30 menit (atau lewat **Baca kalender sekarang**). OTA membaca link Zanclus menurut jadwalnya sendiri, biasanya setiap beberapa jam.
+- **Tidak membawa sisa slot.** iCal hanya mengirim tanggal buka atau tutup, karena itu ada batas **Tandai penuh**.
+- **Tidak semua OTA punya iCal.** Cek di extranet tiap OTA apakah ada menu impor/ekspor iCal / ICS. Yang tidak punya perlu channel manager atau API.
+
 **Buat link baru** langsung mematikan link lama; **Nonaktifkan** dan **Hapus** menutup feed dan halaman partner. Hanya link `https://` publik yang dibaca (maksimal 2 MB, 10 detik, 3 pengalihan); alamat jaringan lokal ditolak. Acara berulang (RRULE) dihitung sekali pada tanggal pertamanya. Tidak perlu environment variable tambahan.
 
 Uji dengan server demo `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false AGENT_CALENDAR_ALLOW_LOCAL=true` pada folder data baru, lalu `BASE_URL=… node scripts/verify-agents.mjs`. `AGENT_CALENDAR_ALLOW_LOCAL` hanya untuk tes lokal; jangan diisi di hosting.
