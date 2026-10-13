@@ -8,6 +8,7 @@ import { defaultContent } from "../src/cms-model.js";
 import { withShop, demoShop } from "../src/shop-model.js";
 import {
   withActivityRefresh,
+  withRajaAmpatTitle,
   withTranslations,
   localizeContent,
 } from "../src/content-i18n.js";
@@ -52,4 +53,21 @@ test("shared legacy facts are refreshed, owner edits are kept", () => {
     localizeContent(fresh, "en").activities.diving.itinerary[2].title,
     "Two dives",
   );
+});
+
+test("old hero and quiz lines are replaced once, owner text is kept", () => {
+  const content = withTranslations({
+    ...withShop(structuredClone(defaultContent), demoShop()),
+  });
+  content.text.heroEyebrow = "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT";
+  content.text.quizTitle = "Belum tahu mulai dari mana?";
+  content.text.quizDescription = "Deskripsi milik owner";
+  content.en.text.quizTitle = "Not sure where to start?";
+  content.en.text.heroEyebrow = "YOUR NEXT STORY STARTS UNDERWATER";
+  const fresh = withRajaAmpatTitle(content);
+  assert.equal(fresh.text.heroEyebrow, "CERITAMU BERIKUTNYA DIMULAI");
+  assert.equal(fresh.text.quizTitle, "Siap belajar menyelam?");
+  assert.equal(fresh.text.quizDescription, "Deskripsi milik owner");
+  assert.equal(fresh.en.text.quizTitle, "Ready to learn to dive?");
+  assert.equal(fresh.en.text.heroEyebrow, "YOUR NEXT STORY STARTS");
 });

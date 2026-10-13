@@ -48,19 +48,35 @@ try {
     "CERITAMU BERIKUTNYA DIMULAI",
   );
 
-  // The course section replaces the old quiz panel; the quiz stays reachable.
+  // The panel under the experiences keeps its look (title, button, photo
+  // fan) but now invites visitors to the dive courses.
   await page.goto(base + "/id", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".quiz-panel, .photo-fan").count(), 0);
-  const cards = page.locator("#courses .course-offer-card");
-  assert.equal(await cards.count(), 4);
-  assert.match(await cards.nth(1).textContent(), /Open Water Diver/);
-  assert.match(await cards.nth(1).textContent(), /Rp\s?7\.500\.000/);
+  const panel = page.locator(".quiz-panel");
+  assert.equal(
+    await panel.locator(".eyebrow").textContent(),
+    "KURSUS SELAM ZANCLUS",
+  );
+  assert.equal(
+    await panel.locator("h2").textContent(),
+    "Siap belajar menyelam?",
+  );
+  assert.equal(await panel.locator(".fan-photo img").count(), 5);
+  const cta = panel.locator("a.quiz-button");
+  assert.equal(await cta.getAttribute("href"), "/id/course");
+  assert.match(await cta.textContent(), /Lihat kursus selam/);
+  // The quiz is still one quiet link away.
   await page.locator("#open-quiz").click();
   assert.equal(
     await page.locator("#quiz-dialog").evaluate((el) => el.open),
     true,
   );
   await page.keyboard.press("Escape");
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  assert.equal(
+    await page.locator(".quiz-panel h2").textContent(),
+    "Ready to learn to dive?",
+  );
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
   // Main menu: Experiences lists the courses page.
   assert.equal(
     await page
@@ -69,9 +85,10 @@ try {
     "Kursus selam",
   );
 
-  // A card opens /course with that course chosen in the form.
-  await cards.nth(1).click();
-  await page.waitForURL(base + "/id/course#open-water");
+  // The button opens /course; a #course link chooses it in the form.
+  await cta.click();
+  await page.waitForURL(base + "/id/course");
+  await page.goto(base + "/id/course#open-water", { waitUntil: "networkidle" });
   assert.equal(await page.locator("#course-select").inputValue(), "open-water");
   assert.equal(await page.locator(".course-item").count(), 4);
   assert.equal(
@@ -134,9 +151,12 @@ try {
   await page.getByLabel("Tampilkan di website").nth(3).uncheck();
   await page.getByRole("button", { name: "Simpan kursus" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
-  await page.goto(base + "/id", { waitUntil: "networkidle" });
-  assert.equal(await cards.count(), 3);
-  assert.match(await cards.nth(1).textContent(), /Rp\s?7\.750\.000/);
+  await page.goto(base + "/id/course", { waitUntil: "networkidle" });
+  assert.equal(await page.locator(".course-item").count(), 3);
+  assert.match(
+    await page.locator("#open-water").textContent(),
+    /Rp\s?7\.750\.000/,
+  );
 
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/id", "/id/course"]) {
@@ -150,7 +170,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course section with prices replacing the quiz panel, quiz still opens, menu link, card preselects course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, 390px without sideways scroll. No messages sent.",
+    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();

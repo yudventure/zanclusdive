@@ -450,13 +450,8 @@ const id = {
   course: {
     nav: "Kursus selam",
     kicker: "KURSUS SELAM ZANCLUS",
-    homeTitle: "Belajar menyelam, dari nol sampai mahir.",
-    homeIntro:
-      "Pilih kursus sesuai pengalamanmu. Instruktur mendampingi setiap langkah, dengan laut Raja Ampat sebagai ruang kelas.",
-    from: "Mulai",
-    detail: "Lihat detail",
-    allCourses: "Lihat semua kursus",
-    help: "Bantu aku memilih",
+    cta: "Lihat kursus selam",
+    help: "Belum yakin? Bantu aku memilih",
     heroKicker: "KURSUS SELAM · ZANCLUS DIVE CENTER",
     title: "Belajar menyelam di Raja Ampat.",
     summary:
@@ -1183,13 +1178,8 @@ const en = {
   course: {
     nav: "Dive courses",
     kicker: "ZANCLUS DIVE COURSES",
-    homeTitle: "Learn to dive, from first breath to confident diver.",
-    homeIntro:
-      "Pick the course that fits your experience. An instructor guides every step, with Raja Ampat as your classroom.",
-    from: "From",
-    detail: "See details",
-    allCourses: "See all courses",
-    help: "Help me choose",
+    cta: "See dive courses",
+    help: "Not sure yet? Help me choose",
     heroKicker: "DIVE COURSES · ZANCLUS DIVE CENTER",
     title: "Learn to dive in Raja Ampat.",
     summary:

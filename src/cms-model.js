@@ -38,8 +38,9 @@ export const defaultContent = {
     heroDescription: "Pengalaman menyelam untuk setiap rasa ingin tahu.",
     heroButton: "Mulai petualanganmu",
     experiencesHeading: "Ada cerita untuk setiap level.",
-    quizTitle: "Belum tahu mulai dari mana?",
-    quizDescription: "Temukan pengalaman yang sesuai denganmu.",
+    quizTitle: "Siap belajar menyelam?",
+    quizDescription:
+      "Dari Discovery Dive sampai Rescue Diver, mulai kursus selammu bersama instruktur Zanclus.",
     oceanTitle1: "Laut punya cara",
     oceanTitle2: "untuk membuatmu takjub.",
     oceanDescription:
@@ -84,8 +85,8 @@ export const textFields = [
   ["heroDescription", "Deskripsi hero"],
   ["heroButton", "Teks tombol hero"],
   ["experiencesHeading", "Judul bagian pengalaman"],
-  ["quizTitle", "Judul kuis"],
-  ["quizDescription", "Deskripsi kuis"],
+  ["quizTitle", "Judul ajakan kursus"],
+  ["quizDescription", "Deskripsi ajakan kursus"],
   ["oceanTitle1", "Judul laut — baris 1"],
   ["oceanTitle2", "Judul laut — baris 2"],
   ["oceanDescription", "Deskripsi bagian laut"],
