@@ -258,8 +258,9 @@ export default function CourseEditor({
         <h2>Partner sertifikasi</h2>
         <p className="admin-subtle">
           Tampil sebagai running text di bagian kursus beranda dan di halaman
-          /course. Upload logo resmi dari PC atau HP; tanpa logo, nama singkat
-          tampil sebagai lencana teks. Maksimal {partnerLimit} partner.
+          /course, putih di atas foto gelap tanpa kartu atau bingkai. Upload logo
+          resmi (PNG berlatar transparan) dari PC atau HP; tanpa logo, nama
+          singkat tampil sebagai tulisan. Maksimal {partnerLimit} partner.
         </p>
         {partners.map((partner, index) => (
           <fieldset className="admin-price-item" key={index}>
@@ -297,11 +298,13 @@ export default function CourseEditor({
             </legend>
             <div className="admin-gallery-item">
               <div className="admin-gallery-photo admin-partner-logo">
-                {partner.logo ? (
-                  <img src={partner.logo} alt={"Logo " + partner.name} />
-                ) : (
-                  <span>{partner.name || "Logo"}</span>
-                )}
+                <span className="admin-partner-preview">
+                  {partner.logo ? (
+                    <img src={partner.logo} alt={"Logo " + partner.name} />
+                  ) : (
+                    partner.name || "Logo"
+                  )}
+                </span>
                 <ImageUpload
                   compact
                   label={partner.logo ? "Ganti logo" : "Upload logo"}
@@ -317,7 +320,7 @@ export default function CourseEditor({
                     className="admin-inline"
                     onClick={() => changePartner(index, { logo: "" })}
                   >
-                    Pakai lencana teks
+                    Pakai tulisan saja
                   </button>
                 )}
               </div>

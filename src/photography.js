@@ -10,6 +10,7 @@ export const siteImageFields = [
   ["galleryTurtle", "Galeri — penyu"],
   ["galleryIsland", "Galeri — pulau & pantai"],
   ["shop", "Sampul Dive Shop — perlengkapan"],
+  ["course", "Latar bagian kursus beranda (foto selam gelap)"],
 ];
 export const defaultSiteImages = {
   hero: "/assets/hero.webp",
@@ -21,6 +22,7 @@ export const defaultSiteImages = {
   galleryTurtle: "/assets/photos/fan-turtle.webp",
   galleryIsland: "/assets/photos/fan-beach.webp",
   shop: "/assets/photos/gear.webp",
+  course: "/assets/photos/course-cover.webp",
 };
 export const activityPhotos = {
   diving: {
@@ -58,6 +60,7 @@ const responsivePhotos = [
   ]),
   defaultSiteImages.shop,
   defaultSiteImages.ocean,
+  defaultSiteImages.course,
 ];
 export function photoSrcSet(url) {
   if (!responsivePhotos.includes(url)) return undefined;

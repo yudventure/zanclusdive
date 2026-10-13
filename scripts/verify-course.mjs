@@ -88,6 +88,9 @@ try {
   // The button opens /course; a #course link chooses it in the form.
   await cta.click();
   await page.waitForURL(base + "/id/course");
+  // Wait for the page to be interactive (the date field gets today's date as
+  // its minimum): a hash set before that is reset by the router.
+  await page.locator("#course-date[min]").waitFor({ state: "attached" });
   await page.goto(base + "/id/course#open-water", { waitUntil: "networkidle" });
   await page.waitForFunction(
     () => document.querySelector("#course-select").value === "open-water",
@@ -161,7 +164,8 @@ try {
   );
 
   // Certification partners run in a strip on the homepage panel and under
-  // the /course hero; a logo uploaded in the admin replaces the text badge.
+  // the /course hero, as plain white logos and names without cards or
+  // borders; a logo uploaded in the admin replaces the short name.
   for (const path of ["/id", "/id/course"]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
     const strip = page.locator(".partner-marquee").first();
@@ -170,10 +174,55 @@ try {
       "PARTNER SERTIFIKASI SELAM",
     );
     const names = await strip
-      .locator("li:not([aria-hidden]) .partner-badge")
+      .locator("li:not([aria-hidden]) .partner-name")
       .allTextContents();
     assert.deepEqual(names, ["SSI", "CMAS", "PADI"]);
+    const look = await strip.evaluate((el) => {
+      const item = getComputedStyle(el.querySelector("li"));
+      const name = getComputedStyle(el.querySelector(".partner-name"));
+      const items = el.querySelectorAll("li");
+      const half = items[items.length / 2];
+      return {
+        border: item.borderTopWidth,
+        background: item.backgroundColor,
+        nameBackground: name.backgroundColor,
+        color: name.color,
+        // The second copy starts exactly half the track along: no jump.
+        loop:
+          Math.abs(
+            half.getBoundingClientRect().left -
+              items[0].getBoundingClientRect().left -
+              el.querySelector(".partner-marquee-track").getBoundingClientRect()
+                .width /
+                2,
+          ) < 1,
+      };
+    });
+    assert.deepEqual(look, {
+      border: "0px",
+      background: "rgba(0, 0, 0, 0)",
+      nameBackground: "rgba(0, 0, 0, 0)",
+      color: "rgb(255, 255, 255)",
+      loop: true,
+    });
   }
+  // The homepage panel sits on a dark diving photo, like the hero.
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
+  assert.deepEqual(
+    await page.locator(".quiz-panel").evaluate((el) => ({
+      photo: el.querySelector(".quiz-photo").getAttribute("src"),
+      cover: getComputedStyle(el.querySelector(".quiz-photo")).objectFit,
+      title: getComputedStyle(el.querySelector("h2")).color,
+      button: getComputedStyle(el.querySelector(".quiz-button")).color,
+    })),
+    {
+      photo: "/assets/photos/course-cover.webp",
+      cover: "cover",
+      title: "rgb(255, 255, 255)",
+      // Dark text on the light button.
+      button: "rgb(6, 43, 59)",
+    },
+  );
   await page.goto(base + "/admin/courses", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "+ Tambah partner" }).click();
   await page.getByLabel("Nama singkat (mis. PADI)").last().fill("NAUI");
@@ -211,7 +260,7 @@ try {
   );
   assert.deepEqual(
     await strip
-      .locator("li:not([aria-hidden]) .partner-badge")
+      .locator("li:not([aria-hidden]) .partner-name")
       .allTextContents(),
     ["CMAS", "PADI", "NAUI"],
   );
@@ -228,7 +277,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, partner strip with admin-added partner and uploaded logo, 390px without sideways scroll. No messages sent.",
+    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, dark photo panel, plain white partner strip (no cards or borders, seamless loop) with admin-added partner and uploaded logo, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();
