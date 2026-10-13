@@ -64,7 +64,7 @@ const facts = {
 };
 export const englishDefaults = {
   text: {
-    heroEyebrow: "YOUR NEXT STORY STARTS UNDERWATER",
+    heroEyebrow: "YOUR NEXT STORY STARTS",
     heroTitle1: "Beneath the waters of Raja Ampat,",
     heroTitle2: "the story begins.",
     tagline: "Explore the ocean. Find your story.",
@@ -384,17 +384,26 @@ export function withRajaAmpatTitle(content) {
   const updated = { ...content };
   if (content.text?.heroTitle1 === "Di bawah laut,")
     updated.text = { ...content.text, heroTitle1: "Di bawah laut Raja Ampat," };
-  // The Indonesian site used to carry the English hero line.
-  if (content.text?.heroEyebrow === "YOUR NEXT STORY STARTS UNDERWATER")
+  // Older hero lines: the English one on the Indonesian site, and the
+  // "di bawah laut" ending the owner asked to drop.
+  if (
+    [
+      "YOUR NEXT STORY STARTS UNDERWATER",
+      "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT",
+    ].includes(content.text?.heroEyebrow)
+  )
     updated.text = {
       ...updated.text,
-      heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT",
+      heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI",
     };
+  const english = (patch) => {
+    const en = updated.en ?? content.en;
+    updated.en = { ...en, text: { ...en.text, ...patch } };
+  };
+  if (content.en?.text?.heroEyebrow === "YOUR NEXT STORY STARTS UNDERWATER")
+    english({ heroEyebrow: "YOUR NEXT STORY STARTS" });
   if (content.en?.text?.heroTitle1 === "Beneath the sea,")
-    updated.en = {
-      ...content.en,
-      text: { ...content.en.text, heroTitle1: englishDefaults.text.heroTitle1 },
-    };
+    english({ heroTitle1: englishDefaults.text.heroTitle1 });
   return updated;
 }
 

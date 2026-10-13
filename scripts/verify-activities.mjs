@@ -212,8 +212,8 @@ try {
           await page.locator("#activity-navigation").isVisible(),
           true,
         );
-        // Six main links plus the three activity pages under Experiences.
-        assert.equal(await page.locator("#activity-navigation a").count(), 9);
+        // Six main links plus the activity pages and courses under Experiences.
+        assert.equal(await page.locator("#activity-navigation a").count(), 10);
         assert.equal(
           await page
             .locator("#activity-navigation")

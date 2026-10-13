@@ -3,7 +3,7 @@ import { dictionary, localeHref } from "../i18n.js";
 
 // The same main menu on every public page. On the homepage the links jump to
 // its sections; elsewhere they lead back to them, and Dive Shop opens the
-// full Dive Shop page (its catalog when already there). "Experiences" holds the three activity pages.
+// full Dive Shop page (its catalog when already there). "Experiences" holds the activity pages and the courses.
 export default function SiteNavLinks({
   locale,
   page = "home",
@@ -35,23 +35,29 @@ export default function SiteNavLinks({
           "experiences",
           section("experiences"),
           t.common.experiences,
-          page === "activity",
+          page === "activity" || page === "course",
         )}
-        {visible.length > 0 && (
-          <div className="nav-sub">
-            {visible.map((key) => (
-              <a
-                key={key}
-                href={href("/" + key)}
-                className={key === activityKey ? "current" : undefined}
-                aria-current={key === activityKey ? "page" : undefined}
-                onClick={onNavigate}
-              >
-                {t.activityLabels[key]}
-              </a>
-            ))}
-          </div>
-        )}
+        <div className="nav-sub">
+          {visible.map((key) => (
+            <a
+              key={key}
+              href={href("/" + key)}
+              className={key === activityKey ? "current" : undefined}
+              aria-current={key === activityKey ? "page" : undefined}
+              onClick={onNavigate}
+            >
+              {t.activityLabels[key]}
+            </a>
+          ))}
+          <a
+            href={href("/course")}
+            className={page === "course" ? "current" : undefined}
+            aria-current={page === "course" ? "page" : undefined}
+            onClick={onNavigate}
+          >
+            {t.course.nav}
+          </a>
+        </div>
       </div>
       {item("dive-sites", section("dive-sites"), t.common.diveSites)}
       {item("ocean", section("ocean"), t.common.exploreOcean)}

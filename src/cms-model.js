@@ -1,6 +1,7 @@
 import { experiences } from "./domain.js";
 import { defaultGallery, galleryLimit } from "./gallery.js";
 import { defaultCalendar, validateCalendar } from "./calendar-model.js";
+import { defaultCourses, validateCourses } from "./course-model.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -30,7 +31,7 @@ export const defaultContent = {
   activities: structuredClone(defaultActivities),
   shop: structuredClone(emptyShop),
   text: {
-    heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI DI BAWAH LAUT",
+    heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI",
     heroTitle1: "Di bawah laut Raja Ampat,",
     heroTitle2: "cerita dimulai.",
     tagline: "Jelajahi laut. Temukan cerita.",
@@ -56,6 +57,7 @@ export const defaultContent = {
   priceList: structuredClone(defaultPriceList),
   gallery: structuredClone(defaultGallery),
   calendar: structuredClone(defaultCalendar),
+  courses: structuredClone(defaultCourses),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -242,6 +244,7 @@ export function validateContent(input) {
     activities: validateActivities(input.activities),
     gallery: validateGallery(input.gallery),
     calendar: validateCalendar(input.calendar),
+    courses: validateCourses(input.courses),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }

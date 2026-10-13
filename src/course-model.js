@@ -1,0 +1,237 @@
+// Dive courses offered by Zanclus: shown on the homepage and on /course.
+// Editable in the CMS; texts carry Indonesian and English. Prices are the
+// owner's to confirm and change in the admin.
+import { cleanWhatsApp, cleanEmail } from "./contact-fields.js";
+import { dictionary } from "./i18n.js";
+
+const t = (id, en) => ({ id, en });
+export const courseLimit = 8;
+
+export const defaultCourses = {
+  items: [
+    {
+      id: "discovery",
+      enabled: true,
+      name: t("Discovery Dive", "Discovery Dive"),
+      level: t("Coba menyelam", "Try diving"),
+      duration: t("Setengah hari", "Half day"),
+      depth: t("Hingga 12 m", "Down to 12 m"),
+      age: t("Usia 10+", "Age 10+"),
+      price: 1200000,
+      unit: t("/ orang", "/ person"),
+      summary: t(
+        "Pengalaman pertama di bawah air tanpa lisensi. Pemandu mendampingi dari awal sampai naik lagi ke perahu.",
+        "Your first time underwater, no license needed. A guide stays with you from the first breath to back on the boat.",
+      ),
+      includes: [
+        t(
+          "Pengenalan alat dan latihan di air dangkal",
+          "Gear briefing and practice in shallow water",
+        ),
+        t("2 penyelaman bersama pemandu", "2 dives with a guide"),
+        t("Perlengkapan selam lengkap", "Full dive equipment"),
+        t(
+          "Dokumentasi gratis untuk lebih dari 4 peserta",
+          "Free photos for groups over 4",
+        ),
+      ],
+      requirements: t(
+        "Sehat dan nyaman di air. Tidak perlu pengalaman.",
+        "Healthy and comfortable in the water. No experience needed.",
+      ),
+      image: "/assets/photos/gallery-dive.webp",
+    },
+    {
+      id: "open-water",
+      enabled: true,
+      name: t("Open Water Diver", "Open Water Diver"),
+      level: t("Lisensi pertama", "First license"),
+      duration: t("3 sampai 4 hari", "3 to 4 days"),
+      depth: t("Hingga 18 m", "Down to 18 m"),
+      age: t("Usia 10+", "Age 10+"),
+      price: 7500000,
+      unit: t("/ orang", "/ person"),
+      summary: t(
+        "Lisensi menyelam yang diakui internasional. Belajar teori, latihan di air tenang, lalu 4 penyelaman di laut Raja Ampat.",
+        "An internationally recognized diving license. Learn the theory, practise in calm water, then make 4 open water dives in Raja Ampat.",
+      ),
+      includes: [
+        t("Materi teori dan kuis", "Theory lessons and quizzes"),
+        t(
+          "Latihan keterampilan di air tenang",
+          "Skills practice in calm water",
+        ),
+        t("4 penyelaman di laut", "4 open water dives"),
+        t("Alat selam dan biaya lisensi", "Dive gear and license fee"),
+      ],
+      requirements: t(
+        "Bisa berenang 200 m dan mengapung 10 menit. Mengisi formulir kesehatan.",
+        "Able to swim 200 m and float for 10 minutes. Fill in a medical form.",
+      ),
+      image: "/assets/photos/fan-turtle.webp",
+    },
+    {
+      id: "advanced",
+      enabled: true,
+      name: t("Advanced Open Water", "Advanced Open Water"),
+      level: t("Lanjutan", "Advanced"),
+      duration: t("2 sampai 3 hari", "2 to 3 days"),
+      depth: t("Hingga 30 m", "Down to 30 m"),
+      age: t("Usia 12+", "Age 12+"),
+      price: 6500000,
+      unit: t("/ orang", "/ person"),
+      summary: t(
+        "Tambah pengalaman dengan 5 penyelaman petualangan, termasuk penyelaman dalam dan navigasi bawah air.",
+        "Build experience with 5 adventure dives, including a deep dive and underwater navigation.",
+      ),
+      includes: [
+        t("5 penyelaman petualangan", "5 adventure dives"),
+        t("Penyelaman dalam dan navigasi", "Deep and navigation dives"),
+        t("Pilihan arus, foto, atau ikan", "Choice of drift, photo or fish ID"),
+        t("Alat selam dan biaya lisensi", "Dive gear and license fee"),
+      ],
+      requirements: t(
+        "Sudah punya lisensi Open Water.",
+        "Open Water license required.",
+      ),
+      image: "/assets/photos/diving-cover.webp",
+    },
+    {
+      id: "rescue",
+      enabled: true,
+      name: t("Rescue Diver", "Rescue Diver"),
+      level: t("Keselamatan", "Safety"),
+      duration: t("3 hari", "3 days"),
+      depth: t("Hingga 30 m", "Down to 30 m"),
+      age: t("Usia 12+", "Age 12+"),
+      price: 7000000,
+      unit: t("/ orang", "/ person"),
+      summary: t(
+        "Belajar mencegah dan menangani masalah di air, untuk diri sendiri dan teman menyelam.",
+        "Learn to prevent and handle problems in the water, for yourself and your buddy.",
+      ),
+      includes: [
+        t("Skenario penyelamatan di laut", "Rescue scenarios at sea"),
+        t("Pertolongan pertama untuk penyelam", "First aid for divers"),
+        t("Latihan bersama instruktur", "Training with an instructor"),
+        t("Biaya lisensi", "License fee"),
+      ],
+      requirements: t(
+        "Lisensi Advanced Open Water dan sertifikat pertolongan pertama yang masih berlaku.",
+        "Advanced Open Water license and a valid first aid certificate.",
+      ),
+      image: "/assets/photos/snorkeling-cover.webp",
+    },
+  ],
+};
+
+export function withCourses(content) {
+  return content.courses
+    ? content
+    : { ...content, courses: structuredClone(defaultCourses) };
+}
+
+// Text in the page language, falling back to Indonesian.
+export const courseText = (value, locale) =>
+  (locale === "en" && value?.en?.trim()) || value?.id || "";
+
+function text(value, label, max, required) {
+  const out = {};
+  for (const lang of ["id", "en"]) {
+    const v = value?.[lang] ?? "";
+    if (
+      typeof v !== "string" ||
+      v.length > max ||
+      (required && lang === "id" && !v.trim())
+    )
+      throw new Error(`${label} pada kursus tidak valid.`);
+    out[lang] = v.trim();
+  }
+  return out;
+}
+
+export function validateCourses(input) {
+  if (input === undefined || input === null)
+    return structuredClone(defaultCourses);
+  const items = input.items;
+  if (!Array.isArray(items) || items.length > courseLimit)
+    throw new Error(`Kursus berisi maksimal ${courseLimit} item.`);
+  const ids = new Set();
+  return {
+    items: items.map((c) => {
+      const id = String(c?.id ?? "").trim();
+      if (!/^[a-z0-9-]{2,40}$/.test(id) || ids.has(id))
+        throw new Error("Kode kursus harus unik, huruf kecil, angka, atau -.");
+      ids.add(id);
+      const price = Number(c.price);
+      if (!Number.isSafeInteger(price) || price <= 0 || price > 1e9)
+        throw new Error("Harga kursus harus angka rupiah.");
+      if (!Array.isArray(c.includes) || c.includes.length > 8)
+        throw new Error("Isi kursus maksimal 8 poin.");
+      const image = String(c.image ?? "").trim();
+      if (
+        image.length > 1200 ||
+        (image &&
+          !image.startsWith("/assets/") &&
+          !image.startsWith("/api/media/") &&
+          !image.startsWith("https://"))
+      )
+        throw new Error("Foto kursus harus URL HTTPS atau foto yang diunggah.");
+      return {
+        id,
+        enabled: c.enabled !== false,
+        name: text(c.name, "Nama", 80, true),
+        level: text(c.level, "Level", 40, false),
+        duration: text(c.duration, "Durasi", 60, true),
+        depth: text(c.depth, "Kedalaman", 40, false),
+        age: text(c.age, "Usia", 40, false),
+        price,
+        unit: text(c.unit, "Satuan", 20, false),
+        summary: text(c.summary, "Ringkasan", 400, true),
+        includes: c.includes
+          .map((item) => text(item, "Isi kursus", 120, false))
+          .filter((item) => item.id),
+        requirements: text(c.requirements, "Syarat", 300, false),
+        image,
+      };
+    }),
+  };
+}
+
+// WhatsApp message for a course request.
+export function courseInquiry(course, details, today, locale = "id") {
+  const t = dictionary(locale).course;
+  if (!course?.enabled) throw new Error(t.errCourse);
+  const name = typeof details.name === "string" ? details.name.trim() : "";
+  if (!name || name.length > 120) throw new Error(t.errName);
+  const whatsapp = cleanWhatsApp(details.whatsapp);
+  if (!whatsapp) throw new Error(t.errWhatsapp);
+  const email = cleanEmail(details.email);
+  if (email === null) throw new Error(t.errEmail);
+  const date = details.date;
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
+    Number.isNaN(new Date(date + "T12:00:00Z").valueOf()) ||
+    new Date(date + "T12:00:00Z").toISOString().slice(0, 10) !== date ||
+    date < today
+  )
+    throw new Error(t.errDate);
+  const participants = Number(details.participants);
+  if (!Number.isInteger(participants) || participants < 1 || participants > 20)
+    throw new Error(t.errParticipants);
+  const notes = typeof details.notes === "string" ? details.notes.trim() : "";
+  if (notes.length > 1000) throw new Error(t.errNotes);
+  return [
+    t.message.greeting(courseText(course.name, locale)),
+    `${t.message.name}: ${name}`,
+    `WhatsApp: ${whatsapp}`,
+    ...(email ? [`Email: ${email}`] : []),
+    `${t.message.date}: ${date}`,
+    t.message.people(participants),
+    ...(details.certification
+      ? [`${t.message.license}: ${String(details.certification).slice(0, 80)}`]
+      : []),
+    ...(notes ? [`${t.message.notes}: ${notes}`] : []),
+    t.message.closing,
+  ].join("\n");
+}
