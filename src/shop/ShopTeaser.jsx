@@ -7,6 +7,7 @@ import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
+import CartIcon from "../components/CartIcon.jsx";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
@@ -133,20 +134,6 @@ function ServiceBanner({ service, locale, locks }) {
         {b.cta} <span aria-hidden="true">↗</span>
       </span>
     </a>
-  );
-}
-
-function CartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-      <path
-        d="M3 4h2l2.4 11h10.2L20 7H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm7 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 

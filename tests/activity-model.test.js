@@ -165,8 +165,17 @@ test("the WhatsApp message carries the chosen package and estimate", () => {
     "2030-01-01",
     false,
     "id",
-    { item: "Discovery Dive", quantity: 2, unit: "orang", total: 2400000 },
+    {
+      lines: [
+        { item: "Discovery Dive", quantity: 2, unit: "orang" },
+        { item: "Dokumentasi", quantity: 1, unit: "hari" },
+      ],
+      total: 2900000,
+    },
   );
-  assert.match(message, /Paket: Discovery Dive × 2 orang\n/);
-  assert.match(message, /Perkiraan biaya: Rp\s?2\.400\.000\n/);
+  assert.match(
+    message,
+    /Paket: Discovery Dive × 2 orang, Dokumentasi × 1 hari\n/,
+  );
+  assert.match(message, /Perkiraan biaya: Rp\s?2\.900\.000\n/);
 });

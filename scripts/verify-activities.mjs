@@ -102,13 +102,22 @@ try {
       (item) => item.price > 0,
     );
     assert.equal(await page.locator(".activity-price").count(), 0);
+    // Packages go into a cart from the price cards or the panel.
     assert.equal(
       await page.locator(".plan-package legend").textContent(),
-      "Paket & biaya",
+      "Paket dipilih",
     );
     assert.equal(
-      await page.locator("#pay-item option").count(),
+      await page.locator(".activity-prices .shop-item-add").count(),
       packages.length,
+    );
+    assert.equal(
+      await page.locator(".plan-add option").count(),
+      packages.length + 1,
+    );
+    assert.match(
+      await page.locator(".activity-cart-bar").textContent(),
+      /Keranjang · 0 paket/,
     );
     assert.match(
       await page.locator(".pay-total").textContent(),
@@ -152,6 +161,13 @@ try {
       future.setDate(future.getDate() + 8);
       return future.toLocaleDateString("en-CA");
     });
+    // A package from its price card, after the header checks above.
+    await page
+      .getByRole("button", {
+        name: `Tambahkan ${packages[0].name.id} ke keranjang`,
+      })
+      .click();
+    assert.equal(await page.locator(".plan-cart li").count(), 1);
     await page.getByLabel("Nama kamu").fill("Tamu Uji Aktivitas");
     // Required fields are marked; WhatsApp is checked before the message.
     assert.equal(

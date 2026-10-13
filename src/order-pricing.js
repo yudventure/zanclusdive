@@ -40,6 +40,8 @@ function checkDate(date, { today, last }) {
   return date;
 }
 
+// Packages from the activity's price list, chosen like a cart: one or more
+// lines { item, itemName, quantity } (or the single item of earlier pages).
 function activityOrder(content, input, window, locks) {
   const activity = input.activity;
   if (
@@ -48,30 +50,45 @@ function activityOrder(content, input, window, locks) {
     pageLocked(locks, activity)
   )
     fail("Aktivitas ini belum bisa dibayar online.");
-  const item = payableItems(content.priceList, activity).find(
-    (entry) => entry.index === Number(input.item),
-  );
-  if (!item || priceText(item.name, "id") !== input.itemName)
-    fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
-  const quantity = whole(input.quantity, 1, quantityLimit);
+  const chosen = Array.isArray(input.lines)
+    ? input.lines
+    : [
+        {
+          item: input.item,
+          itemName: input.itemName,
+          quantity: input.quantity,
+        },
+      ];
+  const packages = payableItems(content.priceList, activity);
+  if (!chosen.length || chosen.length > packages.length)
+    fail("Pilih minimal satu paket dari daftar harga.", 400);
   const participants = whole(input.participants, 1, quantityLimit);
-  if (!quantity || !participants)
-    fail("Jumlah paket dan peserta harus 1–30.", 400);
+  if (!participants) fail("Jumlah paket dan peserta harus 1–30.", 400);
+  const seen = new Set();
+  const lines = chosen.map((line) => {
+    const item = packages.find((entry) => entry.index === Number(line?.item));
+    if (!item || priceText(item.name, "id") !== line.itemName)
+      fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
+    if (seen.has(item.index))
+      fail("Pilih minimal satu paket dari daftar harga.", 400);
+    seen.add(item.index);
+    const quantity = whole(line.quantity, 1, quantityLimit);
+    if (!quantity) fail("Jumlah paket dan peserta harus 1–30.", 400);
+    return {
+      id: `${activity}-${item.index}`,
+      name: item.name,
+      unit: item.unit,
+      price: item.price,
+      quantity,
+    };
+  });
   const date = checkDate(input.date, window);
   return {
     program: activity,
     startDate: date,
     endDate: date,
     participants,
-    lines: [
-      {
-        id: `${activity}-${item.index}`,
-        name: item.name,
-        unit: item.unit,
-        price: item.price,
-        quantity,
-      },
-    ],
+    lines,
   };
 }
 

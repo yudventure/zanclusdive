@@ -126,8 +126,12 @@ try {
       });
       const rect = await page.locator("#order").boundingBox();
       assert.ok(rect.y >= 70 && rect.y < 200);
-      await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
-      await page.waitForFunction(() => window.scrollY === 0);
+      // The smooth scroll to the order panel may still be running: keep
+      // asking for the top until the page is there.
+      await page.waitForFunction(() => {
+        scrollTo({ top: 0, behavior: "instant" });
+        return window.scrollY === 0;
+      });
       await page.screenshot({
         path: "artifacts/dive-shop-mobile.png",
         fullPage: true,

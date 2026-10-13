@@ -171,7 +171,7 @@ Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-book
 
 Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
 
-- **Paket Diving, Snorkeling, Trip laut**: tiga langkah **Isi data → Ringkasan → Pembayaran** dengan kartu **Paket & biaya** (paket dari daftar harga CMS; harga per orang mengikuti jumlah peserta, satuan lain punya kolom jumlah). Pembayaran online dibatasi 30 peserta.
+- **Paket Diving, Snorkeling, Trip laut**: seperti Dive Shop. Setiap kartu di **Paket & harga** punya tombol **Keranjang** (lalu − / + untuk jumlah), dan bilah keranjang di bawah daftar harga menampilkan jumlah paket, total, serta tombol **Checkout** menuju panel pemesanan. Panel menampilkan **Paket dipilih** (bisa diubah atau ditambah dari pilihan **+ Tambah paket…**), lalu tiga langkah **Isi data → Ringkasan → Pembayaran**. Paket per orang mengikuti jumlah peserta; beberapa paket dibayar dalam satu transaksi. Pembayaran online dibatasi 30 peserta.
 - **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp.
 - **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20).
 - **Servis alat** (`/service`): jumlah harga servis yang dipilih.

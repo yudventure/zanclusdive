@@ -200,6 +200,54 @@ test("courses and gear servicing are priced from the CMS", () => {
   );
 });
 
+test("several activity packages are paid together, like a cart", () => {
+  const [first, second] = content.priceList.diving;
+  const order = price({
+    activity: "diving",
+    lines: [
+      { item: 0, itemName: first.name.id, quantity: 2 },
+      { item: 1, itemName: second.name.id, quantity: 1 },
+    ],
+    participants: 2,
+    date: "2030-01-05",
+  });
+  assert.equal(order.amount, first.price * 2 + second.price);
+  assert.deepEqual(
+    order.lines.map((line) => [line.id, line.quantity]),
+    [
+      ["diving-0", 2],
+      ["diving-1", 1],
+    ],
+  );
+  for (const lines of [
+    [],
+    [
+      { item: 0, itemName: first.name.id, quantity: 1 },
+      { item: 0, itemName: first.name.id, quantity: 1 },
+    ],
+  ])
+    assert.throws(
+      () =>
+        price({
+          activity: "diving",
+          lines,
+          participants: 1,
+          date: "2030-01-05",
+        }),
+      /Pilih minimal satu paket/,
+    );
+  assert.throws(
+    () =>
+      price({
+        activity: "diving",
+        lines: [{ item: 0, itemName: first.name.id, quantity: 31 }],
+        participants: 1,
+        date: "2030-01-05",
+      }),
+    /1–30/,
+  );
+});
+
 test("activity packages keep their checks; a locked site takes nothing", () => {
   const item = content.priceList.diving[0];
   const order = price({

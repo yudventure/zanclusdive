@@ -95,13 +95,28 @@ try {
     "2Summary",
     "3Payment",
   ]);
-  assert.equal(
-    await page.locator("#pay-item option").first().textContent(),
-    "Discovery Dive",
+  // Packages go into a cart from the price cards, like the Dive Shop.
+  assert.match(
+    await page.locator(".activity-cart-bar").textContent(),
+    /Cart · 0 packages/,
+  );
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
+  assert.match(
+    await page.locator(".activity-error").textContent(),
+    /Enter your name|at least one package/,
+  );
+  await page
+    .getByRole("button", { name: "Add Discovery Dive to the cart" })
+    .click();
+  assert.match(
+    await page.locator(".plan-cart").textContent(),
+    /Discovery Dive\s*IDR\s?1,200,000 \/ person/,
   );
   assert.match(
-    await page.locator(".plan-package-info strong").textContent(),
-    /IDR\s?1,200,000 \/ person/,
+    await page.locator(".activity-cart-bar").textContent(),
+    /Cart · 1 package[\s\S]*Total to pay IDR\s?1,200,000/,
   );
   await fillForm("Tamu Lunas");
   // Per-person packages follow the number of participants.
@@ -195,6 +210,9 @@ try {
 
   // An unpaid order that expires cancels its booking.
   await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Tambahkan Discovery Dive ke keranjang" })
+    .click();
   await fillForm("Tamu Batal", "1");
   await page
     .getByRole("button", { name: "Lanjut ke ringkasan pembayaran" })
@@ -226,14 +244,38 @@ try {
   delete mock.orders.get(expiredId).gross;
 
   // A payment finished without a notification is picked up by "Cek status".
+  // It is also an order of two packages, added from the cards and the panel.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Add Discovery Dive to the cart" })
+    .click();
+  await page.locator(".plan-add").selectOption({ index: 1 });
+  assert.equal(await page.locator(".plan-cart li").count(), 2);
+  await page.locator(".activity-cart-bar .button").click();
+  assert.equal(
+    await page.evaluate(() => document.activeElement.id),
+    "inquiry-name",
+  );
   await fillForm("Tamu Cek", "1");
   await page
     .getByRole("button", { name: "Continue to payment summary" })
     .click();
+  assert.equal(
+    (await page.locator(".plan-summary-list dd").nth(1).textContent()).split(
+      "\n",
+    ).length,
+    2,
+  );
   await page.locator(".pay-submit").click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const checkId = new URL(page.url()).pathname.split("/").pop();
+  assert.equal(mock.orders.get(checkId).items.length, 2);
+  assert.equal(
+    mock.orders.get(checkId).amount,
+    mock.orders
+      .get(checkId)
+      .items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  );
   mock.orders.get(checkId).status = "settlement";
   await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
   await a
@@ -398,6 +440,9 @@ try {
 
   // Still unsure: the same summary goes to WhatsApp instead.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Add Discovery Dive to the cart" })
+    .click();
   await fillForm("Tamu Ragu", "3");
   await page
     .getByRole("button", { name: "Continue to payment summary" })
@@ -441,7 +486,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS payments: off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package card with price and total, per-person quantity, 30-participant limit, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
+    "PASS payments: off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package cart from the price cards and the panel (like the Dive Shop) with the cart bar, per-person quantity following participants, 30-participant limit, a two-package order, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
   );
 } finally {
   await browser.close();

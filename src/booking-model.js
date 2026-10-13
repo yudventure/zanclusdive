@@ -48,6 +48,8 @@ const englishErrors = {
   "Isi nama, maksimal 80 karakter.": "Enter your name, up to 80 characters.",
   "Format email belum benar.": "That email doesn't look right.",
   "Catatan maksimal 1.000 karakter.": "Notes can be up to 1,000 characters.",
+  "Pilih minimal satu paket dari daftar harga.":
+    "Choose at least one package from the price list.",
   "Pilih alat terlebih dahulu.": "Choose your gear first.",
   "Lama sewa harus 1–30 hari.": "Rental days must be between 1 and 30.",
   "Jumlah setiap alat harus 1–10.": "Each item can be 1 to 10 units.",

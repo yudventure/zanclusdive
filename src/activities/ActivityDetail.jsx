@@ -15,6 +15,7 @@ import FormField from "../components/FormField.jsx";
 import SectionBanner from "./SectionBanner.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { payableItems, quantityLimit } from "../payment-model.js";
+import CartIcon from "../components/CartIcon.jsx";
 
 // Per-person packages count one unit for each participant.
 const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
@@ -31,30 +32,33 @@ function Inquiry({
   activityKey,
   activity,
   contact,
-  priceList,
+  packages,
+  cart,
+  changeCart,
+  participants,
+  changeParticipants,
   payments,
   locale,
 }) {
   const t = dictionary(locale).activity;
   const p = dictionary(locale).payment;
   const label = dictionary(locale).activityLabels[activityKey];
-  // Packages from the price list; paid online when Midtrans is switched on,
-  // otherwise they give the estimate in the WhatsApp message.
-  const packages = payableItems(priceList, activityKey);
+  // Packages are chosen like a cart, from the price list or here; they are
+  // paid online when Midtrans is switched on, otherwise they give the
+  // estimate in the WhatsApp message.
   const ready = Boolean(payments?.ready) && packages.length > 0;
   const [step, setStep] = useState("form");
   const [intent, setIntent] = useState(ready ? "pay" : "ask");
-  const [pick, setPick] = useState({ item: packages[0]?.index, quantity: 1 });
   const [paying, setPaying] = useState(false);
   const [today, setToday] = useState("");
-  const [details, setDetails] = useState({
+  const [fields, setFields] = useState({
     name: "",
     whatsapp: "",
     email: "",
     date: "",
-    participants: 1,
     notes: "",
   });
+  const details = { ...fields, participants };
   const [error, setError] = useState("");
   const panelRef = useRef(null);
   const stepsRef = useRef(null);
@@ -71,30 +75,37 @@ function Inquiry({
     summary.focus({ preventScroll: true });
   }, [step]);
 
-  const chosen = packages.find((item) => item.index === pick.item);
-  const unit = chosen ? priceText(chosen.unit, locale) : "";
-  const byPerson = perPerson(chosen?.unit?.id);
-  // Per-person packages follow the participants (up to 100 for an estimate;
-  // paying online stops at the limit with a message).
-  const quantity = Math.min(
-    byPerson ? 100 : quantityLimit,
-    Math.max(
-      1,
-      Math.round(Number(byPerson ? details.participants : pick.quantity)) || 1,
-    ),
+  const lines = cart
+    .map((line) => ({
+      ...line,
+      item: packages.find((item) => item.index === line.index),
+    }))
+    .filter((line) => line.item);
+  const total = lines.reduce(
+    (sum, line) => sum + line.item.price * line.quantity,
+    0,
   );
-  const total = chosen ? chosen.price * quantity : 0;
-  const order = chosen
+  const unitOf = (line) =>
+    unitCount(priceText(line.item.unit, locale), line.quantity, locale);
+  const lineText = (line) =>
+    `${priceText(line.item.name, locale)} × ${line.quantity}${unitOf(line) ? " " + unitOf(line) : ""}`;
+  const order = lines.length
     ? {
-        item: priceText(chosen.name, locale),
-        quantity,
-        unit: unitCount(unit, quantity, locale),
+        lines: lines.map((line) => ({
+          item: priceText(line.item.name, locale),
+          quantity: line.quantity,
+          unit: unitOf(line),
+        })),
         total,
       }
     : null;
+  const unchosen = packages.filter(
+    (item) => !cart.some((line) => line.index === item.index),
+  );
 
   function change(key, value) {
-    setDetails((current) => ({ ...current, [key]: value }));
+    if (key === "participants") changeParticipants(value);
+    else setFields((current) => ({ ...current, [key]: value }));
     setError("");
   }
   // The WhatsApp message; it throws with the reason when a field is wrong.
@@ -118,6 +129,10 @@ function Inquiry({
   }
   function toSummary(nextIntent) {
     if (!check()) return;
+    if (nextIntent === "pay" && !lines.length) {
+      setError(p.pickPackage);
+      return;
+    }
     if (nextIntent === "pay" && Number(details.participants) > quantityLimit) {
       setError(p.tooMany(quantityLimit));
       return;
@@ -127,7 +142,7 @@ function Inquiry({
     setStep("summary");
   }
   async function pay() {
-    if (!chosen || !check()) return;
+    if (!lines.length || !check()) return;
     setError("");
     setPaying(true);
     try {
@@ -136,9 +151,11 @@ function Inquiry({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           activity: activityKey,
-          item: chosen.index,
-          itemName: priceText(chosen.name, "id"),
-          quantity,
+          lines: lines.map((line) => ({
+            item: line.index,
+            itemName: priceText(line.item.name, "id"),
+            quantity: line.quantity,
+          })),
           ...details,
         }),
       });
@@ -164,10 +181,10 @@ function Inquiry({
     : "";
   const steps = p.steps[ready ? "pay" : "ask"];
   const current = step === "form" ? 0 : 1;
-  const breakdown = chosen && (
+  const breakdown = lines.length === 1 && (
     <span className="plan-breakdown">
-      {formatIDR(chosen.price, locale)} × {quantity}{" "}
-      {unitCount(unit, quantity, locale)}
+      {formatIDR(lines[0].item.price, locale)} ×{" "}
+      {lineText(lines[0]).split(" × ")[1]}
     </span>
   );
 
@@ -204,52 +221,71 @@ function Inquiry({
             }}
             noValidate
           >
-            {chosen ? (
+            {packages.length > 0 ? (
               <fieldset className="plan-package">
-                <legend>{p.packageCard}</legend>
-                <FormField id="pay-item" label={p.choosePackage} icon="note">
+                <legend>{p.cartTitle}</legend>
+                {lines.length ? (
+                  <ul className="plan-cart">
+                    {lines.map((line) => {
+                      const name = priceText(line.item.name, locale);
+                      return (
+                        <li key={line.index}>
+                          <span>
+                            <strong>{name}</strong>
+                            <small>
+                              {formatIDR(line.item.price, locale)}{" "}
+                              {priceText(line.item.unit, locale)}
+                            </small>
+                          </span>
+                          <span className="shop-item-stepper">
+                            <button
+                              type="button"
+                              aria-label={
+                                line.quantity > 1
+                                  ? p.less(name)
+                                  : p.remove(name)
+                              }
+                              onClick={() => changeCart(line.index, -1)}
+                            >
+                              −
+                            </button>
+                            <span aria-live="polite">{line.quantity}</span>
+                            <button
+                              type="button"
+                              aria-label={p.more(name)}
+                              disabled={line.quantity >= quantityLimit}
+                              onClick={() => changeCart(line.index, 1)}
+                            >
+                              +
+                            </button>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="plan-cart-empty">{p.cartEmpty}</p>
+                )}
+                {unchosen.length > 0 && (
                   <select
-                    id="pay-item"
-                    value={chosen.index}
+                    className="plan-add"
+                    aria-label={p.addPackage}
+                    value=""
                     onChange={(e) => {
-                      setPick({ item: Number(e.target.value), quantity: 1 });
+                      if (e.target.value === "") return;
+                      changeCart(Number(e.target.value), 1);
                       setError("");
                     }}
                   >
-                    {packages.map((item) => (
+                    <option value="">{p.addPackage}</option>
+                    {unchosen.map((item) => (
                       <option key={item.index} value={item.index}>
-                        {priceText(item.name, locale)}
+                        {priceText(item.name, locale)} ·{" "}
+                        {formatIDR(item.price, locale)}{" "}
+                        {priceText(item.unit, locale)}
                       </option>
                     ))}
                   </select>
-                </FormField>
-                <p className="plan-package-info">
-                  <strong>
-                    {formatIDR(chosen.price, locale)} <small>{unit}</small>
-                  </strong>
-                  {chosen.info && <span>{priceText(chosen.info, locale)}</span>}
-                </p>
-                {!byPerson && (
-                  <FormField
-                    id="pay-quantity"
-                    label={p.quantity(unitName(unit))}
-                    icon="calendar"
-                  >
-                    <input
-                      id="pay-quantity"
-                      type="number"
-                      min="1"
-                      max={quantityLimit}
-                      required
-                      value={pick.quantity}
-                      onChange={(e) =>
-                        setPick((current) => ({
-                          ...current,
-                          quantity: e.target.value,
-                        }))
-                      }
-                    />
-                  </FormField>
                 )}
                 <p className="pay-total">
                   <span>
@@ -400,7 +436,9 @@ function Inquiry({
           <dl className="plan-summary-list">
             {[
               [p.activity, label],
-              ...(chosen ? [[p.package, priceText(chosen.name, locale)]] : []),
+              ...(lines.length
+                ? [[p.package, lines.map(lineText).join("\n")]]
+                : []),
               [p.date, dateText],
               [p.participants, p.people(Number(details.participants))],
               [p.name, details.name.trim()],
@@ -418,7 +456,7 @@ function Inquiry({
               </div>
             ))}
           </dl>
-          {chosen && (
+          {lines.length > 0 && (
             <p className="pay-total plan-summary-total">
               <span>
                 {intent === "pay" ? p.total : p.estimate}
@@ -584,6 +622,65 @@ export default function ActivityDetail({
     );
   };
   const prices = content.priceList?.[activityKey] || [];
+  // Packages go into a cart, like the Dive Shop: from the price cards or the
+  // plan panel. Per-person packages start at, and follow, the number of
+  // participants unless their quantity was changed by hand.
+  const p = dict.payment;
+  const packages = payableItems(content.priceList, activityKey);
+  const ready = Boolean(payments?.ready) && packages.length > 0;
+  const [cart, setCart] = useState([]);
+  const [participants, setParticipants] = useState(1);
+  const people = (value) =>
+    Math.min(quantityLimit, Math.max(1, Math.round(Number(value)) || 1));
+  const byPerson = (index) =>
+    perPerson(packages.find((item) => item.index === index)?.unit?.id);
+  function changeCart(index, delta) {
+    // More people on a per-person package means more participants.
+    const line = cart.find((entry) => entry.index === index);
+    if (line && byPerson(index) && line.quantity + delta > people(participants))
+      setParticipants(Math.min(quantityLimit, line.quantity + delta));
+    setCart((current) => {
+      const line = current.find((entry) => entry.index === index);
+      const quantity = line
+        ? line.quantity + delta
+        : delta > 0
+          ? byPerson(index)
+            ? people(participants)
+            : 1
+          : 0;
+      if (quantity <= 0) return current.filter((entry) => entry !== line);
+      const next = { index, quantity: Math.min(quantityLimit, quantity) };
+      return line
+        ? current.map((entry) => (entry === line ? next : entry))
+        : [...current, next];
+    });
+  }
+  function changeParticipants(value) {
+    const before = people(participants);
+    setParticipants(value);
+    setCart((current) =>
+      current.map((line) =>
+        byPerson(line.index) && line.quantity === before
+          ? { ...line, quantity: people(value) }
+          : line,
+      ),
+    );
+  }
+  const cartTotal = cart.reduce(
+    (sum, line) =>
+      sum +
+      (packages.find((item) => item.index === line.index)?.price ?? 0) *
+        line.quantity,
+    0,
+  );
+  // Checkout is the plan panel: on phones it scrolls into view.
+  function checkout() {
+    const panel = document.getElementById("inquiry");
+    const top = panel?.getBoundingClientRect().top ?? 0;
+    if (top < 0 || top > window.innerHeight - 120)
+      panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("inquiry-name")?.focus({ preventScroll: true });
+  }
   const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(t.helpMessage(labels[activityKey]))}`;
   return (
     <div className="activity-page" data-theme={activityKey} ref={motionRoot}>
@@ -726,23 +823,91 @@ export default function ActivityDetail({
                   <section className="activity-block" id="prices" data-reveal>
                     {banner("prices")}
                     <ul className="activity-prices">
-                      {prices.map((item, index) => (
-                        <li key={index}>
-                          <span>
-                            <strong>{priceText(item.name, locale)}</strong>
-                            {priceText(item.info, locale) && (
-                              <small>{priceText(item.info, locale)}</small>
-                            )}
-                          </span>
-                          <b>
-                            {formatIDR(item.price, locale)}
-                            {priceText(item.unit, locale) && (
-                              <small>{priceText(item.unit, locale)}</small>
-                            )}
-                          </b>
-                        </li>
-                      ))}
+                      {prices.map((item, index) => {
+                        const name = priceText(item.name, locale);
+                        const payable = packages.some(
+                          (entry) => entry.index === index,
+                        );
+                        const count =
+                          cart.find((line) => line.index === index)?.quantity ??
+                          0;
+                        return (
+                          <li key={index}>
+                            <span>
+                              <strong>{name}</strong>
+                              {priceText(item.info, locale) && (
+                                <small>{priceText(item.info, locale)}</small>
+                              )}
+                            </span>
+                            <div className="activity-price-foot">
+                              <b>
+                                {formatIDR(item.price, locale)}
+                                {priceText(item.unit, locale) && (
+                                  <small>{priceText(item.unit, locale)}</small>
+                                )}
+                              </b>
+                              {payable &&
+                                (count ? (
+                                  <span className="shop-item-stepper">
+                                    <button
+                                      type="button"
+                                      aria-label={
+                                        count > 1
+                                          ? p.less(name)
+                                          : p.remove(name)
+                                      }
+                                      onClick={() => changeCart(index, -1)}
+                                    >
+                                      −
+                                    </button>
+                                    <span aria-live="polite">{count}</span>
+                                    <button
+                                      type="button"
+                                      aria-label={p.more(name)}
+                                      disabled={count >= quantityLimit}
+                                      onClick={() => changeCart(index, 1)}
+                                    >
+                                      +
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="shop-item-add"
+                                    aria-label={p.addLabel(name)}
+                                    onClick={() => changeCart(index, 1)}
+                                  >
+                                    <CartIcon /> {p.addToCart}
+                                  </button>
+                                ))}
+                            </div>
+                          </li>
+                        );
+                      })}
                     </ul>
+                    {packages.length > 0 && (
+                      <div className="shop-cart-bar activity-cart-bar">
+                        <span className="shop-cart-icon">
+                          <CartIcon />
+                        </span>
+                        <p>
+                          <strong>{p.cartBar(cart.length)}</strong>
+                          <small>
+                            {cart.length
+                              ? `${ready ? p.total : p.estimate} ${formatIDR(cartTotal, locale)}`
+                              : p.cartBarEmpty}
+                          </small>
+                        </p>
+                        <button
+                          type="button"
+                          className="button dark"
+                          disabled={!cart.length}
+                          onClick={checkout}
+                        >
+                          {p.checkout} <span aria-hidden="true">↗</span>
+                        </button>
+                      </div>
+                    )}
                     <p className="activity-price-note">{dict.prices.note}</p>
                   </section>
                 )}
@@ -807,7 +972,11 @@ export default function ActivityDetail({
                 activityKey={activityKey}
                 activity={activity}
                 contact={content.contact}
-                priceList={content.priceList}
+                packages={packages}
+                cart={cart}
+                changeCart={changeCart}
+                participants={participants}
+                changeParticipants={changeParticipants}
                 payments={payments}
                 locale={locale}
               />

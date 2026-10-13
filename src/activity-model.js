@@ -228,8 +228,8 @@ export function withActivities(content) {
   };
 }
 
-// order, when a package was chosen: { item, quantity, unit, total } with
-// texts already in the visitor's language.
+// order, when packages were chosen: { lines: [{ item, quantity, unit }],
+// total } with texts already in the visitor's language.
 export function activityInquiry(
   key,
   activity,
@@ -270,9 +270,14 @@ export function activityInquiry(
     ...(email ? [`Email: ${email}`] : []),
     `${t.proposedDate}: ${date}`,
     t.people(participants),
-    ...(order
+    ...(order?.lines?.length
       ? [
-          `${t.package}: ${order.item} × ${order.quantity}${order.unit ? " " + order.unit : ""}`,
+          `${t.package}: ${order.lines
+            .map(
+              (line) =>
+                `${line.item} × ${line.quantity}${line.unit ? " " + line.unit : ""}`,
+            )
+            .join(", ")}`,
           `${t.estimate}: ${formatIDR(order.total, locale)}`,
         ]
       : []),
