@@ -245,6 +245,10 @@ const id = {
     previous: "Foto sebelumnya",
     next: "Foto berikutnya",
     position: (n, total) => `${n} dari ${total}`,
+    videos: "Video penyelaman Zanclus",
+    video: (n, caption) => caption || `Video penyelaman ${n}`,
+    play: (name) => `Putar ${name}`,
+    watch: (name) => `Tonton ${name} di YouTube`,
   },
   diveSites: {
     title: "Titik selam di Selat Dampier.",
@@ -1162,6 +1166,10 @@ const en = {
     previous: "Previous photo",
     next: "Next photo",
     position: (n, total) => `${n} of ${total}`,
+    videos: "Zanclus dive videos",
+    video: (n, caption) => caption || `Dive video ${n}`,
+    play: (name) => `Play ${name}`,
+    watch: (name) => `Watch ${name} on YouTube`,
   },
   diveSites: {
     title: "Dive sites of the Dampier Strait.",

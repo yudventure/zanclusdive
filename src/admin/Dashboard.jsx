@@ -1401,6 +1401,9 @@ export default function Dashboard({ section, email, today }) {
                     gallery={content.gallery}
                     media={data.media}
                     update={(items) => mutateContent("gallery", "items", items)}
+                    updateVideos={(videos) =>
+                      mutateContent("gallery", "videos", videos)
+                    }
                     onSave={saveSettings}
                     busy={busy}
                     placePhoto={placePhoto}

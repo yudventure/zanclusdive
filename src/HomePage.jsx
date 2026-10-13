@@ -12,6 +12,7 @@ import HeroWeather from "./components/HeroWeather.jsx";
 import PricePanel from "./components/PricePanel.jsx";
 import DiveSiteMap from "./components/DiveSiteMap.jsx";
 import DiveGallery from "./components/DiveGallery.jsx";
+import DiveVideos from "./components/DiveVideos.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
@@ -378,6 +379,7 @@ export default function HomePage({ content, locale = "en" }) {
                 </h3>
               </article>
             </div>
+            <DiveVideos videos={content.gallery?.videos} locale={locale} />
             <DiveGallery gallery={content.gallery} locale={locale} />
           </section>
           <ShopTeaser

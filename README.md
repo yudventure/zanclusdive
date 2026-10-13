@@ -56,6 +56,12 @@ Teks yang dikelola CMS memiliki versi English. Di **Teks website**, **Pengalaman
 
 Teks UI tetap (label tombol, formulir, dan navigasi) ada di `src/i18n.js`; terjemahan default konten CMS ada di `src/content-i18n.js`. Uji dua bahasa dengan `node scripts/verify-i18n.mjs` terhadap server demo lokal (`BASE_URL`). Skrip verifikasi lain menguji versi Indonesia di `/id`.
 
+## Video YouTube di galeri
+
+Di bawah dua kartu Jelajahi laut dan di atas tombol **Buka galeri** tampil deretan video vertikal 9:16 dari YouTube. Isi link di `/admin/media` → **Video YouTube (9:16)** (maksimal 8; link Shorts, `watch?v=`, atau `youtu.be`), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil.
+
+Video tetap dihosting YouTube (`youtube-nocookie.com`), jadi tidak membebani server. Pemutar baru dimuat saat deretan mendekati layar, berputar tanpa suara secara loop, dan dijeda saat keluar layar. Dengan reduced motion, video menunggu diketuk. Kualitas dipilih otomatis oleh YouTube sesuai ukuran pemutar; unggah video 1080×1920 agar tajam. Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-videos.mjs` pada server demo lokal dengan `CMS_DEMO_LOGIN=true`; YouTube diganti tiruan sehingga tidak ada permintaan keluar.
+
 ## Dive Shop
 
 Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, pencarian, filter kategori, serta pesanan gabungan. Rental dihitung per unit per hari (1–30 hari). Pengunjung menyiapkan pesan lalu mengirim sendiri lewat WhatsApp untuk konfirmasi stok, ukuran, harga, pembayaran, serta pengambilan/pengembalian. Tidak ada checkout pembayaran atau pencatatan stok otomatis.

@@ -1,5 +1,10 @@
 import { experiences } from "./domain.js";
-import { defaultGallery, galleryLimit } from "./gallery.js";
+import {
+  defaultGallery,
+  galleryLimit,
+  videoLimit,
+  youtubeId,
+} from "./gallery.js";
 import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { defaultCourses, validateCourses } from "./course-model.js";
 import { defaultAbout, validateAbout } from "./about-model.js";
@@ -150,7 +155,22 @@ export function validateGallery(input) {
       src: imageURL(item?.src),
       caption: galleryCaptionText(item?.caption),
     })),
+    videos: validateVideos(input.videos),
   };
+}
+// YouTube links for the video row; documents without videos get none.
+export function validateVideos(input) {
+  const videos = input ?? [];
+  if (!Array.isArray(videos) || videos.length > videoLimit)
+    throw new Error(`Video YouTube maksimal ${videoLimit}.`);
+  return videos.map((video, index) => {
+    const url = typeof video?.url === "string" ? video.url.trim() : "";
+    if (url.length > 300 || !youtubeId(url))
+      throw new Error(
+        `Link video ${index + 1} belum dikenali. Tempel link YouTube, misalnya https://youtube.com/shorts/…`,
+      );
+    return { url, caption: galleryCaptionText(video?.caption) };
+  });
 }
 
 export function validateContent(input) {

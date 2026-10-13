@@ -1,7 +1,12 @@
 "use client";
 import { cloneElement, useId } from "react";
 import { builtInPhotos } from "../photography.js";
-import { defaultGallery, galleryLimit } from "../gallery.js";
+import {
+  defaultGallery,
+  galleryLimit,
+  videoLimit,
+  youtubeId,
+} from "../gallery.js";
 import ImageUpload from "./ImageUpload.jsx";
 
 function Field({ label, children }) {
@@ -14,17 +19,151 @@ function Field({ label, children }) {
   );
 }
 
-// Photos of the dive gallery under the ocean cards on the homepage.
+// YouTube links for the 9:16 videos above the gallery button.
+function VideoList({ videos, update, busy }) {
+  const change = (index, patch) =>
+    update(
+      videos.map((video, i) => (i === index ? { ...video, ...patch } : video)),
+    );
+  function move(index, delta) {
+    const next = [...videos];
+    const [video] = next.splice(index, 1);
+    next.splice(index + delta, 0, video);
+    update(next);
+  }
+  return (
+    <section className="admin-card">
+      <h2>Video YouTube (9:16)</h2>
+      <p className="admin-subtle">
+        Video vertikal yang berputar terus tanpa suara di bawah dua kartu
+        Jelajahi laut, di atas tombol Buka galeri. Video tetap di YouTube, jadi
+        website tidak berat. Tempel link YouTube Shorts atau link video biasa.
+        Unggah video 1080×1920 ke YouTube supaya tampil tajam. Maksimal{" "}
+        {videoLimit} video.
+      </p>
+      <div className="admin-gallery-list">
+        {videos.map((video, index) => {
+          const id = youtubeId(video.url);
+          return (
+            <fieldset className="admin-price-item" key={index}>
+              <legend>
+                Video {index + 1}
+                <span>
+                  <button
+                    type="button"
+                    className="admin-text-button"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                    aria-label={`Naikkan video ${index + 1}`}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-text-button"
+                    disabled={index === videos.length - 1}
+                    onClick={() => move(index, 1)}
+                    aria-label={`Turunkan video ${index + 1}`}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-text-button"
+                    onClick={() => update(videos.filter((_, i) => i !== index))}
+                  >
+                    Hapus
+                  </button>
+                </span>
+              </legend>
+              <div className="admin-gallery-item admin-video-item">
+                <div className="admin-video-preview">
+                  {id ? (
+                    <img
+                      src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
+                      alt={"Preview video " + (index + 1)}
+                    />
+                  ) : (
+                    <span>9:16</span>
+                  )}
+                </div>
+                <div className="admin-form-grid">
+                  <Field label="Link YouTube">
+                    <input
+                      required
+                      maxLength={300}
+                      inputMode="url"
+                      placeholder="https://youtube.com/shorts/…"
+                      value={video.url}
+                      onChange={(e) => change(index, { url: e.target.value })}
+                    />
+                  </Field>
+                  <p className="admin-subtle admin-video-status">
+                    {video.url.trim()
+                      ? id
+                        ? "Link dikenali. Simpan untuk menampilkan."
+                        : "Link belum dikenali. Salin link dari tombol Bagikan di YouTube."
+                      : "Tempel link video dari YouTube."}
+                  </p>
+                  <Field label="Keterangan (Indonesia)">
+                    <input
+                      maxLength={120}
+                      value={video.caption.id}
+                      onChange={(e) =>
+                        change(index, {
+                          caption: { ...video.caption, id: e.target.value },
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label="Caption (English)">
+                    <input
+                      maxLength={120}
+                      value={video.caption.en}
+                      onChange={(e) =>
+                        change(index, {
+                          caption: { ...video.caption, en: e.target.value },
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+            </fieldset>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        className="admin-button secondary"
+        disabled={videos.length >= videoLimit}
+        onClick={() =>
+          update([...videos, { url: "", caption: { id: "", en: "" } }])
+        }
+      >
+        + Tambah video
+      </button>
+      <button className="admin-button" disabled={busy}>
+        {busy ? "Menyimpan…" : "Simpan video"}
+      </button>
+    </section>
+  );
+}
+
+// Photos of the dive gallery under the ocean cards on the homepage, and the
+// YouTube videos shown above its button.
 export default function GalleryEditor({
   gallery,
   media,
   update,
+  updateVideos,
   onSave,
   busy,
   placePhoto,
   addPhoto,
 }) {
   const items = (gallery ?? defaultGallery).items;
+  const videos = gallery?.videos ?? [];
   const change = (index, patch) =>
     update(
       items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
@@ -175,6 +314,7 @@ export default function GalleryEditor({
           {busy ? "Menyimpan…" : "Simpan galeri"}
         </button>
       </section>
+      <VideoList videos={videos} update={updateVideos} busy={busy} />
     </form>
   );
 }

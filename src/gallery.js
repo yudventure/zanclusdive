@@ -1,6 +1,8 @@
 // Zanclus dive gallery under "Explore the ocean". Editable in the CMS; each
-// photo has an Indonesian and English caption.
+// photo has an Indonesian and English caption. Vertical (9:16) YouTube
+// videos play in a row between the ocean cards and the gallery button.
 export const galleryLimit = 24;
+export const videoLimit = 8;
 const photo = (src, id, en) => ({ src, caption: { id, en } });
 export const defaultGallery = {
   items: [
@@ -55,7 +57,34 @@ export const defaultGallery = {
       "Heading out to the islands",
     ),
   ],
+  videos: [],
 };
 
 export const galleryCaption = (item, locale) =>
   (locale === "en" && item.caption.en) || item.caption.id;
+
+// The video ID from a YouTube link: Shorts, watch, youtu.be or embed links,
+// or a bare 11-character ID. Anything else gives null.
+const videoIdPattern = /^[A-Za-z0-9_-]{11}$/;
+export function youtubeId(value) {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (videoIdPattern.test(text)) return text;
+  let url;
+  try {
+    url = new URL(/^https?:\/\//i.test(text) ? text : "https://" + text);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.replace(/^(www|m|music)\./, "");
+  const [, kind, rest] = url.pathname.split("/");
+  let id = null;
+  if (host === "youtu.be") id = kind;
+  else if (host === "youtube.com" || host === "youtube-nocookie.com")
+    id =
+      kind === "watch"
+        ? url.searchParams.get("v")
+        : ["shorts", "embed", "live"].includes(kind)
+          ? rest
+          : null;
+  return id && videoIdPattern.test(id) ? id : null;
+}
