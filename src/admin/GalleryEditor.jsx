@@ -1,12 +1,14 @@
 "use client";
-import { cloneElement, useId } from "react";
+import { cloneElement, useEffect, useId, useRef, useState } from "react";
 import { builtInPhotos } from "../photography.js";
 import {
   defaultGallery,
   galleryLimit,
   videoLimit,
-  youtubeId,
+  videoPlatforms,
+  videoSource,
 } from "../gallery.js";
+import ContactIcon from "../components/ContactIcon.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 
 function Field({ label, children }) {
@@ -19,8 +21,24 @@ function Field({ label, children }) {
   );
 }
 
-// YouTube links for the 9:16 videos above the gallery button.
+// What each platform does in the video row, shown under a recognised link.
+const platformNotes = {
+  youtube: "Berputar sendiri tanpa suara.",
+  tiktok: "Berputar sendiri tanpa suara.",
+  instagram:
+    "Tampil dengan pemutar Instagram; pengunjung mengetuk untuk memutar karena Instagram tidak mengizinkan putar otomatis.",
+  facebook:
+    "Tampil dengan pemutar Facebook dan mulai tanpa suara; videonya harus publik.",
+};
+
+// Video links (YouTube, TikTok, Instagram, Facebook) for the 9:16 videos
+// above the gallery button. Share links from the TikTok and Facebook apps
+// are opened on the server and replaced by the full video link.
 function VideoList({ videos, update, busy }) {
+  const [opening, setOpening] = useState({});
+  const latest = useRef(videos);
+  const tried = useRef(new Set());
+  latest.current = videos;
   const change = (index, patch) =>
     update(
       videos.map((video, i) => (i === index ? { ...video, ...patch } : video)),
@@ -31,19 +49,70 @@ function VideoList({ videos, update, busy }) {
     next.splice(index + delta, 0, video);
     update(next);
   }
+  async function open(url) {
+    setOpening((current) => ({ ...current, [url]: "busy" }));
+    try {
+      const response = await fetch("/api/admin/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw new Error(result.error || "Link pendek belum bisa dibuka.");
+      update(
+        latest.current.map((video) =>
+          video.url.trim() === url ? { ...video, url: result.url } : video,
+        ),
+      );
+      setOpening((current) => {
+        const next = { ...current };
+        delete next[url];
+        return next;
+      });
+    } catch (error) {
+      setOpening((current) => ({ ...current, [url]: error.message }));
+    }
+  }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      for (const video of videos) {
+        const url = video.url.trim();
+        if (!videoSource(url)?.short || tried.current.has(url)) continue;
+        tried.current.add(url);
+        open(url);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [videos]); // eslint-disable-line react-hooks/exhaustive-deps
+  function status(url, source) {
+    const platform = videoPlatforms[source?.platform];
+    if (!url)
+      return "Tempel link video dari YouTube, TikTok, Instagram, atau Facebook.";
+    if (!source)
+      return "Link belum dikenali. Salin link dari tombol Bagikan / Salin tautan di aplikasi YouTube, TikTok, Instagram, atau Facebook.";
+    if (source.short)
+      return opening[url] && opening[url] !== "busy"
+        ? opening[url]
+        : `Membuka link pendek ${platform}…`;
+    return `Link ${platform} dikenali. ${platformNotes[source.platform]} Simpan untuk menampilkan.`;
+  }
   return (
     <section className="admin-card">
-      <h2>Video YouTube (9:16)</h2>
+      <h2>Video vertikal (9:16)</h2>
       <p className="admin-subtle">
-        Video vertikal yang berputar terus tanpa suara di bawah dua kartu
-        Jelajahi laut, di atas tombol Buka galeri. Video tetap di YouTube, jadi
-        website tidak berat. Tempel link YouTube Shorts atau link video biasa.
-        Unggah video 1080×1920 ke YouTube supaya tampil tajam. Maksimal{" "}
-        {videoLimit} video.
+        Video vertikal di bawah dua kartu Jelajahi laut, di atas tombol Buka
+        galeri. Tempel link dari YouTube (Shorts atau video biasa), TikTok,
+        Instagram (Reels), atau Facebook (Reels atau video). Video tetap di
+        platformnya, jadi website tidak berat. Link pendek dari tombol Bagikan
+        di aplikasi otomatis dibuka menjadi link lengkap. Maksimal {videoLimit}{" "}
+        video.
       </p>
       <div className="admin-gallery-list">
         {videos.map((video, index) => {
-          const id = youtubeId(video.url);
+          const url = video.url.trim();
+          const source = videoSource(url);
+          const ready = source && !source.short;
           return (
             <fieldset className="admin-price-item" key={index}>
               <legend>
@@ -77,33 +146,47 @@ function VideoList({ videos, update, busy }) {
                 </span>
               </legend>
               <div className="admin-gallery-item admin-video-item">
-                <div className="admin-video-preview">
-                  {id ? (
+                <div
+                  className="admin-video-preview"
+                  data-platform={source?.platform}
+                >
+                  {ready && source.platform === "youtube" ? (
                     <img
-                      src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
+                      src={`https://i.ytimg.com/vi/${source.id}/hqdefault.jpg`}
                       alt={"Preview video " + (index + 1)}
                     />
+                  ) : source ? (
+                    <span className="admin-video-platform">
+                      <ContactIcon name={source.platform} />
+                      {videoPlatforms[source.platform]}
+                    </span>
                   ) : (
                     <span>9:16</span>
                   )}
                 </div>
                 <div className="admin-form-grid">
-                  <Field label="Link YouTube">
+                  <Field label="Link video">
                     <input
                       required
                       maxLength={300}
                       inputMode="url"
-                      placeholder="https://youtube.com/shorts/…"
+                      placeholder="https://youtube.com/shorts/… · tiktok.com/@akun/video/… · instagram.com/reel/…"
                       value={video.url}
                       onChange={(e) => change(index, { url: e.target.value })}
                     />
                   </Field>
-                  <p className="admin-subtle admin-video-status">
-                    {video.url.trim()
-                      ? id
-                        ? "Link dikenali. Simpan untuk menampilkan."
-                        : "Link belum dikenali. Salin link dari tombol Bagikan di YouTube."
-                      : "Tempel link video dari YouTube."}
+                  <p
+                    className={
+                      "admin-subtle admin-video-status" +
+                      (url &&
+                      !ready &&
+                      opening[url] !== "busy" &&
+                      (!source || opening[url])
+                        ? " warn"
+                        : "")
+                    }
+                  >
+                    {status(url, source)}
                   </p>
                   <Field label="Keterangan (Indonesia)">
                     <input
@@ -151,7 +234,7 @@ function VideoList({ videos, update, busy }) {
 }
 
 // Photos of the dive gallery under the ocean cards on the homepage, and the
-// YouTube videos shown above its button.
+// videos shown above its button.
 export default function GalleryEditor({
   gallery,
   media,

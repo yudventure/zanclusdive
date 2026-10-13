@@ -3,7 +3,7 @@ import {
   defaultGallery,
   galleryLimit,
   videoLimit,
-  youtubeId,
+  videoSource,
 } from "./gallery.js";
 import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { defaultCourses, validateCourses } from "./course-model.js";
@@ -175,16 +175,22 @@ export function validateGallery(input) {
     videos: validateVideos(input.videos),
   };
 }
-// YouTube links for the video row; documents without videos get none.
+// Video links (YouTube, TikTok, Instagram, Facebook) for the video row;
+// documents without videos get none.
 export function validateVideos(input) {
   const videos = input ?? [];
   if (!Array.isArray(videos) || videos.length > videoLimit)
-    throw new Error(`Video YouTube maksimal ${videoLimit}.`);
+    throw new Error(`Video maksimal ${videoLimit}.`);
   return videos.map((video, index) => {
     const url = typeof video?.url === "string" ? video.url.trim() : "";
-    if (url.length > 300 || !youtubeId(url))
+    const source = url.length <= 300 ? videoSource(url) : null;
+    if (!source)
       throw new Error(
-        `Link video ${index + 1} belum dikenali. Tempel link YouTube, misalnya https://youtube.com/shorts/…`,
+        `Link video ${index + 1} belum dikenali. Tempel link video dari YouTube, TikTok, Instagram, atau Facebook.`,
+      );
+    if (source.short)
+      throw new Error(
+        `Link video ${index + 1} masih link pendek. Buka link itu di browser, lalu salin alamat lengkap dari kolom alamat.`,
       );
     return { url, caption: galleryCaptionText(video?.caption) };
   });

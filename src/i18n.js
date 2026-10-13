@@ -314,7 +314,7 @@ const id = {
     videos: "Video penyelaman Zanclus",
     video: (n, caption) => caption || `Video penyelaman ${n}`,
     play: (name) => `Putar ${name}`,
-    watch: (name) => `Tonton ${name} di YouTube`,
+    watch: (name, platform = "YouTube") => `Tonton ${name} di ${platform}`,
   },
   diveSites: {
     title: "Titik selam di Selat Dampier.",
@@ -1303,7 +1303,7 @@ const en = {
     videos: "Zanclus dive videos",
     video: (n, caption) => caption || `Dive video ${n}`,
     play: (name) => `Play ${name}`,
-    watch: (name) => `Watch ${name} on YouTube`,
+    watch: (name, platform = "YouTube") => `Watch ${name} on ${platform}`,
   },
   diveSites: {
     title: "Dive sites of the Dampier Strait.",

@@ -84,11 +84,18 @@ Tambahkan `?lang=id` untuk versi Indonesia. Service worker (`public/sw.js`) meny
 
 Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-developer.mjs` pada build produksi server demo lokal dengan `CMS_DEMO_LOGIN=true` dan `CMS_COOKIE_SECURE=false`. Tes ini mengubah mode developer lalu mematikannya lagi.
 
-## Video YouTube di galeri
+## Video di galeri (YouTube, TikTok, Instagram, Facebook)
 
-Di bawah dua kartu Jelajahi laut dan di atas tombol **Buka galeri** tampil deretan video vertikal 9:16 dari YouTube. Isi link di `/admin/media` → **Video YouTube (9:16)** (maksimal 8; link Shorts, `watch?v=`, atau `youtu.be`), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil.
+Di bawah dua kartu Jelajahi laut dan di atas tombol **Buka galeri** tampil deretan video vertikal 9:16. Isi link di `/admin/media` → **Video vertikal (9:16)** (maksimal 8), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil. Link yang dikenali:
 
-Video tetap dihosting YouTube (`youtube-nocookie.com`), jadi tidak membebani server. Pemutar baru dimuat saat deretan mendekati layar, berputar tanpa suara secara loop, dan dijeda saat keluar layar. Dengan reduced motion, video menunggu diketuk. Kualitas dipilih otomatis oleh YouTube sesuai ukuran pemutar; unggah video 1080×1920 agar tajam. Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-videos.mjs` pada server demo lokal dengan `CMS_DEMO_LOGIN=true`; YouTube diganti tiruan sehingga tidak ada permintaan keluar.
+- **YouTube**: Shorts, `watch?v=`, `youtu.be`.
+- **TikTok**: `tiktok.com/@akun/video/…`. Link pendek dari tombol Bagikan (`vt.tiktok.com/…`, `vm.tiktok.com/…`) otomatis dibuka server menjadi link lengkap.
+- **Instagram**: Reels atau postingan video (`instagram.com/reel/…`, `/p/…`).
+- **Facebook**: Reels dan video (`facebook.com/reel/…`, `watch/?v=…`, `/halaman/videos/…`). Link `fb.watch/…` dan `facebook.com/share/…` dibuka otomatis seperti TikTok. Videonya harus publik.
+
+Jika link pendek tidak bisa dibuka dari server, admin menampilkan petunjuk: buka link itu di browser, lalu salin alamat lengkap dari kolom alamat. Link pendek yang belum terbuka tidak bisa disimpan.
+
+Video tetap dihosting platformnya, jadi tidak membebani server. Pemutar baru dimuat saat deretan mendekati layar (video di ujung kanan dimuat saat digeser). YouTube (`youtube-nocookie.com`) dan TikTok (pemutar resmi `tiktok.com/player/v1`) berputar tanpa suara secara loop tanpa tombol, dan dijeda saat keluar layar. Instagram dan Facebook memakai pemutar resmi mereka di dalam kartu: Instagram tidak mengizinkan putar otomatis, jadi pengunjung mengetuk untuk memutar dan bingkai Instagram ikut tampil; Facebook mulai tanpa suara bila browser mengizinkan. Dengan reduced motion, YouTube dan TikTok menunggu diketuk. Tombol di pojok kartu membuka video di platformnya. Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-videos.mjs` pada server demo lokal dengan `CMS_DEMO_LOGIN=true`; semua pemutar diganti tiruan sehingga tidak ada permintaan keluar.
 
 ## Dive Shop
 

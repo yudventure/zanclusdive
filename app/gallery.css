@@ -44,8 +44,27 @@
 .dive-video-frame iframe {
   pointer-events: none;
 }
-.dive-video-frame.is-tapped iframe {
+.dive-video-frame.is-tapped iframe,
+.dive-video-frame.is-own-player iframe {
   pointer-events: auto;
+}
+/* Shown until a TikTok, Instagram or Facebook player has loaded. */
+.dive-video-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 20%, #1d6f7d 0, transparent 55%),
+    linear-gradient(160deg, #0b3f4f, #031c28);
+  color: #ffffff59;
+}
+.dive-video-poster svg {
+  width: 56px;
+  height: 56px;
+}
+.dive-video-frame.is-own-player .dive-video-caption {
+  padding-top: 18px;
 }
 .dive-video-play {
   position: absolute;
@@ -87,18 +106,28 @@
   color: #e8f5f5;
 }
 .dive-video-caption a {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   flex-shrink: 0;
-  width: 34px;
   height: 34px;
   margin-left: auto;
-  border-radius: 50%;
+  padding: 0 11px;
+  border-radius: 999px;
   background: #ffffff26;
   color: white;
   font-size: 14px;
   pointer-events: auto;
   transition: background 0.2s;
+}
+.dive-video-caption a svg {
+  width: 15px;
+  height: 15px;
+}
+.dive-video-caption a span {
+  font-size: 13px;
+  color: inherit;
 }
 .dive-video-caption a:hover {
   background: #bef4a5;
