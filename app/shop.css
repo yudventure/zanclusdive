@@ -359,6 +359,17 @@
   min-width: 0;
   scroll-margin-top: 115px;
 }
+/* Taller than the window, the order panel scrolls by itself. */
+@media (min-width: 901px) {
+  .shop-order {
+    max-height: max(420px, calc(100vh - 135px));
+    max-height: max(420px, calc(100dvh - 135px));
+    overflow-y: auto;
+    scroll-padding: 12px 0 24px;
+    scrollbar-width: thin;
+    scrollbar-color: #c7d8d0 transparent;
+  }
+}
 .shop-order h2 {
   font-size: 28px;
   letter-spacing: -1px;

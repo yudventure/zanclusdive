@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useReveal } from "../components/useReveal.js";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import PageHeader from "../components/PageHeader.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
@@ -62,6 +63,7 @@ function Request({ items, chosen, onToggle, contact, locale }) {
     notes: "",
   });
   const [message, setMessage] = useState("");
+  const messageRef = useReveal(message);
   const [error, setError] = useState("");
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
   useEffect(() => setMessage(""), [chosen]);
@@ -205,7 +207,7 @@ function Request({ items, chosen, onToggle, contact, locale }) {
         </button>
       </form>
       {message && (
-        <div className="activity-message" role="status">
+        <div className="activity-message" role="status" ref={messageRef}>
           <h3>{a.ready}</h3>
           <p className="activity-message-preview">{message}</p>
           <a

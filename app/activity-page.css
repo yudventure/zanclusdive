@@ -262,8 +262,31 @@
 
 /* Plan card: shorter head */
 .activity-inquiry {
+  --inquiry-bg: #f4f8f5;
   top: 172px;
   padding: 26px;
+}
+/* The plan form stays in view while the page scrolls. When it is taller
+   than the window it scrolls by itself and its send button stays at the
+   bottom of the panel, so the whole form can be filled in right away
+   instead of after scrolling to the end of the page. */
+@media (min-width: 901px) {
+  .activity-inquiry {
+    max-height: max(420px, calc(100vh - 192px));
+    max-height: max(420px, calc(100dvh - 192px));
+    overflow-y: auto;
+    scroll-padding: 12px 0 96px;
+    scrollbar-width: thin;
+    scrollbar-color: #b9cfc4 transparent;
+  }
+  .activity-inquiry .activity-form > .button[type="submit"] {
+    position: sticky;
+    bottom: -12px;
+    z-index: 2;
+    box-shadow:
+      0 0 0 12px var(--inquiry-bg),
+      0 -22px 20px -4px var(--inquiry-bg);
+  }
 }
 .activity-inquiry h2 {
   font-size: 26px;

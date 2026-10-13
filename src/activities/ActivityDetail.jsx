@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import { useReveal } from "../components/useReveal.js";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import { activityInquiry } from "../activity-model.js";
@@ -28,6 +29,7 @@ function Inquiry({ activityKey, activity, contact, locale }) {
     notes: "",
   });
   const [message, setMessage] = useState("");
+  const messageRef = useReveal(message);
   const [error, setError] = useState("");
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
   function change(key, value) {
@@ -172,7 +174,7 @@ function Inquiry({ activityKey, activity, contact, locale }) {
         </button>
       </form>
       {message && (
-        <div className="activity-message" role="status">
+        <div className="activity-message" role="status" ref={messageRef}>
           <h3>{t.ready}</h3>
           <p className="activity-message-preview">{message}</p>
           <a
