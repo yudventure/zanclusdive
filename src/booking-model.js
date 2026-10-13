@@ -36,6 +36,20 @@ const englishErrors = {
     "Booking data is invalid or too large.",
   "Booking belum dapat disimpan. Coba lagi atau hubungi tim melalui WhatsApp.":
     "The booking couldn't be saved. Try again or contact our team on WhatsApp.",
+  "Data pembayaran tidak valid.": "Invalid payment details.",
+  "Pembayaran online belum tersedia. Silakan chat tim kami lewat WhatsApp.":
+    "Online payment isn't available yet. Please chat with our team on WhatsApp.",
+  "Aktivitas ini belum bisa dibayar online.":
+    "This activity can't be paid online yet.",
+  "Daftar harga baru saja diperbarui. Muat ulang halaman.":
+    "The price list was just updated. Please reload the page.",
+  "Jumlah paket dan peserta harus 1–30.":
+    "Quantity and participants must be between 1 and 30.",
+  "Isi nama, maksimal 80 karakter.": "Enter your name, up to 80 characters.",
+  "Format email belum benar.": "That email doesn't look right.",
+  "Catatan maksimal 1.000 karakter.": "Notes can be up to 1,000 characters.",
+  "Pembayaran belum bisa dibuat. Coba lagi sebentar, atau chat tim kami lewat WhatsApp.":
+    "The payment couldn't be created. Try again shortly, or chat with our team on WhatsApp.",
 };
 export function bookingErrorMessage(message, locale) {
   if (locale !== "en") return message;
@@ -117,7 +131,10 @@ export function validateBookingRequest(input, now) {
 }
 
 export function assertBookable(content, bookings, booking) {
-  if (!content.experiences?.[booking.experience]?.enabled)
+  const program =
+    content.experiences?.[booking.experience] ??
+    content.activities?.[booking.experience];
+  if (!program?.enabled)
     throw new BookingError(
       "Program ini belum menerima booking. Pilih program lain.",
       409,

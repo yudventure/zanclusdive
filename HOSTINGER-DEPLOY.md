@@ -59,6 +59,10 @@ Tailwind CSS dan PostCSS berada di `dependencies`, bukan `devDependencies`, kare
 
 Mode developer diatur dari `/admin/developer`, tanpa hPanel. Halaman 404 dan 500 ditangani aplikasi. Kalau Node.js app sedang mati, server Hostinger menampilkan halamannya sendiri untuk pengunjung baru. Pengunjung yang pernah membuka website melihat halaman 502/503/504 dan offline Zanclus dari service worker. Jika hPanel menyediakan pengaturan halaman error kustom untuk website ini, arahkan ke `/status/502.html`, `/status/503.html`, atau `/status/504.html`. Pengaturan ini belum diverifikasi di hPanel.
 
+## Pembayaran Midtrans dan kalender agen
+
+Untuk pembayaran online, tambahkan `MIDTRANS_SERVER_KEY` (mulai dengan key sandbox) di environment variable hPanel, deploy ulang, lalu aktifkan dari `/admin/payments`. Saat siap menerima uang sungguhan, ganti dengan server key production, tambahkan `MIDTRANS_PRODUCTION=true`, dan pastikan `CMS_MODE=mysql`. Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-kamu/api/payments/midtrans`. Detail ada di README bagian *Pembayaran online (Midtrans)*. Kalender travel agent di `/admin/agents` tidak memerlukan pengaturan hPanel. Server Hostinger harus bisa membuka `api.midtrans.com`/`app.midtrans.com` (sandbox: `*.sandbox.midtrans.com`) dan alamat kalender agen; ini belum diverifikasi dari sesi pengembangan.
+
 ## Diagnosis singkat
 
 - Build gagal: pastikan Node 22/24, root proyek benar, dan `package-lock.json` ikut diunggah. Lihat error pertama pada log.
@@ -69,6 +73,6 @@ Mode developer diatur dari `/admin/developer`, tanpa hPanel. Halaman 404 dan 500
 
 ## Batas fitur
 
-Reservasi publik dilakukan melalui pesan WhatsApp yang dikirim pengguna. CMS kini memakai mode demo secara default, tanpa MySQL; akun serta data contoh terisi otomatis. Lihat [DEMO-HOSTINGER.md](DEMO-HOSTINGER.md). Lokasi, harga, dan reservasi pada demo merupakan contoh. Untuk produksi, isi `CMS_MODE=mysql` dan ikuti [CMS-HOSTINGER.md](CMS-HOSTINGER.md). Belum ada pembayaran atau kalender ketersediaan otomatis. Nomor masih nomor uji coba pengguna. Gambar laut merupakan ilustrasi generatif.
+Reservasi publik dilakukan melalui pesan WhatsApp yang dikirim pengguna, atau dibayar langsung lewat Midtrans bila diaktifkan. CMS kini memakai mode demo secara default, tanpa MySQL; akun serta data contoh terisi otomatis. Lihat [DEMO-HOSTINGER.md](DEMO-HOSTINGER.md). Lokasi, harga, dan reservasi pada demo merupakan contoh. Untuk produksi, isi `CMS_MODE=mysql` dan ikuti [CMS-HOSTINGER.md](CMS-HOSTINGER.md). Nomor masih nomor uji coba pengguna. Gambar laut merupakan ilustrasi generatif.
 
 Instruksi ini berdasarkan pengaturan aplikasi yang telah diuji lokal dan keberadaan fitur Node.js Web App yang dikonfirmasi pengguna. Dokumentasi Hostinger tidak dapat diakses dari jaringan sesi ini, sehingga nama/letak kolom hPanel belum diverifikasi langsung.

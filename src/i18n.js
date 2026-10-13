@@ -234,6 +234,36 @@ const id = {
     ecoMessage:
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
   },
+  payment: {
+    ask: "Tanya dulu",
+    pay: "Bayar sekarang",
+    modes: "Cara melanjutkan",
+    askHint:
+      "Masih ragu? Kirim pertanyaanmu lewat WhatsApp, tim kami bantu memilih.",
+    payHint:
+      "Sudah yakin? Pilih paket dan bayar lunas sekarang. Tanggalnya otomatis tercatat begitu pembayaran berhasil.",
+    package: "Paket",
+    quantity: (unit) =>
+      unit ? `Jumlah (${unit.replace(/^\/\s*/, "")})` : "Jumlah",
+    total: "Total dibayar",
+    submit: (total) => `Bayar ${total}`,
+    redirecting: "Membuka halaman pembayaran Midtrans…",
+    secure:
+      "Pembayaran aman lewat Midtrans: transfer bank / virtual account, QRIS, e-wallet, atau kartu.",
+    sandbox: "Mode uji coba Midtrans: tidak ada uang sungguhan yang ditarik.",
+    stillUnsure: "Masih ragu? Chat WhatsApp dulu ↗",
+    noPackages:
+      "Belum ada paket dengan harga untuk dibayar online. Tanyakan lewat WhatsApp.",
+    failed:
+      "Pembayaran belum bisa dibuat. Coba lagi sebentar, atau chat tim kami lewat WhatsApp.",
+    reference: "Referensi",
+    activity: "Aktivitas",
+    date: "Tanggal",
+    participants: "Peserta",
+    totalPaid: "Total",
+    whatsappAfter: (ref) =>
+      `Halo Zanclus! Saya baru membayar booking ${ref} lewat website.`,
+  },
   locked: {
     eyebrow: "SEDANG DIPERBARUI",
     text: "Bagian ini sedang kami perbarui dan segera kembali. Ada pertanyaan? Tim kami siap membantu lewat WhatsApp.",
@@ -1172,6 +1202,36 @@ const en = {
     ecoJoin: "Join an ocean care day",
     ecoMessage:
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
+  },
+  payment: {
+    ask: "Ask first",
+    pay: "Pay now",
+    modes: "How to continue",
+    askHint:
+      "Still deciding? Send your questions on WhatsApp and our team will help you choose.",
+    payHint:
+      "Ready to go? Pick a package and pay in full now. Your date is booked automatically once the payment succeeds.",
+    package: "Package",
+    quantity: (unit) =>
+      unit ? `Quantity (${unit.replace(/^\/\s*/, "")})` : "Quantity",
+    total: "Total to pay",
+    submit: (total) => `Pay ${total}`,
+    redirecting: "Opening the Midtrans payment page…",
+    secure:
+      "Secure payment with Midtrans: bank transfer / virtual account, QRIS, e-wallets or cards.",
+    sandbox: "Midtrans test mode: no real money is charged.",
+    stillUnsure: "Still unsure? Chat on WhatsApp first ↗",
+    noPackages:
+      "There's no priced package to pay online yet. Ask us on WhatsApp.",
+    failed:
+      "The payment couldn't be created. Try again shortly, or chat with our team on WhatsApp.",
+    reference: "Reference",
+    activity: "Activity",
+    date: "Date",
+    participants: "Participants",
+    totalPaid: "Total",
+    whatsappAfter: (ref) =>
+      `Hi Zanclus! I've just paid for booking ${ref} on the website.`,
   },
   locked: {
     eyebrow: "BEING UPDATED",

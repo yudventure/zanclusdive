@@ -10,6 +10,7 @@ import { defaultCourses, validateCourses } from "./course-model.js";
 import { defaultAbout, validateAbout } from "./about-model.js";
 import { defaultService, validateService } from "./service-model.js";
 import { defaultDeveloper, validateDeveloper } from "./developer.js";
+import { defaultPayments, validatePayments } from "./payment-model.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -33,6 +34,19 @@ import {
   photographyVersion,
 } from "./photography.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
+// Reservations are for a diving program or, when booked and paid from an
+// activity page, for the activity itself.
+export const activityPrograms = {
+  diving: "Diving",
+  snorkeling: "Snorkeling",
+  trip: "Trip laut",
+};
+export const bookingPrograms = [
+  ...experienceKeys,
+  ...Object.keys(activityPrograms),
+];
+export const programTitle = (content, key) =>
+  content.experiences?.[key]?.title ?? activityPrograms[key] ?? key;
 export const defaultContent = {
   photographyVersion,
   en: structuredClone(englishDefaults),
@@ -70,6 +84,7 @@ export const defaultContent = {
   about: structuredClone(defaultAbout),
   service: structuredClone(defaultService),
   developer: structuredClone(defaultDeveloper),
+  payments: { ...defaultPayments },
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -275,6 +290,7 @@ export function validateContent(input) {
     about: validateAbout(input.about),
     service: validateService(input.service),
     developer: validateDeveloper(input.developer),
+    payments: validatePayments(input.payments),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }
@@ -414,7 +430,7 @@ function validDate(s) {
 export function validateBooking(input) {
   if (
     !input ||
-    !experienceKeys.includes(input.experience) ||
+    !bookingPrograms.includes(input.experience) ||
     !Object.hasOwn(statuses, input.status) ||
     !Object.hasOwn(sources, input.source)
   )
@@ -456,5 +472,6 @@ export function validateBooking(input) {
     participants,
     amount,
     notes: plain(input.notes || "", "Catatan", 2000, false),
+    ...(input.email ? { email: plain(input.email, "Email", 200, false) } : {}),
   };
 }

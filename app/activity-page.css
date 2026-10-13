@@ -596,3 +596,104 @@ nav.open .nav-sub a {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Ask first on WhatsApp, or pay now with Midtrans. */
+.pay-modes {
+  margin: 0 0 18px;
+}
+.pay-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #d6e4dc;
+  border-radius: 999px;
+  background: #fff;
+}
+.pay-switch button {
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #3d5b63;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.pay-switch button[aria-pressed="true"] {
+  background: #062b3b;
+  color: white;
+}
+.pay-switch button:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+.pay-hint {
+  margin: 10px 4px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.pay-package {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid #cfe3d6;
+  border-radius: 16px;
+  background: #fff;
+}
+.pay-package select {
+  width: 100%;
+}
+.pay-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px dashed #cfe3d6;
+  font-size: 12px;
+  color: #57717a;
+}
+.pay-total strong {
+  font-size: 20px;
+  color: #062b3b;
+}
+.pay-submit[disabled] {
+  opacity: 0.7;
+  cursor: progress;
+}
+.pay-notes {
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.pay-notes p {
+  margin: 0 0 6px;
+}
+.pay-sandbox {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #7a5a00;
+}
+.pay-unsure {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #087873;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

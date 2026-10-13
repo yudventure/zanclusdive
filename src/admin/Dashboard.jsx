@@ -10,6 +10,9 @@ import CourseEditor from "./CourseEditor.jsx";
 import AboutEditor from "./AboutEditor.jsx";
 import ServiceEditor from "./ServiceEditor.jsx";
 import DeveloperEditor from "./DeveloperEditor.jsx";
+import PaymentsEditor, { PaymentBadge } from "./PaymentsEditor.jsx";
+import AgentsEditor from "./AgentsEditor.jsx";
+import { paymentStatusLabels } from "../payment-model.js";
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
@@ -25,6 +28,8 @@ import { siteImageFields, builtInPhotos } from "../photography.js";
 import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
   experienceKeys,
+  bookingPrograms,
+  programTitle,
   textFields,
   statuses,
   sources,
@@ -47,11 +52,15 @@ const sections = {
   service: "Servis alat selam",
   about: "Tentang kami",
   developer: "Mode developer",
+  payments: "Pembayaran online",
+  agents: "Agen & kalender",
 };
 const mainSections = [
   "overview",
   "calendar",
   "reservations",
+  "payments",
+  "agents",
   "customers",
   "events",
 ];
@@ -151,9 +160,9 @@ function BookingEditor({
               value={value.experience}
               onChange={(e) => change("experience", e.target.value)}
             >
-              {experienceKeys.map((k) => (
+              {bookingPrograms.map((k) => (
                 <option key={k} value={k}>
-                  {content.experiences[k].title}
+                  {programTitle(content, k)}
                 </option>
               ))}
             </select>
@@ -462,6 +471,12 @@ export default function Dashboard({ section, email, today }) {
     d.setMonth(d.getMonth() + delta);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
+  // Events read from the travel agents' own calendars.
+  const agentEvents = (data?.agents ?? [])
+    .filter((agent) => agent.enabled)
+    .flatMap((agent) =>
+      (agent.events ?? []).map((event) => ({ agent, event })),
+    );
   const monthCount = new Date(
     Number(month.slice(0, 4)),
     Number(month.slice(5, 7)),
@@ -477,7 +492,7 @@ export default function Dashboard({ section, email, today }) {
   const filtered = bookings.filter(
     (b) =>
       (statusFilter === "all" || b.status === statusFilter) &&
-      `${b.guestName} ${b.phone} ${content.experiences[b.experience].title}`
+      `${b.guestName} ${b.phone} ${programTitle(content, b.experience)} ${b.payment?.orderId ?? ""}`
         .toLowerCase()
         .includes(filter.toLowerCase()),
   );
@@ -519,7 +534,7 @@ export default function Dashboard({ section, email, today }) {
                   <small>{bookingReference(b.id)}</small>
                 )}
               </td>
-              <td>{content.experiences[b.experience].title}</td>
+              <td>{programTitle(content, b.experience)}</td>
               <td>
                 {dateLabel(b.startDate)}
                 <small>s/d {dateLabel(b.endDate)}</small>
@@ -528,6 +543,7 @@ export default function Dashboard({ section, email, today }) {
                 <span className={"admin-status " + b.status}>
                   {statuses[b.status]}
                 </span>
+                {b.payment && <PaymentBadge payment={b.payment} />}
               </td>
               <td>{b.participants}</td>
               <td>{money(b.amount)}</td>
@@ -813,12 +829,15 @@ export default function Dashboard({ section, email, today }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {experienceKeys.map((key) => (
+                        {bookingPrograms.map((key) => (
                           <tr key={key}>
                             <th>
-                              {content.experiences[key].title}
+                              {programTitle(content, key)}
                               <small>
-                                {content.experiences[key].enabled
+                                {(
+                                  content.experiences[key] ??
+                                  content.activities?.[key]
+                                )?.enabled
                                   ? "Aktif"
                                   : "Tidak ditampilkan"}
                               </small>
@@ -842,20 +861,25 @@ export default function Dashboard({ section, email, today }) {
                                       <button
                                         key={b.id}
                                         className={
-                                          "calendar-booking " + b.status
+                                          "calendar-booking " +
+                                          b.status +
+                                          (b.payment?.status === "paid"
+                                            ? " paid"
+                                            : "")
                                         }
-                                        title={`${b.guestName || "Ditutup"} · ${statuses[b.status]} · ${sources[b.source]}`}
+                                        title={`${b.guestName || "Ditutup"} · ${statuses[b.status]} · ${sources[b.source]}${b.payment ? " · Pembayaran: " + paymentStatusLabels[b.payment.status] : ""}`}
                                         onClick={() => editReservation(b)}
                                       >
                                         {b.status === "closed"
                                           ? "Ditutup"
                                           : b.guestName}
+                                        {b.payment?.status === "paid" && " ✓"}
                                       </button>
                                     ))
                                   ) : (
                                     <button
                                       className="calendar-day"
-                                      aria-label={`Tambah reservasi ${content.experiences[key].title}, ${date}`}
+                                      aria-label={`Tambah reservasi ${programTitle(content, key)}, ${date}`}
                                       onClick={() => {
                                         setEditing(null);
                                         setBooking({
@@ -877,6 +901,38 @@ export default function Dashboard({ section, email, today }) {
                             })}
                           </tr>
                         ))}
+                        {agentEvents.length > 0 && (
+                          <tr className="calendar-agents">
+                            <th>
+                              Agen & partner
+                              <small>Dari kalender agen</small>
+                            </th>
+                            {Array.from({ length: monthCount }, (_, i) => {
+                              const date =
+                                month + "-" + String(i + 1).padStart(2, "0");
+                              const items = agentEvents.filter(
+                                ({ event }) =>
+                                  date >= event.start && date <= event.end,
+                              );
+                              return (
+                                <td
+                                  key={date}
+                                  className={date === today ? "today" : ""}
+                                >
+                                  {items.map(({ agent, event }) => (
+                                    <span
+                                      key={agent.id + event.uid}
+                                      className="calendar-agent"
+                                      title={`${agent.name}: ${event.summary}`}
+                                    >
+                                      {agent.name}
+                                    </span>
+                                  ))}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -906,7 +962,8 @@ export default function Dashboard({ section, email, today }) {
                               {b.guestName || "Penutupan tanggal"}
                             </strong>
                             <span>
-                              {content.experiences[b.experience].title}
+                              {programTitle(content, b.experience)}
+                              {b.payment?.status === "paid" && " · Lunas"}
                             </span>
                             <small>
                               {dateLabel(b.startDate)} — {dateLabel(b.endDate)}
@@ -1201,6 +1258,66 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   placePhoto={placePhoto}
+                />
+              )}
+              {section === "agents" && (
+                <AgentsEditor
+                  agents={data.agents ?? []}
+                  busy={busy}
+                  run={async (url, method, body, message) => {
+                    setBusy(true);
+                    setError("");
+                    setNotice("");
+                    try {
+                      await request(url, method, body);
+                      await refresh();
+                      if (message) setNotice(message);
+                      return true;
+                    } catch (e) {
+                      setError(e.message);
+                      return false;
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  reload={async () => {
+                    try {
+                      await request("/api/admin/agents");
+                      await refresh();
+                    } catch {}
+                  }}
+                />
+              )}
+              {section === "payments" && (
+                <PaymentsEditor
+                  payments={content.payments ?? { enabled: false }}
+                  status={data.payments}
+                  bookings={bookings}
+                  content={content}
+                  update={(enabled) =>
+                    setContent((current) => ({
+                      ...current,
+                      payments: { ...current.payments, enabled },
+                    }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(event, "Pengaturan pembayaran tersimpan.")
+                  }
+                  onSync={async (orderId) => {
+                    setBusy(true);
+                    try {
+                      await request("/api/admin/payments", "POST", {
+                        orderId,
+                      });
+                      await refresh();
+                      setNotice("Status pembayaran diperbarui dari Midtrans.");
+                    } catch (e) {
+                      setError(e.message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  busy={busy}
                 />
               )}
               {section === "developer" && (

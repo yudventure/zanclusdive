@@ -15,10 +15,32 @@ import { phoneLabel } from "../contact-model.js";
 import FormField from "../components/FormField.jsx";
 import SectionBanner from "./SectionBanner.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
+import { payableItems, quantityLimit } from "../payment-model.js";
 
-function Inquiry({ activityKey, activity, contact, locale }) {
+// Per-person packages start with one unit for each participant.
+const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
+
+function Inquiry({
+  activityKey,
+  activity,
+  contact,
+  priceList,
+  payments,
+  locale,
+}) {
   const t = dictionary(locale).activity;
+  const p = dictionary(locale).payment;
   const label = dictionary(locale).activityLabels[activityKey];
+  // Ask first on WhatsApp, or pay now when online payment is switched on.
+  const packages = payments?.ready ? payableItems(priceList, activityKey) : [];
+  const [mode, setMode] = useState("ask");
+  const [pick, setPick] = useState({ item: packages[0]?.index, quantity: 1 });
+  const [paying, setPaying] = useState(false);
+  const chosen = packages.find((item) => item.index === pick.item);
+  const quantity = Math.min(
+    quantityLimit,
+    Math.max(1, Number(pick.quantity) || 1),
+  );
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -34,8 +56,51 @@ function Inquiry({ activityKey, activity, contact, locale }) {
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
   function change(key, value) {
     setDetails((current) => ({ ...current, [key]: value }));
+    if (key === "participants" && perPerson(chosen?.unit?.id))
+      setPick((current) => ({ ...current, quantity: value }));
     setMessage("");
     setError("");
+  }
+  function choose(index) {
+    const item = packages.find((entry) => entry.index === index);
+    setPick({
+      item: index,
+      quantity: perPerson(item?.unit?.id) ? details.participants : 1,
+    });
+    setError("");
+  }
+  async function pay(event) {
+    event.preventDefault();
+    if (!chosen) return;
+    setError("");
+    try {
+      // The same checks as the WhatsApp message, before going to Midtrans.
+      activityInquiry(activityKey, activity, details, today, false, locale);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+    setPaying(true);
+    try {
+      const response = await fetch(`/api/payments?locale=${locale}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activity: activityKey,
+          item: chosen.index,
+          itemName: priceText(chosen.name, "id"),
+          quantity,
+          ...details,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.redirectUrl)
+        throw new Error(result.error || p.failed);
+      window.location.assign(result.redirectUrl);
+    } catch (err) {
+      setError(err.message || p.failed);
+      setPaying(false);
+    }
   }
   function prepare(event) {
     event.preventDefault();
@@ -65,7 +130,75 @@ function Inquiry({ activityKey, activity, contact, locale }) {
         </strong>
         <p>{t.priceNote}</p>
       </div>
-      <form className="activity-form" onSubmit={prepare} noValidate>
+      {packages.length > 0 && (
+        <div className="pay-modes">
+          <div className="pay-switch" role="group" aria-label={p.modes}>
+            {["ask", "pay"].map((key) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={mode === key}
+                onClick={() => {
+                  setMode(key);
+                  setError("");
+                }}
+              >
+                {p[key]}
+              </button>
+            ))}
+          </div>
+          <p className="pay-hint">{mode === "pay" ? p.payHint : p.askHint}</p>
+        </div>
+      )}
+      <form
+        className="activity-form"
+        onSubmit={mode === "pay" ? pay : prepare}
+        noValidate
+      >
+        {mode === "pay" && chosen && (
+          <fieldset className="pay-package">
+            <FormField id="pay-item" label={p.package} icon="note" required>
+              <select
+                id="pay-item"
+                value={chosen.index}
+                onChange={(e) => choose(Number(e.target.value))}
+              >
+                {packages.map((item) => (
+                  <option key={item.index} value={item.index}>
+                    {priceText(item.name, locale)} ·{" "}
+                    {formatIDR(item.price, locale)}{" "}
+                    {priceText(item.unit, locale)}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField
+              id="pay-quantity"
+              label={p.quantity(priceText(chosen.unit, locale))}
+              icon="people"
+              required
+            >
+              <input
+                id="pay-quantity"
+                type="number"
+                min="1"
+                max={quantityLimit}
+                required
+                value={pick.quantity}
+                onChange={(e) =>
+                  setPick((current) => ({
+                    ...current,
+                    quantity: e.target.value,
+                  }))
+                }
+              />
+            </FormField>
+            <p className="pay-total">
+              <span>{p.total}</span>
+              <strong>{formatIDR(chosen.price * quantity, locale)}</strong>
+            </p>
+          </fieldset>
+        )}
         <p className="form-required-note">
           <span aria-hidden="true">*</span> {t.requiredNote}
         </p>
@@ -169,11 +302,37 @@ function Inquiry({ activityKey, activity, contact, locale }) {
             {error}
           </p>
         )}
-        <button className="button dark" type="submit">
-          {t.prepare} <span aria-hidden="true">↗</span>
-        </button>
+        {mode === "pay" && chosen ? (
+          <button
+            className="button dark pay-submit"
+            type="submit"
+            disabled={paying}
+          >
+            {paying
+              ? p.redirecting
+              : p.submit(formatIDR(chosen.price * quantity, locale))}{" "}
+            <span aria-hidden="true">↗</span>
+          </button>
+        ) : (
+          <button className="button dark" type="submit">
+            {t.prepare} <span aria-hidden="true">↗</span>
+          </button>
+        )}
       </form>
-      {message && (
+      {mode === "pay" && (
+        <div className="pay-notes">
+          <p>{p.secure}</p>
+          {payments?.sandbox && <p className="pay-sandbox">{p.sandbox}</p>}
+          <button
+            type="button"
+            className="pay-unsure"
+            onClick={() => setMode("ask")}
+          >
+            {p.stillUnsure}
+          </button>
+        </div>
+      )}
+      {mode === "ask" && message && (
         <div className="activity-message" role="status" ref={messageRef}>
           <h3>{t.ready}</h3>
           <p className="activity-message-preview">{message}</p>
@@ -242,6 +401,7 @@ export default function ActivityDetail({
   activityKey,
   content,
   today,
+  payments,
   locale = "en",
 }) {
   const dict = dictionary(locale);
@@ -496,6 +656,8 @@ export default function ActivityDetail({
                 activityKey={activityKey}
                 activity={activity}
                 contact={content.contact}
+                priceList={content.priceList}
+                payments={payments}
                 locale={locale}
               />
             </div>

@@ -3,7 +3,11 @@ import {
   jsonBody,
   apiFailure,
 } from "../../../../../src/server/auth.js";
-import { saveBooking, deleteBooking } from "../../../../../src/server/store.js";
+import {
+  saveBooking,
+  deleteBooking,
+  listBookings,
+} from "../../../../../src/server/store.js";
 import { validateBooking } from "../../../../../src/cms-model.js";
 export async function PUT(request, { params }) {
   const denied = await requireAdmin(request);
@@ -16,6 +20,9 @@ export async function PUT(request, { params }) {
     return Response.json({ error: error.message }, { status: 400 });
   }
   try {
+    // Online payment details come from Midtrans and are not edited here.
+    const current = (await listBookings()).find((b) => b.id === id);
+    if (current?.payment) payload = { ...payload, payment: current.payment };
     const result = await saveBooking(payload, id);
     return result
       ? Response.json(result)

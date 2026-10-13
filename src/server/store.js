@@ -201,6 +201,131 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
     connection.release();
   }
 }
+// A booking paid online: checked like a website request, saved at once.
+export async function createPaymentBooking(payload) {
+  if (isDemo()) return demo.createPaymentBooking(payload);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [contentRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id='site' FOR UPDATE",
+    );
+    const [bookingRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE kind='booking'",
+    );
+    assertBookable(
+      JSON.parse(contentRows[0].payload),
+      bookingRows.map((r) => JSON.parse(r.payload)),
+      payload,
+    );
+    const id = randomUUID();
+    await connection.execute(
+      "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'booking',?)",
+      [id, JSON.stringify(payload)],
+    );
+    await connection.commit();
+    return { id, ...payload };
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+// Changes one booking in place; change returns the new booking, or null to
+// leave it as it is.
+export async function updateBooking(id, change) {
+  if (isDemo()) return demo.updateBooking(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='booking' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { id, ...JSON.parse(rows[0].payload) };
+    const next = change(structuredClone(current));
+    if (next) {
+      const { id: _id, updatedAt: _at, ...payload } = next;
+      await connection.execute(
+        "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+        [JSON.stringify(payload), id],
+      );
+    }
+    await connection.commit();
+    return next ? { ...next, id } : current;
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+// Travel agents whose calendars are linked with ours.
+export async function listAgents() {
+  if (isDemo()) return demo.listAgents();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT id,payload FROM zanclus_records WHERE kind='agent' ORDER BY id",
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+export async function saveAgent(agent) {
+  if (isDemo()) return demo.saveAgent(agent);
+  const pool = await db();
+  const { id, ...payload } = agent;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'agent',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, JSON.stringify(payload)],
+  );
+  return agent;
+}
+// Changes an agent only if it still exists, so a calendar read that
+// finishes late cannot bring back a deleted agent or an old link.
+export async function updateAgent(id, change) {
+  if (isDemo()) return demo.updateAgent(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='agent' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { ...JSON.parse(rows[0].payload), id };
+    const next = change(structuredClone(current));
+    if (next) {
+      const { id: _id, ...payload } = next;
+      await connection.execute(
+        "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+        [JSON.stringify(payload), id],
+      );
+    }
+    await connection.commit();
+    return next ? { ...next, id } : current;
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+export async function deleteAgent(id) {
+  if (isDemo()) return demo.deleteAgent(id);
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='agent'",
+    [id],
+  );
+  return Boolean(r.affectedRows);
+}
 export async function deleteBooking(id) {
   if (isDemo()) return demo.deleteBooking(id);
   const pool = await db();

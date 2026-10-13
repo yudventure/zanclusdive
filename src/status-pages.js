@@ -122,6 +122,45 @@ export const statusPages = {
     actions: ["retry"],
   },
 };
+// Pages that follow an online payment.
+Object.assign(statusPages, {
+  paid: {
+    art: "celebrate",
+    eyebrow: t("Pembayaran lunas", "Payment complete"),
+    title: t(
+      "Terima kasih, tanggalmu sudah tercatat.",
+      "Thank you, your date is booked.",
+    ),
+    text: t(
+      "Pembayaran sudah kami terima dan jadwalnya otomatis masuk kalender tim Zanclus. Tim kami akan menghubungimu lewat WhatsApp untuk detail persiapan.",
+      "We've received your payment and the date is now in the Zanclus team's calendar. Our team will contact you on WhatsApp about getting ready.",
+    ),
+    actions: ["whatsapp", "home"],
+  },
+  paymentPending: {
+    art: "waiting",
+    eyebrow: t("Menunggu pembayaran", "Waiting for payment"),
+    title: t("Tinggal selesaikan pembayaranmu.", "Just finish your payment."),
+    text: t(
+      "Untuk transfer bank, virtual account, atau QRIS, ikuti instruksi dari Midtrans. Tanggalnya otomatis tercatat begitu pembayaran lunas. Muat ulang halaman ini untuk melihat status terbaru.",
+      "For bank transfer, virtual account or QRIS, follow the Midtrans instructions. Your date is booked automatically once the payment is complete. Reload this page to see the latest status.",
+    ),
+    actions: ["retry", "whatsapp"],
+  },
+  paymentFailed: {
+    art: "snapped",
+    eyebrow: t("Pembayaran belum berhasil", "Payment didn't go through"),
+    title: t(
+      "Pembayaran dibatalkan atau kedaluwarsa.",
+      "The payment was cancelled or expired.",
+    ),
+    text: t(
+      "Tidak ada pembayaran yang tercatat untuk pesanan ini. Kamu bisa mencoba lagi, atau tanya tim kami lewat WhatsApp dulu.",
+      "No payment was recorded for this order. You can try again, or ask our team on WhatsApp first.",
+    ),
+    actions: ["back", "whatsapp"],
+  },
+});
 export const statusNames = Object.keys(statusPages);
 
 const labels = {
@@ -133,6 +172,7 @@ const labels = {
   note: t("Pesan dari tim", "A note from the team"),
   place: t("Waisai, Raja Ampat", "Waisai, Raja Ampat"),
   switch: t("English", "Bahasa Indonesia"),
+  back: t("Coba bayar lagi", "Try paying again"),
   whatsappText: t(
     "Halo Zanclus! Website sedang tidak bisa dibuka, saya ingin bertanya.",
     "Hi Zanclus! The website isn't available right now and I have a question.",
@@ -195,6 +235,10 @@ export const statusStyles = `
 .zs-until{display:inline-block;margin:18px 0 0;padding:10px 14px;border-radius:14px;background:#ffffff0f;font-size:13px;line-height:1.6;color:#cfe3e6}
 .zs-until strong{color:#fff;font-weight:600}
 .zs-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.zs-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin:24px 0 0;max-width:480px;overflow:hidden;border:1px solid #ffffff1f;border-radius:16px;background:#ffffff1f}
+.zs-details div{padding:12px 16px;background:#062b3b}
+.zs-details dt{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#85b7bf}
+.zs-details dd{margin:4px 0 0;font-size:14px;font-weight:600;color:#fff}
 .zs-btn{display:inline-flex;align-items:center;gap:10px;padding:15px 22px;border:1px solid #ffffff38;border-radius:999px;font-size:14px;font-weight:600;line-height:1;color:#fff;transition:background .2s,border-color .2s,transform .2s}
 .zs-btn svg{width:18px;height:18px}
 .zs-btn:hover{border-color:#bef4a5;transform:translateY(-1px)}
@@ -230,6 +274,9 @@ export function statusMarkup({
   until = "",
   homeHref = locale === "id" ? "/id" : "/",
   switchHref = "",
+  backHref = homeHref,
+  details = [],
+  whatsappText = "",
   styles = true,
 }) {
   const page = statusPages[kind] ?? statusPages[500];
@@ -239,13 +286,15 @@ export function statusMarkup({
     const cls = index === 0 ? "zs-btn primary" : "zs-btn";
     if (name === "whatsapp") {
       if (!number) return "";
-      const href = `https://wa.me/${number}?text=${encodeURIComponent(labels.whatsappText[lang])}`;
+      const href = `https://wa.me/${number}?text=${encodeURIComponent(whatsappText || labels.whatsappText[lang])}`;
       return `<a class="${cls}" href="${href}" target="_blank" rel="noopener noreferrer">${icon("whatsapp")}${labels.whatsapp[lang]}</a>`;
     }
     if (name === "retry")
       return `<a class="${cls}" href="" data-retry>${icon("retry")}${labels.retry[lang]}</a>`;
     if (name === "operator")
       return `<a class="${cls}" href="/admin">${icon("operator")}${labels.operator[lang]}</a>`;
+    if (name === "back")
+      return `<a class="${cls}" href="${escape(backHref)}">${icon("retry")}${labels.back[lang]}</a>`;
     return `<a class="${cls}" href="${escape(homeHref)}">${icon("home")}${labels.home[lang]}</a>`;
   };
   const when = untilLabel(until, lang);
@@ -262,6 +311,7 @@ export function statusMarkup({
       <p class="zs-text">${page.text[lang]}</p>
       ${message ? `<div class="zs-note"><small>${labels.note[lang]}</small><p>${escape(message)}</p></div>` : ""}
       ${when ? `<p class="zs-until">${labels.until[lang]}: <strong>${escape(when)}</strong></p>` : ""}
+      ${details.length ? `<dl class="zs-details">${details.map(([label, value]) => `<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>` : ""}
       <div class="zs-actions">${page.actions
         .filter((name) => name !== "whatsapp" || number)
         .map(action)

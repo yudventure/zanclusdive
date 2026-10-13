@@ -234,7 +234,25 @@ const offline = porthole(`
     [226, 168, 4],
   ])}`);
 
+// A dive flag planted on the seabed and a big tick: payment complete.
+const celebrate = porthole(`
+  ${seabed}
+  <rect x="330" y="150" width="7" height="200" fill="#c4d0d4"/>
+  <path d="M337 154h86v58h-86Z" fill="#e5484d"/>
+  <path d="M337 154l86 58" stroke="#fff" stroke-width="12"/>
+  <circle cx="232" cy="150" r="40" fill="#bef4a5"/>
+  <path d="M214 150l13 13 25-27" stroke="#0b3442" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  ${mascot(196, 262, -0.9)}
+  ${bubbles([
+    [292, 120, 6],
+    [304, 92, 4],
+    [180, 96, 5],
+    [400, 250, 4],
+  ])}
+  <g fill="#f5c842"><circle cx="160" cy="200" r="4"/><circle cx="292" cy="196" r="3"/><circle cx="400" cy="120" r="4"/></g>`);
+
 export const statusArt = {
+  celebrate,
   maintenance,
   lost,
   closed,

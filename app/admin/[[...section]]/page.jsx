@@ -33,6 +33,8 @@ export default async function AdminPage({ params }) {
       "service",
       "about",
       "developer",
+      "payments",
+      "agents",
     ].includes(active)
   )
     notFound();

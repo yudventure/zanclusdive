@@ -212,6 +212,66 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
     return { receipt, created: true };
   });
 }
+// A booking paid online: checked like a website request, saved at once.
+export async function createPaymentBooking(payload) {
+  return mutate((state) => {
+    assertBookable(state.content, state.bookings, payload);
+    const booking = {
+      ...payload,
+      id: randomUUID(),
+      updatedAt: new Date().toISOString(),
+    };
+    state.bookings.push(booking);
+    return booking;
+  });
+}
+// Changes one booking in place; change returns the new booking, or null to
+// leave it as it is.
+export async function updateBooking(id, change) {
+  return mutate((state) => {
+    const index = state.bookings.findIndex((booking) => booking.id === id);
+    if (index < 0) return null;
+    const next = change(structuredClone(state.bookings[index]));
+    if (!next) return state.bookings[index];
+    state.bookings[index] = {
+      ...next,
+      id,
+      updatedAt: new Date().toISOString(),
+    };
+    return state.bookings[index];
+  });
+}
+export async function listAgents() {
+  return (await read()).agents ?? [];
+}
+export async function saveAgent(agent) {
+  return mutate((state) => {
+    state.agents ||= [];
+    const index = state.agents.findIndex((a) => a.id === agent.id);
+    if (index < 0) state.agents.push(agent);
+    else state.agents[index] = agent;
+    return agent;
+  });
+}
+// Changes an agent only if it still exists; change returns the new agent
+// or null to keep it as is.
+export async function updateAgent(id, change) {
+  return mutate((state) => {
+    const index = (state.agents ||= []).findIndex((a) => a.id === id);
+    if (index < 0) return null;
+    const next = change(structuredClone(state.agents[index]));
+    if (!next) return state.agents[index];
+    state.agents[index] = { ...next, id };
+    return state.agents[index];
+  });
+}
+export async function deleteAgent(id) {
+  return mutate((state) => {
+    const before = (state.agents ||= []).length;
+    state.agents = state.agents.filter((a) => a.id !== id);
+    return state.agents.length < before;
+  });
+}
 export async function deleteBooking(id) {
   return mutate((state) => {
     const index = state.bookings.findIndex((booking) => booking.id === id);

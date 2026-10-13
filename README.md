@@ -154,8 +154,38 @@ Seksi Pengalaman di beranda berupa akordeon tiga kartu (Diving, Snorkeling, Trip
 
 Pengunjung membuka formulir booking dari tombol hero atau bagian kontak, memilih program dan tanggal, lalu mengisi nama, nomor WhatsApp, jumlah peserta, dan catatan. Permintaan tersimpan di CMS dengan sumber **Website** dan status **Belum dikonfirmasi**. Ringkasan memuat nomor referensi yang juga terlihat di daftar reservasi admin; pengunjung dapat mengunduhnya atau melanjutkan ke WhatsApp.
 
-Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan. Penutupan tanggal di kalender admin berlaku pada program dan rentang tanggal terkait; permintaan pada tanggal tertutup ditolak dengan pesan yang jelas. Pengajuan masih perlu konfirmasi jadwal, biaya, dan kondisi laut oleh tim; belum ada pembayaran atau jaminan kapasitas otomatis. Nilai reservasi awal Rp0 adalah nilai pencatatan yang belum diisi, bukan penawaran gratis.
+Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan. Penutupan tanggal di kalender admin berlaku pada program dan rentang tanggal terkait; permintaan pada tanggal tertutup ditolak dengan pesan yang jelas. Pengajuan masih perlu konfirmasi jadwal, biaya, dan kondisi laut oleh tim; belum ada jaminan kapasitas otomatis. Pembayaran langsung tersedia di formulir halaman aktivitas bila diaktifkan (lihat di bawah). Nilai reservasi awal Rp0 adalah nilai pencatatan yang belum diisi, bukan penawaran gratis.
 
 API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan bukti pengajuan tanpa identitas tamu. Pengiriman ulang memakai ID permintaan yang sama untuk mencegah duplikasi. Formulir membatasi peserta, memvalidasi nomor kontak dan tanggal di server, serta membatasi percobaan pengajuan. Di mode demo data tersimpan pada penyimpanan demo yang sama dengan CMS (gunakan data contoh); di mode MySQL data masuk ke tabel CMS yang sudah ada. Tidak perlu environment variable tambahan atau mengimpor ulang SQL.
 
 Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-booking.mjs`. Jalankan hanya pada server lokal dengan data uji; mode MySQL memerlukan database khusus berakhiran `_test`.
+
+## Pembayaran online (Midtrans)
+
+Formulir di halaman Diving, Snorkeling, dan Trip laut punya dua pilihan: **Tanya dulu** (pesan WhatsApp seperti sebelumnya) untuk tamu yang masih ragu, dan **Bayar sekarang** untuk tamu yang sudah yakin. Tamu memilih paket dari daftar harga CMS, jumlah (otomatis mengikuti jumlah peserta untuk harga per orang), lalu dibawa ke halaman pembayaran Midtrans (QRIS, e-wallet, virtual account, kartu, dll. sesuai akun Midtrans). Harga selalu dihitung ulang di server dari daftar harga, bukan dari browser.
+
+Saat tombol bayar ditekan, reservasi tersimpan dengan status **Belum dikonfirmasi** dan pembayaran **Menunggu**. Begitu Midtrans mengirim notifikasi lunas (`settlement`, atau `capture` dengan fraud `accept`), reservasi otomatis menjadi **Dikonfirmasi** pada tanggal kegiatan yang dipilih, tampil dengan tanda ✓ di kalender reservasi, dan masuk riwayat di `/admin/payments`. Pembayaran kedaluwarsa atau gagal membatalkan reservasinya. Notifikasi wajib bertanda tangan SHA512 yang sah, jumlahnya harus sama dengan tagihan, dan status lunas dicek ulang ke API Midtrans. Jika notifikasi terlambat, tombol **Cek status** di riwayat pembayaran menarik status terbaru.
+
+Aktifkan dari `/admin/payments` setelah environment berikut diisi di hPanel (lalu deploy ulang):
+
+| Variabel | Isi |
+| --- | --- |
+| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys). Mulai dengan key sandbox `SB-Mid-server-…`. |
+| `MIDTRANS_PRODUCTION` | `true` hanya saat memakai server key production. Kosongkan untuk sandbox. |
+| `NEXT_PUBLIC_SITE_URL` | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar. |
+
+Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-kamu/api/payments/midtrans`. Halaman kembali `/payment/finish` dikirim otomatis pada setiap transaksi; mengisinya juga sebagai Finish Redirect URL tidak masalah. Pembayaran sungguhan (`MIDTRANS_PRODUCTION=true`) hanya ditawarkan bila `CMS_MODE=mysql`, karena penyimpanan demo bersifat sementara. Tidak ada tabel baru; data pembayaran tersimpan di catatan reservasi.
+
+Uji tanpa menghubungi Midtrans: jalankan server demo dengan `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499`, lalu `BASE_URL=… node scripts/verify-payments.mjs`. Tes memakai Midtrans tiruan (`scripts/mock-midtrans.mjs`).
+
+## Kalender bersama travel agent
+
+Di `/admin/agents` (**Agen & kalender**) tambahkan setiap travel agent. Kalender tersambung dua arah:
+
+- **Zanclus → agen.** Setiap agen mendapat halaman partner pribadi (`/partner/<token>`) dengan tombol **Tambahkan ke Google Calendar**, link Apple Calendar/Outlook (`webcal://`), dan link `.ics`. Kalender berisi reservasi Zanclus sebagai jumlah tamu (tanpa nama atau nomor), tanggal tutup, dan kegiatan dari kalender kegiatan; reservasi pembayaran online baru muncul setelah lunas. Aplikasi kalender agen memperbaruinya sendiri (Google biasanya beberapa jam sekali).
+- **Agen → Zanclus.** Isi link kalender agen (Google Calendar: Setelan kalender → *Alamat rahasia dalam format iCal*, atau link `.ics` dari Outlook/Apple). Kalender dibaca saat disimpan, lalu setiap 30 menit saat admin atau feed dibuka, dan tampil sebagai baris **Agen & partner** di kalender reservasi.
+- **Antaragen.** Agen yang mengaktifkan *Bagikan hari sibuk* tampil sebagai “Nama agen · terisi” di kalender agen lain, tanpa detail acara.
+
+**Buat link baru** langsung mematikan link lama; **Nonaktifkan** dan **Hapus** menutup feed dan halaman partner. Hanya link `https://` publik yang dibaca (maksimal 2 MB, 10 detik, 3 pengalihan); alamat jaringan lokal ditolak. Acara berulang (RRULE) dihitung sekali pada tanggal pertamanya. Tidak perlu environment variable tambahan.
+
+Uji dengan server demo `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false AGENT_CALENDAR_ALLOW_LOCAL=true` pada folder data baru, lalu `BASE_URL=… node scripts/verify-agents.mjs`. `AGENT_CALENDAR_ALLOW_LOCAL` hanya untuk tes lokal; jangan diisi di hosting.
