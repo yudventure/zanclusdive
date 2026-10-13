@@ -48,9 +48,16 @@ async function fillForm(name, participants = "2") {
   await page.locator("#inquiry-participants").fill(participants);
 }
 try {
-  // Switched off: only the WhatsApp form.
+  // Switched off: the summary leads to WhatsApp.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".pay-switch").count(), 0);
+  assert.equal(
+    await page.locator(".plan-steps li").last().textContent(),
+    "3WhatsApp",
+  );
+  assert.equal(
+    await page.getByRole("button", { name: "Continue to summary" }).count(),
+    1,
+  );
 
   // Admin switches payments on and sees the key and the URLs to paste.
   assert.equal(
@@ -80,20 +87,57 @@ try {
 
   // A guest who is sure pays for two Discovery Dives for today.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  assert.match(await page.locator(".pay-hint").textContent(), /WhatsApp/);
-  await page.getByRole("button", { name: "Pay now" }).click();
-  assert.match(await page.locator(".pay-hint").textContent(), /pay in full/);
-  assert.match(
+  assert.deepEqual(await page.locator(".plan-steps li").allTextContents(), [
+    "1Your details",
+    "2Summary",
+    "3Payment",
+  ]);
+  assert.equal(
     await page.locator("#pay-item option").first().textContent(),
-    /Discovery Dive · IDR\s?1,200,000/,
+    "Discovery Dive",
+  );
+  assert.match(
+    await page.locator(".plan-package-info strong").textContent(),
+    /IDR\s?1,200,000 \/ person/,
   );
   await fillForm("Tamu Lunas");
-  assert.equal(await page.locator("#pay-quantity").inputValue(), "2");
+  // Per-person packages follow the number of participants.
+  assert.equal(await page.locator("#pay-quantity").count(), 0);
   assert.match(
     await page.locator(".pay-total").textContent(),
-    /IDR\s?2,400,000/,
+    /^Total to pay\s*IDR\s?1,200,000 × 2 people\s*IDR\s?2,400,000$/,
+  );
+  // Over 30 participants is for WhatsApp, not online payment.
+  await page.locator("#inquiry-participants").fill("31");
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
+  assert.match(
+    await page.locator(".activity-error").textContent(),
+    /up to 30 participants/,
+  );
+  await page.locator("#inquiry-participants").fill("2");
+  // The summary comes before Midtrans.
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
+  assert.equal(
+    await page.locator("#plan-summary-title").textContent(),
+    "Payment summary",
+  );
+  assert.match(
+    await page.locator(".plan-summary-list").textContent(),
+    /ActivityDiving[\s\S]*PackageDiscovery Dive[\s\S]*Participants2 people[\s\S]*NameTamu Lunas[\s\S]*Emailtamu@example.com/,
+  );
+  assert.match(
+    await page.locator(".plan-summary-total").textContent(),
+    /IDR\s?2,400,000$/,
   );
   assert.match(await page.locator(".pay-sandbox").textContent(), /test mode/);
+  if (process.env.SHOT_DIR)
+    await page.locator("#inquiry").screenshot({
+      path: process.env.SHOT_DIR + "/pay-summary-desktop.png",
+    });
   await page.getByRole("button", { name: /Pay IDR\s?2,400,000/ }).click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const paidId = new URL(page.url()).pathname.split("/").pop();
@@ -148,8 +192,14 @@ try {
 
   // An unpaid order that expires cancels its booking.
   await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Bayar sekarang" }).click();
   await fillForm("Tamu Batal", "1");
+  await page
+    .getByRole("button", { name: "Lanjut ke ringkasan pembayaran" })
+    .click();
+  assert.equal(
+    await page.locator("#plan-summary-title").textContent(),
+    "Ringkasan pembayaran",
+  );
   await page.locator(".pay-submit").click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const expiredId = new URL(page.url()).pathname.split("/").pop();
@@ -174,8 +224,10 @@ try {
 
   // A payment finished without a notification is picked up by "Cek status".
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Pay now" }).click();
   await fillForm("Tamu Cek", "1");
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
   await page.locator(".pay-submit").click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const checkId = new URL(page.url()).pathname.split("/").pop();
@@ -188,24 +240,52 @@ try {
   await a.getByText("Status pembayaran diperbarui dari Midtrans.").waitFor();
   assert.equal((await order(checkId)).payment.status, "paid");
 
-  // Asking first still prepares the WhatsApp message.
+  // Still unsure: the same summary goes to WhatsApp instead.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
   await fillForm("Tamu Ragu", "3");
-  await page.getByRole("button", { name: /Prepare WhatsApp message/ }).click();
-  assert.match(
-    await page.locator(".activity-message-preview").textContent(),
-    /Tamu Ragu/,
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Still unsure? Send this summary on WhatsApp",
+    })
+    .click();
+  assert.equal(
+    await page.locator("#plan-summary-title").textContent(),
+    "Plan summary",
   );
+  assert.equal(await page.locator(".pay-submit").count(), 0);
+  const ask = new URL(
+    await page
+      .getByRole("link", { name: "Continue to WhatsApp" })
+      .getAttribute("href"),
+  ).searchParams.get("text");
+  assert.match(
+    ask,
+    /Tamu Ragu[\s\S]*Package: Discovery Dive × 3 people\nEstimated cost: IDR\s?3,600,000/,
+  );
+  // And back to paying online.
+  await page.getByRole("button", { name: "Ready? Pay online now" }).click();
+  assert.equal(
+    await page.locator("#plan-summary-title").textContent(),
+    "Payment summary",
+  );
+  await page.getByRole("button", { name: "← Edit details" }).click();
+  assert.equal(await page.locator("#inquiry-name").inputValue(), "Tamu Ragu");
   // Switched off again: no pay option.
   await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
   await a.locator(".admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".pay-switch").count(), 0);
+  assert.equal(
+    await page.locator(".plan-steps li").last().textContent(),
+    "3WhatsApp",
+  );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS payments: off by default, admin switch with key status and Midtrans URLs, pay now with package, quantity per person and total, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, WhatsApp path unchanged. Nothing sent to Midtrans.",
+    "PASS payments: off by default (summary then WhatsApp), admin switch with key status and Midtrans URLs, package card with price and total, per-person quantity, 30-participant limit, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
   );
 } finally {
   await browser.close();

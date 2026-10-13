@@ -97,10 +97,28 @@ try {
     const activity = originals.content.activities[key];
     assert.equal(await page.locator("h1").textContent(), activity.title);
     assert.ok((await page.title()).includes(activityLabels[key]));
-    assert.equal(
-      await page.locator(".activity-price strong").textContent(),
-      "Minta penawaran",
+    // A clear package and cost card instead of "request a quote".
+    const packages = originals.content.priceList[key].filter(
+      (item) => item.price > 0,
     );
+    assert.equal(await page.locator(".activity-price").count(), 0);
+    assert.equal(
+      await page.locator(".plan-package legend").textContent(),
+      "Paket & biaya",
+    );
+    assert.equal(
+      await page.locator("#pay-item option").count(),
+      packages.length,
+    );
+    assert.match(
+      await page.locator(".pay-total").textContent(),
+      /^Perkiraan biaya/,
+    );
+    assert.deepEqual(await page.locator(".plan-steps li").allTextContents(), [
+      "1Isi data",
+      "2Ringkasan",
+      "3WhatsApp",
+    ]);
     assert.equal(
       await page
         .locator(".activity-hero-photo")
@@ -142,7 +160,7 @@ try {
     );
     await page.getByLabel("Usulan tanggal").fill(date);
     await page.getByLabel("Jumlah peserta").fill("3");
-    await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
     assert.match(
       await page.locator(".activity-error").textContent(),
       /nomor WhatsApp/,
@@ -153,7 +171,15 @@ try {
     await page
       .getByLabel("Ceritakan rencanamu", { exact: false })
       .fill("Perlu fins ukuran M");
-    await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
+    assert.equal(
+      await page.locator("#plan-summary-title").textContent(),
+      "Ringkasan rencana",
+    );
+    assert.match(
+      await page.locator(".plan-summary-list").textContent(),
+      /Tamu Uji Aktivitas[\s\S]*\+62 812 3456 7890[\s\S]*Perlu fins ukuran M/,
+    );
     const url = new URL(
       await page
         .getByRole("link", { name: "Lanjutkan ke WhatsApp" })
@@ -172,14 +198,23 @@ try {
       "WhatsApp: +62 812 3456 7890",
       "Email: tamu@example.com",
       "belum menjadi reservasi",
+      `Paket: ${packages[0].name.id} × `,
+      "Perkiraan biaya: Rp",
     ])
       assert.ok(message.includes(value), value);
-    await page.getByLabel("Jumlah peserta").fill("4");
+    // Editing keeps the details and the summary follows the change.
+    await page.getByRole("button", { name: "← Ubah data" }).click();
     assert.equal(
-      await page.locator(".activity-message").count(),
-      0,
-      "An edited inquiry cannot send stale details",
+      await page.getByLabel("Nama kamu").inputValue(),
+      "Tamu Uji Aktivitas",
     );
+    await page.getByLabel("Jumlah peserta").fill("4");
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
+    assert.match(
+      await page.locator(".plan-summary-list").textContent(),
+      /Peserta4 orang/,
+    );
+    await page.getByRole("button", { name: "← Ubah data" }).click();
     await page.evaluate(() => scrollTo({ top: 700, behavior: "instant" }));
     await page.waitForFunction(() =>
       document.querySelector(".site-header").classList.contains("is-scrolled"),
@@ -303,10 +338,7 @@ try {
     await page.locator("h1").textContent(),
     "Snorkeling bersama keluarga — uji CMS",
   );
-  assert.match(
-    await page.locator(".activity-price strong").textContent(),
-    /450\.000/,
-  );
+  assert.match(await (await api.get(site)).text(), /Rp\s?450\.000/);
   assert.ok(
     (await page.locator(".activity-hero-facts").textContent()).includes(
       "Setengah hari · contoh uji",

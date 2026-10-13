@@ -1,6 +1,6 @@
 import { cleanWhatsApp, cleanEmail } from "./contact-fields.js";
 import { activityPhotos } from "./photography.js";
-import { dictionary } from "./i18n.js";
+import { dictionary, formatIDR } from "./i18n.js";
 export const activityLabels = {
   diving: "Diving",
   snorkeling: "Snorkeling",
@@ -228,6 +228,8 @@ export function withActivities(content) {
   };
 }
 
+// order, when a package was chosen: { item, quantity, unit, total } with
+// texts already in the visitor's language.
 export function activityInquiry(
   key,
   activity,
@@ -235,6 +237,7 @@ export function activityInquiry(
   today,
   demo = false,
   locale = "id",
+  order = null,
 ) {
   const t = dictionary(locale).inquiry;
   const label = dictionary(locale).activityLabels[key];
@@ -267,6 +270,12 @@ export function activityInquiry(
     ...(email ? [`Email: ${email}`] : []),
     `${t.proposedDate}: ${date}`,
     t.people(participants),
+    ...(order
+      ? [
+          `${t.package}: ${order.item} × ${order.quantity}${order.unit ? " " + order.unit : ""}`,
+          `${t.estimate}: ${formatIDR(order.total, locale)}`,
+        ]
+      : []),
     ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
     t.closing,
   ].join("\n");

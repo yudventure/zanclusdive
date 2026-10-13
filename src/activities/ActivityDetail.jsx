@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useReveal } from "../components/useReveal.js";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import { activityInquiry } from "../activity-model.js";
@@ -17,8 +16,16 @@ import SectionBanner from "./SectionBanner.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { payableItems, quantityLimit } from "../payment-model.js";
 
-// Per-person packages start with one unit for each participant.
+// Per-person packages count one unit for each participant.
 const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
+const unitName = (unit) => (unit || "").replace(/^\/\s*/, "");
+// "2 days", "3 people" in English; Indonesian units stay as they are.
+const unitCount = (unit, count, locale) => {
+  const name = unitName(unit);
+  if (locale !== "en" || count === 1 || !name) return name;
+  if (name === "person") return "people";
+  return name.endsWith("s") ? name : name + "s";
+};
 
 function Inquiry({
   activityKey,
@@ -31,16 +38,14 @@ function Inquiry({
   const t = dictionary(locale).activity;
   const p = dictionary(locale).payment;
   const label = dictionary(locale).activityLabels[activityKey];
-  // Ask first on WhatsApp, or pay now when online payment is switched on.
-  const packages = payments?.ready ? payableItems(priceList, activityKey) : [];
-  const [mode, setMode] = useState("ask");
+  // Packages from the price list; paid online when Midtrans is switched on,
+  // otherwise they give the estimate in the WhatsApp message.
+  const packages = payableItems(priceList, activityKey);
+  const ready = Boolean(payments?.ready) && packages.length > 0;
+  const [step, setStep] = useState("form");
+  const [intent, setIntent] = useState(ready ? "pay" : "ask");
   const [pick, setPick] = useState({ item: packages[0]?.index, quantity: 1 });
   const [paying, setPaying] = useState(false);
-  const chosen = packages.find((item) => item.index === pick.item);
-  const quantity = Math.min(
-    quantityLimit,
-    Math.max(1, Number(pick.quantity) || 1),
-  );
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -50,36 +55,80 @@ function Inquiry({
     participants: 1,
     notes: "",
   });
-  const [message, setMessage] = useState("");
-  const messageRef = useReveal(message);
   const [error, setError] = useState("");
+  const panelRef = useRef(null);
+  const stepsRef = useRef(null);
+  const summaryRef = useRef(null);
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
+  // The summary opens at the top of the panel, in view on phones too.
+  useEffect(() => {
+    const summary = summaryRef.current;
+    if (step !== "summary" || !summary) return;
+    panelRef.current?.scrollTo?.({ top: 0 });
+    const top = stepsRef.current.getBoundingClientRect().top;
+    if (top < 150 || top > window.innerHeight - 200)
+      stepsRef.current.scrollIntoView({ block: "start" });
+    summary.focus({ preventScroll: true });
+  }, [step]);
+
+  const chosen = packages.find((item) => item.index === pick.item);
+  const unit = chosen ? priceText(chosen.unit, locale) : "";
+  const byPerson = perPerson(chosen?.unit?.id);
+  // Per-person packages follow the participants (up to 100 for an estimate;
+  // paying online stops at the limit with a message).
+  const quantity = Math.min(
+    byPerson ? 100 : quantityLimit,
+    Math.max(
+      1,
+      Math.round(Number(byPerson ? details.participants : pick.quantity)) || 1,
+    ),
+  );
+  const total = chosen ? chosen.price * quantity : 0;
+  const order = chosen
+    ? {
+        item: priceText(chosen.name, locale),
+        quantity,
+        unit: unitCount(unit, quantity, locale),
+        total,
+      }
+    : null;
+
   function change(key, value) {
     setDetails((current) => ({ ...current, [key]: value }));
-    if (key === "participants" && perPerson(chosen?.unit?.id))
-      setPick((current) => ({ ...current, quantity: value }));
-    setMessage("");
     setError("");
   }
-  function choose(index) {
-    const item = packages.find((entry) => entry.index === index);
-    setPick({
-      item: index,
-      quantity: perPerson(item?.unit?.id) ? details.participants : 1,
-    });
-    setError("");
-  }
-  async function pay(event) {
-    event.preventDefault();
-    if (!chosen) return;
-    setError("");
+  // The WhatsApp message; it throws with the reason when a field is wrong.
+  const build = () =>
+    activityInquiry(
+      activityKey,
+      activity,
+      details,
+      today,
+      false,
+      locale,
+      order,
+    );
+  function check() {
     try {
-      // The same checks as the WhatsApp message, before going to Midtrans.
-      activityInquiry(activityKey, activity, details, today, false, locale);
+      return build();
     } catch (err) {
       setError(err.message);
+      return null;
+    }
+  }
+  function toSummary(nextIntent) {
+    if (!check()) return;
+    if (nextIntent === "pay" && Number(details.participants) > quantityLimit) {
+      setError(p.tooMany(quantityLimit));
       return;
     }
+    setIntent(nextIntent);
+    setError("");
+    setStep("summary");
+  }
+  async function pay() {
+    if (!chosen || !check()) return;
+    setError("");
     setPaying(true);
     try {
       const response = await fetch(`/api/payments?locale=${locale}`, {
@@ -102,251 +151,353 @@ function Inquiry({
       setPaying(false);
     }
   }
-  function prepare(event) {
-    event.preventDefault();
+  let message = "";
+  if (step === "summary" && intent === "ask")
     try {
-      setMessage(
-        activityInquiry(activityKey, activity, details, today, false, locale),
-      );
-      setError("");
-    } catch (err) {
-      setError(err.message);
-    }
-  }
+      message = build();
+    } catch {}
+  const dateText = details.date
+    ? new Date(details.date + "T12:00:00").toLocaleDateString(
+        locale === "id" ? "id-ID" : "en-GB",
+        { weekday: "long", day: "numeric", month: "long", year: "numeric" },
+      )
+    : "";
+  const steps = p.steps[ready ? "pay" : "ask"];
+  const current = step === "form" ? 0 : 1;
+  const breakdown = chosen && (
+    <span className="plan-breakdown">
+      {formatIDR(chosen.price, locale)} × {quantity}{" "}
+      {unitCount(unit, quantity, locale)}
+    </span>
+  );
+
   return (
     <aside
       className="activity-inquiry"
       id="inquiry"
       aria-labelledby="inquiry-title"
+      ref={panelRef}
     >
       <p className="eyebrow">{t.planKicker}</p>
       <h2 id="inquiry-title">{t.planTitle(label)}</h2>
-      <div className="activity-price">
-        <small>{activity.price === null ? t.priceLabel : t.fromPrice}</small>
-        <strong>
-          {activity.price === null
-            ? dictionary(locale).common.requestQuote
-            : formatIDR(activity.price, locale)}
-        </strong>
-        <p>{t.priceNote}</p>
-      </div>
-      {packages.length > 0 && (
-        <div className="pay-modes">
-          <div className="pay-switch" role="group" aria-label={p.modes}>
-            {["ask", "pay"].map((key) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={mode === key}
-                onClick={() => {
-                  setMode(key);
-                  setError("");
-                }}
-              >
-                {p[key]}
-              </button>
-            ))}
-          </div>
-          <p className="pay-hint">{mode === "pay" ? p.payHint : p.askHint}</p>
-        </div>
-      )}
-      <form
-        className="activity-form"
-        onSubmit={mode === "pay" ? pay : prepare}
-        noValidate
-      >
-        {mode === "pay" && chosen && (
-          <fieldset className="pay-package">
-            <FormField id="pay-item" label={p.package} icon="note" required>
-              <select
-                id="pay-item"
-                value={chosen.index}
-                onChange={(e) => choose(Number(e.target.value))}
-              >
-                {packages.map((item) => (
-                  <option key={item.index} value={item.index}>
-                    {priceText(item.name, locale)} ·{" "}
-                    {formatIDR(item.price, locale)}{" "}
-                    {priceText(item.unit, locale)}
-                  </option>
-                ))}
-              </select>
+      <ol className="plan-steps" aria-label={p.steps.label} ref={stepsRef}>
+        {steps.map((name, index) => (
+          <li
+            key={name}
+            className={
+              index < current ? "done" : index === current ? "current" : ""
+            }
+            aria-current={index === current ? "step" : undefined}
+          >
+            <span aria-hidden="true">{index < current ? "✓" : index + 1}</span>
+            {name}
+          </li>
+        ))}
+      </ol>
+      {step === "form" ? (
+        <>
+          <form
+            className="activity-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              toSummary(ready ? "pay" : "ask");
+            }}
+            noValidate
+          >
+            {chosen ? (
+              <fieldset className="plan-package">
+                <legend>{p.packageCard}</legend>
+                <FormField id="pay-item" label={p.choosePackage} icon="note">
+                  <select
+                    id="pay-item"
+                    value={chosen.index}
+                    onChange={(e) => {
+                      setPick({ item: Number(e.target.value), quantity: 1 });
+                      setError("");
+                    }}
+                  >
+                    {packages.map((item) => (
+                      <option key={item.index} value={item.index}>
+                        {priceText(item.name, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </FormField>
+                <p className="plan-package-info">
+                  <strong>
+                    {formatIDR(chosen.price, locale)} <small>{unit}</small>
+                  </strong>
+                  {chosen.info && <span>{priceText(chosen.info, locale)}</span>}
+                </p>
+                {!byPerson && (
+                  <FormField
+                    id="pay-quantity"
+                    label={p.quantity(unitName(unit))}
+                    icon="calendar"
+                  >
+                    <input
+                      id="pay-quantity"
+                      type="number"
+                      min="1"
+                      max={quantityLimit}
+                      required
+                      value={pick.quantity}
+                      onChange={(e) =>
+                        setPick((current) => ({
+                          ...current,
+                          quantity: e.target.value,
+                        }))
+                      }
+                    />
+                  </FormField>
+                )}
+                <p className="pay-total">
+                  <span>
+                    {ready ? p.total : p.estimate}
+                    {breakdown}
+                  </span>
+                  <strong>{formatIDR(total, locale)}</strong>
+                </p>
+              </fieldset>
+            ) : (
+              <div className="activity-price">
+                <small>
+                  {activity.price === null ? p.priceQuote : p.priceFrom}
+                </small>
+                <strong>
+                  {activity.price === null
+                    ? p.quoteValue
+                    : `${formatIDR(activity.price, locale)} ${p.perPersonUnit}`}
+                </strong>
+                <p>{t.priceNote}</p>
+              </div>
+            )}
+            <p className="form-required-note">
+              <span aria-hidden="true">*</span> {t.requiredNote}
+            </p>
+            <FormField id="inquiry-name" label={t.name} icon="user" required>
+              <input
+                id="inquiry-name"
+                name="name"
+                autoComplete="name"
+                maxLength={120}
+                required
+                value={details.name}
+                onChange={(e) => change("name", e.target.value)}
+                placeholder={t.namePlaceholder}
+              />
             </FormField>
             <FormField
-              id="pay-quantity"
-              label={p.quantity(priceText(chosen.unit, locale))}
-              icon="people"
+              id="inquiry-whatsapp"
+              label={t.whatsapp}
+              icon="whatsapp"
               required
             >
               <input
-                id="pay-quantity"
-                type="number"
-                min="1"
-                max={quantityLimit}
+                id="inquiry-whatsapp"
+                name="whatsapp"
+                type="tel"
+                inputMode="tel"
+                pattern="\+?[0-9 \(\)\.\-]{8,30}"
+                autoComplete="tel"
+                maxLength={30}
                 required
-                value={pick.quantity}
-                onChange={(e) =>
-                  setPick((current) => ({
-                    ...current,
-                    quantity: e.target.value,
-                  }))
-                }
+                value={details.whatsapp}
+                onChange={(e) => change("whatsapp", e.target.value)}
+                placeholder={t.whatsappPlaceholder}
               />
             </FormField>
-            <p className="pay-total">
-              <span>{p.total}</span>
-              <strong>{formatIDR(chosen.price * quantity, locale)}</strong>
+            <FormField
+              id="inquiry-email"
+              label={t.email}
+              icon="email"
+              optional={t.optional}
+            >
+              <input
+                id="inquiry-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                maxLength={200}
+                value={details.email}
+                onChange={(e) => change("email", e.target.value)}
+                placeholder={t.emailPlaceholder}
+              />
+            </FormField>
+            <div className="form-row">
+              <FormField
+                id="inquiry-date"
+                label={t.date}
+                icon="calendar"
+                required
+              >
+                <input
+                  id="inquiry-date"
+                  name="date"
+                  type="date"
+                  min={today || undefined}
+                  required
+                  value={details.date}
+                  onChange={(e) => change("date", e.target.value)}
+                />
+              </FormField>
+              <FormField
+                id="inquiry-participants"
+                label={t.participants}
+                icon="people"
+                required
+              >
+                <input
+                  id="inquiry-participants"
+                  name="participants"
+                  type="number"
+                  min="1"
+                  max="100"
+                  required
+                  value={details.participants}
+                  onChange={(e) => change("participants", e.target.value)}
+                />
+              </FormField>
+            </div>
+            <FormField
+              id="inquiry-notes"
+              label={t.notes}
+              icon="note"
+              optional={t.optional}
+            >
+              <textarea
+                id="inquiry-notes"
+                name="notes"
+                rows="3"
+                maxLength={1000}
+                value={details.notes}
+                onChange={(e) => change("notes", e.target.value)}
+                placeholder={t.notesPlaceholder}
+              />
+            </FormField>
+            {error && (
+              <p className="activity-error" role="alert">
+                {error}
+              </p>
+            )}
+            <button className="button dark plan-next" type="submit">
+              {ready ? p.toSummary : p.toSummaryAsk}{" "}
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <p className="activity-form-note">{ready ? p.payNote : t.formNote}</p>
+        </>
+      ) : (
+        <section
+          className="plan-summary"
+          aria-labelledby="plan-summary-title"
+          ref={summaryRef}
+          tabIndex={-1}
+        >
+          <h3 id="plan-summary-title">
+            {intent === "pay" ? p.summaryPay : p.summaryAsk}
+          </h3>
+          <dl className="plan-summary-list">
+            {[
+              [p.activity, label],
+              ...(chosen ? [[p.package, priceText(chosen.name, locale)]] : []),
+              [p.date, dateText],
+              [p.participants, p.people(Number(details.participants))],
+              [p.name, details.name.trim()],
+              ["WhatsApp", details.whatsapp.trim()],
+              ...(details.email.trim()
+                ? [["Email", details.email.trim()]]
+                : []),
+              ...(details.notes.trim()
+                ? [[p.notes, details.notes.trim()]]
+                : []),
+            ].map(([term, value]) => (
+              <div key={term}>
+                <dt>{term}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {chosen && (
+            <p className="pay-total plan-summary-total">
+              <span>
+                {intent === "pay" ? p.total : p.estimate}
+                {breakdown}
+              </span>
+              <strong>{formatIDR(total, locale)}</strong>
             </p>
-          </fieldset>
-        )}
-        <p className="form-required-note">
-          <span aria-hidden="true">*</span> {t.requiredNote}
-        </p>
-        <FormField id="inquiry-name" label={t.name} icon="user" required>
-          <input
-            id="inquiry-name"
-            name="name"
-            autoComplete="name"
-            maxLength={120}
-            required
-            value={details.name}
-            onChange={(e) => change("name", e.target.value)}
-            placeholder={t.namePlaceholder}
-          />
-        </FormField>
-        <FormField
-          id="inquiry-whatsapp"
-          label={t.whatsapp}
-          icon="whatsapp"
-          required
-        >
-          <input
-            id="inquiry-whatsapp"
-            name="whatsapp"
-            type="tel"
-            inputMode="tel"
-            pattern="\+?[0-9 \(\)\.\-]{8,30}"
-            autoComplete="tel"
-            maxLength={30}
-            required
-            value={details.whatsapp}
-            onChange={(e) => change("whatsapp", e.target.value)}
-            placeholder={t.whatsappPlaceholder}
-          />
-        </FormField>
-        <FormField
-          id="inquiry-email"
-          label={t.email}
-          icon="email"
-          optional={t.optional}
-        >
-          <input
-            id="inquiry-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            maxLength={200}
-            value={details.email}
-            onChange={(e) => change("email", e.target.value)}
-            placeholder={t.emailPlaceholder}
-          />
-        </FormField>
-        <div className="form-row">
-          <FormField id="inquiry-date" label={t.date} icon="calendar" required>
-            <input
-              id="inquiry-date"
-              name="date"
-              type="date"
-              min={today || undefined}
-              required
-              value={details.date}
-              onChange={(e) => change("date", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            id="inquiry-participants"
-            label={t.participants}
-            icon="people"
-            required
-          >
-            <input
-              id="inquiry-participants"
-              name="participants"
-              type="number"
-              min="1"
-              max="100"
-              required
-              value={details.participants}
-              onChange={(e) => change("participants", e.target.value)}
-            />
-          </FormField>
-        </div>
-        <FormField
-          id="inquiry-notes"
-          label={t.notes}
-          icon="note"
-          optional={t.optional}
-        >
-          <textarea
-            id="inquiry-notes"
-            name="notes"
-            rows="3"
-            maxLength={1000}
-            value={details.notes}
-            onChange={(e) => change("notes", e.target.value)}
-            placeholder={t.notesPlaceholder}
-          />
-        </FormField>
-        {error && (
-          <p className="activity-error" role="alert">
-            {error}
-          </p>
-        )}
-        {mode === "pay" && chosen ? (
-          <button
-            className="button dark pay-submit"
-            type="submit"
-            disabled={paying}
-          >
-            {paying
-              ? p.redirecting
-              : p.submit(formatIDR(chosen.price * quantity, locale))}{" "}
-            <span aria-hidden="true">↗</span>
-          </button>
-        ) : (
-          <button className="button dark" type="submit">
-            {t.prepare} <span aria-hidden="true">↗</span>
-          </button>
-        )}
-      </form>
-      {mode === "pay" && (
-        <div className="pay-notes">
-          <p>{p.secure}</p>
-          {payments?.sandbox && <p className="pay-sandbox">{p.sandbox}</p>}
-          <button
-            type="button"
-            className="pay-unsure"
-            onClick={() => setMode("ask")}
-          >
-            {p.stillUnsure}
-          </button>
-        </div>
+          )}
+          {error && (
+            <p className="activity-error" role="alert">
+              {error}
+            </p>
+          )}
+          {intent === "pay" ? (
+            <>
+              <button
+                className="button dark pay-submit"
+                type="button"
+                disabled={paying}
+                onClick={pay}
+              >
+                {paying ? p.redirecting : p.submit(formatIDR(total, locale))}{" "}
+                <span aria-hidden="true">↗</span>
+              </button>
+              <div className="pay-notes">
+                <p>{p.secure}</p>
+                {payments?.sandbox && (
+                  <p className="pay-sandbox">{p.sandbox}</p>
+                )}
+              </div>
+            </>
+          ) : (
+            message && (
+              <div className="activity-message" role="status">
+                <a
+                  className="button lime"
+                  href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t.continueWhatsApp} <span aria-hidden="true">↗</span>
+                </a>
+                <p className="plan-ask-note">{p.askNote}</p>
+                <details className="plan-message">
+                  <summary>{p.viewMessage}</summary>
+                  <p className="activity-message-preview">{message}</p>
+                </details>
+              </div>
+            )
+          )}
+          <div className="plan-summary-actions">
+            <button
+              type="button"
+              className="plan-back"
+              disabled={paying}
+              onClick={() => {
+                setStep("form");
+                setError("");
+              }}
+            >
+              {p.edit}
+            </button>
+            {ready && (
+              <button
+                type="button"
+                className="pay-unsure"
+                disabled={paying}
+                onClick={() => {
+                  setError("");
+                  if (intent === "pay") setIntent("ask");
+                  else toSummary("pay");
+                }}
+              >
+                {intent === "pay" ? p.sendSummary : p.payInstead}
+              </button>
+            )}
+          </div>
+        </section>
       )}
-      {mode === "ask" && message && (
-        <div className="activity-message" role="status" ref={messageRef}>
-          <h3>{t.ready}</h3>
-          <p className="activity-message-preview">{message}</p>
-          <a
-            className="button lime"
-            href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t.continueWhatsApp} <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      )}
-      <p className="activity-form-note">{t.formNote}</p>
       <a
         className="activity-inquiry-contact"
         href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(t.askMessage(label))}`}

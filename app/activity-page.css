@@ -597,62 +597,113 @@ nav.open .nav-sub a {
   }
 }
 
-/* Ask first on WhatsApp, or pay now with Midtrans. */
-.pay-modes {
-  margin: 0 0 18px;
-}
-.pay-switch {
+/* Plan form: details, then a summary, then Midtrans or WhatsApp. */
+.plan-steps {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid #d6e4dc;
-  border-radius: 999px;
-  background: #fff;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 16px 0 20px;
+  padding: 0;
+  list-style: none;
+  scroll-margin-top: 160px;
 }
-.pay-switch button {
-  padding: 11px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #3d5b63;
-  font: inherit;
-  font-size: 13px;
+.plan-steps li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #6b8086;
+  font-size: 11.5px;
   font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  line-height: 1.3;
+  text-align: center;
 }
-.pay-switch button[aria-pressed="true"] {
-  background: #062b3b;
-  color: white;
+/* The line joining each step to the one before it. */
+.plan-steps li + li::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: #d6e4dc;
 }
-.pay-switch button:focus-visible {
-  outline: 3px solid #20b8b1;
-  outline-offset: 2px;
-}
-.pay-hint {
-  margin: 10px 4px 0;
-  font-size: 12px;
-  line-height: 1.7;
-  color: #57717a;
-}
-.pay-package {
+.plan-steps span {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 14px;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #c9dad1;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 12px;
+}
+.plan-steps li.current {
+  color: #062b3b;
+}
+.plan-steps li.current span {
+  border-color: #062b3b;
+  background: #062b3b;
+  color: #c8f28a;
+}
+.plan-steps li.done {
+  color: #1f6b47;
+}
+.plan-steps li.done span {
+  border-color: #2e9a63;
+  background: #2e9a63;
+  color: #fff;
+}
+.plan-steps li.done + li::before {
+  background: #2e9a63;
+}
+.plan-package {
+  display: grid;
+  gap: 12px;
   margin: 0 0 18px;
   padding: 16px;
   border: 1px solid #cfe3d6;
   border-radius: 16px;
   background: #fff;
 }
-.pay-package select {
+.plan-package legend {
+  float: left;
   width: 100%;
+  margin: 0 0 2px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.plan-package select {
+  width: 100%;
+}
+.plan-package-info {
+  display: grid;
+  gap: 4px;
+  margin: -2px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.plan-package-info strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: #062b3b;
+}
+.plan-package-info small {
+  font-size: 12px;
+  font-weight: 500;
+  color: #57717a;
 }
 .pay-total {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
   margin: 0;
@@ -661,16 +712,81 @@ nav.open .nav-sub a {
   font-size: 12px;
   color: #57717a;
 }
+.pay-total > span {
+  display: grid;
+  gap: 2px;
+}
+.plan-breakdown {
+  font-size: 11.5px;
+  white-space: nowrap;
+  color: #7a8f95;
+}
 .pay-total strong {
   font-size: 20px;
+  line-height: 1.2;
   color: #062b3b;
+  white-space: nowrap;
+}
+.plan-summary {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #cfe3d6;
+  border-radius: 18px;
+  background: #fff;
+}
+.plan-summary:focus {
+  outline: none;
+}
+.plan-summary h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.plan-summary-list {
+  display: grid;
+  margin: 0;
+}
+.plan-summary-list div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf2ef;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.plan-summary-list dt {
+  color: #6b8086;
+}
+.plan-summary-list dd {
+  margin: 0;
+  color: #062b3b;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.plan-summary-total {
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f1f7f3;
+}
+.plan-summary .button {
+  width: 100%;
+  justify-content: center;
+  padding: 16px;
+  font-size: 13px;
+  white-space: normal;
+}
+.plan-summary .activity-error {
+  margin: 0;
 }
 .pay-submit[disabled] {
   opacity: 0.7;
   cursor: progress;
 }
 .pay-notes {
-  margin-top: 14px;
   font-size: 11px;
   line-height: 1.7;
   color: #57717a;
@@ -685,15 +801,64 @@ nav.open .nav-sub a {
   background: #fff4d6;
   color: #7a5a00;
 }
-.pay-unsure {
+.plan-summary .activity-message {
+  display: grid;
+  gap: 10px;
+  margin: 0;
   padding: 0;
+  border: 0;
+  background: none;
+}
+.plan-ask-note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.plan-message summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: #087873;
+  cursor: pointer;
+}
+.plan-message .activity-message-preview {
+  margin-top: 8px;
+}
+.plan-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-top: 4px;
+  border-top: 1px solid #edf2ef;
+}
+.plan-back {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #062b3b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pay-unsure {
+  padding: 8px 0;
   border: 0;
   background: none;
   color: #087873;
   font: inherit;
   font-size: 12px;
   font-weight: 600;
+  text-align: left;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+}
+.plan-back:focus-visible,
+.pay-unsure:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+  border-radius: 6px;
 }

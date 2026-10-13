@@ -235,25 +235,43 @@ const id = {
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
   },
   payment: {
-    ask: "Tanya dulu",
-    pay: "Bayar sekarang",
-    modes: "Cara melanjutkan",
-    askHint:
-      "Masih ragu? Kirim pertanyaanmu lewat WhatsApp, tim kami bantu memilih.",
-    payHint:
-      "Sudah yakin? Pilih paket dan bayar lunas sekarang. Tanggalnya otomatis tercatat begitu pembayaran berhasil.",
-    package: "Paket",
-    quantity: (unit) =>
-      unit ? `Jumlah (${unit.replace(/^\/\s*/, "")})` : "Jumlah",
+    packageCard: "Paket & biaya",
+    choosePackage: "Pilih paket",
+    quantity: (unit) => (unit ? `Jumlah (${unit})` : "Jumlah"),
     total: "Total dibayar",
+    estimate: "Perkiraan biaya",
+    people: (n) => `${n} orang`,
+    steps: {
+      label: "Langkah pemesanan",
+      pay: ["Isi data", "Ringkasan", "Pembayaran"],
+      ask: ["Isi data", "Ringkasan", "WhatsApp"],
+    },
+    toSummary: "Lanjut ke ringkasan pembayaran",
+    toSummaryAsk: "Lanjut ke ringkasan",
+    summaryPay: "Ringkasan pembayaran",
+    summaryAsk: "Ringkasan rencana",
+    package: "Paket",
+    name: "Nama",
+    notes: "Catatan",
+    edit: "← Ubah data",
+    sendSummary: "Masih ragu? Kirim ringkasan ini lewat WhatsApp",
+    payInstead: "Sudah yakin? Bayar online sekarang",
+    viewMessage: "Lihat isi pesan",
+    askNote:
+      "Ini belum menjadi reservasi. Tim kami mengonfirmasi jadwal, ketersediaan, dan biaya lewat WhatsApp.",
+    payNote:
+      "Begitu pembayaran lunas, tanggalmu otomatis tercatat di jadwal kami dan tim menghubungimu lewat WhatsApp.",
+    priceFrom: "Mulai dari",
+    priceQuote: "Biaya",
+    quoteValue: "Dikirim tim lewat WhatsApp",
+    perPersonUnit: "/ orang",
+    tooMany: (max) =>
+      `Pembayaran online maksimal ${max} peserta. Untuk grup lebih besar, tanya kami lewat WhatsApp.`,
     submit: (total) => `Bayar ${total}`,
     redirecting: "Membuka halaman pembayaran Midtrans…",
     secure:
       "Pembayaran aman lewat Midtrans: transfer bank / virtual account, QRIS, e-wallet, atau kartu.",
     sandbox: "Mode uji coba Midtrans: tidak ada uang sungguhan yang ditarik.",
-    stillUnsure: "Masih ragu? Chat WhatsApp dulu ↗",
-    noPackages:
-      "Belum ada paket dengan harga untuk dibayar online. Tanyakan lewat WhatsApp.",
     failed:
       "Pembayaran belum bisa dibuat. Coba lagi sebentar, atau chat tim kami lewat WhatsApp.",
     reference: "Referensi",
@@ -529,6 +547,8 @@ const id = {
     proposedDate: "Usulan tanggal",
     people: (n) => `Peserta: ${n} orang`,
     notesLabel: "Catatan",
+    package: "Paket",
+    estimate: "Perkiraan biaya",
     closing:
       "Mohon konfirmasi jadwal, persyaratan, perlengkapan, dan biaya. Ini belum menjadi reservasi.",
   },
@@ -1204,25 +1224,43 @@ const en = {
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
   },
   payment: {
-    ask: "Ask first",
-    pay: "Pay now",
-    modes: "How to continue",
-    askHint:
-      "Still deciding? Send your questions on WhatsApp and our team will help you choose.",
-    payHint:
-      "Ready to go? Pick a package and pay in full now. Your date is booked automatically once the payment succeeds.",
-    package: "Package",
-    quantity: (unit) =>
-      unit ? `Quantity (${unit.replace(/^\/\s*/, "")})` : "Quantity",
+    packageCard: "Package & price",
+    choosePackage: "Choose a package",
+    quantity: (unit) => (unit ? `Quantity (${unit})` : "Quantity"),
     total: "Total to pay",
+    estimate: "Estimated cost",
+    people: (n) => `${n} ${Number(n) === 1 ? "person" : "people"}`,
+    steps: {
+      label: "Booking steps",
+      pay: ["Your details", "Summary", "Payment"],
+      ask: ["Your details", "Summary", "WhatsApp"],
+    },
+    toSummary: "Continue to payment summary",
+    toSummaryAsk: "Continue to summary",
+    summaryPay: "Payment summary",
+    summaryAsk: "Plan summary",
+    package: "Package",
+    name: "Name",
+    notes: "Notes",
+    edit: "← Edit details",
+    sendSummary: "Still unsure? Send this summary on WhatsApp",
+    payInstead: "Ready? Pay online now",
+    viewMessage: "See the message",
+    askNote:
+      "This is not a reservation yet. Our team confirms the schedule, availability and price on WhatsApp.",
+    payNote:
+      "Once the payment is complete, your date is booked in our schedule automatically and our team contacts you on WhatsApp.",
+    priceFrom: "From",
+    priceQuote: "Price",
+    quoteValue: "Sent by our team on WhatsApp",
+    perPersonUnit: "/ person",
+    tooMany: (max) =>
+      `Online payment is for up to ${max} participants. For bigger groups, ask us on WhatsApp.`,
     submit: (total) => `Pay ${total}`,
     redirecting: "Opening the Midtrans payment page…",
     secure:
       "Secure payment with Midtrans: bank transfer / virtual account, QRIS, e-wallets or cards.",
     sandbox: "Midtrans test mode: no real money is charged.",
-    stillUnsure: "Still unsure? Chat on WhatsApp first ↗",
-    noPackages:
-      "There's no priced package to pay online yet. Ask us on WhatsApp.",
     failed:
       "The payment couldn't be created. Try again shortly, or chat with our team on WhatsApp.",
     reference: "Reference",
@@ -1497,6 +1535,8 @@ const en = {
     people: (n) =>
       `Participants: ${n} ${Number(n) === 1 ? "person" : "people"}`,
     notesLabel: "Notes",
+    package: "Package",
+    estimate: "Estimated cost",
     closing:
       "Please confirm the schedule, requirements, gear and price. This is not a reservation yet.",
   },
