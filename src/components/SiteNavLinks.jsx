@@ -3,7 +3,9 @@ import { dictionary, localeHref } from "../i18n.js";
 
 // The same main menu on every public page. On the homepage the links jump to
 // its sections; elsewhere they lead back to them, and Dive Shop opens the
-// full Dive Shop page (its catalog when already there). "Experiences" holds the activity pages and the courses.
+// full Dive Shop page (its catalog when already there). "Experiences" holds
+// the activity pages and the courses; Dive Shop holds the catalog and the
+// gear service.
 export default function SiteNavLinks({
   locale,
   page = "home",
@@ -16,6 +18,16 @@ export default function SiteNavLinks({
   const href = (path) => localeHref(locale, path);
   const section = (id) => (home ? "#" + id : href("/#" + id));
   const visible = activityKeys.filter((key) => activities?.[key]?.enabled);
+  const sub = (link, label, current) => (
+    <a
+      href={link}
+      className={current ? "current" : undefined}
+      aria-current={current ? "page" : undefined}
+      onClick={onNavigate}
+    >
+      {label}
+    </a>
+  );
   const item = (key, link, label, active, current = false) => (
     <a
       key={key}
@@ -61,12 +73,33 @@ export default function SiteNavLinks({
       </div>
       {item("dive-sites", section("dive-sites"), t.common.diveSites)}
       {item("ocean", section("ocean"), t.common.exploreOcean)}
+      <div className="nav-group">
+        {item(
+          "dive-shop",
+          home
+            ? "#dive-shop"
+            : page === "shop"
+              ? "#catalog"
+              : href("/dive-shop"),
+          "Dive Shop",
+          page === "shop" || page === "service",
+          page === "shop",
+        )}
+        <div className="nav-sub">
+          {sub(
+            page === "shop" ? "#catalog" : href("/dive-shop"),
+            t.service.shopNav,
+            false,
+          )}
+          {sub(href("/service"), t.service.nav, page === "service")}
+        </div>
+      </div>
       {item(
-        "dive-shop",
-        home ? "#dive-shop" : page === "shop" ? "#catalog" : href("/dive-shop"),
-        "Dive Shop",
-        page === "shop",
-        page === "shop",
+        "about",
+        href("/about"),
+        t.about.nav,
+        page === "about",
+        page === "about",
       )}
       {item("contact", section("contact"), t.common.contact)}
     </>
