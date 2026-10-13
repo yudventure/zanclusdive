@@ -48,6 +48,8 @@ export default function SiteFooter({
             <a href={href("/course")}>{dictionary(locale).course.nav}</a>
             <a href={href("/dive-shop")}>Dive Shop</a>
             <a href={href("/dive-shop?mode=rental#catalog")}>{t.rental}</a>
+            <a href={href("/service")}>{dictionary(locale).service.nav}</a>
+            <a href={href("/about")}>{dictionary(locale).about.nav}</a>
           </div>
         </section>
         <section

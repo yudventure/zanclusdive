@@ -212,8 +212,9 @@ try {
           await page.locator("#activity-navigation").isVisible(),
           true,
         );
-        // Six main links plus the activity pages and courses under Experiences.
-        assert.equal(await page.locator("#activity-navigation a").count(), 10);
+        // Seven main links, the activity pages and courses under
+        // Experiences, and the catalog and gear service under Dive Shop.
+        assert.equal(await page.locator("#activity-navigation a").count(), 13);
         assert.equal(
           await page
             .locator("#activity-navigation")

@@ -166,6 +166,13 @@ export default function DiveShop({
             <div className="shop-hero-note">
               <span className="tiny-dot" /> {t.heroNote}
             </div>
+            <a className="shop-hero-service" href={href("/service")}>
+              <span>
+                {dict.service.fromShop[0]}
+                <strong>{dict.service.fromShop[1]}</strong>
+              </span>
+              <span aria-hidden="true">↗</span>
+            </a>
           </div>
           <div className="shop-hero-art">
             <img

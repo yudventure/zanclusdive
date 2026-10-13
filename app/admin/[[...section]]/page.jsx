@@ -30,6 +30,8 @@ export default async function AdminPage({ params }) {
       "prices",
       "events",
       "courses",
+      "service",
+      "about",
     ].includes(active)
   )
     notFound();

@@ -7,7 +7,11 @@ import PriceListEditor from "./PriceListEditor.jsx";
 import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
 import CourseEditor from "./CourseEditor.jsx";
+import AboutEditor from "./AboutEditor.jsx";
+import ServiceEditor from "./ServiceEditor.jsx";
 import { defaultCourses } from "../course-model.js";
+import { defaultAbout } from "../about-model.js";
+import { defaultService } from "../service-model.js";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
@@ -38,6 +42,8 @@ const sections = {
   prices: "Daftar harga",
   events: "Kalender kegiatan",
   courses: "Kursus selam",
+  service: "Servis alat selam",
+  about: "Tentang kami",
 };
 const mainSections = [
   "overview",
@@ -54,6 +60,8 @@ const siteSections = [
   "courses",
   "prices",
   "shop",
+  "service",
+  "about",
   "contact",
 ];
 const money = (n) =>
@@ -1142,6 +1150,48 @@ export default function Dashboard({ section, email, today }) {
                       },
                     }))
                   }
+                />
+              )}
+              {section === "about" && (
+                <AboutEditor
+                  about={content.about}
+                  media={data.media}
+                  update={(patch) =>
+                    setContent((current) => ({
+                      ...current,
+                      about: { ...(current.about ?? defaultAbout), ...patch },
+                    }))
+                  }
+                  onSave={saveSettings}
+                  busy={busy}
+                  placePhoto={placePhoto}
+                />
+              )}
+              {section === "service" && (
+                <ServiceEditor
+                  service={content.service}
+                  media={data.media}
+                  updateItems={(items) =>
+                    setContent((current) => ({
+                      ...current,
+                      service: {
+                        ...(current.service ?? defaultService),
+                        items,
+                      },
+                    }))
+                  }
+                  setImage={(image) =>
+                    setContent((current) => ({
+                      ...current,
+                      service: {
+                        ...(current.service ?? defaultService),
+                        image,
+                      },
+                    }))
+                  }
+                  onSave={saveSettings}
+                  busy={busy}
+                  placePhoto={placePhoto}
                 />
               )}
               {section === "events" && (

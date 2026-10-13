@@ -242,6 +242,19 @@ nav a.active {
 nav a.active::after {
   transform: scaleX(1);
 }
+/* Laptop widths: tighter links keep the whole menu on one line. */
+@media (max-width: 1400px) {
+  nav {
+    gap: 2px;
+  }
+  nav a {
+    padding: 10px 11px;
+  }
+  nav a::after {
+    left: 11px;
+    right: 11px;
+  }
+}
 /* In the opened mobile menu the underline is a short accent. */
 nav.open a::after {
   right: auto;

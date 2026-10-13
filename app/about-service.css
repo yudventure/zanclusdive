@@ -1,0 +1,362 @@
+/* The About (/about) and dive gear service (/service) pages. */
+.activity-page[data-theme="about"] {
+  --act-accent: #1f8f8a;
+  --act-soft: #e6f4f1;
+  --act-ink: #062b3b;
+}
+.activity-page[data-theme="service"] {
+  --act-accent: #4a5fc1;
+  --act-soft: #eef0fb;
+  --act-ink: #1d2752;
+}
+
+/* About: the story, values and services under the hero, without the
+   request form of the other pages. */
+.about-container > .activity-jump-links + .activity-block {
+  margin-top: 40px;
+}
+.about-story {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.about-story p {
+  font-size: 16px;
+  line-height: 1.85;
+  color: #3f5d66;
+}
+.about-story p:first-child {
+  font-size: 19px;
+  line-height: 1.7;
+  color: #062b3b;
+}
+.about-values li > span {
+  font-size: 15px;
+  font-weight: 800;
+}
+.about-services {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  list-style: none;
+  padding: 0;
+}
+.about-service {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid #e3ecea;
+  border-radius: 20px;
+  background: #fff;
+  color: #062b3b;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s,
+    translate 0.25s;
+}
+.about-service:hover,
+.about-service:focus-visible {
+  border-color: var(--act-accent);
+  box-shadow: 0 14px 30px -18px #06324466;
+  translate: 0 -2px;
+}
+.about-service-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: var(--act-soft);
+  color: var(--act-accent);
+}
+.about-service strong {
+  font-size: 17px;
+}
+.about-service p {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #57717a;
+}
+.about-service-more {
+  margin-top: auto;
+  padding-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--act-accent);
+}
+.about-visit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  margin-top: 56px;
+  padding: 34px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 90% 10%, #1f8f8a66, transparent 55%), #062b3b;
+  color: white;
+}
+.about-visit .eyebrow {
+  color: #bef4a5;
+}
+.about-visit h2 {
+  margin-top: 8px;
+  font-size: clamp(24px, 2.6vw, 32px);
+  letter-spacing: -0.8px;
+}
+.about-visit p:not(.eyebrow) {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #c9dbe4;
+}
+.about-visit-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.about-visit-location svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #bef4a5;
+}
+.about-visit-actions {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+.about-visit .button.lime {
+  color: #062b3b;
+}
+.about-visit-actions .button svg {
+  width: 18px;
+  height: 18px;
+}
+.about-visit-link {
+  font-size: 13px;
+  color: #d3e2ec;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.about-visit-link:hover {
+  color: white;
+}
+
+/* Service: one card per service with its starting price. */
+.service-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+.service-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid #e3ecea;
+  border-radius: 20px;
+  background: #fff;
+  scroll-margin-top: 180px;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
+}
+.service-item.is-selected {
+  border-color: var(--act-accent);
+  box-shadow: 0 0 0 3px #4a5fc124;
+}
+.service-item-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: var(--act-soft);
+  color: var(--act-accent);
+}
+.service-item h3 {
+  font-size: 18px;
+  letter-spacing: -0.3px;
+}
+.service-item-body > p {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #57717a;
+}
+.service-item-body .service-item-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--act-soft);
+  font-size: 12px;
+  color: #23434d;
+}
+.service-item-time svg {
+  color: var(--act-accent);
+}
+.service-item-foot {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  text-align: right;
+}
+.service-item-price small {
+  display: block;
+  font-size: 11px;
+  color: #6b8289;
+}
+.service-item-price strong {
+  display: block;
+  font-size: 19px;
+  color: var(--act-ink);
+  white-space: nowrap;
+}
+.service-item-foot .button {
+  min-height: 40px;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.service-next {
+  margin-top: 14px;
+}
+.service-page .activity-equipment-link {
+  margin-top: 18px;
+}
+.service-choices {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+.service-choices legend {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #23434d;
+}
+.service-choices legend span {
+  color: #c2410c;
+}
+.service-choices label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #d5e3e0;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  color: #23434d;
+  cursor: pointer;
+}
+.service-choices label:has(input:checked) {
+  border-color: var(--act-accent);
+  background: var(--act-soft);
+}
+.service-choices input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--act-accent);
+}
+
+/* Links to the gear service from the Dive Shop. */
+.shop-teaser-service {
+  display: inline-block;
+  margin: 14px 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #087873;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.shop-hero-service {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  border: 1px solid #ffffff26;
+  border-radius: 16px;
+  background: #ffffff0f;
+  font-size: 12px;
+  color: #adc5ce;
+}
+.shop-hero-service strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+}
+.shop-hero-service > span:last-child {
+  font-size: 22px;
+  color: #bef4a5;
+}
+.shop-hero-service:hover {
+  border-color: #bef4a5;
+}
+
+@media (max-width: 900px) {
+  .about-services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .about-visit {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+  .about-visit-actions {
+    justify-items: start;
+  }
+}
+@media (max-width: 700px) {
+  .about-story p:first-child {
+    font-size: 17px;
+  }
+  .about-story p {
+    font-size: 15px;
+  }
+  .about-services {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about-visit {
+    margin-top: 40px;
+    padding: 26px 20px;
+    border-radius: 22px;
+  }
+  .service-item {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px 14px;
+    padding: 16px;
+  }
+  .service-item-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+  .service-item-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid #e3ecea;
+    text-align: left;
+  }
+  .shop-teaser-service {
+    margin-left: 0;
+    display: block;
+  }
+}

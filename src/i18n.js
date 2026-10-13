@@ -552,6 +552,151 @@ const id = {
     askMessage: "Halo Zanclus! Saya ingin bertanya tentang kursus selam.",
     metaTitle: "Kursus selam | Zanclus Dive Center",
   },
+  about: {
+    nav: "Tentang kami",
+    heroKicker: "TENTANG KAMI · ZANCLUS DIVE CENTER",
+    facts: [
+      ["Lokasi", "Waisai & Selat Dampier"],
+      ["Layanan", "Selam, kursus, trip, dive shop, servis"],
+      ["WhatsApp", ""],
+    ],
+    sections: ["Cerita kami", "Yang kami pegang", "Layanan kami"],
+    story: [
+      "CERITA KAMI",
+      "Dari laut, untuk laut.",
+      "Siapa kami dan kenapa Zanclus.",
+    ],
+    values: [
+      "YANG KAMI PEGANG",
+      "Cara kami bekerja.",
+      "Hal yang selalu kami jaga di setiap perjalanan.",
+    ],
+    services: [
+      "LAYANAN KAMI",
+      "Semua kebutuhan menyelam di satu tempat.",
+      "Pilih layanan untuk melihat detail dan harga.",
+    ],
+    serviceText: {
+      diving: "Fun dive bersama pemandu di titik selam Selat Dampier.",
+      snorkeling:
+        "Terumbu dangkal yang jernih, cocok untuk keluarga dan pemula.",
+      trip: "Jelajah pulau karst, laguna, dan titik pandang Raja Ampat.",
+      course: "Dari Discovery Dive sampai Rescue Diver bersama instruktur.",
+      shop: "Beli atau sewa masker, fin, wetsuit, dan alat selam lainnya.",
+      service: "Servis regulator, BCD, tabung, dan komputer selam.",
+    },
+    open: "Lihat",
+    visitKicker: "MAMPIR KE ZANCLUS",
+    visitTitle: "Ngobrol dulu sebelum berangkat.",
+    visitText:
+      "Tanya jadwal, harga, atau kondisi laut. Tim menjawab lewat WhatsApp.",
+    chat: "Chat WhatsApp",
+    contactLink: "Lihat kontak & peta",
+    askMessage:
+      "Halo Zanclus! Saya ingin tahu lebih banyak tentang Zanclus Dive Center.",
+    metaTitle: "Tentang kami | Zanclus Dive Center",
+  },
+  service: {
+    nav: "Servis alat selam",
+    shopNav: "Katalog & rental",
+    heroKicker: "SERVIS ALAT SELAM · ZANCLUS DIVE SHOP",
+    title: "Alat terawat, menyelam lebih tenang.",
+    summary:
+      "Regulator, BCD, tabung, dan komputer selam dicek dan diservis tim Zanclus sebelum penyelaman berikutnya.",
+    facts: [
+      ["Alat", "Regulator, BCD, tabung, komputer"],
+      ["Waktu", "Mulai hari yang sama"],
+      ["Lokasi", "Waisai, Raja Ampat"],
+    ],
+    sections: ["Layanan & harga", "Cara kerja", "Pertanyaan umum"],
+    list: [
+      "LAYANAN SERVIS",
+      "Pilih servis untuk alatmu.",
+      "Harga mulai dari, tergantung kondisi alat dan part yang diganti.",
+    ],
+    process: [
+      "CARA KERJA",
+      "Empat langkah, tanpa repot.",
+      "Dari alat diantar sampai siap dipakai lagi.",
+    ],
+    steps: [
+      [
+        "Kirim pesan",
+        "Isi formulir di halaman ini. Tim membalas lewat WhatsApp untuk jadwal antar alat.",
+      ],
+      [
+        "Alat dicek",
+        "Tim memeriksa alat lalu memberi estimasi biaya dan lama pengerjaan sebelum mulai.",
+      ],
+      [
+        "Servis",
+        "Alat dibongkar, dibersihkan, part yang aus diganti, lalu dirakit kembali.",
+      ],
+      [
+        "Uji & ambil",
+        "Alat diuji sebelum diserahkan, lengkap dengan catatan pekerjaan.",
+      ],
+    ],
+    faq: [
+      "TANYA SOAL SERVIS",
+      "Pertanyaan seputar servis.",
+      "Jadwal servis, merek alat, dan biaya part.",
+    ],
+    faqs: [
+      [
+        "Seberapa sering regulator perlu diservis?",
+        "Umumnya setahun sekali atau sesuai panduan pabrik, dan lebih cepat bila sering dipakai atau lama disimpan. Tim bisa membantu mengecek kapan servis terakhirmu.",
+      ],
+      [
+        "Merek apa saja yang bisa diservis?",
+        "Tulis merek dan model alatmu di formulir. Tim memastikan kit servis dan part tersedia sebelum alat diantar.",
+      ],
+      [
+        "Apakah harga sudah termasuk part?",
+        "Harga adalah biaya mulai dari. Part di luar kit standar dihitung terpisah dan selalu dikonfirmasi lebih dulu.",
+      ],
+      [
+        "Bisakah servis selesai sebelum trip saya?",
+        "Tulis tanggal tripmu di catatan. Tim menyesuaikan antrean bila memungkinkan dan mengabari lewat WhatsApp.",
+      ],
+    ],
+    from: "Mulai",
+    choose: "Pilih servis ini",
+    chosen: "Dipilih ✓",
+    next: (n) => `Lanjut ke formulir (${n} servis dipilih)`,
+    duration: "Lama pengerjaan",
+    note: "Harga dalam rupiah, mulai dari, dan dapat berubah. Estimasi akhir diberikan setelah alat dicek.",
+    planKicker: "MINTA SERVIS",
+    planTitle: "Jadwalkan servis alatmu.",
+    services: "Servis yang dibutuhkan",
+    estimate: "Perkiraan biaya mulai",
+    nothingChosen: "Belum ada servis dipilih",
+    dateLabel: "Rencana antar alat",
+    notesLabel: "Merek, model, dan keluhan",
+    notesPlaceholder:
+      "Contoh: regulator Mares, terasa berat saat menarik napas",
+    formNote:
+      "Formulir ini menyiapkan pesan untuk tim. Servis dijadwalkan setelah dikonfirmasi.",
+    errService: "Pilih minimal satu servis.",
+    errName: "Isi nama, maksimal 120 karakter.",
+    errWhatsapp: "Isi nomor WhatsApp yang aktif, termasuk kode negara.",
+    errEmail: "Format email belum benar, contoh nama@email.com.",
+    errDate: "Pilih tanggal yang valid, hari ini atau setelahnya.",
+    errNotes: "Catatan maksimal 1.000 karakter.",
+    message: {
+      greeting: "Halo Zanclus! Saya ingin servis alat selam.",
+      name: "Nama",
+      services: "Servis",
+      date: "Rencana antar alat",
+      notes: "Alat dan keluhan",
+      closing:
+        "Mohon info estimasi biaya dan lama pengerjaan. Ini belum menjadi pesanan resmi.",
+    },
+    askMessage: "Halo Zanclus! Saya ingin bertanya tentang servis alat selam.",
+    shopLink: ["Butuh alat baru atau sewa?", "Lihat katalog Dive Shop"],
+    fromShop: ["Alat selam perlu dirawat?", "Servis alat selam"],
+    metaTitle: "Servis alat selam | Zanclus Dive Center",
+  },
   footer: {
     label: "Informasi Zanclus Dive Center",
     tagline: "Jelajahi laut. Temukan cerita.",
@@ -1282,6 +1427,149 @@ const en = {
     },
     askMessage: "Hi Zanclus! I'd like to ask about your dive courses.",
     metaTitle: "Dive courses | Zanclus Dive Center",
+  },
+  about: {
+    nav: "About us",
+    heroKicker: "ABOUT US · ZANCLUS DIVE CENTER",
+    facts: [
+      ["Location", "Waisai & the Dampier Strait"],
+      ["Services", "Diving, courses, trips, dive shop, servicing"],
+      ["WhatsApp", ""],
+    ],
+    sections: ["Our story", "What we stand for", "Our services"],
+    story: [
+      "OUR STORY",
+      "From the sea, for the sea.",
+      "Who we are and why Zanclus.",
+    ],
+    values: [
+      "WHAT WE STAND FOR",
+      "How we work.",
+      "What we look after on every trip.",
+    ],
+    services: [
+      "OUR SERVICES",
+      "Everything for your dive in one place.",
+      "Choose a service to see the details and prices.",
+    ],
+    serviceText: {
+      diving: "Fun dives with a guide at the Dampier Strait dive sites.",
+      snorkeling: "Clear, shallow reefs, great for families and beginners.",
+      trip: "Karst islands, lagoons and the viewpoints of Raja Ampat.",
+      course: "From Discovery Dive to Rescue Diver with an instructor.",
+      shop: "Buy or rent masks, fins, wetsuits and other dive gear.",
+      service: "Servicing for regulators, BCDs, cylinders and dive computers.",
+    },
+    open: "View",
+    visitKicker: "VISIT ZANCLUS",
+    visitTitle: "Have a chat before you go.",
+    visitText:
+      "Ask about schedules, prices or sea conditions. The team answers on WhatsApp.",
+    chat: "Chat on WhatsApp",
+    contactLink: "See contact & map",
+    askMessage:
+      "Hi Zanclus! I would like to know more about Zanclus Dive Center.",
+    metaTitle: "About us | Zanclus Dive Center",
+  },
+  service: {
+    nav: "Gear service",
+    shopNav: "Shop & rental",
+    heroKicker: "DIVE GEAR SERVICE · ZANCLUS DIVE SHOP",
+    title: "Well-kept gear, calmer dives.",
+    summary:
+      "Regulators, BCDs, cylinders and dive computers checked and serviced by the Zanclus team before your next dive.",
+    facts: [
+      ["Gear", "Regulators, BCDs, cylinders, computers"],
+      ["Time", "From the same day"],
+      ["Location", "Waisai, Raja Ampat"],
+    ],
+    sections: ["Services & prices", "How it works", "Questions"],
+    list: [
+      "SERVICES",
+      "Choose a service for your gear.",
+      "Starting prices; the final cost depends on the gear and the parts replaced.",
+    ],
+    process: [
+      "HOW IT WORKS",
+      "Four easy steps.",
+      "From dropping off your gear to ready to dive again.",
+    ],
+    steps: [
+      [
+        "Send a message",
+        "Fill in the form on this page. The team replies on WhatsApp to arrange the drop-off.",
+      ],
+      [
+        "Gear check",
+        "The team inspects your gear and gives a cost and time estimate before starting.",
+      ],
+      [
+        "Service",
+        "The gear is stripped, cleaned, worn parts replaced, then put back together.",
+      ],
+      [
+        "Test & collect",
+        "Your gear is tested before handover, with a note of the work done.",
+      ],
+    ],
+    faq: [
+      "SERVICE QUESTIONS",
+      "Questions about servicing.",
+      "Service intervals, gear brands and parts.",
+    ],
+    faqs: [
+      [
+        "How often does a regulator need a service?",
+        "Usually once a year or as the manufacturer recommends, and sooner with heavy use or long storage. The team can help check when it was last serviced.",
+      ],
+      [
+        "Which brands can you service?",
+        "Write the brand and model of your gear in the form. The team checks that service kits and parts are available before you drop it off.",
+      ],
+      [
+        "Do the prices include parts?",
+        "Prices are starting prices. Parts outside the standard kit are charged separately and always confirmed first.",
+      ],
+      [
+        "Can the service be done before my trip?",
+        "Write your trip date in the notes. The team adjusts the queue where possible and keeps you posted on WhatsApp.",
+      ],
+    ],
+    from: "From",
+    choose: "Choose this service",
+    chosen: "Chosen ✓",
+    next: (n) => `Continue to the form (${n} selected)`,
+    duration: "Turnaround",
+    note: "Prices in rupiah are starting prices and may change. The final estimate follows the gear check.",
+    planKicker: "REQUEST A SERVICE",
+    planTitle: "Book your gear service.",
+    services: "Services needed",
+    estimate: "Estimated cost from",
+    nothingChosen: "No service chosen yet",
+    dateLabel: "Planned drop-off",
+    notesLabel: "Brand, model and issue",
+    notesPlaceholder: "Example: Mares regulator, breathing feels heavy",
+    formNote:
+      "This form prepares a message for the team. The service is booked once confirmed.",
+    errService: "Choose at least one service.",
+    errName: "Enter your name, up to 120 characters.",
+    errWhatsapp: "Enter an active WhatsApp number, including the country code.",
+    errEmail: "Check the email format, for example name@email.com.",
+    errDate: "Choose a valid date, today or later.",
+    errNotes: "Notes can be up to 1,000 characters.",
+    message: {
+      greeting: "Hi Zanclus! I would like to have my dive gear serviced.",
+      name: "Name",
+      services: "Services",
+      date: "Planned drop-off",
+      notes: "Gear and issue",
+      closing:
+        "Please let me know the estimated cost and turnaround. This is not a confirmed order yet.",
+    },
+    askMessage: "Hi Zanclus! I have a question about dive gear servicing.",
+    shopLink: ["Need new gear or a rental?", "See the Dive Shop catalog"],
+    fromShop: ["Does your dive gear need care?", "Dive gear service"],
+    metaTitle: "Dive gear service | Zanclus Dive Center",
   },
   footer: {
     label: "Zanclus Dive Center information",

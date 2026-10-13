@@ -173,6 +173,13 @@ export default function ShopTeaser({
           <a className="button dark" href={localeHref(locale, "/dive-shop")}>
             {t.explore}
           </a>
+          <a
+            className="shop-teaser-service"
+            href={localeHref(locale, "/service")}
+          >
+            {dictionary(locale).service.fromShop[1]}{" "}
+            <span aria-hidden="true">↗</span>
+          </a>
         </div>
       </div>
       <div className="shop-services" data-reveal>

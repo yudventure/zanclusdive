@@ -550,6 +550,153 @@ const scenes = {
       </>
     ),
   },
+  about: {
+    story: (
+      <>
+        {waves(104)}
+        {sun(262, 36, 14)}
+        {islands}
+        {/* The Zanclus boat crossing to the islands */}
+        <g transform="translate(70 70)">
+          <path d="M0 22h76l-10 16H10z" fill={ink} />
+          <rect x="20" y="8" width="34" height="14" rx="4" fill="#fff" />
+          <rect x="26" y="12" width="8" height="6" rx="2" fill={ice} />
+          <rect x="40" y="12" width="8" height="6" rx="2" fill={ice} />
+          <path d="M37 8V-6" stroke={ink} strokeWidth="2" />
+          <path d="M37 -6h16l-5 5 5 5H37z" fill={coral} />
+        </g>
+        {fish(232, 118, sand)}
+      </>
+    ),
+    values: (
+      <>
+        {waves()}
+        {bubbles}
+        {reef}
+        {/* A shield with a tick for safety, a heart for the reef */}
+        <path
+          d="M140 22l34 12v24c0 22-15 36-34 44-19-8-34-22-34-44V34z"
+          fill="#fff"
+          stroke={ink}
+          strokeWidth="2.4"
+        />
+        <path
+          d="M126 60l10 10 20-22"
+          stroke={sea1}
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <path
+          d="M232 50c-6-12-26-8-22 8 2 8 22 20 22 20s20-12 22-20c4-16-16-20-22-8z"
+          fill={coral}
+        />
+      </>
+    ),
+    services: (
+      <>
+        {waves()}
+        {/* Mask, fin, boat ticket and wrench: one place for everything */}
+        {[
+          [92, 52, sea2],
+          [148, 34, sand],
+          [204, 52, coral],
+          [260, 34, sea1],
+        ].map(([x, y, color], i) => (
+          <g key={i} transform={`translate(${x} ${y})`}>
+            <circle r="24" fill="#fff" stroke={ink} strokeWidth="2" />
+            <circle r="17" fill={color} opacity=".35" />
+          </g>
+        ))}
+        <g fill="none" stroke={ink} strokeWidth="2.4" strokeLinejoin="round">
+          <rect x="80" y="45" width="24" height="14" rx="6" />
+          <path d="M92 45v14" />
+          <path d="M142 22h12l4 26h-20z" />
+          <path d="M192 46h24v12h-24zM200 46v12" />
+          <path
+            d="M254 26a7 7 0 0 0 9 9l5 5-4 4-5-5a7 7 0 0 1-9-9l4 4 4-4z"
+            strokeLinecap="round"
+          />
+        </g>
+        {bubbles}
+      </>
+    ),
+  },
+  service: {
+    list: (
+      <>
+        {waves()}
+        {bubbles}
+        {/* A regulator: first stage, hose and second stage */}
+        <circle cx="122" cy="52" r="20" fill={ink} />
+        <circle cx="122" cy="52" r="8" fill={ice} />
+        <path
+          d="M140 60c26 8 30 30 54 30"
+          stroke={ink}
+          strokeWidth="6"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <rect x="192" y="74" width="40" height="32" rx="14" fill={sea1} />
+        <circle cx="212" cy="90" r="8" fill="#fff" />
+        <rect x="230" y="84" width="14" height="12" rx="4" fill={ink} />
+        {tag(244, 26)}
+      </>
+    ),
+    process: (
+      <>
+        {waves()}
+        {/* A cog, a wrench and a tick: checked, serviced, tested */}
+        <g transform="translate(118 62)">
+          <circle
+            r="26"
+            fill="none"
+            stroke={ink}
+            strokeWidth="9"
+            strokeDasharray="10 7"
+          />
+          <circle r="16" fill={sea2} />
+          <circle r="6" fill="#fff" />
+        </g>
+        <path
+          d="M176 96l44-44m-6-14a14 14 0 0 0 18 18l-8-8 4-10z"
+          stroke={sand}
+          strokeWidth="9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        <circle
+          cx="262"
+          cy="74"
+          r="20"
+          fill="#fff"
+          stroke={ink}
+          strokeWidth="2"
+        />
+        <path
+          d="M252 74l7 7 13-14"
+          stroke={sea1}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        {bubbles}
+      </>
+    ),
+    faq: (
+      <>
+        {waves()}
+        {bubbles}
+        {question(96, 24)}
+        <rect x="222" y="40" width="30" height="70" rx="14" fill={ink} />
+        <rect x="229" y="30" width="16" height="14" rx="4" fill={sand} />
+        <path d="M228 66h18" stroke={ice} strokeWidth="4" />
+      </>
+    ),
+  },
   shared: {
     calendar: (
       <>
@@ -685,6 +832,16 @@ export const bannerTones = {
     why: "#e6effa",
     path: "#e8f4ee",
     faq: "#f1edf9",
+  },
+  about: {
+    story: "#e3f1f6",
+    values: "#e9f5ea",
+    services: "#fbf1dc",
+  },
+  service: {
+    list: "#e6eef8",
+    process: "#fbefe0",
+    faq: "#e8f3f1",
   },
   shared: {
     calendar: "#e5f3f5",

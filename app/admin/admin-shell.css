@@ -869,3 +869,21 @@ a.admin-stat:hover {
   object-fit: contain;
   filter: brightness(0) invert(1);
 }
+
+/* A page photo next to its texts (About and gear service editors). */
+.admin-photo-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+.admin-photo-row .admin-image-slot select {
+  width: 100%;
+  margin-top: 8px;
+}
+@media (max-width: 900px) {
+  .admin-photo-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
