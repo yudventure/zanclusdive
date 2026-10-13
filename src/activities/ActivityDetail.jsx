@@ -16,6 +16,7 @@ import SectionBanner from "./SectionBanner.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { payableItems, quantityLimit } from "../payment-model.js";
 import CartIcon from "../components/CartIcon.jsx";
+import SlotCalendar from "./SlotCalendar.jsx";
 
 // Per-person packages count one unit for each participant.
 const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
@@ -37,6 +38,10 @@ function Inquiry({
   changeCart,
   participants,
   changeParticipants,
+  date,
+  changeDate,
+  slots,
+  lastDate,
   payments,
   locale,
 }) {
@@ -55,23 +60,28 @@ function Inquiry({
     name: "",
     whatsapp: "",
     email: "",
-    date: "",
     notes: "",
   });
-  const details = { ...fields, participants };
+  const details = { ...fields, date, participants };
+  const sl = dictionary(locale).slots;
+  // Places still free on the chosen date, or null without a daily limit.
+  const capacity = slots?.capacity ?? 0;
+  const closedOn = (key) =>
+    (slots?.closed ?? []).some(([from, to]) => key >= from && key <= to);
+  const placesLeft =
+    capacity && date
+      ? Math.max(0, capacity - (slots?.used?.[date] ?? 0))
+      : null;
   const [error, setError] = useState("");
   const panelRef = useRef(null);
   const stepsRef = useRef(null);
   const summaryRef = useRef(null);
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
-  // The summary opens at the top of the panel, in view on phones too.
+  // The summary opens at the top of the checkout window.
   useEffect(() => {
     const summary = summaryRef.current;
     if (step !== "summary" || !summary) return;
-    panelRef.current?.scrollTo?.({ top: 0 });
-    const top = stepsRef.current.getBoundingClientRect().top;
-    if (top < 150 || top > window.innerHeight - 200)
-      stepsRef.current.scrollIntoView({ block: "start" });
+    panelRef.current?.closest("dialog")?.scrollTo?.({ top: 0 });
     summary.focus({ preventScroll: true });
   }, [step]);
 
@@ -105,6 +115,7 @@ function Inquiry({
 
   function change(key, value) {
     if (key === "participants") changeParticipants(value);
+    else if (key === "date") changeDate(value);
     else setFields((current) => ({ ...current, [key]: value }));
     setError("");
   }
@@ -135,6 +146,19 @@ function Inquiry({
     }
     if (nextIntent === "pay" && Number(details.participants) > quantityLimit) {
       setError(p.tooMany(quantityLimit));
+      return;
+    }
+    // The daily places, checked again on the server.
+    if (nextIntent === "pay" && closedOn(date)) {
+      setError(sl.closedDate);
+      return;
+    }
+    if (
+      nextIntent === "pay" &&
+      placesLeft !== null &&
+      Number(details.participants) > placesLeft
+    ) {
+      setError(placesLeft ? sl.tooFew(placesLeft) : sl.fullDate);
       return;
     }
     setIntent(nextIntent);
@@ -189,14 +213,9 @@ function Inquiry({
   );
 
   return (
-    <aside
-      className="activity-inquiry"
-      id="inquiry"
-      aria-labelledby="inquiry-title"
-      ref={panelRef}
-    >
-      <p className="eyebrow">{t.planKicker}</p>
-      <h2 id="inquiry-title">{t.planTitle(label)}</h2>
+    <div className="activity-checkout-body" id="inquiry" ref={panelRef}>
+      <p className="eyebrow">{sl.checkoutKicker}</p>
+      <h2 id="inquiry-title">{sl.checkoutTitle}</h2>
       <ol className="plan-steps" aria-label={p.steps.label} ref={stepsRef}>
         {steps.map((name, index) => (
           <li
@@ -372,6 +391,7 @@ function Inquiry({
                   name="date"
                   type="date"
                   min={today || undefined}
+                  max={lastDate}
                   required
                   value={details.date}
                   onChange={(e) => change("date", e.target.value)}
@@ -395,6 +415,20 @@ function Inquiry({
                 />
               </FormField>
             </div>
+            {date && (capacity > 0 || closedOn(date)) && (
+              <p
+                className={
+                  "slot-note" +
+                  (closedOn(date) || placesLeft === 0 ? " is-full" : "")
+                }
+              >
+                {closedOn(date)
+                  ? sl.closedDate
+                  : placesLeft
+                    ? sl.leftFor(placesLeft)
+                    : sl.fullDate}
+              </p>
+            )}
             <FormField
               id="inquiry-notes"
               label={t.notes}
@@ -545,7 +579,7 @@ function Inquiry({
         <ContactIcon name="whatsapp" /> {t.askFirst}{" "}
         {phoneLabel(contact.whatsapp)} <span aria-hidden="true">↗</span>
       </a>
-    </aside>
+    </div>
   );
 }
 
@@ -591,6 +625,8 @@ export default function ActivityDetail({
   content,
   today,
   payments,
+  slots,
+  lastDate,
   locale = "en",
 }) {
   const dict = dictionary(locale);
@@ -630,6 +666,9 @@ export default function ActivityDetail({
   const ready = Boolean(payments?.ready) && packages.length > 0;
   const [cart, setCart] = useState([]);
   const [participants, setParticipants] = useState(1);
+  // The date chosen in the calendar beside the page, used at checkout.
+  const [date, setDate] = useState("");
+  const checkoutRef = useRef(null);
   const people = (value) =>
     Math.min(quantityLimit, Math.max(1, Math.round(Number(value)) || 1));
   const byPerson = (index) =>
@@ -673,13 +712,13 @@ export default function ActivityDetail({
         line.quantity,
     0,
   );
-  // Checkout is the plan panel: on phones it scrolls into view.
+  // Checkout opens over the page, on the first field still to fill.
   function checkout() {
-    const panel = document.getElementById("inquiry");
-    const top = panel?.getBoundingClientRect().top ?? 0;
-    if (top < 0 || top > window.innerHeight - 120)
-      panel?.scrollIntoView({ behavior: "smooth", block: "start" });
-    document.getElementById("inquiry-name")?.focus({ preventScroll: true });
+    checkoutRef.current?.showModal();
+    const empty = [
+      ...document.querySelectorAll("#inquiry input[required]"),
+    ].find((input) => !input.value);
+    empty?.focus();
   }
   const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(t.helpMessage(labels[activityKey]))}`;
   return (
@@ -791,9 +830,9 @@ export default function ActivityDetail({
                 ["itinerary", t.itinerary],
                 ["preparation", t.preparation],
                 ["faq", t.faq],
+                ["calendar", dict.calendarPage.jump[0]],
                 ...(calendar
                   ? [
-                      ["calendar", dict.calendarPage.jump[0]],
                       ["seasons", dict.calendarPage.jump[1]],
                       ["ocean-care", dict.calendarPage.jump[3]],
                     ]
@@ -885,29 +924,6 @@ export default function ActivityDetail({
                         );
                       })}
                     </ul>
-                    {packages.length > 0 && (
-                      <div className="shop-cart-bar activity-cart-bar">
-                        <span className="shop-cart-icon">
-                          <CartIcon />
-                        </span>
-                        <p>
-                          <strong>{p.cartBar(cart.length)}</strong>
-                          <small>
-                            {cart.length
-                              ? `${ready ? p.total : p.estimate} ${formatIDR(cartTotal, locale)}`
-                              : p.cartBarEmpty}
-                          </small>
-                        </p>
-                        <button
-                          type="button"
-                          className="button dark"
-                          disabled={!cart.length}
-                          onClick={checkout}
-                        >
-                          {p.checkout} <span aria-hidden="true">↗</span>
-                        </button>
-                      </div>
-                    )}
                     <p className="activity-price-note">{dict.prices.note}</p>
                   </section>
                 )}
@@ -967,7 +983,64 @@ export default function ActivityDetail({
                     ))}
                   </div>
                 </section>
+                {/* The cart follows the guest down the page once it has a
+                    package, like the Dive Shop. Without priced packages the
+                    bar opens the plan form for WhatsApp. */}
+                {(cart.length > 0 || !packages.length) && (
+                  <div className="shop-cart-bar activity-cart-bar">
+                    <span className="shop-cart-icon">
+                      <CartIcon />
+                    </span>
+                    <p>
+                      {packages.length ? (
+                        <>
+                          <strong>{p.cartBar(cart.length)}</strong>
+                          <small>
+                            {`${ready ? p.total : p.estimate} ${formatIDR(cartTotal, locale)}`}
+                          </small>
+                        </>
+                      ) : (
+                        <strong>{dict.slots.planBar}</strong>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      className="button dark"
+                      onClick={checkout}
+                    >
+                      {packages.length ? p.checkout : dict.slots.planOpen}{" "}
+                      <span aria-hidden="true">↗</span>
+                    </button>
+                  </div>
+                )}
               </div>
+              <SlotCalendar
+                slots={slots}
+                events={calendar?.events ?? []}
+                seasons={calendar?.seasons ?? []}
+                today={today}
+                lastDate={lastDate}
+                date={date}
+                onSelect={setDate}
+                canCheckout={cart.length > 0 || !packages.length}
+                onCheckout={checkout}
+                label={labels[activityKey]}
+                locale={locale}
+              />
+            </div>
+            <dialog
+              ref={checkoutRef}
+              className="modal activity-checkout"
+              aria-labelledby="inquiry-title"
+            >
+              <button
+                type="button"
+                className="close-modal"
+                aria-label={dict.slots.close}
+                onClick={() => checkoutRef.current?.close()}
+              >
+                ×
+              </button>
               <Inquiry
                 activityKey={activityKey}
                 activity={activity}
@@ -977,15 +1050,18 @@ export default function ActivityDetail({
                 changeCart={changeCart}
                 participants={participants}
                 changeParticipants={changeParticipants}
+                date={date}
+                changeDate={setDate}
+                slots={slots}
+                lastDate={lastDate}
                 payments={payments}
                 locale={locale}
               />
-            </div>
+            </dialog>
             {calendar && (
               <CalendarSections
                 calendar={calendar}
                 whatsapp={content.contact.whatsapp}
-                today={today}
                 locale={locale}
               />
             )}

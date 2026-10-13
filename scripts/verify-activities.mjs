@@ -115,9 +115,27 @@ try {
       await page.locator(".plan-add option").count(),
       packages.length + 1,
     );
-    assert.match(
-      await page.locator(".activity-cart-bar").textContent(),
-      /Keranjang · 0 paket/,
+    // The cart bar appears with the first package; the old side panel is
+    // gone and checkout opens in a window.
+    assert.equal(await page.locator(".activity-cart-bar").count(), 0);
+    assert.equal(await page.locator(".activity-inquiry").count(), 0);
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
+    // The side calendar shows the places left each day.
+    const slotCalendar = page.locator(".slot-calendar");
+    assert.equal(await slotCalendar.isVisible(), true);
+    assert.equal(
+      await slotCalendar.locator("h2").textContent(),
+      `Pilih tanggal ${activityLabels[key].toLowerCase()}.`,
+    );
+    const capacity = activity.capacity ?? (key === "diving" ? 30 : 0);
+    if (capacity)
+      assert.match(
+        await slotCalendar.locator(".slot-intro").textContent(),
+        new RegExp(`maksimal ${capacity} orang`),
+      );
+    assert.equal(
+      await slotCalendar.locator(".slot-seasons").count(),
+      key === "diving" ? 1 : 0,
     );
     assert.match(
       await page.locator(".pay-total").textContent(),
@@ -156,25 +174,44 @@ try {
     const faq = page.locator(".activity-faqs details").first();
     await faq.locator("summary").click();
     assert.equal(await faq.locator("p").isVisible(), true);
-    const date = await page.evaluate(() => {
-      const future = new Date();
-      future.setDate(future.getDate() + 8);
-      return future.toLocaleDateString("en-CA");
-    });
     // A package from its price card, after the header checks above.
     await page
       .getByRole("button", {
         name: `Tambahkan ${packages[0].name.id} ke keranjang`,
       })
       .click();
+    assert.match(
+      await page.locator(".activity-cart-bar").textContent(),
+      /Keranjang · 1 paket/,
+    );
     assert.equal(await page.locator(".plan-cart li").count(), 1);
+    // A day picked in the calendar is the checkout date.
+    const day = slotCalendar.locator(".slot-day:not([disabled])").nth(8);
+    const date = await day.getAttribute("data-date");
+    await day.click();
+    assert.equal(await day.getAttribute("aria-pressed"), "true");
+    if (capacity)
+      assert.match(
+        await slotCalendar.locator(".slot-picked").textContent(),
+        new RegExp(`dari ${capacity} slot tersisa`),
+      );
+    await slotCalendar
+      .getByRole("button", { name: "Checkout untuk tanggal ini" })
+      .click();
+    const dialog = page.locator(".activity-checkout");
+    await dialog.locator("#inquiry-name").waitFor({ state: "visible" });
+    assert.equal(await page.getByLabel("Usulan tanggal").inputValue(), date);
+    // The first field still to fill has the focus.
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.id),
+      "inquiry-name",
+    );
     await page.getByLabel("Nama kamu").fill("Tamu Uji Aktivitas");
     // Required fields are marked; WhatsApp is checked before the message.
     assert.equal(
       await page.locator(".activity-form .form-required").count(),
       4,
     );
-    await page.getByLabel("Usulan tanggal").fill(date);
     await page.getByLabel("Jumlah peserta").fill("3");
     await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
     assert.match(
@@ -231,6 +268,20 @@ try {
       /Peserta4 orang/,
     );
     await page.getByRole("button", { name: "← Ubah data" }).click();
+    await page.screenshot({ path: `artifacts/${key}-checkout-desktop.png` });
+    await page.getByRole("button", { name: "Tutup checkout" }).click();
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
+    // The cart bar opens the same checkout, with what was typed.
+    await page
+      .locator(".activity-cart-bar")
+      .getByRole("button", { name: "Checkout" })
+      .click();
+    assert.equal(
+      await page.getByLabel("Nama kamu").inputValue(),
+      "Tamu Uji Aktivitas",
+    );
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
     await page.evaluate(() => scrollTo({ top: 700, behavior: "instant" }));
     await page.waitForFunction(() =>
       document.querySelector(".site-header").classList.contains("is-scrolled"),
@@ -252,8 +303,23 @@ try {
     for (const key of activityKeys) {
       await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
       await noOverflow(`${key} overflow at ${width}`);
-      await page.locator("#inquiry").scrollIntoViewIfNeeded();
+      await page.locator(".slot-calendar").scrollIntoViewIfNeeded();
+      assert.equal(await page.locator(".slot-calendar").isVisible(), true);
+      // The checkout window fits the screen.
+      await page.locator(".activity-prices .shop-item-add").first().click();
+      await page
+        .locator(".activity-cart-bar")
+        .getByRole("button", { name: "Checkout" })
+        .click();
       await page.locator("#inquiry-name").waitFor({ state: "visible" });
+      const box = await page.locator(".activity-checkout").boundingBox();
+      assert.ok(
+        box.x >= 0 && box.x + box.width <= width,
+        `${key} checkout fits at ${width}`,
+      );
+      if (width === 390)
+        await page.screenshot({ path: `artifacts/${key}-checkout-mobile.png` });
+      await page.getByRole("button", { name: "Tutup checkout" }).click();
       if (width <= 820) {
         await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
         await page
@@ -470,7 +536,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: three detail pages, home/footer links, WhatsApp inquiry details and stale message clearing, FAQs, sticky/transparent headers, five responsive widths, live CMS content/image/price changes, legacy content preservation, validation and disabled-page 404. No external messages sent.",
+    "PASS: three detail pages, side slot calendar and checkout window, home/footer links, WhatsApp inquiry details and stale message clearing, FAQs, sticky/transparent headers, five responsive widths, live CMS content/image/price changes, legacy content preservation, validation and disabled-page 404. No external messages sent.",
   );
 } finally {
   try {

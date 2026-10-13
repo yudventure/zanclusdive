@@ -35,7 +35,7 @@ export default function PricePanel({ priceList, group, locale, hidden }) {
         </div>
         <a
           className="button dark price-cta"
-          href={localeHref(locale, `/${group}#inquiry`)}
+          href={localeHref(locale, `/${group}#prices`)}
         >
           {p.cta(label)} <span aria-hidden="true">↗</span>
         </a>

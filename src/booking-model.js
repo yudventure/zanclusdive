@@ -48,6 +48,8 @@ const englishErrors = {
   "Isi nama, maksimal 80 karakter.": "Enter your name, up to 80 characters.",
   "Format email belum benar.": "That email doesn't look right.",
   "Catatan maksimal 1.000 karakter.": "Notes can be up to 1,000 characters.",
+  "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.":
+    "This date is fully booked. Please choose another date.",
   "Pilih minimal satu paket dari daftar harga.":
     "Choose at least one package from the price list.",
   "Pilih alat terlebih dahulu.": "Choose your gear first.",
@@ -69,7 +71,69 @@ const englishErrors = {
 };
 export function bookingErrorMessage(message, locale) {
   if (locale !== "en") return message;
+  const left = /^Slot tanggal ini tinggal (\d+) orang/.exec(message);
+  if (left)
+    return `Only ${left[1]} ${left[1] === "1" ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`;
   return englishErrors[message] ?? "Please check your booking details.";
+}
+
+// Daily places: the dive center takes a set number of people a day for an
+// activity (diving: 30). Diving programs, dive courses and the diving page
+// share the diving places. A booking holds places once it is confirmed, or
+// while its online payment is open.
+export const capacityPools = {
+  diving: ["diving", ...experienceKeys, "course"],
+  snorkeling: ["snorkeling"],
+  trip: ["trip"],
+};
+export const defaultCapacity = { diving: 30, snorkeling: 0, trip: 0 };
+export const poolOf = (program) =>
+  Object.keys(capacityPools).find((pool) =>
+    capacityPools[pool].includes(program),
+  ) ?? null;
+export function capacityOf(content, pool) {
+  const value = content?.activities?.[pool]?.capacity;
+  return Number.isInteger(value) && value >= 0
+    ? value
+    : (defaultCapacity[pool] ?? 0);
+}
+export const holdsPlaces = (b) =>
+  b.status === "confirmed" ||
+  (b.status === "pending" &&
+    ["created", "pending"].includes(b.payment?.status));
+const nextDay = (date) =>
+  new Date(Date.parse(date + "T00:00:00Z") + 86400000)
+    .toISOString()
+    .slice(0, 10);
+// People already holding places in a pool, per day from..to.
+export function placesUsed(bookings, pool, from, to) {
+  const programs = capacityPools[pool] ?? [];
+  const used = {};
+  for (const b of bookings) {
+    if (!programs.includes(b.experience) || !holdsPlaces(b)) continue;
+    if (b.endDate < from || b.startDate > to) continue;
+    let day = b.startDate < from ? from : b.startDate;
+    const end = b.endDate > to ? to : b.endDate;
+    for (let n = 0; day <= end && n < 400; n++, day = nextDay(day))
+      used[day] = (used[day] ?? 0) + (Number(b.participants) || 0);
+  }
+  return used;
+}
+// What a public calendar shows for an activity: its daily places, the days
+// already taken and the closed days. No names or contacts.
+export function slotCalendar(content, bookings, activity, { today, last }) {
+  return {
+    capacity: capacityOf(content, activity),
+    used: placesUsed(bookings, activity, today, last),
+    closed: bookings
+      .filter(
+        (b) =>
+          b.experience === activity &&
+          b.status === "closed" &&
+          b.endDate >= today,
+      )
+      .map((b) => [b.startDate, b.endDate]),
+  };
 }
 
 // Booking dates follow the dive center's timezone, including for overseas guests.
@@ -169,6 +233,19 @@ export function assertBookable(content, bookings, booking) {
       "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.",
       409,
     );
+  const pool = poolOf(booking.experience);
+  const capacity = pool ? capacityOf(content, pool) : 0;
+  if (capacity > 0) {
+    const used = placesUsed(bookings, pool, booking.startDate, booking.endDate);
+    const left = Math.max(0, capacity - Math.max(0, ...Object.values(used)));
+    if ((Number(booking.participants) || 0) > left)
+      throw new BookingError(
+        left > 0
+          ? `Slot tanggal ini tinggal ${left} orang. Kurangi peserta atau pilih tanggal lain.`
+          : "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.",
+        409,
+      );
+  }
 }
 
 export function bookingReference(id) {

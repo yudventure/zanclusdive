@@ -27,6 +27,8 @@ export const legacyActivityDefaults = {
 export const defaultActivities = {
   diving: {
     ...common,
+    // People a day across diving programs and courses; 0 = no limit shown.
+    capacity: 30,
     title: "Temukan cerita di bawah permukaan.",
     summary:
       "Dari pengalaman pertama hingga petualangan berikutnya, susun rencana menyelam yang sesuai denganmu.",
@@ -89,6 +91,7 @@ export const defaultActivities = {
   },
   snorkeling: {
     ...common,
+    capacity: 0,
     title: "Dekat dengan laut, dari permukaannya.",
     summary:
       "Nikmati warna dan kehidupan laut dengan rencana snorkeling yang nyaman untukmu dan teman perjalananmu.",
@@ -150,6 +153,7 @@ export const defaultActivities = {
   },
   trip: {
     ...common,
+    capacity: 0,
     title: "Satu perjalanan, banyak cerita laut.",
     summary:
       "Susun trip laut bersama teman atau keluarga, dengan aktivitas dan rute yang mengikuti caramu menikmati perjalanan.",

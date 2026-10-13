@@ -165,6 +165,15 @@ try {
     timeZone: "Asia/Jayapura",
   });
   await page.goto(base + "/trip", { waitUntil: "networkidle" });
+  assert.equal(
+    await page.textContent(".slot-calendar h2"),
+    "Pick your sea trip date.",
+  );
+  await page.locator(".activity-prices .shop-item-add").first().click();
+  await page
+    .locator(".activity-cart-bar")
+    .getByRole("button", { name: "Checkout" })
+    .click();
   await page.fill("#inquiry-name", "Alex");
   await page.fill("#inquiry-whatsapp", "+44 7700 900123");
   await page.fill("#inquiry-date", today);

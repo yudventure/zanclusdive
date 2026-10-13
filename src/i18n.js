@@ -191,34 +191,47 @@ const id = {
       "Halo Zanclus! Saya ingin mendapat bantuan tentang pengalaman diving dan jadwal yang tersedia.",
     whatsappVisit: "Halo Zanclus! Saya ingin mampir ke toko di Waisai.",
   },
+  slots: {
+    eyebrow: "KALENDER & SLOT",
+    title: (label) => `Pilih tanggal ${label.toLowerCase()}.`,
+    introCapacity: (n, label) =>
+      `Zanclus menerima maksimal ${n} orang ${label.toLowerCase()} per hari. Angka di tanggal adalah slot yang masih tersedia.`,
+    intro: "Pilih tanggal kegiatanmu. Tanggal yang ditutup tidak bisa dipilih.",
+    full: "Penuh",
+    closed: "Tutup",
+    legend: {
+      open: "Tersedia",
+      low: "Hampir penuh",
+      full: "Penuh",
+      closed: "Tutup",
+    },
+    dayState: (left, capacity) =>
+      capacity ? `${left} dari ${capacity} slot tersisa` : "Tersedia",
+    pickedFull: "Slot penuh. Pilih tanggal lain.",
+    pickedClosed: "Tutup pada tanggal ini.",
+    pickPackages: "Pilih paket di daftar harga ↓",
+    checkoutDate: "Checkout untuk tanggal ini",
+    events: "Kegiatan di tanggal ini",
+    seasonsTitle: "Bulan terbaik untuk diving",
+    seasonsIntro:
+      "Raja Ampat bisa diselami sepanjang tahun; suhu air sekitar 27–30 °C.",
+    leftFor: (left) => `${left} slot tersisa di tanggal ini.`,
+    tooFew: (left) =>
+      `Slot tanggal ini tinggal ${left} orang. Kurangi peserta atau pilih tanggal lain.`,
+    fullDate: "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.",
+    closedDate: "Tanggal ini ditutup. Silakan pilih tanggal lain.",
+    checkoutKicker: "ZANCLUS DIVE CENTER",
+    checkoutTitle: "Checkout paketmu.",
+    close: "Tutup checkout",
+    planBar: "Harga paket dikonfirmasi tim lewat WhatsApp.",
+    planOpen: "Isi rencana",
+  },
   calendarPage: {
     jump: ["Kalender", "Musim terbaik", "Spot populer", "Peduli lingkungan"],
-    calendarEyebrow: "AGENDA ZANCLUS",
-    calendarTitle: "Jadwal kegiatan.",
-    calendarIntro:
-      "Pilih bulan dan tanggal untuk melihat kegiatan. Kuota terbatas, jadi kabari tim lebih awal.",
     weekdays: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
     previous: "Bulan sebelumnya",
     next: "Bulan berikutnya",
-    types: {
-      dive: "Trip selam",
-      course: "Kelas & kursus",
-      eco: "Peduli lingkungan",
-      community: "Acara komunitas",
-    },
-    eventsIn: (month) => `Kegiatan ${month}`,
-    eventsOn: (date) => `Kegiatan ${date}`,
-    showMonth: "Lihat semua bulan ini",
-    noEvents:
-      "Belum ada kegiatan di bulan ini. Tanyakan jadwal pribadi lewat WhatsApp.",
-    dayLabel: (date, n) => (n ? `${date}, ${n} kegiatan` : date),
     join: "Ikut kegiatan",
-    joinMessage: (title, date) =>
-      `Halo Zanclus! Saya ingin ikut kegiatan ${title} pada ${date}. Apakah masih ada tempat?`,
-    seasonEyebrow: "KAPAN SEBAIKNYA DATANG",
-    seasonTitle: "Musim terbaik untuk menyelam.",
-    seasonIntro:
-      "Raja Ampat bisa diselami sepanjang tahun. Suhu air sekitar 27 sampai 30 °C dan jarak pandang umumnya 10 sampai 30 meter. Panduan ini bersifat umum, kondisi harian selalu dicek tim sebelum berangkat.",
     ratings: { best: "Terbaik", good: "Baik", windy: "Berangin" },
     spotsEyebrow: "SPOT SELAM POPULER",
     spotsTitle: "Spot selam paling populer.",
@@ -247,8 +260,6 @@ const id = {
     more: (name) => `Tambah ${name}`,
     remove: (name) => `Hapus ${name}`,
     cartBar: (n) => `Keranjang · ${n} paket`,
-    cartBarEmpty:
-      "Keranjang masih kosong. Tambahkan paket dari daftar di atas.",
     checkout: "Checkout",
     pickPackage: "Pilih minimal satu paket dari daftar harga.",
     quantity: (unit) => (unit ? `Jumlah (${unit})` : "Jumlah"),
@@ -503,8 +514,6 @@ const id = {
       },
     },
     pricesNav: "Paket & harga",
-    planKicker: "AYO SUSUN RENCANA",
-    planTitle: (label) => `Rencanakan ${label.toLowerCase()}.`,
     priceLabel: "BIAYA KEGIATAN",
     fromPrice: "MULAI DARI / ORANG",
     priceNote:
@@ -1206,35 +1215,48 @@ const en = {
       "Hi Zanclus! I'd like some help with diving experiences and available dates.",
     whatsappVisit: "Hi Zanclus! I'd like to visit your store in Waisai.",
   },
+  slots: {
+    eyebrow: "CALENDAR & PLACES",
+    title: (label) => `Pick your ${label.toLowerCase()} date.`,
+    introCapacity: (n, label) =>
+      `Zanclus takes up to ${n} people for ${label.toLowerCase()} a day. The number on each date is the places still free.`,
+    intro: "Pick the date of your activity. Closed dates can't be chosen.",
+    full: "Full",
+    closed: "Closed",
+    legend: {
+      open: "Available",
+      low: "Almost full",
+      full: "Full",
+      closed: "Closed",
+    },
+    dayState: (left, capacity) =>
+      capacity ? `${left} of ${capacity} places left` : "Available",
+    pickedFull: "Fully booked. Please pick another date.",
+    pickedClosed: "Closed on this date.",
+    pickPackages: "Choose packages in the price list ↓",
+    checkoutDate: "Checkout for this date",
+    events: "On this date",
+    seasonsTitle: "The best months to dive",
+    seasonsIntro:
+      "Raja Ampat can be dived all year; the water is around 27–30 °C.",
+    leftFor: (left) =>
+      `${left} ${left === 1 ? "place" : "places"} left on this date.`,
+    tooFew: (left) =>
+      `Only ${left} ${left === 1 ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`,
+    fullDate: "This date is fully booked. Please choose another date.",
+    closedDate: "This date is closed. Please choose another date.",
+    checkoutKicker: "ZANCLUS DIVE CENTER",
+    checkoutTitle: "Check out your packages.",
+    close: "Close checkout",
+    planBar: "Package prices are confirmed by our team on WhatsApp.",
+    planOpen: "Plan your trip",
+  },
   calendarPage: {
     jump: ["Calendar", "Best season", "Popular spots", "Ocean care"],
-    calendarEyebrow: "WHAT'S ON",
-    calendarTitle: "Upcoming activities.",
-    calendarIntro:
-      "Pick a month and a date to see what's on. Places are limited, so let the team know early.",
     weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     previous: "Previous month",
     next: "Next month",
-    types: {
-      dive: "Dive trip",
-      course: "Class & course",
-      eco: "Ocean care",
-      community: "Community event",
-    },
-    eventsIn: (month) => `Activities in ${month}`,
-    eventsOn: (date) => `Activities on ${date}`,
-    showMonth: "Show the whole month",
-    noEvents:
-      "Nothing scheduled this month yet. Ask about a private date on WhatsApp.",
-    dayLabel: (date, n) =>
-      n ? `${date}, ${n} ${n === 1 ? "activity" : "activities"}` : date,
     join: "Join this activity",
-    joinMessage: (title, date) =>
-      `Hi Zanclus! I'd like to join ${title} on ${date}. Are there places left?`,
-    seasonEyebrow: "WHEN TO COME",
-    seasonTitle: "The best season to dive.",
-    seasonIntro:
-      "Raja Ampat can be dived all year. The water is around 27 to 30 °C and visibility is usually 10 to 30 metres. This is a general guide, and the team checks each day's conditions before heading out.",
     ratings: { best: "Best", good: "Good", windy: "Windy" },
     spotsEyebrow: "POPULAR DIVE SPOTS",
     spotsTitle: "The most popular dive spots.",
@@ -1263,7 +1285,6 @@ const en = {
     more: (name) => `One more ${name}`,
     remove: (name) => `Remove ${name}`,
     cartBar: (n) => `Cart · ${n} ${n === 1 ? "package" : "packages"}`,
-    cartBarEmpty: "Your cart is empty. Add packages from the list above.",
     checkout: "Checkout",
     pickPackage: "Choose at least one package from the price list.",
     quantity: (unit) => (unit ? `Quantity (${unit})` : "Quantity"),
@@ -1518,8 +1539,6 @@ const en = {
       },
     },
     pricesNav: "Packages & prices",
-    planKicker: "LET'S MAKE A PLAN",
-    planTitle: (label) => `Plan your ${label.toLowerCase()}.`,
     priceLabel: "ACTIVITY PRICE",
     fromPrice: "FROM / PERSON",
     priceNote:

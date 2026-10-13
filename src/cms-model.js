@@ -345,6 +345,13 @@ export function validateActivities(input) {
         throw new Error("Isi 1–8 langkah alur kegiatan.");
       if (!Array.isArray(a.faqs) || a.faqs.length < 1 || a.faqs.length > 6)
         throw new Error("Isi 1–6 pertanyaan umum.");
+      const capacity = Number(
+        a.capacity ?? defaultActivities[key].capacity ?? 0,
+      );
+      if (!Number.isInteger(capacity) || capacity < 0 || capacity > 500)
+        throw new Error(
+          "Kuota peserta per hari harus 0–500 (0 = tanpa batas).",
+        );
       return [
         key,
         {
@@ -364,6 +371,7 @@ export function validateActivities(input) {
           audience: plain(a.audience, "Peserta aktivitas", 150),
           meetingPoint: plain(a.meetingPoint, "Titik temu", 250),
           price,
+          capacity,
           highlights: points(a.highlights, "Sorotan aktivitas"),
           preparations: points(a.preparations, "Persiapan aktivitas"),
           itinerary: a.itinerary.map((item) => ({

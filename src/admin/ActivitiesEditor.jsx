@@ -125,6 +125,18 @@ export default function ActivitiesEditor({
                 onChange={(e) => change("meetingPoint", e.target.value)}
               />
             </Field>
+            <Field label="Kuota peserta per hari (0 = tanpa batas)">
+              <input
+                type="number"
+                min="0"
+                max="500"
+                step="1"
+                value={activity.capacity ?? 0}
+                onChange={(e) =>
+                  change("capacity", Math.max(0, Number(e.target.value) || 0))
+                }
+              />
+            </Field>
             <Field label="Harga mulai per orang (Rp, kosong = penawaran)">
               <input
                 type="number"

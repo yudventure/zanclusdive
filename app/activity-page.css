@@ -849,3 +849,342 @@ nav.open .nav-sub a {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* Calendar beside the activity page: places left per day, closed days,
+   scheduled activities, and the best months below. */
+.slot-calendar {
+  position: sticky;
+  top: 172px;
+  padding: 24px;
+  border: 1px solid #dbe8e1;
+  border-radius: 24px;
+  background: #f4f8f5;
+}
+@media (min-width: 901px) {
+  .slot-calendar {
+    max-height: max(420px, calc(100vh - 192px));
+    max-height: max(420px, calc(100dvh - 192px));
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #b9cfc4 transparent;
+  }
+}
+@media (max-width: 900px) {
+  .slot-calendar {
+    position: static;
+    max-width: 640px;
+    width: 100%;
+  }
+}
+.slot-calendar h2 {
+  margin-top: 8px;
+  font-size: 26px;
+}
+.slot-intro {
+  margin: 8px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.slot-month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.slot-month-bar h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.slot-month-bar button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cfe0d8;
+  border-radius: 50%;
+  background: #fff;
+  color: #062b3b;
+  font: inherit;
+  cursor: pointer;
+}
+.slot-month-bar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.slot-weekday {
+  padding-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  color: #6b8086;
+}
+.slot-day {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1px;
+  min-width: 0;
+  aspect-ratio: 1 / 1.08;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #e5f4ea;
+  color: #1f6b47;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.slot-day-number {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.slot-day small {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 9.5px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slot-day.is-low {
+  background: #fff1cf;
+  color: #7a5a00;
+}
+.slot-day.is-full {
+  background: #fde5df;
+  color: #a73428;
+}
+.slot-day.is-closed {
+  background: #e8edef;
+  color: #7d8f95;
+}
+.slot-day.is-past {
+  background: transparent;
+  color: #b3c2c7;
+}
+.slot-day:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px #062b3b1f;
+}
+.slot-day:disabled {
+  cursor: default;
+}
+.slot-day.is-today {
+  border-color: #20b8b1;
+}
+.slot-day.is-selected {
+  background: #062b3b;
+  color: #fff;
+}
+.slot-day.has-events::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1f8f8a;
+}
+.slot-day.is-selected.has-events::after {
+  background: #c8f28a;
+}
+.slot-day:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+.slot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: #57717a;
+}
+.slot-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slot-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #e5f4ea;
+}
+.slot-legend i.is-low {
+  background: #fff1cf;
+}
+.slot-legend i.is-full {
+  background: #fde5df;
+}
+.slot-legend i.is-closed {
+  background: #e8edef;
+}
+.slot-picked {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 13px;
+}
+.slot-picked > span {
+  color: #57717a;
+}
+.slot-picked .button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+  padding: 14px;
+  font-size: 12.5px;
+}
+.slot-link {
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #087873;
+}
+.slot-events {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.slot-events li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.slot-events i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--type, #1f8f8a);
+}
+.slot-events small {
+  color: #6b8086;
+}
+.slot-seasons {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #dbe8e1;
+  scroll-margin-top: 170px;
+}
+.slot-seasons h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.slot-seasons > p {
+  margin: 4px 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.slot-seasons ol {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.slot-seasons li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+}
+.slot-seasons li strong {
+  font-size: 11.5px;
+  text-transform: capitalize;
+}
+.slot-seasons li span {
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+.slot-seasons li.season-best {
+  background: #dff3e6;
+  color: #1f6b47;
+}
+.slot-seasons li.season-good {
+  background: #eaf4f7;
+  color: #24607a;
+}
+.slot-seasons li.season-windy {
+  background: #fff1cf;
+  color: #7a5a00;
+}
+.slot-seasons li.is-current {
+  border-color: #062b3b;
+}
+.slot-season-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #3d5b63;
+}
+.slot-season-note strong {
+  text-transform: capitalize;
+}
+
+/* Checkout over the page. */
+.activity-checkout {
+  width: min(560px, calc(100% - 24px));
+  padding: 34px 30px 28px;
+}
+.activity-checkout h2 {
+  margin: 8px 0 14px;
+  font-size: 28px;
+}
+.activity-checkout .activity-form .button[type="submit"] {
+  position: static;
+  box-shadow: none;
+}
+.slot-note {
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #1f6b47;
+}
+.slot-note.is-full {
+  color: #a73428;
+}
+.activity-cart-bar {
+  margin-top: 28px;
+}
+@media (max-width: 600px) {
+  .activity-checkout {
+    padding: 28px 18px 22px;
+  }
+  .slot-calendar {
+    padding: 18px;
+  }
+}
+.activity-checkout .plan-cart,
+.activity-checkout .slot-events,
+.activity-checkout .plan-summary-list {
+  margin: 0;
+  padding: 0;
+}

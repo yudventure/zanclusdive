@@ -108,7 +108,7 @@ Tidak ada akun staf, password reset melalui email, MFA, atau integrasi OTA otoma
 
 ## Data dan reservasi
 
-Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu secara manual. Kalender website publik tetap kalender rencana; kalender CMS merupakan catatan operasional, belum sistem kapasitas/ketersediaan otomatis. Penutupan tanggal CMS tidak otomatis memblokir formulir WhatsApp publik.
+Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu secara manual. Kalender di halaman aktivitas menampilkan sisa slot per hari dari reservasi yang dikonfirmasi dan pembayaran online yang sedang menunggu. Kuotanya diatur di **Aktivitas → Kuota peserta per hari**; diving bawaannya 30 orang per hari, dipakai bersama program diving dan kursus. Tanggal penuh atau ditutup tidak bisa dipilih dan pembayarannya ditolak server. Pesan WhatsApp tetap perlu dicatat manual.
 
 Data berada di tabel `zanclus_records`, `zanclus_media`, dan `zanclus_login_attempts`. Backup ketiganya melalui fasilitas backup database/ekspor SQL Hostinger. Simpan backup secara aman; tabel reservasi mengandung data tamu. Media BLOB menambah ukuran database; gunakan URL gambar dari penyimpanan eksternal jika koleksi besar.
 

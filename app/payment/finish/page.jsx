@@ -52,7 +52,7 @@ export default async function Page({ searchParams }) {
         locale,
         booking.experience === "shop"
           ? "/dive-shop"
-          : `/${booking.experience}#inquiry`,
+          : `/${booking.experience}#prices`,
       )}
       details={[
         [p.reference, reference],

@@ -109,9 +109,25 @@ Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jua
 
 ## Halaman aktivitas
 
-Halaman `/diving`, `/snorkeling`, dan `/trip` menyediakan gambaran kegiatan, durasi, peserta, titik temu, alur aktivitas, persiapan, pertanyaan umum, serta formulir konsultasi WhatsApp. Ketiga kartu di seksi Pengalaman pada beranda langsung membuka halaman detail; kartu Diving tetap menyatu dengan kalender. Tidak ada seksi aktivitas tambahan di beranda. Navigasi halaman detail dan footer juga menghubungkan ketiga halaman. Formulir menyiapkan pesan berisi aktivitas, nama, usulan tanggal, jumlah peserta, dan catatan; pengunjung menekan tautan WhatsApp untuk melanjutkan. Reservasi dan rincian biaya tetap dikonfirmasi oleh tim.
+Halaman `/diving`, `/snorkeling`, dan `/trip` menyediakan gambaran kegiatan, durasi, peserta, titik temu, daftar paket & harga, alur aktivitas, persiapan, dan pertanyaan umum. Ketiga kartu di seksi Pengalaman pada beranda langsung membuka halaman detail. Tidak ada seksi aktivitas tambahan di beranda. Navigasi halaman detail dan footer juga menghubungkan ketiga halaman.
 
-Kelola judul halaman, ringkasan, foto/caption, harga mulai per orang, informasi kegiatan, langkah perjalanan, dan FAQ melalui `/admin/activities`. Foto sampul halaman dan foto kartu pengalaman memiliki pengaturan terpisah. Kartu beranda menggunakan ringkasan, harga, durasi, dan status aktif dari halaman yang sama. Harga kosong menampilkan “Minta penawaran” pada halaman detail. Nonaktifkan halaman untuk menyembunyikan kartu/tautannya dan mengembalikan 404 pada URL tersebut; kalender beranda tetap tersedia. Dokumen CMS lama mendapat halaman default tanpa menghapus konten atau reservasi sebelumnya; tidak ada harga aktivitas baru yang diisi otomatis. Mode demo menandai aktivitas dan alur sebagai contoh. Foto default adalah visual konsep, dapat diganti melalui media library. `/admin/experiences` tetap mengatur program diving untuk kuis dan formulir rencana.
+### Kalender & slot harian
+
+Di samping isi halaman (di ponsel: di bawahnya) ada **kalender tanggal kegiatan**. Panel formulir “Ayo susun rencana” dan kalender kegiatan di bawah halaman diving sudah dihapus.
+
+- **Slot per hari.** Setiap tanggal menampilkan sisa slot. Diving menerima **30 orang per hari**. Slot ini dipakai bersama oleh semua program diving dan kursus selam. Tanggal dengan ≤5 slot ditandai *Hampir penuh*. Tanggal penuh dan tanggal yang ditutup di kalender admin tidak bisa dipilih.
+- **Yang mengurangi slot:** reservasi **Dikonfirmasi** dan pembayaran online yang sedang **Menunggu** pembayaran. Pengajuan tanpa pembayaran, pembayaran gagal/kedaluwarsa, dan reservasi batal tidak mengurangi slot.
+- **Kuota bisa diatur.** Ubah di `/admin/activities` → **Kuota peserta per hari** (0 = tanpa batas). Snorkeling dan Trip laut bawaannya tanpa batas.
+- **Server ikut memeriksa.** Pembayaran untuk tanggal penuh, atau yang pesertanya melebihi sisa slot, ditolak dengan pesan jelas. Pemeriksaan dilakukan di dalam kunci penyimpanan, sehingga dua tamu bersamaan tidak bisa melewati kuota.
+- **Kegiatan dan bulan terbaik.** Titik pada tanggal menandai kegiatan dari `/admin/events`; memilih tanggal menampilkan daftarnya. Di halaman diving, di bawah kalender ada **Bulan terbaik untuk diving**: 12 bulan dengan penilaian dan catatan bulan yang sedang dilihat.
+
+Tanggal yang dipilih menjadi tanggal checkout.
+
+### Keranjang & checkout
+
+Paket ditambahkan dari kartu **Paket & harga**. Bilah keranjang muncul di bawah isi halaman setelah paket pertama ditambahkan. Tombol **Checkout** di bilah itu, atau **Checkout untuk tanggal ini** di kalender, membuka **jendela checkout** di atas halaman: paket dipilih, data tamu, ringkasan, lalu pembayaran Midtrans atau WhatsApp. Jika aktivitas belum punya paket berharga, bilah menampilkan tombol **Isi rencana** untuk mengirim rencana lewat WhatsApp.
+
+Kelola judul halaman, ringkasan, foto/caption, harga mulai per orang, informasi kegiatan, langkah perjalanan, dan FAQ melalui `/admin/activities`. Foto sampul halaman dan foto kartu pengalaman memiliki pengaturan terpisah. Kartu beranda menggunakan ringkasan, harga, durasi, dan status aktif dari halaman yang sama. Atur juga **Kuota peserta per hari** untuk kalender slot. Nonaktifkan halaman untuk menyembunyikan kartu/tautannya dan mengembalikan 404 pada URL tersebut. Dokumen CMS lama mendapat halaman default tanpa menghapus konten atau reservasi sebelumnya; tidak ada harga aktivitas baru yang diisi otomatis. Mode demo menandai aktivitas dan alur sebagai contoh. Foto default adalah visual konsep, dapat diganti melalui media library. `/admin/experiences` tetap mengatur program diving untuk kuis dan formulir rencana.
 
 ## Foto & efek scroll
 
@@ -161,7 +177,7 @@ Seksi Pengalaman di beranda berupa akordeon tiga kartu (Diving, Snorkeling, Trip
 
 Pengunjung membuka formulir booking dari tombol hero atau bagian kontak, memilih program dan tanggal, lalu mengisi nama, nomor WhatsApp, jumlah peserta, dan catatan. Permintaan tersimpan di CMS dengan sumber **Website** dan status **Belum dikonfirmasi**. Ringkasan memuat nomor referensi yang juga terlihat di daftar reservasi admin; pengunjung dapat mengunduhnya atau melanjutkan ke WhatsApp.
 
-Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan. Penutupan tanggal di kalender admin berlaku pada program dan rentang tanggal terkait; permintaan pada tanggal tertutup ditolak dengan pesan yang jelas. Pengajuan masih perlu konfirmasi jadwal, biaya, dan kondisi laut oleh tim; belum ada jaminan kapasitas otomatis. Pembayaran langsung tersedia di formulir halaman aktivitas bila diaktifkan (lihat di bawah). Nilai reservasi awal Rp0 adalah nilai pencatatan yang belum diisi, bukan penawaran gratis.
+Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan. Penutupan tanggal di kalender admin berlaku pada program dan rentang tanggal terkait; permintaan pada tanggal tertutup ditolak dengan pesan yang jelas. Pengajuan masih perlu konfirmasi jadwal, biaya, dan kondisi laut oleh tim. Kuota harian (diving 30 orang) diperiksa saat pengajuan dan pembayaran; lihat **Kalender & slot harian**. Pembayaran langsung tersedia di formulir halaman aktivitas bila diaktifkan (lihat di bawah). Nilai reservasi awal Rp0 adalah nilai pencatatan yang belum diisi, bukan penawaran gratis.
 
 API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan bukti pengajuan tanpa identitas tamu. Pengiriman ulang memakai ID permintaan yang sama untuk mencegah duplikasi. Formulir membatasi peserta, memvalidasi nomor kontak dan tanggal di server, serta membatasi percobaan pengajuan. Di mode demo data tersimpan pada penyimpanan demo yang sama dengan CMS (gunakan data contoh); di mode MySQL data masuk ke tabel CMS yang sudah ada. Tidak perlu environment variable tambahan atau mengimpor ulang SQL.
 
@@ -171,7 +187,7 @@ Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-book
 
 Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
 
-- **Paket Diving, Snorkeling, Trip laut**: seperti Dive Shop. Setiap kartu di **Paket & harga** punya tombol **Keranjang** (lalu − / + untuk jumlah), dan bilah keranjang di bawah daftar harga menampilkan jumlah paket, total, serta tombol **Checkout** menuju panel pemesanan. Panel menampilkan **Paket dipilih** (bisa diubah atau ditambah dari pilihan **+ Tambah paket…**), lalu tiga langkah **Isi data → Ringkasan → Pembayaran**. Paket per orang mengikuti jumlah peserta; beberapa paket dibayar dalam satu transaksi. Pembayaran online dibatasi 30 peserta.
+- **Paket Diving, Snorkeling, Trip laut**: seperti Dive Shop. Setiap kartu di **Paket & harga** punya tombol **Keranjang** (lalu − / + untuk jumlah), dan bilah keranjang di bawah daftar harga menampilkan jumlah paket, total, serta tombol **Checkout** yang membuka jendela checkout. Jendela itu menampilkan **Paket dipilih** (bisa diubah atau ditambah dari pilihan **+ Tambah paket…**), lalu tiga langkah **Isi data → Ringkasan → Pembayaran**. Paket per orang mengikuti jumlah peserta; beberapa paket dibayar dalam satu transaksi. Pembayaran online dibatasi 30 peserta dan sisa slot tanggal yang dipilih.
 - **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp.
 - **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20).
 - **Servis alat** (`/service`): jumlah harga servis yang dipilih.

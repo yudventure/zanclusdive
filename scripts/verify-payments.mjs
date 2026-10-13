@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
+import { slotCalendar } from "../src/booking-model.js";
 import { startMockMidtrans } from "./mock-midtrans.mjs";
 
 // Online payment with a stand-in Midtrans. Start the demo server with:
@@ -54,9 +55,9 @@ try {
     await page.locator(".plan-steps li").last().textContent(),
     "3WhatsApp",
   );
-  assert.equal(
-    await page.getByRole("button", { name: "Continue to summary" }).count(),
-    1,
+  assert.match(
+    await page.locator(".plan-next").textContent(),
+    /^Continue to summary\b/,
   );
 
   // Admin switches payments on and sees the key and the URLs to paste.
@@ -95,18 +96,9 @@ try {
     "2Summary",
     "3Payment",
   ]);
-  // Packages go into a cart from the price cards, like the Dive Shop.
-  assert.match(
-    await page.locator(".activity-cart-bar").textContent(),
-    /Cart · 0 packages/,
-  );
-  await page
-    .getByRole("button", { name: "Continue to payment summary" })
-    .click();
-  assert.match(
-    await page.locator(".activity-error").textContent(),
-    /Enter your name|at least one package/,
-  );
+  // Packages go into a cart from the price cards, like the Dive Shop; the
+  // cart bar and its checkout appear with the first package.
+  assert.equal(await page.locator(".activity-cart-bar").count(), 0);
   await page
     .getByRole("button", { name: "Add Discovery Dive to the cart" })
     .click();
@@ -118,6 +110,7 @@ try {
     await page.locator(".activity-cart-bar").textContent(),
     /Cart · 1 package[\s\S]*Total to pay IDR\s?1,200,000/,
   );
+  await page.locator(".activity-cart-bar .button").click();
   await fillForm("Tamu Lunas");
   // Per-person packages follow the number of participants.
   assert.equal(await page.locator("#pay-quantity").count(), 0);
@@ -213,6 +206,7 @@ try {
   await page
     .getByRole("button", { name: "Tambahkan Discovery Dive ke keranjang" })
     .click();
+  await page.locator(".activity-cart-bar .button").click();
   await fillForm("Tamu Batal", "1");
   await page
     .getByRole("button", { name: "Lanjut ke ringkasan pembayaran" })
@@ -249,13 +243,13 @@ try {
   await page
     .getByRole("button", { name: "Add Discovery Dive to the cart" })
     .click();
-  await page.locator(".plan-add").selectOption({ index: 1 });
-  assert.equal(await page.locator(".plan-cart li").count(), 2);
   await page.locator(".activity-cart-bar .button").click();
   assert.equal(
     await page.evaluate(() => document.activeElement.id),
     "inquiry-name",
   );
+  await page.locator(".plan-add").selectOption({ index: 1 });
+  assert.equal(await page.locator(".plan-cart li").count(), 2);
   await fillForm("Tamu Cek", "1");
   await page
     .getByRole("button", { name: "Continue to payment summary" })
@@ -443,6 +437,7 @@ try {
   await page
     .getByRole("button", { name: "Add Discovery Dive to the cart" })
     .click();
+  await page.locator(".activity-cart-bar .button").click();
   await fillForm("Tamu Ragu", "3");
   await page
     .getByRole("button", { name: "Continue to payment summary" })
@@ -474,6 +469,106 @@ try {
   );
   await page.getByRole("button", { name: "← Edit details" }).click();
   assert.equal(await page.locator("#inquiry-name").inputValue(), "Tamu Ragu");
+  // Diving takes 30 people a day: 29 booked leaves one place, shown in the
+  // calendar and checked on the server; a full day cannot be chosen.
+  // An open day with no divers booked yet in the demo data.
+  const current = await state();
+  const slots = slotCalendar(current.content, current.bookings, "diving", {
+    today,
+    last: "2099-12-31",
+  });
+  const taken = (date) =>
+    date === today ||
+    slots.used[date] ||
+    slots.closed.some(([from, to]) => date >= from && date <= to);
+  let busy = today;
+  for (let n = 3; taken(busy); n++)
+    busy = new Date(Date.parse(today + "T12:00:00Z") + n * 86400000)
+      .toISOString()
+      .slice(0, 10);
+  const walkIn = (participants) =>
+    admin.request.post(base + "/api/admin/bookings", {
+      headers: { Origin: base },
+      data: {
+        experience: "beginner",
+        status: "confirmed",
+        source: "walkin",
+        startDate: busy,
+        endDate: busy,
+        guestName: "Rombongan",
+        phone: "",
+        participants,
+        amount: 0,
+        notes: "",
+      },
+    });
+  assert.equal((await walkIn(29)).status(), 201);
+  await page.goto(base + "/diving", { waitUntil: "networkidle" });
+  const slotDay = page.locator(`.slot-day[data-date="${busy}"]`);
+  if (busy.slice(0, 7) !== today.slice(0, 7))
+    await page.getByRole("button", { name: "Next month" }).click();
+  assert.match(await slotDay.getAttribute("class"), /is-low/);
+  assert.equal(await slotDay.locator("small").textContent(), "1");
+  await slotDay.click();
+  assert.match(
+    await page.locator(".slot-picked").textContent(),
+    /1 of 30 places left/,
+  );
+  await page
+    .getByRole("button", { name: "Add Discovery Dive to the cart" })
+    .click();
+  await page.getByRole("button", { name: "Checkout for this date" }).click();
+  await fillForm("Tamu Penuh", "2");
+  await page.locator("#inquiry-date").fill(busy);
+  assert.match(
+    await page.locator(".slot-note").textContent(),
+    /1 place left on this date/,
+  );
+  await page
+    .getByRole("button", { name: "Continue to payment summary" })
+    .click();
+  assert.equal(
+    await page.locator(".activity-error").textContent(),
+    "Only 1 place is left on this date. Choose fewer participants or another date.",
+  );
+  const crowded = await page.request.post(base + "/api/payments?locale=en", {
+    headers: { Origin: base, "x-real-ip": "203.0.113.9" },
+    data: {
+      activity: "diving",
+      lines: [{ item: 0, itemName: "Discovery Dive", quantity: 2 }],
+      name: "Tamu Penuh",
+      whatsapp: "081234567890",
+      email: "",
+      notes: "",
+      date: busy,
+      participants: 2,
+    },
+  });
+  assert.equal(crowded.status(), 409);
+  assert.equal(
+    (await crowded.json()).error,
+    "Only 1 place is left on this date. Choose fewer participants or another date.",
+  );
+  assert.equal(
+    (await state()).bookings.filter((b) => b.guestName === "Tamu Penuh").length,
+    0,
+  );
+  assert.equal((await walkIn(1)).status(), 201);
+  await page.goto(base + "/diving", { waitUntil: "networkidle" });
+  if (busy.slice(0, 7) !== today.slice(0, 7))
+    await page.getByRole("button", { name: "Next month" }).click();
+  assert.match(await slotDay.getAttribute("class"), /is-full/);
+  assert.equal(await slotDay.isDisabled(), true);
+  assert.equal(await slotDay.locator("small").textContent(), "Full");
+  // Snorkeling has no daily limit unless the owner sets one.
+  await page.goto(base + "/snorkeling", { waitUntil: "networkidle" });
+  if (busy.slice(0, 7) !== today.slice(0, 7))
+    await page.getByRole("button", { name: "Next month" }).click();
+  assert.match(
+    await page.locator(`.slot-day[data-date="${busy}"]`).getAttribute("class"),
+    /is-open/,
+  );
+
   // Switched off again: no pay option.
   await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
   await a.locator(".admin-dev-switch").click();
@@ -486,7 +581,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS payments: off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package cart from the price cards and the panel (like the Dive Shop) with the cart bar, per-person quantity following participants, 30-participant limit, a two-package order, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
+    "PASS payments: daily limit of 30 divers in the calendar, checkout and server, off by default (summary then WhatsApp), Midtrans connection test, admin switch with key status and Midtrans URLs, package cart from the price cards and the panel (like the Dive Shop) with the cart bar, per-person quantity following participants, 30-participant limit, a two-package order, payment summary before Midtrans, Midtrans order and items, settled payment confirms the booking on its date and shows in the calendar and payment list, signed notifications only, unknown orders ignored, expiry cancels, tampered amount refused, status check without notification, homepage shop cart (buy + rent) priced on the server and confirmed on its dates, course for two, gear service, Dive Shop page with a refused transaction shown in the admin with its cause and a retry, still-unsure summary to WhatsApp with package and estimate, back to paying and editing keeps details. Nothing sent to Midtrans.",
   );
 } finally {
   await browser.close();
