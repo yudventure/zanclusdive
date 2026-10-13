@@ -37,7 +37,7 @@ Buat ZIP dari commit terakhir dengan `npm run zip:hostinger`. Hasilnya `Zanclus-
 2. Pilih **Upload file** → **Lanjutkan**, lalu unggah `Zanclus-Nextjs-Hostinger.zip`. Jangan ekstrak dulu dan jangan unggah ZIP Vite lama (`Zanclus-Website-Source.zip`).
 3. Pilih Next.js dan Node.js 22.x, lalu periksa pengaturan build di tabel.
 4. Tambahkan environment variable publik berikut sebelum build:
-   - `NEXT_PUBLIC_WHATSAPP_NUMBER=6285190849237`
+   - `NEXT_PUBLIC_WHATSAPP_NUMBER=6285190969308`
    - `NEXT_PUBLIC_SITE_URL=https://domain-kamu` — ganti dengan domain asli lengkap, tanpa path. Variabel ini opsional; tanpanya gambar share sosial tidak dikonfigurasi.
 5. Jalankan deployment/build dari hPanel, lalu periksa log build dan runtime. Upload kode saja belum berarti aplikasi telah online.
 6. Hubungkan domain menggunakan instruksi DNS yang ditampilkan Hostinger dan aktifkan/periksa HTTPS.
@@ -47,7 +47,7 @@ Jika memilih GitHub sebagai sumber, proyek harus lebih dulu dipush ke repository
 
 ## Setelah mengganti nomor atau domain
 
-Variabel `NEXT_PUBLIC_*` ditanam ke bundle pada waktu build. Perubahan memerlukan build/deployment ulang. Nomor harus berupa kode negara dan angka saja, misalnya `6285190849237`, tanpa `+`, spasi, atau angka 0 di depan.
+Variabel `NEXT_PUBLIC_*` ditanam ke bundle pada waktu build. Perubahan memerlukan build/deployment ulang. Nomor harus berupa kode negara dan angka saja, misalnya `6285190969308`, tanpa `+`, spasi, atau angka 0 di depan.
 
 ## Kompatibilitas build Hostinger
 

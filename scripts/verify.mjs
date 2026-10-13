@@ -60,7 +60,7 @@ const quickChat = page.getByRole("link", {
 });
 assert.equal(await quickChat.isVisible(), true);
 const quickURL = await quickChat.getAttribute("href");
-assert.ok(quickURL.startsWith("https://wa.me/6285190849237?text="));
+assert.ok(quickURL.startsWith("https://wa.me/6285190969308?text="));
 assert.match(decodeURIComponent(quickURL), /mendapat bantuan/);
 await context.route("https://wa.me/**", (route) =>
   route.fulfill({
@@ -156,7 +156,7 @@ await page.locator('#booking-form button[type="submit"]').click();
 await page.locator("#booking-result").waitFor({ state: "visible" });
 await assertCentered("#booking-dialog");
 const wa = await page.locator("#send-whatsapp").getAttribute("href");
-assert.ok(wa.startsWith("https://wa.me/6285190849237?text="));
+assert.ok(wa.startsWith("https://wa.me/6285190969308?text="));
 assert.match(decodeURIComponent(wa), /Ayu <script>/);
 assert.match(decodeURIComponent(wa), /Peserta: 2/);
 assert.match(decodeURIComponent(wa), /Pengalaman spesial/);

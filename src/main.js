@@ -8,7 +8,7 @@ import { dictionary, formatLongDate } from "./i18n.js";
 export function initializeWebsite(content, locale = "en") {
   const t = dictionary(locale).booking;
   const experiences = content?.experiences || defaultExperiences;
-  const WHATSAPP_NUMBER = content?.contact.whatsapp || "6285190849237";
+  const WHATSAPP_NUMBER = content?.contact.whatsapp || "6285190969308";
   const activeKeys = Object.keys(experiences).filter(
     (key) => experiences[key].enabled !== false,
   );

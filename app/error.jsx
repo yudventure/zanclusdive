@@ -9,7 +9,7 @@ export default function Error() {
     <StatusView
       kind="500"
       locale={/^\/id(\/|$)/.test(path) ? "id" : "en"}
-      whatsapp={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190849237"}
+      whatsapp={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190969308"}
     />
   );
 }

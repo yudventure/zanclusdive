@@ -80,7 +80,7 @@ export const defaultContent = {
   },
   contact: {
     ...blankSocials,
-    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190849237",
+    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190969308",
     email: "halo@zanclusdive.com",
     location: "",
     mapQuery: defaultMapQuery,

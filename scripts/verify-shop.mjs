@@ -79,7 +79,7 @@ try {
   const url = await page
     .getByRole("link", { name: "Lanjut ke WhatsApp" })
     .getAttribute("href");
-  assert.ok(url.startsWith("https://wa.me/6285190849237?text="));
+  assert.ok(url.startsWith("https://wa.me/6285190969308?text="));
   const message = new URL(url).searchParams.get("text");
   assert.match(message, /BELI · Mask & snorkel set × 1/);
   assert.match(message, /RENTAL · Open heel fins × 2/);
