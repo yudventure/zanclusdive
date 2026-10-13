@@ -447,6 +447,114 @@ const id = {
     closing:
       "Mohon konfirmasi jadwal, persyaratan, perlengkapan, dan biaya. Ini belum menjadi reservasi.",
   },
+  course: {
+    nav: "Kursus selam",
+    kicker: "KURSUS SELAM ZANCLUS",
+    homeTitle: "Belajar menyelam, dari nol sampai mahir.",
+    homeIntro:
+      "Pilih kursus sesuai pengalamanmu. Instruktur mendampingi setiap langkah, dengan laut Raja Ampat sebagai ruang kelas.",
+    from: "Mulai",
+    detail: "Lihat detail",
+    allCourses: "Lihat semua kursus",
+    help: "Bantu aku memilih",
+    heroKicker: "KURSUS SELAM · ZANCLUS DIVE CENTER",
+    title: "Belajar menyelam di Raja Ampat.",
+    summary:
+      "Dari coba menyelam pertama sampai lisensi penyelamat. Kelas kecil, instruktur yang sabar, dan terumbu Selat Dampier sebagai tempat latihan.",
+    facts: [
+      ["Tingkat", "Pemula sampai lanjutan"],
+      ["Lokasi", "Waisai & Selat Dampier"],
+      ["Jadwal", "Disesuaikan dengan tanggalmu"],
+    ],
+    sections: ["Kenapa di sini", "Pilih kursus", "Pertanyaan umum"],
+    why: [
+      "KENAPA BELAJAR DI SINI",
+      "Belajar di laut terbaik.",
+      "Tiga hal yang membuat kursus di Zanclus terasa berbeda.",
+    ],
+    whyItems: [
+      [
+        "Laut sebagai kelas",
+        "Latihan di Selat Dampier, rumah bagi ratusan jenis karang dan ikan.",
+      ],
+      [
+        "Instruktur mendampingi",
+        "Setiap keterampilan dicontohkan dan dilatih sampai kamu nyaman.",
+      ],
+      [
+        "Jadwal fleksibel",
+        "Pilih tanggal, tim menyesuaikan jadwal kelas dan penyelaman.",
+      ],
+    ],
+    path: [
+      "PILIH KURSUSMU",
+      "Jalur belajar menyelam.",
+      "Mulai dari yang paling sesuai, lalu naik level kapan saja.",
+    ],
+    faq: [
+      "TANYA SOAL KURSUS",
+      "Pertanyaan seputar kursus.",
+      "Lisensi, kesehatan, dan alat.",
+    ],
+    faqs: [
+      [
+        "Apakah lisensinya berlaku di tempat lain?",
+        "Lisensi dari kursus kami diakui dive center di banyak negara. Tim menjelaskan lembaga sertifikasinya saat konfirmasi.",
+      ],
+      [
+        "Bagaimana jika punya kondisi kesehatan tertentu?",
+        "Isi formulir kesehatan sebelum kursus. Beberapa kondisi memerlukan surat dokter, dan tim membantu memeriksanya.",
+      ],
+      [
+        "Apakah harga sudah termasuk alat?",
+        "Ya, alat selam selama kursus sudah termasuk. Rincian biaya dikonfirmasi lewat WhatsApp sebelum pembayaran.",
+      ],
+      [
+        "Bagaimana jika lama tidak menyelam?",
+        "Ambil penyegaran singkat bersama pemandu sebelum penyelaman berikutnya. Tanyakan jadwalnya lewat WhatsApp.",
+      ],
+    ],
+    step: (n) => `Langkah ${n}`,
+    duration: "Durasi",
+    depth: "Kedalaman",
+    age: "Usia",
+    includes: "Yang kamu dapat",
+    requirements: "Syarat",
+    choose: "Pilih kursus ini",
+    note: "Harga dalam rupiah dan dapat berubah. Jadwal dan biaya dikonfirmasi lewat WhatsApp.",
+    planKicker: "DAFTAR KURSUS",
+    planTitle: "Daftar kursus selam.",
+    course: "Kursus",
+    certification: "Lisensi yang dimiliki",
+    certOptions: [
+      "Belum punya",
+      "Open Water",
+      "Advanced Open Water",
+      "Rescue Diver atau lebih",
+    ],
+    dateLabel: "Usulan tanggal mulai",
+    formNote:
+      "Formulir ini menyiapkan pesan untuk tim. Pendaftaran berlaku setelah dikonfirmasi.",
+    errCourse: "Pilih kursus yang tersedia.",
+    errName: "Isi nama, maksimal 120 karakter.",
+    errWhatsapp: "Isi nomor WhatsApp yang aktif, termasuk kode negara.",
+    errEmail: "Format email belum benar, contoh nama@email.com.",
+    errDate: "Pilih tanggal yang valid, hari ini atau setelahnya.",
+    errParticipants: "Jumlah peserta 1 sampai 20 orang.",
+    errNotes: "Catatan maksimal 1.000 karakter.",
+    message: {
+      greeting: (name) => `Halo Zanclus! Saya ingin daftar kursus ${name}.`,
+      name: "Nama",
+      date: "Usulan tanggal mulai",
+      people: (n) => `Peserta: ${n} orang`,
+      license: "Lisensi saat ini",
+      notes: "Catatan",
+      closing:
+        "Mohon konfirmasi jadwal, biaya, dan persyaratan kursus. Ini belum menjadi pendaftaran resmi.",
+    },
+    askMessage: "Halo Zanclus! Saya ingin bertanya tentang kursus selam.",
+    metaTitle: "Kursus selam | Zanclus Dive Center",
+  },
   footer: {
     label: "Informasi Zanclus Dive Center",
     tagline: "Jelajahi laut. Temukan cerita.",
@@ -1071,6 +1179,115 @@ const en = {
     notesLabel: "Notes",
     closing:
       "Please confirm the schedule, requirements, gear and price. This is not a reservation yet.",
+  },
+  course: {
+    nav: "Dive courses",
+    kicker: "ZANCLUS DIVE COURSES",
+    homeTitle: "Learn to dive, from first breath to confident diver.",
+    homeIntro:
+      "Pick the course that fits your experience. An instructor guides every step, with Raja Ampat as your classroom.",
+    from: "From",
+    detail: "See details",
+    allCourses: "See all courses",
+    help: "Help me choose",
+    heroKicker: "DIVE COURSES · ZANCLUS DIVE CENTER",
+    title: "Learn to dive in Raja Ampat.",
+    summary:
+      "From your first try dive to a rescue license. Small classes, patient instructors and the reefs of the Dampier Strait as your training ground.",
+    facts: [
+      ["Level", "Beginner to advanced"],
+      ["Location", "Waisai & Dampier Strait"],
+      ["Schedule", "Fitted to your dates"],
+    ],
+    sections: ["Why here", "Choose a course", "Questions"],
+    why: [
+      "WHY LEARN HERE",
+      "Learn in the best sea.",
+      "Three things that make a course at Zanclus different.",
+    ],
+    whyItems: [
+      [
+        "The sea as your classroom",
+        "Train in the Dampier Strait, home to hundreds of coral and fish species.",
+      ],
+      [
+        "An instructor by your side",
+        "Every skill is shown and practised until you feel comfortable.",
+      ],
+      [
+        "Flexible schedule",
+        "Choose your dates and the team fits the lessons and dives around them.",
+      ],
+    ],
+    path: [
+      "CHOOSE YOUR COURSE",
+      "Your diving path.",
+      "Start where it suits you and level up whenever you like.",
+    ],
+    faq: [
+      "COURSE QUESTIONS",
+      "Questions about courses.",
+      "Licenses, health and gear.",
+    ],
+    faqs: [
+      [
+        "Is the license valid elsewhere?",
+        "Licenses from our certification courses are recognized by dive centers in many countries. The team explains the certifying agency when confirming.",
+      ],
+      [
+        "What if I have a health condition?",
+        "Fill in a medical form before the course. Some conditions need a doctor's note, and the team helps you check.",
+      ],
+      [
+        "Is gear included in the price?",
+        "Yes, dive gear during the course is included. Costs are confirmed on WhatsApp before payment.",
+      ],
+      [
+        "What if I haven't dived for a while?",
+        "Take a short refresher with a guide before your next dive. Ask about the schedule on WhatsApp.",
+      ],
+    ],
+    step: (n) => `Step ${n}`,
+    duration: "Duration",
+    depth: "Depth",
+    age: "Age",
+    includes: "What you get",
+    requirements: "Requirements",
+    choose: "Choose this course",
+    note: "Prices in Indonesian rupiah and subject to change. Schedule and costs are confirmed on WhatsApp.",
+    planKicker: "SIGN UP",
+    planTitle: "Sign up for a dive course.",
+    course: "Course",
+    certification: "Current license",
+    certOptions: [
+      "None yet",
+      "Open Water",
+      "Advanced Open Water",
+      "Rescue Diver or higher",
+    ],
+    dateLabel: "Preferred start date",
+    formNote:
+      "This form prepares a message for our team. Your place is confirmed by the team.",
+    errCourse: "Choose an available course.",
+    errName: "Enter your name, up to 120 characters.",
+    errWhatsapp: "Enter an active WhatsApp number, including the country code.",
+    errEmail: "That email doesn't look right, for example name@email.com.",
+    errDate: "Choose a valid date, today or later.",
+    errParticipants: "Participants must be between 1 and 20.",
+    errNotes: "Notes can be up to 1,000 characters.",
+    message: {
+      greeting: (name) =>
+        `Hi Zanclus! I'd like to sign up for the ${name} course.`,
+      name: "Name",
+      date: "Preferred start date",
+      people: (n) => `Participants: ${n}`,
+      license: "Current license",
+      notes: "Notes",
+      closing:
+        "Please confirm the schedule, costs and course requirements. This is not a confirmed booking yet.",
+    },
+    askMessage: "Hi Zanclus! I'd like to ask about your dive courses.",
+    metaTitle: "Dive courses | Zanclus Dive Center",
   },
   footer: {
     label: "Zanclus Dive Center information",

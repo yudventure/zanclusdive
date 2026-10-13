@@ -455,6 +455,101 @@ const scenes = {
       </>
     ),
   },
+  course: {
+    why: (
+      <>
+        {waves()}
+        {bubbles}
+        {reef}
+        {/* A dive license card next to a diver */}
+        <g transform="translate(112 34) rotate(-6)">
+          <rect
+            width="96"
+            height="62"
+            rx="10"
+            fill="#fff"
+            stroke={ink}
+            strokeWidth="2"
+          />
+          <rect width="96" height="16" rx="8" fill={ink} />
+          <circle
+            cx="22"
+            cy="38"
+            r="11"
+            fill={ice}
+            stroke={ink}
+            strokeWidth="2"
+          />
+          <path
+            d="M42 32h40M42 42h30M42 50h22"
+            stroke={ink}
+            strokeOpacity=".4"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <circle cx="82" cy="50" r="7" fill={sand} />
+        </g>
+        {diver(224, 64, 6)}
+      </>
+    ),
+    path: (
+      <>
+        {waves()}
+        {/* Steps going up, one per course, with a flag at the top */}
+        {[0, 1, 2, 3].map((i) => (
+          <g key={i}>
+            <rect
+              x={104 + i * 40}
+              y={100 - i * 18}
+              width="40"
+              height={20 + i * 18}
+              rx="4"
+              fill={[sea2, sea1, ink, sand][i]}
+            />
+            <text
+              x={124 + i * 40}
+              y={114 - i * 18}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="800"
+              fill="#fff"
+            >
+              {i + 1}
+            </text>
+          </g>
+        ))}
+        <path d="M264 46V20" stroke={ink} strokeWidth="2.4" />
+        <path d="M264 20h26l-7 8 7 8h-26z" fill={coral} />
+        {bubbles}
+      </>
+    ),
+    faq: (
+      <>
+        {waves()}
+        {bubbles}
+        {question(96, 24)}
+        <g transform="translate(222 58) rotate(8)">
+          <rect
+            width="64"
+            height="42"
+            rx="8"
+            fill="#fff"
+            stroke={ink}
+            strokeWidth="2"
+          />
+          <rect width="64" height="11" rx="5.5" fill={ink} />
+          <circle cx="15" cy="26" r="7" fill={ice} />
+          <path
+            d="M28 24h26M28 32h18"
+            stroke={ink}
+            strokeOpacity=".4"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+        </g>
+      </>
+    ),
+  },
   shared: {
     calendar: (
       <>
@@ -585,6 +680,11 @@ export const bannerTones = {
     itinerary: "#e8f1e1",
     prep: "#fbefe0",
     faq: "#f1ebe0",
+  },
+  course: {
+    why: "#e6effa",
+    path: "#e8f4ee",
+    faq: "#f1edf9",
   },
   shared: {
     calendar: "#e5f3f5",

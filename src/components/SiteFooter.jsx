@@ -45,6 +45,7 @@ export default function SiteFooter({
                   {labels[key]}
                 </a>
               ))}
+            <a href={href("/course")}>{dictionary(locale).course.nav}</a>
             <a href={href("/dive-shop")}>Dive Shop</a>
             <a href={href("/dive-shop?mode=rental#catalog")}>{t.rental}</a>
           </div>

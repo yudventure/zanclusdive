@@ -1,15 +1,20 @@
 // Local concept imagery: each placement has its own scene, without external requests.
 export const photographyVersion = 1;
+// Image slots edited in Foto & media. The five photos of the old quiz fan
+// are no longer placed on the page (the course cards took that spot), so
+// they are only offered as built-in photos below.
 export const siteImageFields = [
   ["hero", "Sampul beranda"],
   ["reef", "Jelajahi laut — kehidupan terumbu"],
   ["ocean", "Jelajahi laut — laut terbuka"],
-  ["galleryDive", "Galeri — scuba diving"],
-  ["galleryFreedive", "Galeri — freediving"],
-  ["galleryCoral", "Galeri — kehidupan karang"],
-  ["galleryTurtle", "Galeri — penyu"],
-  ["galleryIsland", "Galeri — pulau & pantai"],
   ["shop", "Sampul Dive Shop — perlengkapan"],
+];
+const extraPhotos = [
+  ["galleryDive", "Foto — scuba diving"],
+  ["galleryFreedive", "Foto — freediving"],
+  ["galleryCoral", "Foto — kehidupan karang"],
+  ["galleryTurtle", "Foto — penyu"],
+  ["galleryIsland", "Foto — pulau & pantai"],
 ];
 export const defaultSiteImages = {
   hero: "/assets/hero.webp",
@@ -45,7 +50,10 @@ export const activityPhotos = {
   },
 };
 export const builtInPhotos = [
-  ...siteImageFields.map(([key, label]) => [defaultSiteImages[key], label]),
+  ...[...siteImageFields, ...extraPhotos].map(([key, label]) => [
+    defaultSiteImages[key],
+    label,
+  ]),
   ...Object.entries(activityPhotos).flatMap(([key, photo]) => [
     [photo.cardImage, `${key} — kartu pengalaman`],
     [photo.image, `${key} — sampul halaman`],

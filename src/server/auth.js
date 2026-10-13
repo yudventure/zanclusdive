@@ -145,11 +145,11 @@ export async function requireAdmin(request) {
     );
   return null;
 }
-export async function jsonBody(request) {
-  if (Number(request.headers.get("content-length") || 0) > 64000)
+export async function jsonBody(request, limit = 64000) {
+  if (Number(request.headers.get("content-length") || 0) > limit)
     throw new Error("Data terlalu besar.");
   const text = await request.text();
-  if (Buffer.byteLength(text) > 64000) throw new Error("Data terlalu besar.");
+  if (Buffer.byteLength(text) > limit) throw new Error("Data terlalu besar.");
   return JSON.parse(text);
 }
 export function apiFailure(error) {

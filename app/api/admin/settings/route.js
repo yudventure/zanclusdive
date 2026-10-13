@@ -10,7 +10,9 @@ export async function PUT(request) {
   if (denied) return denied;
   let content, version;
   try {
-    const data = await jsonBody(request);
+    // The whole site document (texts, calendar, gallery, courses) is larger
+    // than other admin payloads.
+    const data = await jsonBody(request, 400000);
     content = validateContent(data.content);
     version = data.version;
     if (!Number.isInteger(version) || version < 1)

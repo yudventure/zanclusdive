@@ -16,6 +16,7 @@ const paths = {
   shop: "M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2",
   contact:
     "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z",
+  courses: "M2 9l10-5 10 5-10 5zM6 11v5c3 2.5 9 2.5 12 0v-5M22 9v6",
   settings: "M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4",
   chevron: "M6 9l6 6 6-6",
   arrow: "M7 17L17 7M9 7h8v8",

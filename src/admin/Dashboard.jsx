@@ -6,6 +6,7 @@ import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
 import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
+import CourseEditor from "./CourseEditor.jsx";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
@@ -35,6 +36,7 @@ const sections = {
   activities: "Halaman aktivitas",
   prices: "Daftar harga",
   events: "Kalender kegiatan",
+  courses: "Kursus selam",
 };
 const mainSections = [
   "overview",
@@ -48,6 +50,7 @@ const siteSections = [
   "website",
   "experiences",
   "activities",
+  "courses",
   "prices",
   "shop",
   "contact",
@@ -1111,6 +1114,21 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
+                  placePhoto={placePhoto}
+                />
+              )}
+              {section === "courses" && (
+                <CourseEditor
+                  courses={content.courses}
+                  media={data.media}
+                  update={(items) =>
+                    setContent((current) => ({
+                      ...current,
+                      courses: { ...current.courses, items },
+                    }))
+                  }
+                  onSave={saveSettings}
+                  busy={busy}
                   placePhoto={placePhoto}
                 />
               )}
