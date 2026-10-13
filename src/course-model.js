@@ -123,7 +123,33 @@ export const defaultCourses = {
       image: "/assets/photos/snorkeling-cover.webp",
     },
   ],
+  // Certification partners shown in the running strip. Without an uploaded
+  // logo the short name is shown as a text badge.
+  partners: [
+    {
+      name: "SSI",
+      full: t("Scuba Schools International", "Scuba Schools International"),
+      logo: "",
+    },
+    {
+      name: "CMAS",
+      full: t(
+        "Confédération Mondiale des Activités Subaquatiques",
+        "Confédération Mondiale des Activités Subaquatiques",
+      ),
+      logo: "",
+    },
+    {
+      name: "PADI",
+      full: t(
+        "Professional Association of Diving Instructors",
+        "Professional Association of Diving Instructors",
+      ),
+      logo: "",
+    },
+  ],
 };
+export const partnerLimit = 12;
 
 export function withCourses(content) {
   return content.courses
@@ -150,10 +176,41 @@ function text(value, label, max, required) {
   return out;
 }
 
+function mediaURL(value, label) {
+  const url = String(value ?? "").trim();
+  if (
+    url.length > 1200 ||
+    (url &&
+      !url.startsWith("/assets/") &&
+      !url.startsWith("/api/media/") &&
+      !url.startsWith("https://"))
+  )
+    throw new Error(`${label} harus URL HTTPS atau foto yang diunggah.`);
+  return url;
+}
+
+export function validatePartners(input) {
+  if (input === undefined || input === null)
+    return structuredClone(defaultCourses.partners);
+  if (!Array.isArray(input) || input.length > partnerLimit)
+    throw new Error(`Partner berisi maksimal ${partnerLimit} item.`);
+  return input.map((p) => {
+    const name = String(p?.name ?? "").trim();
+    if (!name || name.length > 30)
+      throw new Error("Nama partner wajib diisi, maksimal 30 karakter.");
+    return {
+      name,
+      full: text(p.full, "Nama lengkap partner", 120, false),
+      logo: mediaURL(p.logo, "Logo partner"),
+    };
+  });
+}
+
 export function validateCourses(input) {
   if (input === undefined || input === null)
     return structuredClone(defaultCourses);
-  const items = input.items;
+  // Documents saved before a part existed get its defaults.
+  const items = input.items ?? structuredClone(defaultCourses.items);
   if (!Array.isArray(items) || items.length > courseLimit)
     throw new Error(`Kursus berisi maksimal ${courseLimit} item.`);
   const ids = new Set();
@@ -168,15 +225,7 @@ export function validateCourses(input) {
         throw new Error("Harga kursus harus angka rupiah.");
       if (!Array.isArray(c.includes) || c.includes.length > 8)
         throw new Error("Isi kursus maksimal 8 poin.");
-      const image = String(c.image ?? "").trim();
-      if (
-        image.length > 1200 ||
-        (image &&
-          !image.startsWith("/assets/") &&
-          !image.startsWith("/api/media/") &&
-          !image.startsWith("https://"))
-      )
-        throw new Error("Foto kursus harus URL HTTPS atau foto yang diunggah.");
+      const image = mediaURL(c.image, "Foto kursus");
       return {
         id,
         enabled: c.enabled !== false,
@@ -195,6 +244,7 @@ export function validateCourses(input) {
         image,
       };
     }),
+    partners: validatePartners(input.partners),
   };
 }
 
