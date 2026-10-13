@@ -272,16 +272,7 @@
   accent-color: var(--act-accent);
 }
 
-/* Links to the gear service from the Dive Shop. */
-.shop-teaser-service {
-  display: inline-block;
-  margin: 14px 0 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #087873;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+/* Link to the gear service from the Dive Shop page. */
 .shop-hero-service {
   display: inline-flex;
   align-items: center;
@@ -354,9 +345,5 @@
     padding-top: 12px;
     border-top: 1px solid #e3ecea;
     text-align: left;
-  }
-  .shop-teaser-service {
-    margin-left: 0;
-    display: block;
   }
 }

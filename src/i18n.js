@@ -118,6 +118,39 @@ const id = {
     reefTitle: ["Warna yang", "tak pernah biasa."],
     oceanAlt: "Visual konsep manta di laut terbuka",
     oceanTitle: ["Menjelajah lautan", "yang penuh misteri."],
+    travelEyebrow: "PERJALANAN KE WAISAI",
+    travelTitle: ["Cara menuju", "ke sini."],
+    travelIntro:
+      "Zanclus ada di Waisai, ibu kota Raja Ampat. Dari mana pun asalmu, rutenya sama: terbang ke Sorong, menyeberang dengan kapal cepat, lalu sebentar lagi ke toko kami.",
+    travelMap:
+      "Ilustrasi rute dari Bandara Sorong, menyeberangi Selat Dampier dengan kapal cepat, ke toko Zanclus di Waisai",
+    travelPlaces: ["Sorong", "Waisai", "Selat Dampier", "Pulau Waigeo"],
+    travelSteps: [
+      [
+        "Terbang ke Sorong",
+        "Mendarat di Bandara Domine Eduard Osok (SOQ), Sorong. Penerbangan umumnya transit di Jakarta atau Makassar.",
+        "Bandara SOQ",
+      ],
+      [
+        "Kapal cepat ke Waisai",
+        "Dari bandara sekitar 15–20 menit ke Pelabuhan Rakyat Sorong. Kapal cepat ke Waisai berangkat setiap hari.",
+        "± 2 jam",
+      ],
+      [
+        "Sampai di toko Zanclus",
+        "Dari Pelabuhan Waisai, naik ojek atau mobil sebentar ke toko kami.",
+        "Waisai",
+      ],
+    ],
+    travelTips: [
+      "Datang berombongan? Sewa speedboat Sorong–Waisai dari Zanclus, maksimal 10 penumpang.",
+      "Siapkan kartu masuk kawasan Raja Ampat (PIN), tersedia di Sorong dan Waisai.",
+    ],
+    travelNote:
+      "Jadwal kapal bisa berubah karena cuaca. Kirim jadwal kapalmu lewat WhatsApp supaya tim tahu kapan kamu tiba.",
+    travelChat: "Tanya rute lewat WhatsApp",
+    whatsappTravel:
+      "Halo Zanclus! Saya ingin bertanya cara menuju toko kalian di Waisai.",
     storeEyebrow: "KUNJUNGI TOKO KAMI",
     storeTitle: ["Toko kami di Waisai,", "Raja Ampat."],
     storeIntro:
@@ -800,6 +833,14 @@ const id = {
       "Katalog sedang disiapkan. Hubungi tim Zanclus melalui Dive Shop untuk kebutuhan alatmu.",
     teaser: {
       tabsLabel: "Layanan Dive Shop",
+      serviceBanner: {
+        eyebrow: "SERVIS ALAT SELAM",
+        title: "Alat terawat, menyelam lebih tenang.",
+        text: "Regulator, BCD, tabung, dan komputer selam dicek dan diservis tim Zanclus di Waisai.",
+        from: (price) => `Mulai ${price}`,
+        fast: "Bisa selesai hari yang sama",
+        cta: "Pesan servis",
+      },
       buyTag: "BELI",
       rentalTag: "SEWA HARIAN",
       askPrice: "Tanya harga",
@@ -993,6 +1034,39 @@ const en = {
     reefTitle: ["Colors that are", "never ordinary."],
     oceanAlt: "Concept visual of a manta ray in open water",
     oceanTitle: ["An ocean", "full of mystery."],
+    travelEyebrow: "GETTING TO WAISAI",
+    travelTitle: ["How to", "get here."],
+    travelIntro:
+      "Zanclus is in Waisai, the capital of Raja Ampat. Wherever you start, the route is the same: fly to Sorong, cross by fast ferry, then a short ride to our store.",
+    travelMap:
+      "Illustrated route from Sorong airport, across the Dampier Strait by fast ferry, to the Zanclus store in Waisai",
+    travelPlaces: ["Sorong", "Waisai", "Dampier Strait", "Waigeo Island"],
+    travelSteps: [
+      [
+        "Fly to Sorong",
+        "Land at Domine Eduard Osok Airport (SOQ) in Sorong. Flights usually connect through Jakarta or Makassar.",
+        "SOQ airport",
+      ],
+      [
+        "Fast ferry to Waisai",
+        "From the airport it's about 15–20 minutes to Sorong's Pelabuhan Rakyat harbour. Fast ferries to Waisai leave every day.",
+        "About 2 hours",
+      ],
+      [
+        "Arrive at Zanclus",
+        "From Waisai harbour, take a short ojek or car ride to our store.",
+        "Waisai",
+      ],
+    ],
+    travelTips: [
+      "Travelling as a group? Charter the Zanclus Sorong–Waisai speedboat for up to 10 passengers.",
+      "Get your Raja Ampat marine park entry card (PIN) in Sorong or Waisai.",
+    ],
+    travelNote:
+      "Ferry times can change with the weather. Send us your ferry time on WhatsApp so the team knows when to expect you.",
+    travelChat: "Ask about the route on WhatsApp",
+    whatsappTravel:
+      "Hi Zanclus! I'd like to ask how to get to your store in Waisai.",
     storeEyebrow: "VISIT OUR STORE",
     storeTitle: ["Our store in Waisai,", "Raja Ampat."],
     storeIntro:
@@ -1669,6 +1743,14 @@ const en = {
       "Our catalog is being prepared. Contact the Zanclus team through the Dive Shop for your gear needs.",
     teaser: {
       tabsLabel: "Dive Shop services",
+      serviceBanner: {
+        eyebrow: "DIVE GEAR SERVICE",
+        title: "Well-kept gear, calmer dives.",
+        text: "Regulators, BCDs, cylinders and dive computers checked and serviced by the Zanclus team in Waisai.",
+        from: (price) => `From ${price}`,
+        fast: "Same-day options",
+        cta: "Book a service",
+      },
       buyTag: "BUY",
       rentalTag: "DAILY RENTAL",
       askPrice: "Ask for price",

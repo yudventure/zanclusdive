@@ -617,6 +617,93 @@
   height: 21px;
   flex-shrink: 0;
 }
+.shop-services-side {
+  display: grid;
+  gap: 22px;
+}
+/* Dive gear service banner under the service list. */
+.shop-service-banner {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 24px 24px 22px;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0, #bef4a526, transparent 45%),
+    linear-gradient(155deg, #0b3442 0%, #0d6f73 100%);
+  color: white;
+  box-shadow: 0 18px 40px #0b344229;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+.shop-service-banner:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 50px #0b34423d;
+}
+.shop-service-banner:focus-visible {
+  outline: 3px solid #0d6f73;
+  outline-offset: 3px;
+}
+.shop-service-banner-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.shop-service-banner-top svg {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  margin: -6px -6px -14px 0;
+}
+.shop-service-banner-eyebrow {
+  padding-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  color: #bef4a5;
+}
+.shop-service-banner strong {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+}
+.shop-service-banner-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cfe3e6;
+}
+.shop-service-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+.shop-service-banner-meta span {
+  padding: 6px 11px;
+  border: 1px solid #ffffff33;
+  border-radius: 999px;
+  background: #ffffff14;
+  font-size: 11px;
+  color: #e8f4f2;
+}
+.shop-service-banner-cta {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #bef4a5;
+  color: #0b3442;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.shop-service-banner:hover .shop-service-banner-cta {
+  background: #d4fac2;
+}
 .shop-service-panel {
   padding: 36px;
   background: #f8fbfc;
@@ -948,6 +1035,17 @@
   .shop-services {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
+  }
+  /* Stacked: tabs, the selected gear, then the service banner. */
+  .shop-services-side {
+    display: contents;
+  }
+  .shop-service-banner {
+    order: 1;
+  }
+  .shop-service-banner strong,
+  .shop-service-banner-text {
+    max-width: 520px;
   }
   .shop-service-tabs {
     display: flex;

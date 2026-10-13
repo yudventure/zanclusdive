@@ -60,6 +60,10 @@ Teks UI tetap (label tombol, formulir, dan navigasi) ada di `src/i18n.js`; terje
 
 Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, pencarian, filter kategori, serta pesanan gabungan. Rental dihitung per unit per hari (1–30 hari). Pengunjung menyiapkan pesan lalu mengirim sendiri lewat WhatsApp untuk konfirmasi stok, ukuran, harga, pembayaran, serta pengambilan/pengembalian. Tidak ada checkout pembayaran atau pencatatan stok otomatis.
 
+Di beranda, banner **Servis alat selam** di bawah daftar Beli/Rental membuka `/service`. Harga "Mulai" pada banner diambil dari harga servis termurah yang aktif di CMS; judul dan teks banner ada di `src/i18n.js` (`shop.teaser.serviceBanner`).
+
+Seksi **Cara menuju ke sini** (`#getting-here`) berada di atas toko Waisai: ilustrasi rute Sorong → kapal cepat → Waisai, tiga langkah, dan tips perjalanan. Teksnya ada di `src/i18n.js` (`home.travel*`), belum diatur dari CMS; ilustrasinya di `src/components/TravelRoute.jsx`.
+
 Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jual dan rental, ketersediaan, tampilan publik, serta foto dari media library. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat delapan produk contoh; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
 
 ## Halaman aktivitas

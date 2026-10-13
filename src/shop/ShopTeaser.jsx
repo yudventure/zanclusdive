@@ -49,6 +49,89 @@ function TabIcon({ name }) {
   );
 }
 
+// Pressure gauge, hose and cog for the gear service banner.
+function ServiceArt() {
+  return (
+    <svg viewBox="0 0 140 140" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d="M62 100c0 24 26 30 42 18"
+        stroke="#8fd3cf"
+        strokeWidth="7"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="62"
+        cy="60"
+        r="40"
+        fill="#0b3442"
+        stroke="#bef4a5"
+        strokeWidth="3"
+      />
+      <circle
+        cx="62"
+        cy="60"
+        r="30"
+        stroke="#ffffff55"
+        strokeWidth="5"
+        strokeDasharray="1.5 6.35"
+      />
+      <path
+        d="M83 81a30 30 0 0 0 9-21"
+        stroke="#ff9c8a"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M62 60 80 40"
+        stroke="white"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      <circle cx="62" cy="60" r="5" fill="#bef4a5" />
+      <circle
+        cx="108"
+        cy="106"
+        r="15"
+        stroke="#bef4a5"
+        strokeWidth="7"
+        strokeDasharray="4.7 3.15"
+      />
+      <circle cx="108" cy="106" r="11.5" fill="#bef4a5" />
+      <circle cx="108" cy="106" r="4.5" fill="#0d6f73" />
+      <circle cx="118" cy="30" r="5" stroke="#ffffff66" strokeWidth="2" />
+      <circle cx="128" cy="14" r="3" stroke="#ffffff44" strokeWidth="2" />
+      <circle cx="108" cy="12" r="2" fill="#ffffff44" />
+    </svg>
+  );
+}
+
+// Banner under the service list leading to the dive gear service page.
+function ServiceBanner({ service, locale }) {
+  const b = dictionary(locale).shop.teaser.serviceBanner;
+  const prices = (service?.items ?? [])
+    .filter((item) => item.enabled)
+    .map((item) => item.price);
+  return (
+    <a className="shop-service-banner" href={localeHref(locale, "/service")}>
+      <span className="shop-service-banner-top">
+        <span className="shop-service-banner-eyebrow">{b.eyebrow}</span>
+        <ServiceArt />
+      </span>
+      <strong>{b.title}</strong>
+      <span className="shop-service-banner-text">{b.text}</span>
+      <span className="shop-service-banner-meta">
+        {prices.length > 0 && (
+          <span>{b.from(rupiah(Math.min(...prices), locale))}</span>
+        )}
+        <span>{b.fast}</span>
+      </span>
+      <span className="shop-service-banner-cta">
+        {b.cta} <span aria-hidden="true">↗</span>
+      </span>
+    </a>
+  );
+}
+
 function CartIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
@@ -69,6 +152,7 @@ function CartIcon() {
 export default function ShopTeaser({
   shop,
   priceList,
+  service,
   whatsapp,
   locale = "en",
 }) {
@@ -173,39 +257,35 @@ export default function ShopTeaser({
           <a className="button dark" href={localeHref(locale, "/dive-shop")}>
             {t.explore}
           </a>
-          <a
-            className="shop-teaser-service"
-            href={localeHref(locale, "/service")}
-          >
-            {dictionary(locale).service.fromShop[1]}{" "}
-            <span aria-hidden="true">↗</span>
-          </a>
         </div>
       </div>
       <div className="shop-services" data-reveal>
-        <div
-          className="shop-service-tabs"
-          role="tablist"
-          aria-label={s.tabsLabel}
-          aria-orientation="vertical"
-        >
-          {tabs.map((key) => (
-            <button
-              type="button"
-              role="tab"
-              key={key}
-              id={`${id}-tab-${key}`}
-              ref={(el) => (tabRefs.current[key] = el)}
-              aria-selected={active === key}
-              aria-controls={`${id}-panel`}
-              tabIndex={active === key ? 0 : -1}
-              onClick={() => setActive(key)}
-              onKeyDown={onKeyDown}
-            >
-              <TabIcon name={key} />
-              <span>{s.groups[key][0]}</span>
-            </button>
-          ))}
+        <div className="shop-services-side">
+          <div
+            className="shop-service-tabs"
+            role="tablist"
+            aria-label={s.tabsLabel}
+            aria-orientation="vertical"
+          >
+            {tabs.map((key) => (
+              <button
+                type="button"
+                role="tab"
+                key={key}
+                id={`${id}-tab-${key}`}
+                ref={(el) => (tabRefs.current[key] = el)}
+                aria-selected={active === key}
+                aria-controls={`${id}-panel`}
+                tabIndex={active === key ? 0 : -1}
+                onClick={() => setActive(key)}
+                onKeyDown={onKeyDown}
+              >
+                <TabIcon name={key} />
+                <span>{s.groups[key][0]}</span>
+              </button>
+            ))}
+          </div>
+          <ServiceBanner service={service} locale={locale} />
         </div>
         <div
           className="shop-service-panel"

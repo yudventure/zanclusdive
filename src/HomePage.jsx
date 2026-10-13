@@ -4,6 +4,7 @@ import SiteNavLinks from "./components/SiteNavLinks.jsx";
 import PartnerMarquee from "./course/PartnerMarquee.jsx";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
+import TravelRoute from "./components/TravelRoute.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
 import ScrollEffects from "./components/ScrollEffects.jsx";
@@ -14,6 +15,7 @@ import DiveGallery from "./components/DiveGallery.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
+import { withService } from "./service-model.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
 
 function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
@@ -381,9 +383,11 @@ export default function HomePage({ content, locale = "en" }) {
           <ShopTeaser
             shop={content.shop}
             priceList={content.priceList}
+            service={withService(content).service}
             whatsapp={content.contact.whatsapp}
             locale={locale}
           />
+          <TravelRoute whatsapp={WHATSAPP_NUMBER} locale={locale} />
           <section
             className="contact-section"
             id="contact"
