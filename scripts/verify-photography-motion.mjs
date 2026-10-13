@@ -63,16 +63,14 @@ try {
     0,
     "No extra homepage section",
   );
-  // The course cards replaced the old photo fan under the experiences.
-  const selectors =
-    ".hero-photo, .course-photo, .course-offer-photo img, .ocean-photo";
+  const selectors = ".hero-photo, .course-photo, .fan-photo img, .ocean-photo";
   const urls = await page
     .locator(selectors)
     .evaluateAll((images) => images.map((image) => image.getAttribute("src")));
-  assert.equal(urls.length, 10);
+  assert.equal(urls.length, 11);
   assert.equal(
     new Set(urls).size,
-    10,
+    11,
     "All homepage photographic placements are different",
   );
   for (const [key, photo] of Object.entries(activityPhotos))
@@ -282,14 +280,12 @@ try {
   await page
     .locator(".admin-image-slot")
     .filter({
-      has: page.locator(":scope > strong", {
-        hasText: /^Jelajahi laut — kehidupan terumbu$/,
-      }),
+      has: page.locator(":scope > strong", { hasText: /^Galeri — penyu$/ }),
     })
     .locator("summary")
     .click();
   await page
-    .getByLabel("URL foto Jelajahi laut — kehidupan terumbu", { exact: true })
+    .getByLabel("URL foto Galeri — penyu", { exact: true })
     .fill("/assets/photos/fan-coral.webp");
   await page
     .getByRole("button", { name: "Simpan gambar website", exact: true })
@@ -302,13 +298,13 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(
     await page
-      .getByLabel("URL foto Jelajahi laut — kehidupan terumbu", { exact: true })
+      .getByLabel("URL foto Galeri — penyu", { exact: true })
       .inputValue(),
     "/assets/photos/fan-coral.webp",
   );
   await page.goto(site, { waitUntil: "networkidle" });
   assert.equal(
-    await page.locator(".reef-card .ocean-photo").getAttribute("src"),
+    await page.locator(".photo-four img").getAttribute("src"),
     "/assets/photos/fan-coral.webp",
   );
   const saved = await state();

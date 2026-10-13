@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import SiteNavLinks from "./components/SiteNavLinks.jsx";
-import CourseOffer from "./course/CourseOffer.jsx";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
@@ -261,7 +260,43 @@ export default function HomePage({ content, locale = "en" }) {
                 );
               })}
             </div>
-            <CourseOffer courses={content.courses} locale={locale} />
+            <div className="quiz-panel" data-reveal>
+              <p className="eyebrow">{t.course.kicker}</p>
+              <h2>{content.text.quizTitle}</h2>
+              <p>{content.text.quizDescription}</p>
+              <a
+                className="button quiz-button"
+                href={localeHref(locale, "/course")}
+              >
+                {t.course.cta + " "}
+                <span>{"↗"}</span>
+              </a>
+              <button className="quiz-help" id="open-quiz" type="button">
+                {t.course.help}
+              </button>
+              <div className="photo-fan" aria-hidden="true">
+                {[
+                  "galleryDive",
+                  "galleryFreedive",
+                  "galleryCoral",
+                  "galleryTurtle",
+                  "galleryIsland",
+                ].map((key, index) => (
+                  <div
+                    className={`fan-photo photo-${["one", "two", "three", "four", "five"][index]}`}
+                    key={key}
+                  >
+                    <img
+                      src={content.images[key]}
+                      alt=""
+                      width="640"
+                      height="426"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
             <div id="more-courses" className="more-courses" hidden>
               <p>{h.moreCourses}</p>
               <button className="button dark" data-book>

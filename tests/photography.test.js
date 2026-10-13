@@ -72,7 +72,7 @@ test("saved custom photos survive migration and every editable image survives CM
   for (const section of ["images", "cardImage"]) {
     const invalid = structuredClone(saved);
     if (section === "images")
-      invalid.images.shop = "javascript:alert(1)";
+      invalid.images.galleryIsland = "javascript:alert(1)";
     else invalid.activities.trip.cardImage = "http://example.com/unsafe.jpg";
     assert.throws(() => validateContent(invalid));
   }

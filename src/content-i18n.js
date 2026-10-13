@@ -71,8 +71,9 @@ export const englishDefaults = {
     heroDescription: "Diving experiences for every kind of curiosity.",
     heroButton: "Start your adventure",
     experiencesHeading: "There's a story for every level.",
-    quizTitle: "Not sure where to start?",
-    quizDescription: "Find the experience that suits you.",
+    quizTitle: "Ready to learn to dive?",
+    quizDescription:
+      "From Discovery Dive to Rescue Diver, start your dive course with a Zanclus instructor.",
     oceanTitle1: "The ocean has a way",
     oceanTitle2: "of leaving you in awe.",
     oceanDescription:
@@ -396,6 +397,17 @@ export function withRajaAmpatTitle(content) {
       ...updated.text,
       heroEyebrow: "CERITAMU BERIKUTNYA DIMULAI",
     };
+  // The panel under the experiences now invites visitors to the courses.
+  const quizLines = {
+    "Belum tahu mulai dari mana?": ["quizTitle", "Siap belajar menyelam?"],
+    "Temukan pengalaman yang sesuai denganmu.": [
+      "quizDescription",
+      "Dari Discovery Dive sampai Rescue Diver, mulai kursus selammu bersama instruktur Zanclus.",
+    ],
+  };
+  for (const [old, [field, value]] of Object.entries(quizLines))
+    if (content.text?.[field] === old)
+      updated.text = { ...(updated.text ?? content.text), [field]: value };
   const english = (patch) => {
     const en = updated.en ?? content.en;
     updated.en = { ...en, text: { ...en.text, ...patch } };
@@ -404,6 +416,12 @@ export function withRajaAmpatTitle(content) {
     english({ heroEyebrow: "YOUR NEXT STORY STARTS" });
   if (content.en?.text?.heroTitle1 === "Beneath the sea,")
     english({ heroTitle1: englishDefaults.text.heroTitle1 });
+  if (content.en?.text?.quizTitle === "Not sure where to start?")
+    english({ quizTitle: englishDefaults.text.quizTitle });
+  if (
+    content.en?.text?.quizDescription === "Find the experience that suits you."
+  )
+    english({ quizDescription: englishDefaults.text.quizDescription });
   return updated;
 }
 
