@@ -845,3 +845,20 @@ a.admin-stat:hover {
 .admin-media-grid {
   margin-top: 18px;
 }
+
+/* Partner logo slot in the course editor. */
+.admin-partner-logo img {
+  height: 80px;
+  object-fit: contain;
+  background: #f4f8fa;
+}
+.admin-partner-logo > span {
+  display: grid;
+  place-items: center;
+  height: 80px;
+  border-radius: 10px;
+  background: #062b3b;
+  color: #bef4a5;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}

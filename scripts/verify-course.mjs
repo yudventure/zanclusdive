@@ -89,7 +89,9 @@ try {
   await cta.click();
   await page.waitForURL(base + "/id/course");
   await page.goto(base + "/id/course#open-water", { waitUntil: "networkidle" });
-  assert.equal(await page.locator("#course-select").inputValue(), "open-water");
+  await page.waitForFunction(
+    () => document.querySelector("#course-select").value === "open-water",
+  );
   assert.equal(await page.locator(".course-item").count(), 4);
   assert.equal(
     await page
@@ -158,6 +160,62 @@ try {
     /Rp\s?7\.750\.000/,
   );
 
+  // Certification partners run in a strip on the homepage panel and under
+  // the /course hero; a logo uploaded in the admin replaces the text badge.
+  for (const path of ["/id", "/id/course"]) {
+    await page.goto(base + path, { waitUntil: "networkidle" });
+    const strip = page.locator(".partner-marquee").first();
+    assert.equal(
+      await strip.locator(".partner-marquee-title").textContent(),
+      "PARTNER SERTIFIKASI SELAM",
+    );
+    const names = await strip
+      .locator("li:not([aria-hidden]) .partner-badge")
+      .allTextContents();
+    assert.deepEqual(names, ["SSI", "CMAS", "PADI"]);
+  }
+  await page.goto(base + "/admin/courses", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "+ Tambah partner" }).click();
+  await page.getByLabel("Nama singkat (mis. PADI)").last().fill("NAUI");
+  await page.getByRole("button", { name: "Simpan partner" }).click();
+  await page.getByText("Perubahan sudah tersimpan").waitFor();
+  const logo = await page.evaluate(async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 80;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#0a5ea8";
+    ctx.fillRect(0, 0, 240, 80);
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    return [...new Uint8Array(await blob.arrayBuffer())];
+  });
+  await page
+    .locator(".admin-partner-logo")
+    .first()
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: "ssi-logo.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(logo),
+    });
+  await page
+    .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
+    .waitFor({ timeout: 60000 });
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
+  const strip = page.locator(".partner-marquee");
+  assert.match(
+    await strip
+      .locator('li:not([aria-hidden]) img[alt="SSI"]')
+      .getAttribute("src"),
+    /^\/api\/media\//,
+  );
+  assert.deepEqual(
+    await strip
+      .locator("li:not([aria-hidden]) .partner-badge")
+      .allTextContents(),
+    ["CMAS", "PADI", "NAUI"],
+  );
+
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/id", "/id/course"]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
@@ -170,7 +228,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, 390px without sideways scroll. No messages sent.",
+    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, partner strip with admin-added partner and uploaded logo, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();

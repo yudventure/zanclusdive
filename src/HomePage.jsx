@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import SiteNavLinks from "./components/SiteNavLinks.jsx";
+import PartnerMarquee from "./course/PartnerMarquee.jsx";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
@@ -274,6 +275,10 @@ export default function HomePage({ content, locale = "en" }) {
               <button className="quiz-help" id="open-quiz" type="button">
                 {t.course.help}
               </button>
+              <PartnerMarquee
+                partners={content.courses?.partners}
+                locale={locale}
+              />
               <div className="photo-fan" aria-hidden="true">
                 {[
                   "galleryDive",

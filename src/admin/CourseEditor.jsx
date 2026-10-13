@@ -1,6 +1,6 @@
 "use client";
 import { cloneElement, useId } from "react";
-import { courseLimit, defaultCourses } from "../course-model.js";
+import { courseLimit, defaultCourses, partnerLimit } from "../course-model.js";
 import { builtInPhotos } from "../photography.js";
 import ImageUpload from "./ImageUpload.jsx";
 
@@ -38,8 +38,24 @@ export default function CourseEditor({
   onSave,
   busy,
   placePhoto,
+  editPartners,
 }) {
   const items = (courses ?? defaultCourses).items;
+  const partners = courses?.partners ?? defaultCourses.partners;
+  // Partner edits go through a function of the current list, so an upload
+  // that finishes later still lands on the right partner.
+  const changePartner = (index, patch) =>
+    editPartners((list) =>
+      list.map((p, i) => (i === index ? { ...p, ...patch } : p)),
+    );
+  function movePartner(index, delta) {
+    editPartners((list) => {
+      const next = [...list];
+      const [item] = next.splice(index, 1);
+      next.splice(index + delta, 0, item);
+      return next;
+    });
+  }
   const change = (index, patch) =>
     update(
       items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
@@ -235,6 +251,124 @@ export default function CourseEditor({
           </button>
           <button className="admin-button" disabled={busy}>
             {busy ? "Menyimpan…" : "Simpan kursus"}
+          </button>
+        </div>
+      </section>
+      <section className="admin-card">
+        <h2>Partner sertifikasi</h2>
+        <p className="admin-subtle">
+          Tampil sebagai running text di bagian kursus beranda dan di halaman
+          /course. Upload logo resmi dari PC atau HP; tanpa logo, nama singkat
+          tampil sebagai lencana teks. Maksimal {partnerLimit} partner.
+        </p>
+        {partners.map((partner, index) => (
+          <fieldset className="admin-price-item" key={index}>
+            <legend>
+              {partner.name || "Partner baru"}
+              <span>
+                <button
+                  type="button"
+                  className="admin-text-button"
+                  disabled={index === 0}
+                  onClick={() => movePartner(index, -1)}
+                  aria-label={`Naikkan ${partner.name || "partner"}`}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className="admin-text-button"
+                  disabled={index === partners.length - 1}
+                  onClick={() => movePartner(index, 1)}
+                  aria-label={`Turunkan ${partner.name || "partner"}`}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  className="admin-text-button"
+                  onClick={() =>
+                    editPartners((list) => list.filter((_, i) => i !== index))
+                  }
+                >
+                  Hapus
+                </button>
+              </span>
+            </legend>
+            <div className="admin-gallery-item">
+              <div className="admin-gallery-photo admin-partner-logo">
+                {partner.logo ? (
+                  <img src={partner.logo} alt={"Logo " + partner.name} />
+                ) : (
+                  <span>{partner.name || "Logo"}</span>
+                )}
+                <ImageUpload
+                  compact
+                  label={partner.logo ? "Ganti logo" : "Upload logo"}
+                  onFile={(file) =>
+                    placePhoto(file, (url) =>
+                      changePartner(index, { logo: url }),
+                    )
+                  }
+                />
+                {partner.logo && (
+                  <button
+                    type="button"
+                    className="admin-inline"
+                    onClick={() => changePartner(index, { logo: "" })}
+                  >
+                    Pakai lencana teks
+                  </button>
+                )}
+              </div>
+              <div className="admin-form-grid">
+                <Field label="Nama singkat (mis. PADI)">
+                  <input
+                    required
+                    maxLength={30}
+                    value={partner.name}
+                    onChange={(e) =>
+                      changePartner(index, { name: e.target.value })
+                    }
+                  />
+                </Field>
+                <span />
+                {["id", "en"].map((lang) => (
+                  <Field
+                    key={lang}
+                    label={`Nama lengkap (${lang === "id" ? "Indonesia" : "English"})`}
+                  >
+                    <input
+                      maxLength={120}
+                      value={partner.full[lang]}
+                      onChange={(e) =>
+                        changePartner(index, {
+                          full: { ...partner.full, [lang]: e.target.value },
+                        })
+                      }
+                    />
+                  </Field>
+                ))}
+              </div>
+            </div>
+          </fieldset>
+        ))}
+        <div className="admin-actions">
+          <button
+            type="button"
+            className="admin-button secondary"
+            disabled={partners.length >= partnerLimit}
+            onClick={() =>
+              editPartners((list) => [
+                ...list,
+                { name: "", full: { id: "", en: "" }, logo: "" },
+              ])
+            }
+          >
+            + Tambah partner
+          </button>
+          <button className="admin-button" disabled={busy}>
+            {busy ? "Menyimpan…" : "Simpan partner"}
           </button>
         </div>
       </section>

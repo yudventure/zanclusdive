@@ -7,6 +7,7 @@ import PriceListEditor from "./PriceListEditor.jsx";
 import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
 import CourseEditor from "./CourseEditor.jsx";
+import { defaultCourses } from "../course-model.js";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
@@ -1130,6 +1131,17 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   placePhoto={placePhoto}
+                  editPartners={(edit) =>
+                    setContent((current) => ({
+                      ...current,
+                      courses: {
+                        ...current.courses,
+                        partners: edit(
+                          current.courses?.partners ?? defaultCourses.partners,
+                        ),
+                      },
+                    }))
+                  }
                 />
               )}
               {section === "events" && (

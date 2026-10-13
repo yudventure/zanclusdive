@@ -7,6 +7,7 @@ import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import FormField from "../components/FormField.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
+import PartnerMarquee from "./PartnerMarquee.jsx";
 import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
 import { courseInquiry, courseText } from "../course-model.js";
@@ -271,10 +272,16 @@ export default function CoursePage({ content, locale = "en" }) {
     window.addEventListener("scroll", scroll, { passive: true });
     return () => window.removeEventListener("scroll", scroll);
   }, []);
-  // A link such as /course#open-water preselects that course in the form.
+  // A link such as /course#open-water preselects that course in the form,
+  // also when the visitor is already on the page.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    if (courses.some((x) => x.id === id)) setSelected(id);
+    const pick = () => {
+      const id = window.location.hash.slice(1);
+      if (courses.some((x) => x.id === id)) setSelected(id);
+    };
+    pick();
+    window.addEventListener("hashchange", pick);
+    return () => window.removeEventListener("hashchange", pick);
   }, []);
   function choose(id) {
     setSelected(id);
@@ -389,6 +396,11 @@ export default function CoursePage({ content, locale = "en" }) {
             </dl>
           </div>
         </section>
+        <PartnerMarquee
+          partners={content.courses.partners}
+          locale={locale}
+          tone="band"
+        />
         <div className="activity-body">
           <div className="activity-container">
             <div
