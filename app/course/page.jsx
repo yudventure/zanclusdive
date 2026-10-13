@@ -6,6 +6,7 @@ import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { withCourses } from "../../src/course-model.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
+import { developerGate } from "../../src/server/developer-gate.jsx";
 
 export const dynamic = "force-dynamic";
 const readContent = cache(publicContent);
@@ -31,5 +32,7 @@ export async function generateMetadata() {
 }
 export default async function Page() {
   const { content, locale } = await coursePage();
+  const { blocked } = await developerGate("course", content, locale);
+  if (blocked) return blocked;
   return <CoursePage content={content} locale={locale} />;
 }

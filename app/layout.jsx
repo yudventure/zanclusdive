@@ -11,8 +11,14 @@ import "./course.css";
 import "./about-service.css";
 import "./forms.css";
 import "../src/components/peta-raja-ampat/peta-raja-ampat.css";
+import "./developer.css";
+import { headers } from "next/headers";
 import { dictionary, htmlLang } from "../src/i18n.js";
 import { requestLocale, languageAlternates } from "../src/server/locale.js";
+import { currentAdmin } from "../src/server/auth.js";
+import { publicContent } from "../src/server/store.js";
+import { DeveloperBar } from "../src/server/developer-gate.jsx";
+import ConnectionNotice from "../src/components/ConnectionNotice.jsx";
 const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -56,10 +62,23 @@ export const viewport = {
   initialScale: 1,
   themeColor: "#062B3B",
 };
+// Developer mode settings when a signed-in admin views the public website.
+async function adminDeveloper() {
+  const path = (await headers()).get("x-zanclus-path") || "";
+  if (path.startsWith("/admin") || !(await currentAdmin())) return null;
+  const developer = (await publicContent()).developer;
+  return developer?.enabled ? developer : null;
+}
 export default async function RootLayout({ children }) {
+  const locale = await requestLocale();
+  const developer = await adminDeveloper();
   return (
-    <html lang={htmlLang[await requestLocale()]}>
-      <body>{children}</body>
+    <html lang={htmlLang[locale]}>
+      <body>
+        {children}
+        {developer && <DeveloperBar developer={developer} />}
+        <ConnectionNotice locale={locale} />
+      </body>
     </html>
   );
 }

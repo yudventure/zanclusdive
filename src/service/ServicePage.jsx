@@ -10,6 +10,8 @@ import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
 import { serviceInquiry, serviceText } from "../service-model.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked } from "../developer.js";
 
 const icons = {
   gear: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
@@ -230,12 +232,19 @@ function Request({ items, chosen, onToggle, contact, locale }) {
   );
 }
 
-export default function ServicePage({ content, locale = "en" }) {
+export default function ServicePage({
+  content,
+  locale = "en",
+  locks = noLocks,
+}) {
   const dict = dictionary(locale);
   const s = dict.service;
   const href = (path) => localeHref(locale, path);
   const motionRoot = useRef(null);
   const items = content.service.items.filter((x) => x.enabled);
+  // Services locked in developer mode stay listed but can't be chosen.
+  const locked = (item) => itemLocked(locks, "service", item.id);
+  const open = items.filter((item) => !locked(item));
   const [chosen, setChosen] = useState([]);
   const toggle = (id) =>
     setChosen((current) =>
@@ -246,7 +255,7 @@ export default function ServicePage({ content, locale = "en" }) {
   useEffect(() => {
     const pick = () => {
       const id = window.location.hash.slice(1);
-      if (items.some((x) => x.id === id))
+      if (open.some((x) => x.id === id))
         setChosen((current) =>
           current.includes(id) ? current : [...current, id],
         );
@@ -348,9 +357,12 @@ export default function ServicePage({ content, locale = "en" }) {
                           key={item.id}
                           id={item.id}
                           className={
-                            "service-item" + (on ? " is-selected" : "")
+                            "service-item" +
+                            (on ? " is-selected" : "") +
+                            (locked(item) ? " is-locked" : "")
                           }
                         >
+                          {locked(item) && <LockedBadge locale={locale} />}
                           <span
                             className="service-item-icon"
                             aria-hidden="true"
@@ -381,6 +393,7 @@ export default function ServicePage({ content, locale = "en" }) {
                             <button
                               type="button"
                               className={"button " + (on ? "lime" : "dark")}
+                              disabled={locked(item)}
                               aria-pressed={on}
                               onClick={() => toggle(item.id)}
                             >
@@ -442,7 +455,7 @@ export default function ServicePage({ content, locale = "en" }) {
               </div>
               {items.length > 0 && (
                 <Request
-                  items={items}
+                  items={open}
                   chosen={chosen}
                   onToggle={toggle}
                   contact={content.contact}

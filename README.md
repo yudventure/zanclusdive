@@ -56,6 +56,34 @@ Teks yang dikelola CMS memiliki versi English. Di **Teks website**, **Pengalaman
 
 Teks UI tetap (label tombol, formulir, dan navigasi) ada di `src/i18n.js`; terjemahan default konten CMS ada di `src/content-i18n.js`. Uji dua bahasa dengan `node scripts/verify-i18n.mjs` terhadap server demo lokal (`BASE_URL`). Skrip verifikasi lain menguji versi Indonesia di `/id`.
 
+## Mode developer, halaman perawatan, dan halaman error
+
+Buka `/admin/developer` (**Mode developer** di menu admin). Saat mode developer **aktif**, kamu bisa mengunci:
+
+- **Seluruh website**: semua halaman publik menampilkan halaman perawatan dengan status 503 dan `Retry-After`, supaya Google tahu ini sementara. Halaman admin tetap terbuka.
+- **Per halaman**: Beranda, Diving, Snorkeling, Trip laut, Kursus, Tentang kami, Servis alat, Dive Shop. Halaman terkunci menampilkan halaman perawatan dengan tombol kembali ke beranda. Kartu aktivitas di beranda ikut ditandai dan tidak bisa diklik.
+- **Per bagian beranda**: pengalaman & harga, panel kursus, peta titik selam, galeri laut, video YouTube, Dive Shop, cara menuju ke sini, dan toko & kontak. Bagian terkunci diganti kartu "Sedang diperbarui" dengan tombol WhatsApp.
+- **Per item**: produk Dive Shop dan servis alat selam. Item tetap terlihat dengan tanda "Sedang diperbarui", tapi tidak bisa dimasukkan ke keranjang atau dipilih di formulir.
+
+Pesan untuk pengunjung (ID/EN) dan perkiraan selesai (WIT) tampil di halaman perawatan. Admin yang sedang masuk tetap melihat website lengkap, dengan bar "Mode developer aktif" di bawah layar. Mematikan mode developer membuka semuanya sekaligus, dan pilihan kunci tetap tersimpan untuk lain kali.
+
+Cara kerjanya: setiap halaman memeriksa kunci dan sesi admin. `proxy.js` juga menjawab halaman terkunci dengan 503 dari status kunci yang diingat proses server setiap kali konten dibaca atau disimpan. Setelah server baru menyala, permintaan pertama tetap mendapat halaman perawatan dari halaman itu sendiri.
+
+Halaman status memakai ilustrasi jendela kapal selam dengan ikan Moorish idol (*Zanclus cornutus*), dalam Bahasa Indonesia dan English:
+
+| Halaman | Kapan tampil | Alamat |
+| --- | --- | --- |
+| Perawatan | Mode developer mengunci website atau halaman | `/maintenance` (503) |
+| 404 | Alamat tidak ditemukan | otomatis, juga `/status/404.html` |
+| 403 | Akses ditolak | `/status/403.html` |
+| 500 | Halaman gagal dimuat | otomatis (`app/error.jsx`), juga `/status/500.html` |
+| 502, 503, 504 | Server Hostinger tidak menjawab dengan benar | `/status/502.html`, `/status/503.html`, `/status/504.html` |
+| Offline | Internet pengunjung terputus | `/status/offline.html` |
+
+Tambahkan `?lang=id` untuk versi Indonesia. Service worker (`public/sw.js`) menyimpan halaman offline, 502, 503, dan 504 di browser pengunjung yang pernah membuka website. Saat internet pengunjung putus, halaman offline tampil dan dimuat ulang otomatis begitu koneksi kembali. Saat hosting menjawab 502, 503, atau 504, halaman Zanclus yang tampil. Service worker hanya menangani pemuatan halaman dan tidak menyimpan isi website. Halaman yang sedang terbuka juga menampilkan pemberitahuan kecil saat koneksi putus dan tersambung lagi.
+
+Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-developer.mjs` pada build produksi server demo lokal dengan `CMS_DEMO_LOGIN=true` dan `CMS_COOKIE_SECURE=false`. Tes ini mengubah mode developer lalu mematikannya lagi.
+
 ## Video YouTube di galeri
 
 Di bawah dua kartu Jelajahi laut dan di atas tombol **Buka galeri** tampil deretan video vertikal 9:16 dari YouTube. Isi link di `/admin/media` → **Video YouTube (9:16)** (maksimal 8; link Shorts, `watch?v=`, atau `youtu.be`), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil.

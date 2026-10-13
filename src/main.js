@@ -96,12 +96,15 @@ export function initializeWebsite(content, locale = "en") {
       { signal: controller.signal },
     ),
   );
-  $("#see-all").onclick = () => {
-    const more = $("#more-courses");
-    more.hidden = !more.hidden;
-    $("#see-all").innerHTML = more.hidden ? t.seeAllHtml : t.closeHtml;
-    $("#see-all").setAttribute("aria-expanded", !more.hidden);
-  };
+  // Missing while the experiences section is locked in developer mode.
+  const seeAll = $("#see-all");
+  if (seeAll)
+    seeAll.onclick = () => {
+      const more = $("#more-courses");
+      more.hidden = !more.hidden;
+      seeAll.innerHTML = more.hidden ? t.seeAllHtml : t.closeHtml;
+      seeAll.setAttribute("aria-expanded", !more.hidden);
+    };
   let quizStep = 0,
     answers = {};
   function quizButton(label, value, callback) {

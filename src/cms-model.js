@@ -9,6 +9,7 @@ import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { defaultCourses, validateCourses } from "./course-model.js";
 import { defaultAbout, validateAbout } from "./about-model.js";
 import { defaultService, validateService } from "./service-model.js";
+import { defaultDeveloper, validateDeveloper } from "./developer.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -68,6 +69,7 @@ export const defaultContent = {
   courses: structuredClone(defaultCourses),
   about: structuredClone(defaultAbout),
   service: structuredClone(defaultService),
+  developer: structuredClone(defaultDeveloper),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -272,6 +274,7 @@ export function validateContent(input) {
     courses: validateCourses(input.courses),
     about: validateAbout(input.about),
     service: validateService(input.service),
+    developer: validateDeveloper(input.developer),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }

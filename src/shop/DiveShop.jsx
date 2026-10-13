@@ -9,6 +9,8 @@ import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
 import { dictionary, intlLocale, localeHref } from "../i18n.js";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked } from "../developer.js";
 
 export default function DiveShop({
   shop,
@@ -19,6 +21,7 @@ export default function DiveShop({
   today,
   tagline,
   locale = "en",
+  locks = noLocks,
 }) {
   const dict = dictionary(locale);
   const t = dict.shop;
@@ -262,13 +265,17 @@ export default function DiveShop({
                 {products.map((product) => {
                   const price =
                     product[mode === "sale" ? "salePrice" : "rentalPrice"];
+                  const locked = itemLocked(locks, "product", product.id);
                   return (
                     <article
-                      className="shop-product-card"
+                      className={
+                        "shop-product-card" + (locked ? " is-locked" : "")
+                      }
                       key={product.id}
                       data-product={product.id}
                       data-reveal
                     >
+                      {locked && <LockedBadge locale={locale} />}
                       <div className="shop-product-image">
                         <ProductVisual product={product} locale={locale} />
                         <span
@@ -298,7 +305,9 @@ export default function DiveShop({
                             )}
                           </p>
                           <button
-                            disabled={product.availability === "unavailable"}
+                            disabled={
+                              locked || product.availability === "unavailable"
+                            }
                             aria-label={t.add(product.name, mode === "sale")}
                             onClick={() => add(product)}
                           >

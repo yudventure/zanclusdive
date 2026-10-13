@@ -6,6 +6,8 @@ import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
 const tabs = ["buy", ...rentalGroups];
 
@@ -106,11 +108,12 @@ function ServiceArt() {
 }
 
 // Banner under the service list leading to the dive gear service page.
-function ServiceBanner({ service, locale }) {
+function ServiceBanner({ service, locale, locks }) {
   const b = dictionary(locale).shop.teaser.serviceBanner;
   const prices = (service?.items ?? [])
-    .filter((item) => item.enabled)
+    .filter((item) => item.enabled && !itemLocked(locks, "service", item.id))
     .map((item) => item.price);
+  if (pageLocked(locks, "service")) return null;
   return (
     <a className="shop-service-banner" href={localeHref(locale, "/service")}>
       <span className="shop-service-banner-top">
@@ -155,6 +158,7 @@ export default function ShopTeaser({
   service,
   whatsapp,
   locale = "en",
+  locks = noLocks,
 }) {
   const t = dictionary(locale).shop;
   const s = t.teaser;
@@ -186,6 +190,7 @@ export default function ShopTeaser({
           unit: "",
           mode: "sale",
           visual: p,
+          locked: itemLocked(locks, "product", p.id),
         }))
     : priceList[active].map((item, index) => ({
         key: `${active}:${index}`,
@@ -285,7 +290,7 @@ export default function ShopTeaser({
               </button>
             ))}
           </div>
-          <ServiceBanner service={service} locale={locale} />
+          <ServiceBanner service={service} locale={locale} locks={locks} />
         </div>
         <div
           className="shop-service-panel"
@@ -300,7 +305,11 @@ export default function ShopTeaser({
               {items.map((item) => {
                 const count = quantity(item.key);
                 return (
-                  <li className="shop-item" key={item.key}>
+                  <li
+                    className={"shop-item" + (item.locked ? " is-locked" : "")}
+                    key={item.key}
+                  >
+                    {item.locked && <LockedBadge locale={locale} />}
                     <ProductVisual product={item.visual} locale={locale} />
                     <div className="shop-item-body">
                       <p className="shop-service-tag">
@@ -316,7 +325,7 @@ export default function ShopTeaser({
                           : rupiah(item.price, locale)}
                         {item.unit && <small> {item.unit}</small>}
                       </p>
-                      {count ? (
+                      {item.locked ? null : count ? (
                         <div className="shop-item-stepper">
                           <button
                             type="button"

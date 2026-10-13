@@ -16,6 +16,7 @@ import {
   withActivityRefresh,
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
+import { rememberLocks } from "../developer.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -58,7 +59,13 @@ async function db() {
   }
   return globalThis.__zanclusDB;
 }
+// Every read and save also tells proxy.js which pages are locked.
 export async function getContent() {
+  const result = await storedContent();
+  rememberLocks(result.content);
+  return result;
+}
+async function storedContent() {
   if (isDemo()) return demo.getContent();
   const pool = await db();
   const [rows] = await pool.execute(
@@ -82,7 +89,7 @@ export async function getContent() {
   };
 }
 export async function publicContent() {
-  if (isDemo()) return (await demo.getContent()).content;
+  if (isDemo()) return (await getContent()).content;
   if (!databaseConfigured()) return structuredClone(defaultContent);
   try {
     return (await getContent()).content;
@@ -95,7 +102,11 @@ export async function publicContent() {
   }
 }
 export async function saveContent(content, version) {
-  if (isDemo()) return demo.saveContent(content, version);
+  if (isDemo()) {
+    const saved = await demo.saveContent(content, version);
+    if (saved) rememberLocks(saved.content);
+    return saved;
+  }
   const pool = await db();
   const [result] = await pool.execute(
     "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id='site' AND version=?",

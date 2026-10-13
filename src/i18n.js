@@ -234,6 +234,24 @@ const id = {
     ecoMessage:
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
   },
+  locked: {
+    eyebrow: "SEDANG DIPERBARUI",
+    text: "Bagian ini sedang kami perbarui dan segera kembali. Ada pertanyaan? Tim kami siap membantu lewat WhatsApp.",
+    chat: "Tanya lewat WhatsApp",
+    whatsapp:
+      "Halo Zanclus! Saya ingin bertanya, bagian website ini sedang diperbarui.",
+    item: "Sedang diperbarui",
+    sections: {
+      experiences: "Pengalaman & daftar harga",
+      course: "Kursus selam",
+      "dive-sites": "Peta titik selam",
+      ocean: "Galeri laut",
+      videos: "Video penyelaman",
+      shop: "Dive Shop",
+      travel: "Cara menuju ke sini",
+      contact: "Toko & kontak",
+    },
+  },
   gallery: {
     eyebrow: "GALERI PENYELAMAN ZANCLUS",
     open: "Buka galeri",
@@ -1154,6 +1172,24 @@ const en = {
     ecoJoin: "Join an ocean care day",
     ecoMessage:
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
+  },
+  locked: {
+    eyebrow: "BEING UPDATED",
+    text: "This part is being updated and will be back soon. Questions? Our team is happy to help on WhatsApp.",
+    chat: "Ask on WhatsApp",
+    whatsapp:
+      "Hi Zanclus! I have a question while this part of the website is being updated.",
+    item: "Being updated",
+    sections: {
+      experiences: "Experiences & prices",
+      course: "Dive courses",
+      "dive-sites": "Dive site map",
+      ocean: "Ocean gallery",
+      videos: "Dive videos",
+      shop: "Dive Shop",
+      travel: "How to get here",
+      contact: "Store & contact",
+    },
   },
   gallery: {
     eyebrow: "ZANCLUS DIVE GALLERY",

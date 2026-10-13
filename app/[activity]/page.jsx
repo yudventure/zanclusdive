@@ -7,6 +7,7 @@ import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
 import { withCalendar } from "../../src/calendar-model.js";
+import { developerGate } from "../../src/server/developer-gate.jsx";
 
 export const dynamic = "force-dynamic";
 const readContent = cache(publicContent);
@@ -44,6 +45,8 @@ export async function generateMetadata({ params }) {
 }
 export default async function Page({ params }) {
   const { key, content, locale } = await activityPage(params);
+  const { blocked } = await developerGate(key, content, locale);
+  if (blocked) return blocked;
   return (
     <ActivityDetail
       activityKey={key}

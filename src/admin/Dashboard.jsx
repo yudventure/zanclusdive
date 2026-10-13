@@ -9,6 +9,8 @@ import CalendarEditor from "./CalendarEditor.jsx";
 import CourseEditor from "./CourseEditor.jsx";
 import AboutEditor from "./AboutEditor.jsx";
 import ServiceEditor from "./ServiceEditor.jsx";
+import DeveloperEditor from "./DeveloperEditor.jsx";
+import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
 import { defaultService } from "../service-model.js";
@@ -44,6 +46,7 @@ const sections = {
   courses: "Kursus selam",
   service: "Servis alat selam",
   about: "Tentang kami",
+  developer: "Mode developer",
 };
 const mainSections = [
   "overview",
@@ -680,6 +683,12 @@ export default function Dashboard({ section, email, today }) {
             {siteOpen && (
               <div className="admin-sublinks">{siteSections.map(link)}</div>
             )}
+            {link("developer")}
+            {lockCount(content?.developer) > 0 && (
+              <p className="admin-dev-flag">
+                Mode developer aktif · {lockCount(content.developer)} kunci
+              </p>
+            )}
           </div>
           <div
             className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
@@ -1192,6 +1201,30 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   placePhoto={placePhoto}
+                />
+              )}
+              {section === "developer" && (
+                <DeveloperEditor
+                  developer={{ ...defaultDeveloper, ...content.developer }}
+                  products={content.shop.products}
+                  services={(content.service ?? defaultService).items}
+                  update={(key, value) =>
+                    setContent((current) => ({
+                      ...current,
+                      developer: {
+                        ...defaultDeveloper,
+                        ...current.developer,
+                        [key]: value,
+                      },
+                    }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(
+                      event,
+                      "Mode developer tersimpan dan langsung berlaku.",
+                    )
+                  }
+                  busy={busy}
                 />
               )}
               {section === "events" && (

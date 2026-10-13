@@ -55,6 +55,10 @@ Script `npm run build` memakai `next build --webpack`. Turbopack default Next.js
 
 Tailwind CSS dan PostCSS berada di `dependencies`, bukan `devDependencies`, karena dibutuhkan saat build. Build tetap berhasil walaupun hosting memasang paket tanpa devDependencies.
 
+## Halaman perawatan dan error
+
+Mode developer diatur dari `/admin/developer`, tanpa hPanel. Halaman 404 dan 500 ditangani aplikasi. Kalau Node.js app sedang mati, server Hostinger menampilkan halamannya sendiri untuk pengunjung baru. Pengunjung yang pernah membuka website melihat halaman 502/503/504 dan offline Zanclus dari service worker. Jika hPanel menyediakan pengaturan halaman error kustom untuk website ini, arahkan ke `/status/502.html`, `/status/503.html`, atau `/status/504.html`. Pengaturan ini belum diverifikasi di hPanel.
+
 ## Diagnosis singkat
 
 - Build gagal: pastikan Node 22/24, root proyek benar, dan `package-lock.json` ikut diunggah. Lihat error pertama pada log.

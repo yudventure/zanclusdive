@@ -3,6 +3,7 @@ import { publicContent } from "../../src/server/store.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary } from "../../src/i18n.js";
+import { developerGate } from "../../src/server/developer-gate.jsx";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -20,8 +21,11 @@ export default async function ShopPage({ searchParams }) {
   const query = await searchParams;
   const locale = await requestLocale();
   const content = localizeContent(await publicContent(), locale);
+  const { locks, blocked } = await developerGate("dive-shop", content, locale);
+  if (blocked) return blocked;
   return (
     <DiveShop
+      locks={locks}
       shop={content.shop}
       contact={content.contact}
       images={content.images}

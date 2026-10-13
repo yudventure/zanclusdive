@@ -12,7 +12,8 @@ import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import { demoAccount } from "../demo-data.js";
 import { operatorAccount } from "./operator-account.js";
-export const COOKIE = "zanclus_admin_session";
+import { adminCookie } from "../developer.js";
+export const COOKIE = adminCookie;
 // The public demo login only works when CMS_DEMO_LOGIN=true (local tests).
 export const demoLoginEnabled = () =>
   isDemo() && process.env.CMS_DEMO_LOGIN === "true";
