@@ -3,8 +3,8 @@ import { dictionary } from "../i18n.js";
 
 // Running strip of dive certification partners. The list is repeated so
 // the loop is seamless; the copy is hidden from screen readers. Each partner
-// is only its logo (or short name) and full name in white, over a dark photo
-// or band: no cards or borders.
+// is only its logo (or short name) and full name over a dark photo or band:
+// no cards or borders. Logos keep their colours unless set to white.
 export default function PartnerMarquee({ partners, locale, tone = "photo" }) {
   const c = dictionary(locale).course;
   const list = partners ?? defaultCourses.partners;
@@ -19,9 +19,10 @@ export default function PartnerMarquee({ partners, locale, tone = "photo" }) {
       <li key={index} aria-hidden={hidden || index >= list.length || undefined}>
         {partner.logo ? (
           <img
+            className={partner.logoStyle === "white" ? "is-white" : "is-color"}
             src={partner.logo}
             alt={partner.name}
-            height="34"
+            height="44"
             loading="lazy"
           />
         ) : (

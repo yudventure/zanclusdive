@@ -164,8 +164,8 @@ try {
   );
 
   // Certification partners run in a strip on the homepage panel and under
-  // the /course hero, as plain white logos and names without cards or
-  // borders; a logo uploaded in the admin replaces the short name.
+  // the /course hero, as logos and names without cards or borders; a logo
+  // uploaded in the admin replaces the short name.
   for (const path of ["/id", "/id/course"]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
     const strip = page.locator(".partner-marquee").first();
@@ -250,8 +250,107 @@ try {
   await page
     .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
     .waitFor({ timeout: 60000 });
+  // A 1080 × 1080 transparent PNG with a colourful round emblem in the middle
+  // (like the POSSI logo), and a dark one-colour logo on transparency.
+  const drawLogo = (kind) =>
+    page.evaluate(async (kind) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1080;
+      const ctx = canvas.getContext("2d");
+      if (kind === "emblem") {
+        ctx.fillStyle = "#d42a2a";
+        ctx.beginPath();
+        ctx.arc(540, 540, 300, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(540, 540, 180, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1747a6";
+        ctx.fillRect(470, 420, 140, 240);
+      } else {
+        ctx.fillStyle = "#101820";
+        ctx.fillRect(140, 460, 800, 160);
+      }
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+      return [...new Uint8Array(await blob.arrayBuffer())];
+    }, kind);
+  const savedPartners = async () =>
+    (await (await page.request.get(base + "/api/admin/state")).json()).content
+      .courses.partners;
+  for (const [index, kind] of [
+    [1, "emblem"],
+    [2, "dark"],
+  ]) {
+    await page
+      .locator(".admin-partner-logo")
+      .nth(index)
+      .locator('input[type="file"]')
+      .setInputFiles({
+        name: kind + ".png",
+        mimeType: "image/png",
+        buffer: Buffer.from(await drawLogo(kind)),
+      });
+    // Saved without pressing a button.
+    for (let i = 0; i < 120 && !(await savedPartners())[index].logo; i++)
+      await page.waitForTimeout(500);
+    assert.ok((await savedPartners())[index].logo, kind + " logo saved");
+  }
+  const previews = page.locator(".admin-partner-preview img");
+  // The emblem keeps its colours; the dark logo is shown white. Both fit
+  // their preview, and the transparent edges were trimmed off.
+  for (const [index, style, ratio] of [
+    [1, "is-color", 1],
+    [2, "is-white", 4.33],
+  ]) {
+    const shown = await previews.nth(index).evaluate((img) => ({
+      style: img.className,
+      height: img.getBoundingClientRect().height,
+      inside:
+        img.getBoundingClientRect().bottom <=
+        img.parentElement.getBoundingClientRect().bottom,
+      width: img.naturalWidth,
+      ratio: img.naturalWidth / img.naturalHeight,
+    }));
+    assert.equal(shown.style, style);
+    assert.equal(shown.height, 52);
+    assert.equal(shown.inside, true);
+    assert.ok(shown.width <= 800 && shown.width > 500, "trimmed to the mark");
+    assert.ok(Math.abs(shown.ratio - ratio) < 0.2, "ratio " + shown.ratio);
+  }
+  assert.equal(
+    await page.getByRole("radio", { name: "Warna asli" }).nth(1).isChecked(),
+    true,
+  );
+  assert.equal(
+    await page.getByRole("radio", { name: "Putih" }).nth(2).isChecked(),
+    true,
+  );
+  assert.deepEqual(
+    (await savedPartners()).map((p) => p.logoStyle),
+    ["color", "color", "white", "color"],
+  );
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const strip = page.locator(".partner-marquee");
+  // On the site: the emblem in colour, 44 px tall and loaded; PADI white.
+  const emblem = await strip
+    .locator('li:not([aria-hidden]) img[alt="CMAS"]')
+    .evaluate((img) => ({
+      loaded: img.complete && img.naturalWidth > 0,
+      className: img.className,
+      height: img.getBoundingClientRect().height,
+      filter: getComputedStyle(img).filter,
+    }));
+  assert.equal(emblem.loaded, true);
+  assert.equal(emblem.className, "is-color");
+  assert.equal(emblem.height, 44);
+  assert.doesNotMatch(emblem.filter, /invert/);
+  assert.match(
+    await strip
+      .locator('li:not([aria-hidden]) img[alt="PADI"]')
+      .evaluate((img) => getComputedStyle(img).filter),
+    /invert/,
+  );
   assert.match(
     await strip
       .locator('li:not([aria-hidden]) img[alt="SSI"]')
@@ -262,8 +361,12 @@ try {
     await strip
       .locator("li:not([aria-hidden]) .partner-name")
       .allTextContents(),
-    ["CMAS", "PADI", "NAUI"],
+    ["NAUI"],
   );
+  await strip.first().scrollIntoViewIfNeeded();
+  await strip.first().screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/partner-logos.png",
+  });
 
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of ["/id", "/id/course"]) {
@@ -277,7 +380,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, dark photo panel, plain white partner strip (no cards or borders, seamless loop) with admin-added partner and uploaded logo, 390px without sideways scroll. No messages sent.",
+    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, dark photo panel, partner strip (no cards or borders, seamless loop) with admin-added partner, uploaded logos trimmed, a colourful transparent emblem in colour and a dark logo white, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();

@@ -104,7 +104,29 @@ Upload gambar saja belum mengganti gambar website: pilih gambar pada slot hero/r
 
 Login memakai cookie HttpOnly, SameSite=Lax, Secure pada HTTPS produksi, dan sesi 8 jam. API admin memerlukan sesi sah, perubahan memerlukan origin yang sesuai, serta login dibatasi setelah 8 kegagalan selama jendela 15 menit. Mengganti password atau SESSION_SECRET membatalkan sesi lama.
 
-Tidak ada akun staf, password reset melalui email, MFA, atau integrasi OTA otomatis. Pengguna pemilik dapat mengganti kredensial dari environment variable hPanel lalu restart/redeploy. Jangan menetapkan `CMS_COOKIE_SECURE=false` di Hostinger; pengaturan tersebut hanya dipakai untuk pengujian HTTP localhost.
+Tidak ada akun staf, MFA, atau integrasi OTA otomatis.
+
+### Ganti password dengan kode OTP email
+
+Di admin, buka **Ubah password** (menu kiri, atau menu akun di kanan atas). Tekan **Kirim kode OTP**, lalu masukkan kode 6 angka dari email bersama password baru (minimal 10 karakter). Lupa password? Di halaman login, tekan **Lupa password? Reset dengan kode OTP email**, isi email operator, lalu ikuti langkah yang sama. Setelah reset, kamu langsung masuk.
+
+- Kode berlaku 10 menit, sekali pakai, dan batal setelah 5 kali salah. Kode baru bisa diminta 1 menit kemudian, maksimal 5 kode per jam.
+- Password baru disimpan sebagai hash scrypt di penyimpanan CMS (folder data demo, atau tabel `zanclus_records` di MySQL). Password ini menggantikan password bawaan akun operator atau `ADMIN_PASSWORD` untuk email yang sama.
+- Setelah password diganti, login di perangkat lain berakhir.
+- Halaman lupa password tidak memberi tahu apakah sebuah email terdaftar.
+
+Kode dikirim lewat akun email SMTP yang diisi di hPanel → Variabel environment, lalu deploy ulang:
+
+| Nama | Isi |
+| --- | --- |
+| `SMTP_HOST` | Server SMTP. Email Hostinger: `smtp.hostinger.com`. Gmail: `smtp.gmail.com` |
+| `SMTP_PORT` | `465` (SSL, bawaan). Untuk port 587 isi juga `SMTP_SECURE=false` |
+| `SMTP_USER` | Alamat email pengirim lengkap, mis. `admin@zanclusdive.com` |
+| `SMTP_PASS` | Password email itu. Untuk Gmail pakai *App Password*, bukan password akun |
+| `SMTP_FROM` | Opsional. Nama dan alamat pengirim, mis. `Zanclus Dive Center <admin@zanclusdive.com>` |
+| `ADMIN_OTP_EMAIL` | Opsional. Email yang menerima kode. Tanpa ini, kode dikirim ke email login |
+
+Isi `ADMIN_OTP_EMAIL` dengan email yang benar-benar kamu buka. Alamat login operator belum tentu punya kotak masuk. Selama SMTP belum diisi, halaman **Ubah password** menampilkan variabel yang masih kurang. Jika server email menolak login, halaman menampilkan alasannya. Jangan menetapkan `CMS_COOKIE_SECURE=false` di Hostinger; pengaturan tersebut hanya dipakai untuk pengujian HTTP localhost.
 
 ## Data dan reservasi
 

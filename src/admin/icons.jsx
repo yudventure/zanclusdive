@@ -32,6 +32,7 @@ const paths = {
   upload: "M12 16V4M7 9l5-5 5 5M4 16v4h16v-4",
   check: "M5 12.5l4.5 4.5L19 7",
   logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10",
+  security: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2",
 };
 
 export function AdminIcon({ name, size = 19, className }) {

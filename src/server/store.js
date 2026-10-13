@@ -1,6 +1,6 @@
 import "server-only";
 import mysql from "mysql2/promise";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
 import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
@@ -365,6 +365,36 @@ export async function getMedia(id) {
     [id],
   );
   return rows[0] || null;
+}
+// Passwords changed in the admin, by lower-case email: { salt, hash,
+// changedAt }. Never part of the content or the admin state.
+const passwordId = (email) =>
+  "pw:" +
+  createHash("sha256")
+    .update(email.trim().toLowerCase())
+    .digest("hex")
+    .slice(0, 40);
+export async function listPasswords() {
+  if (isDemo()) return demo.listPasswords();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT payload FROM zanclus_records WHERE kind='password'",
+  );
+  return Object.fromEntries(
+    rows.map((r) => {
+      const { email, ...record } = JSON.parse(r.payload);
+      return [email, record];
+    }),
+  );
+}
+export async function savePassword(email, record) {
+  if (isDemo()) return demo.savePassword(email, record);
+  const pool = await db();
+  const key = email.trim().toLowerCase();
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'password',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [passwordId(key), JSON.stringify({ email: key, ...record })],
+  );
 }
 export async function loginBlocked() {
   if (isDemo()) return demo.loginBlocked();

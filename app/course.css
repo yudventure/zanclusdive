@@ -304,12 +304,16 @@
   color: white;
   text-shadow: 0 1px 12px #0000008c;
 }
-/* Logos are shown white so any partner fits the dark section. */
+/* Logos keep their own colours, lifted off the photo by a soft shadow; a
+   dark one-colour logo is shown white so it stays visible. */
 .partner-marquee-track img {
-  height: 34px;
+  height: 44px;
   width: auto;
-  max-width: 130px;
+  max-width: 150px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 8px #00000080);
+}
+.partner-marquee-track img.is-white {
   filter: brightness(0) invert(1) drop-shadow(0 1px 8px #00000066);
   opacity: 0.92;
 }
@@ -360,7 +364,7 @@
     animation-duration: 28s;
   }
   .partner-marquee-track img {
-    height: 28px;
+    height: 36px;
   }
   .partner-name {
     font-size: 18px;

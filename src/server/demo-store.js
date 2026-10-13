@@ -326,6 +326,17 @@ export async function getMedia(id) {
     return null;
   }
 }
+// Passwords changed in the admin, by lower-case email: { salt, hash,
+// changedAt }. Never part of the content or the admin state.
+export async function listPasswords() {
+  return (await read()).passwords ?? {};
+}
+export async function savePassword(email, record) {
+  return mutate((state) => {
+    state.passwords ||= {};
+    state.passwords[email.trim().toLowerCase()] = record;
+  });
+}
 export async function loginBlocked() {
   const { failures } = await read();
   return Date.now() - failures.windowStart < 900000 && failures.attempts >= 8;

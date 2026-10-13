@@ -20,7 +20,8 @@ import { defaultService } from "../service-model.js";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
-import { prepareImage } from "./image-upload.js";
+import { prepareImage, prepareLogo } from "./image-upload.js";
+import PasswordEditor from "./PasswordEditor.jsx";
 import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
@@ -55,6 +56,7 @@ const sections = {
   developer: "Mode developer",
   payments: "Pembayaran online",
   agents: "Agen & kalender",
+  security: "Ubah password",
 };
 const mainSections = [
   "overview",
@@ -455,6 +457,20 @@ export default function Dashboard({ section, email, today }) {
     apply(url);
     setAutoSave((n) => n + 1);
   }
+  // Logos are trimmed and their colours checked before the upload; apply
+  // receives the URL and "color" or "white".
+  async function placeLogo(file, apply) {
+    let logo;
+    try {
+      logo = await prepareLogo(file);
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    }
+    const url = await uploadPhoto(logo.file);
+    apply(url, logo.style);
+    setAutoSave((n) => n + 1);
+  }
   useEffect(() => {
     if (autoSave)
       saveSettings(null, "Foto terpasang dan sudah tampil di website.");
@@ -657,6 +673,13 @@ export default function Dashboard({ section, email, today }) {
               {ownerMenu && (
                 <div className="admin-popover">
                   <p>{email}</p>
+                  <Link
+                    className="admin-inline"
+                    href="/admin/security"
+                    onClick={() => setOwnerMenu(false)}
+                  >
+                    <AdminIcon name="security" size={15} /> Ubah password
+                  </Link>
                   <button className="admin-inline" onClick={logout}>
                     <AdminIcon name="logout" size={15} /> Keluar dari admin
                   </button>
@@ -701,6 +724,7 @@ export default function Dashboard({ section, email, today }) {
               <div className="admin-sublinks">{siteSections.map(link)}</div>
             )}
             {link("developer")}
+            {link("security")}
             {lockCount(content?.developer) > 0 && (
               <p className="admin-dev-flag">
                 Mode developer aktif · {lockCount(content.developer)} kunci
@@ -1207,6 +1231,7 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   placePhoto={placePhoto}
+                  placeLogo={placeLogo}
                   editPartners={(edit) =>
                     setContent((current) => ({
                       ...current,
@@ -1322,6 +1347,7 @@ export default function Dashboard({ section, email, today }) {
                   busy={busy}
                 />
               )}
+              {section === "security" && <PasswordEditor request={request} />}
               {section === "developer" && (
                 <DeveloperEditor
                   developer={{ ...defaultDeveloper, ...content.developer }}

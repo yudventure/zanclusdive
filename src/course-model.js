@@ -124,12 +124,14 @@ export const defaultCourses = {
     },
   ],
   // Certification partners shown in the running strip. Without an uploaded
-  // logo the short name is shown as a text badge.
+  // logo the short name is shown as a text badge; a logo keeps its own
+  // colours or is shown white (logoStyle).
   partners: [
     {
       name: "SSI",
       full: t("Scuba Schools International", "Scuba Schools International"),
       logo: "",
+      logoStyle: "color",
     },
     {
       name: "CMAS",
@@ -138,6 +140,7 @@ export const defaultCourses = {
         "Confédération Mondiale des Activités Subaquatiques",
       ),
       logo: "",
+      logoStyle: "color",
     },
     {
       name: "PADI",
@@ -146,6 +149,7 @@ export const defaultCourses = {
         "Professional Association of Diving Instructors",
       ),
       logo: "",
+      logoStyle: "color",
     },
   ],
 };
@@ -202,6 +206,8 @@ export function validatePartners(input) {
       name,
       full: text(p.full, "Nama lengkap partner", 120, false),
       logo: mediaURL(p.logo, "Logo partner"),
+      // "color" shows the logo as it is; "white" as a white silhouette.
+      logoStyle: p.logoStyle === "white" ? "white" : "color",
     };
   });
 }
