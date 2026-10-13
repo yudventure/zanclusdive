@@ -230,7 +230,7 @@
   padding: 4px 6px;
   border: 0;
   background: none;
-  color: #3f6c7a;
+  color: #c4dbe4;
   font: inherit;
   font-size: 12px;
   text-decoration: underline;
@@ -238,7 +238,7 @@
   cursor: pointer;
 }
 .quiz-panel .quiz-help:hover {
-  color: #062b3b;
+  color: white;
 }
 @media (max-width: 700px) {
   .quiz-panel .quiz-help {
@@ -247,19 +247,20 @@
 }
 
 /* Running strip of certification partners (homepage course panel and the
-   band under the /course hero). */
+   band under the /course hero): only logos and names in white over the dark
+   photo or band, no cards or borders. */
 .partner-marquee {
   position: relative;
   z-index: 2;
-  margin: 26px auto 0;
+  margin: 28px auto 0;
   max-width: 1040px;
 }
 .partner-marquee-title {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.24em;
-  color: #4d7381;
+  color: #9fc3cf;
 }
 .partner-marquee-window {
   overflow: hidden;
@@ -278,12 +279,16 @@
     transparent
   );
 }
+/* Half a gap on each end keeps both copies the same width, so the loop
+   has no jump. */
 .partner-marquee-track {
+  --partner-gap: 56px;
   display: flex;
-  gap: 14px;
+  align-items: center;
+  gap: var(--partner-gap);
   width: max-content;
   margin: 0;
-  padding: 6px 0;
+  padding: 6px calc(var(--partner-gap) / 2);
   list-style: none;
   animation: partner-scroll 36s linear infinite;
 }
@@ -295,43 +300,28 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 18px 8px 8px;
-  border: 1px solid #d9e7ee;
-  border-radius: 999px;
-  background: #ffffffd9;
   white-space: nowrap;
+  color: white;
+  text-shadow: 0 1px 12px #0000008c;
 }
+/* Logos are shown white so any partner fits the dark section. */
 .partner-marquee-track img {
   height: 34px;
   width: auto;
-  max-width: 120px;
+  max-width: 130px;
   object-fit: contain;
-  filter: grayscale(1) contrast(1.05);
-  opacity: 0.85;
-  transition:
-    filter 0.3s,
-    opacity 0.3s;
+  filter: brightness(0) invert(1) drop-shadow(0 1px 8px #00000066);
+  opacity: 0.92;
 }
-.partner-marquee-track li:hover img {
-  filter: none;
-  opacity: 1;
-}
-.partner-badge {
-  display: inline-grid;
-  place-items: center;
-  min-width: 58px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #062b3b;
-  color: #bef4a5;
-  font-size: 13px;
+.partner-name {
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
+  line-height: 1;
 }
 .partner-marquee-track small {
   font-size: 12px;
-  color: #3f5d66;
+  color: #d3e2ec;
 }
 @keyframes partner-scroll {
   to {
@@ -342,26 +332,9 @@
 .partner-marquee-band {
   max-width: none;
   margin: 0;
-  padding: 18px 0 20px;
+  padding: 20px 0 22px;
   background: #062b3b;
   text-align: center;
-}
-.partner-marquee-band .partner-marquee-title {
-  color: #8fb9c4;
-}
-.partner-marquee-band .partner-marquee-track li {
-  border-color: #ffffff1f;
-  background: #ffffff0f;
-}
-.partner-marquee-band .partner-badge {
-  background: #bef4a5;
-  color: #062b3b;
-}
-.partner-marquee-band .partner-marquee-track small {
-  color: #d3e2ec;
-}
-.partner-marquee-band .partner-marquee-track img {
-  filter: grayscale(1) brightness(1.8);
 }
 @media (prefers-reduced-motion: reduce) {
   .partner-marquee-track {
@@ -380,14 +353,17 @@
 }
 @media (max-width: 700px) {
   .partner-marquee {
-    margin-top: 20px;
+    margin-top: 22px;
   }
   .partner-marquee-track {
-    gap: 10px;
+    --partner-gap: 36px;
     animation-duration: 28s;
   }
-  .partner-marquee-track li {
-    padding: 6px 14px 6px 6px;
+  .partner-marquee-track img {
+    height: 28px;
+  }
+  .partner-name {
+    font-size: 18px;
   }
   .partner-marquee-track small {
     font-size: 11px;

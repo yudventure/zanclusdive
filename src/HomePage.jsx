@@ -262,6 +262,16 @@ export default function HomePage({ content, locale = "en" }) {
               })}
             </div>
             <div className="quiz-panel" data-reveal>
+              <img
+                className="quiz-photo"
+                src={content.images.course}
+                srcSet={photoSrcSet(content.images.course)}
+                sizes="(max-width: 1320px) 100vw, 1280px"
+                alt=""
+                width="1536"
+                height="864"
+                loading="lazy"
+              />
               <p className="eyebrow">{t.course.kicker}</p>
               <h2>{content.text.quizTitle}</h2>
               <p>{content.text.quizDescription}</p>

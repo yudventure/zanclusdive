@@ -2,9 +2,10 @@ import { defaultCourses, courseText } from "../course-model.js";
 import { dictionary } from "../i18n.js";
 
 // Running strip of dive certification partners. The list is repeated so
-// the loop is seamless; the copy is hidden from screen readers. Without an
-// uploaded logo a partner shows as a text badge.
-export default function PartnerMarquee({ partners, locale, tone = "light" }) {
+// the loop is seamless; the copy is hidden from screen readers. Each partner
+// is only its logo (or short name) and full name in white, over a dark photo
+// or band: no cards or borders.
+export default function PartnerMarquee({ partners, locale, tone = "photo" }) {
   const c = dictionary(locale).course;
   const list = partners ?? defaultCourses.partners;
   if (!list.length) return null;
@@ -24,7 +25,7 @@ export default function PartnerMarquee({ partners, locale, tone = "light" }) {
             loading="lazy"
           />
         ) : (
-          <span className="partner-badge">{partner.name}</span>
+          <strong className="partner-name">{partner.name}</strong>
         )}
         {courseText(partner.full, locale) && (
           <small>{courseText(partner.full, locale)}</small>

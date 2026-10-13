@@ -696,27 +696,53 @@ nav.open a::after {
   color: #60747e;
   text-align: center;
 }
+/* Course panel: a dark diving photo with the same shading as the hero. */
 .quiz-panel {
   position: relative;
+  isolation: isolate;
   text-align: center;
   margin-top: 12px;
   padding: 36px 20px 218px;
-  background: linear-gradient(155deg, #eaf0fb, #f2f4ff 40%, #e9f6f0);
+  background: #031b2c;
+  color: white;
   border-radius: 28px;
   overflow: hidden;
+}
+.quiz-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+}
+.quiz-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 22%, #021b2bb3, transparent 75%),
+    linear-gradient(180deg, #021b2bcc, #021b2b80 45%, #031b2ce6);
+}
+.quiz-panel .eyebrow {
+  color: #bef4a5;
 }
 .quiz-panel h2 {
   font-size: 29px;
   letter-spacing: -1px;
+  color: white;
 }
 .quiz-panel > p:not(.eyebrow) {
   font-size: 12px;
   margin: 12px 0 18px;
-  color: #68818b;
+  color: #d3e2ec;
 }
 .quiz-button {
   background: linear-gradient(100deg, #fff 35%, #cbf4b6);
-  box-shadow: 0 3px 10px #16374b12;
+  color: #062b3b;
+  box-shadow: 0 6px 20px #00000040;
   padding: 12px 20px;
 }
 .photo-fan {
