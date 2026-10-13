@@ -22,6 +22,7 @@ import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { prepareImage, prepareLogo } from "./image-upload.js";
 import PasswordEditor from "./PasswordEditor.jsx";
+import { defaultCalendar } from "../calendar-model.js";
 import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
@@ -1378,6 +1379,20 @@ export default function Dashboard({ section, email, today }) {
                   update={(key, value) => mutateContent("calendar", key, value)}
                   onSave={saveSettings}
                   busy={busy}
+                  media={data.media}
+                  placePhoto={placePhoto}
+                  editBanners={(edit) =>
+                    setContent((current) => ({
+                      ...current,
+                      calendar: {
+                        ...defaultCalendar,
+                        ...current.calendar,
+                        banners: edit(
+                          current.calendar?.banners ?? defaultCalendar.banners,
+                        ),
+                      },
+                    }))
+                  }
                 />
               )}
               {section === "prices" && (

@@ -15,7 +15,7 @@ export const seasonRatingLabels = {
   good: "Baik",
   windy: "Berangin",
 };
-export const calendarLimits = { events: 60, spots: 12, eco: 8 };
+export const calendarLimits = { events: 60, spots: 12, eco: 8, banners: 4 };
 
 const t = (id, en) => ({ id, en });
 const event = (date, type, place, title, description) => ({
@@ -26,6 +26,34 @@ const event = (date, type, place, title, description) => ({
   description,
 });
 
+// Wide banners above the experience cards on the homepage, shown only while
+// an event is on: from showFrom (or at once) until the event's endDate.
+// Without a link the button opens WhatsApp with the event's name.
+export const blankBanner = () => ({
+  enabled: false,
+  badge: { id: "EVENT", en: "EVENT" },
+  title: { id: "", en: "" },
+  subtitle: { id: "", en: "" },
+  price: { id: "", en: "" },
+  note: { id: "", en: "" },
+  startDate: "",
+  endDate: "",
+  showFrom: "",
+  image: "",
+  link: "",
+});
+// A draft from the Zanclus dive trip flyer, off until dates are set.
+export const sampleBanner = () => ({
+  ...blankBanner(),
+  title: t("Dive Trip with Zanclus", "Dive Trip with Zanclus"),
+  subtitle: t(
+    "Raja Ampat The Last Paradise · 8 hari 7 malam · 15 log dive",
+    "Raja Ampat, The Last Paradise · 8 days 7 nights · 15 logged dives",
+  ),
+  price: t("$1.680 / pax", "$1,680 / pax"),
+  note: t("Minimal 4 pax", "Minimum 4 pax"),
+  image: "/assets/photos/event-dive-trip.webp",
+});
 export const defaultCalendar = {
   events: [
     event(
@@ -269,9 +297,77 @@ export const defaultCalendar = {
       ),
     ],
   ].map(([title, when, description]) => ({ title, when, description })),
+  banners: [sampleBanner()],
 };
 
 // Older CMS documents gain the calendar defaults.
+// An event's dates in the page language: "1–8 Jun 2030" or "Jun 1 – 8,
+// 2030"; one day, or nothing without dates.
+export function eventDates(start, end, locale) {
+  if (!start) return "";
+  const format = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const day = (date) => new Date(date + "T12:00:00Z");
+  return !end || end === start
+    ? format.format(day(start))
+    : format.formatRange(day(start), day(end));
+}
+// Banners to show on a day, earliest event first; at most two.
+export function activeBanners(calendar, today) {
+  return (calendar?.banners ?? [])
+    .filter(
+      (b) =>
+        b.enabled &&
+        (!b.showFrom || today >= b.showFrom) &&
+        (!b.endDate || today <= b.endDate),
+    )
+    .sort((a, b) =>
+      (a.startDate || "9999").localeCompare(b.startDate || "9999"),
+    )
+    .slice(0, 2);
+}
+function bannerURL(value, label, internal) {
+  const url = String(value ?? "").trim();
+  if (
+    url.length > 1200 ||
+    (url &&
+      !url.startsWith("https://") &&
+      !(internal
+        ? url.startsWith("/") && !url.startsWith("//")
+        : url.startsWith("/assets/") || url.startsWith("/api/media/")))
+  )
+    throw new Error(`${label} pada banner event tidak valid.`);
+  return url;
+}
+function validateBanner(b) {
+  const date = (value, label) => {
+    const out = String(value ?? "").trim();
+    if (out && !validDate(out))
+      throw new Error(`${label} pada banner event tidak valid.`);
+    return out;
+  };
+  const banner = {
+    enabled: b?.enabled === true,
+    badge: text(b?.badge, "Label banner", 24, false),
+    title: text(b?.title, "Judul banner", 80, true),
+    subtitle: text(b?.subtitle, "Keterangan banner", 140, false),
+    price: text(b?.price, "Harga banner", 40, false),
+    note: text(b?.note, "Catatan banner", 60, false),
+    startDate: date(b?.startDate, "Tanggal mulai"),
+    endDate: date(b?.endDate, "Tanggal selesai"),
+    showFrom: date(b?.showFrom, "Mulai tampil"),
+    image: bannerURL(b?.image, "Foto", false),
+    link: bannerURL(b?.link, "Link tombol", true),
+  };
+  if (banner.startDate && banner.endDate && banner.endDate < banner.startDate)
+    throw new Error("Tanggal selesai banner event sebelum tanggal mulai.");
+  return banner;
+}
+
 export function withCalendar(content) {
   return content.calendar
     ? content
@@ -359,7 +455,12 @@ export function validateCalendar(input) {
     when: text(e.when, "Waktu rencana", 60, false),
     description: text(e.description, "Keterangan rencana", 300, false),
   }));
-  return { events, seasons, spots, eco };
+  const banners = list(
+    input.banners ?? [],
+    "Banner event",
+    calendarLimits.banners,
+  ).map(validateBanner);
+  return { events, seasons, spots, eco, banners };
 }
 
 // A text in the visitor's language, falling back to Indonesian.

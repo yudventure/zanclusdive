@@ -106,6 +106,16 @@ const id = {
   home: {
     heroAlt: "Visual konsep petualangan scuba diving di bawah laut",
     seeAll: "Lihat semua",
+    eventBanner: {
+      label: "Event Zanclus",
+      flyer: "Lihat flyer",
+      book: "Daftar lewat WhatsApp",
+      more: "Info lengkap",
+      close: "Tutup flyer",
+      flyerAlt: (title) => `Flyer ${title}`,
+      message: (title, dates) =>
+        `Halo Zanclus! Saya tertarik dengan ${title}${dates ? ` (${dates})` : ""}. Boleh minta info lengkapnya?`,
+    },
     close: "Tutup",
     divingKicker: "SELAMI CERITA BARU",
     snorkelingKicker: "DEKAT DENGAN LAUT",
@@ -1190,6 +1200,16 @@ const en = {
   },
   home: {
     heroAlt: "Concept visual of a scuba diving adventure underwater",
+    eventBanner: {
+      label: "Zanclus event",
+      flyer: "View flyer",
+      book: "Book on WhatsApp",
+      more: "Full details",
+      close: "Close flyer",
+      flyerAlt: (title) => `${title} flyer`,
+      message: (title, dates) =>
+        `Hi Zanclus! I'm interested in ${title}${dates ? ` (${dates})` : ""}. Could you send me the details?`,
+    },
     seeAll: "See all",
     close: "Close",
     divingKicker: "DIVE INTO A NEW STORY",

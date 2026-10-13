@@ -107,6 +107,28 @@ Seksi **Cara menuju ke sini** (`#getting-here`) berada di atas toko Waisai: ilus
 
 Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jual dan rental, ketersediaan, tampilan publik, serta foto dari media library. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat delapan produk contoh; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
 
+## Banner event di beranda
+
+Banner promosi lebar dan pendek tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner hanya muncul saat ada event.
+
+**Cara mengatur.** Buka `/admin/events` → tab **Banner event**. Isi setiap banner:
+- **Foto / flyer**: upload dari PC atau HP. Foto langsung terpasang dan tersimpan.
+- **Teks**: judul, keterangan singkat, harga (mis. `$1.680 / pax`), catatan (mis. `Minimal 4 pax`), dan label kecil (bawaan `EVENT`), dalam Indonesia dan English.
+- **Tanggal**: tanggal mulai dan selesai event, serta tanggal mulai tampil (opsional).
+- **Link tombol**: opsional, mis. `/id/trip` atau `https://…`.
+
+Simpan dengan **Simpan kalender**.
+
+**Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Maksimal 2 banner tampil bersamaan. Label di admin menunjukkan statusnya: *Tampil sekarang*, *Terjadwal / selesai*, atau *Tidak tampil*.
+
+**Yang dilihat tamu.**
+- Tombol utama membuka WhatsApp dengan nama dan tanggal event. Bila link tombol diisi, tombol membuka **Info lengkap** di link itu.
+- Foto bisa diketuk untuk membuka flyer lengkap.
+
+**Ukuran.** Tinggi banner sekitar 140 px di desktop dan 180 px di HP.
+
+**Draf bawaan.** Sudah ada satu draf dari flyer *Dive Trip with Zanclus* (8 hari 7 malam, $1.680/pax, minimal 4 pax). Draf ini belum tampil sampai tanggalnya diisi dan **Tampilkan di beranda** dicentang.
+
 ## Halaman aktivitas
 
 Halaman `/diving`, `/snorkeling`, dan `/trip` menyediakan gambaran kegiatan, durasi, peserta, titik temu, daftar paket & harga, alur aktivitas, persiapan, dan pertanyaan umum. Ketiga kartu di seksi Pengalaman pada beranda langsung membuka halaman detail. Tidak ada seksi aktivitas tambahan di beranda. Navigasi halaman detail dan footer juga menghubungkan ketiga halaman.

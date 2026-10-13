@@ -1732,3 +1732,32 @@
   letter-spacing: 0.08em;
   vertical-align: middle;
 }
+/* Event banners in the calendar editor. */
+.admin-banner-item {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+.admin-banner-item .admin-image-slot img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  object-position: top;
+}
+.admin-banner-state {
+  margin-right: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #eef3f4;
+  color: #5d7770;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+.admin-banner-state.is-live {
+  background: #e3f4e8;
+  color: #285a3d;
+}
+@media (max-width: 700px) {
+  .admin-banner-item {
+    grid-template-columns: 1fr;
+  }
+}

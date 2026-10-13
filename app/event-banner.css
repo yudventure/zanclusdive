@@ -1,0 +1,255 @@
+/* Event banners above the experience cards: wide and short, only while an
+   event is on. */
+.event-banners {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+.event-banner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 26px;
+  min-height: 132px;
+  padding: 12px 26px 12px 12px;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 78% -20%, #4fd1e85c, transparent 46%),
+    radial-gradient(circle at 12% 120%, #c8f28a40, transparent 40%),
+    linear-gradient(110deg, #052a43 0%, #0a4a68 52%, #0f7287 100%);
+  color: #fff;
+  box-shadow: 0 18px 40px #062b3b2e;
+}
+.event-banner-sea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.event-banner > :not(.event-banner-sea) {
+  position: relative;
+}
+.event-banner-photo {
+  position: relative;
+  align-self: stretch;
+  min-height: 108px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
+  background: #ffffff1f;
+  cursor: zoom-in;
+}
+/* The photo fills its box without setting the banner's height. */
+.event-banner-photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: transform 0.4s ease;
+}
+.event-banner-photo:hover img {
+  transform: scale(1.05);
+}
+.event-banner-photo.is-empty {
+  cursor: default;
+  background:
+    radial-gradient(circle at 30% 30%, #4fd1e870, transparent 55%), #0b3b55;
+}
+.event-banner-text {
+  min-width: 0;
+}
+.event-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+.event-banner-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #c8f28a;
+  color: #062b3b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+.event-banner-dates {
+  padding: 4px 10px;
+  border: 1px solid #ffffff40;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d8f3fb;
+}
+.event-banner h3 {
+  margin: 0;
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.6px;
+}
+.event-banner-text > p:last-child:not(.event-banner-meta) {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #bfe3ee;
+}
+.event-banner-offer {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.event-banner-price {
+  display: grid;
+  justify-items: end;
+  margin: 0;
+}
+.event-banner-price strong {
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: #ffd84d;
+  color: #062b3b;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  transform: rotate(-2deg);
+}
+.event-banner-price small {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d8f3fb;
+}
+.event-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.event-banner-actions .button {
+  white-space: nowrap;
+  color: #062b3b;
+}
+.event-banner-flyer {
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.event-banner-flyer:focus-visible,
+.event-banner-photo:focus-visible {
+  outline: 3px solid #c8f28a;
+  outline-offset: 3px;
+}
+/* The flyer, full size. */
+.event-flyer {
+  width: min(520px, calc(100% - 24px));
+  padding: 16px 16px 18px;
+  text-align: center;
+  background: #062b3b;
+}
+.event-flyer img {
+  display: block;
+  width: 100%;
+  max-height: calc(90dvh - 120px);
+  object-fit: contain;
+  border-radius: 16px;
+}
+.event-flyer .button {
+  margin-top: 14px;
+}
+.event-flyer .close-modal {
+  z-index: 1;
+  top: 22px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #062b3bcc;
+  color: #fff;
+  line-height: 1;
+}
+@media (max-width: 900px) {
+  .event-banner {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 14px 18px;
+    padding-right: 18px;
+  }
+  .event-banner-offer {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
+  }
+  .event-banner-price {
+    justify-items: start;
+  }
+  .event-banner-actions {
+    justify-self: end;
+  }
+}
+@media (max-width: 560px) {
+  .event-banner {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px 12px;
+    border-radius: 22px;
+    padding: 10px 12px 12px 10px;
+  }
+  .event-banner-photo {
+    min-height: 92px;
+    border-radius: 14px;
+  }
+  .event-banner-meta {
+    margin-bottom: 4px;
+  }
+  .event-banner h3 {
+    font-size: 19px;
+  }
+  .event-banner-text > p:last-child:not(.event-banner-meta) {
+    display: -webkit-box;
+    margin-top: 4px;
+    overflow: hidden;
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  /* Price and button on one row; the photo opens the flyer. */
+  .event-banner-offer {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .event-banner-actions {
+    justify-self: end;
+  }
+  .event-banner-flyer {
+    display: none;
+  }
+  .event-banner-price strong {
+    padding: 3px 10px;
+    font-size: 17px;
+  }
+  .event-banner-price small {
+    margin-top: 4px;
+  }
+  .event-banner-actions .button {
+    padding: 11px 14px;
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-banner-photo img {
+    transition: none;
+  }
+}

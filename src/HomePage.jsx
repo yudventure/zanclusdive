@@ -13,6 +13,7 @@ import PricePanel from "./components/PricePanel.jsx";
 import DiveSiteMap from "./components/DiveSiteMap.jsx";
 import DiveGallery from "./components/DiveGallery.jsx";
 import DiveVideos from "./components/DiveVideos.jsx";
+import EventBanners from "./components/EventBanner.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
@@ -87,6 +88,7 @@ export default function HomePage({
   locale = "en",
   locks = noLocks,
   payments,
+  banners = [],
 }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
@@ -244,6 +246,11 @@ export default function HomePage({
                     <span>{"↗"}</span>
                   </button>
                 </div>
+                <EventBanners
+                  banners={banners}
+                  whatsapp={content.contact.whatsapp}
+                  locale={locale}
+                />
                 {/* Accordion: the item under the pointer (or keyboard focus)
                 widens and shows its prices; diving is open by default. */}
                 <div

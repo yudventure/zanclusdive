@@ -11,6 +11,7 @@ import "./pay.css";
 import "./course.css";
 import "./about-service.css";
 import "./forms.css";
+import "./event-banner.css";
 import "../src/components/peta-raja-ampat/peta-raja-ampat.css";
 import "./developer.css";
 import { headers } from "next/headers";
