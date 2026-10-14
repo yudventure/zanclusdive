@@ -49,7 +49,7 @@ test("the order email gives the deadline in WIT and the way to pay", () => {
   assert.ok(mail.html.includes(base + "/assets/email/zanclus-logo.png"));
   assert.match(
     mail.text,
-    /Batas pembayaran: Kamis, 15 Oktober 2026 · 09\.30 WIT/,
+    /Batas pembayaran\n {2}Kamis, 15 Oktober 2026 · 09\.30 WIT/,
   );
   // By transfer: the accounts, the exact amount and the receipt on WhatsApp.
   const transfer = sampleBooking("order", {
@@ -86,7 +86,9 @@ test("the invoice carries its number, method, totals and the note", () => {
   assert.match(mail.html, /QRIS/);
   assert.match(mail.html, /Sisa tagihan/);
   assert.match(mail.html, /Catatan Indonesia/);
-  assert.match(mail.text, /Fun Dive 2x × 2: Rp 3\.000\.000/);
+  assert.match(mail.text, /Fun Dive 2x × 2\n {2}Rp 3\.000\.000/);
+  // No colons in what the guest reads, apart from links and times.
+  assert.ok(!/[:;—]/.test(mail.text.replace(/https?:\/\/\S+/g, "")), mail.text);
   // English guests get the Indonesian note when no English one is set.
   const en = sampleBooking("invoice", { now, lang: "en", method: "transfer" });
   const english = bookingMail("invoice", {

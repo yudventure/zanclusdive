@@ -772,12 +772,24 @@ const id = {
       ["Layanan", "Selam, kursus, trip, dive shop, servis"],
       ["WhatsApp", ""],
     ],
-    sections: ["Cerita kami", "Yang kami pegang", "Layanan kami"],
+    sections: {
+      story: "Cerita kami",
+      company: "Profil perusahaan",
+      values: "Yang kami pegang",
+      services: "Layanan kami",
+    },
     story: [
       "CERITA KAMI",
       "Dari laut, untuk laut.",
       "Siapa kami dan kenapa Zanclus.",
     ],
+    company: [
+      "PROFIL PERUSAHAAN",
+      "Perusahaan di balik Zanclus.",
+      "Badan usaha, bidang kerja, dan mitra kami.",
+    ],
+    portfolio: "Portofolio",
+    partners: "Mitra kerja",
     values: [
       "YANG KAMI PEGANG",
       "Cara kami bekerja.",
@@ -1869,12 +1881,24 @@ const en = {
       ["Services", "Diving, courses, trips, dive shop, servicing"],
       ["WhatsApp", ""],
     ],
-    sections: ["Our story", "What we stand for", "Our services"],
+    sections: {
+      story: "Our story",
+      company: "Company profile",
+      values: "What we stand for",
+      services: "Our services",
+    },
     story: [
       "OUR STORY",
       "From the sea, for the sea.",
       "Who we are and why Zanclus.",
     ],
+    company: [
+      "COMPANY PROFILE",
+      "The company behind Zanclus.",
+      "Who we are as a business, what we do and who we work with.",
+    ],
+    portfolio: "Portfolio",
+    partners: "Partners",
     values: [
       "WHAT WE STAND FOR",
       "How we work.",

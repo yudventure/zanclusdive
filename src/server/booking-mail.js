@@ -18,7 +18,7 @@ export async function sendBookingMail(booking, kind, content) {
     result = {
       ok: false,
       error:
-        "Email belum terkirim: SMTP belum diatur di hPanel (SMTP_HOST, SMTP_USER, SMTP_PASS).",
+        "Email belum terkirim karena SMTP belum diatur di hPanel (SMTP_HOST, SMTP_USER, SMTP_PASS).",
     };
   else
     try {

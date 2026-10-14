@@ -188,6 +188,10 @@ export function invoiceLines(booking, content, lang = "id") {
   ];
 }
 
+// Plain-text email lines: the label on one line, the value indented below,
+// without a colon (the owner's writing rule).
+const pair = (label, value) => `${label}\n  ${value}`;
+
 const esc = (value) =>
   String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -213,7 +217,7 @@ const words = {
       "Lewat dari batas ini, pesanan dapat dibatalkan dan tempatnya kami lepas untuk tamu lain.",
     pay: (amount) => `Bayar sekarang · ${amount}`,
     payHint:
-      "Pembayaran aman lewat Midtrans: kartu, transfer virtual account, QRIS, dan e-wallet.",
+      "Pembayaran aman lewat Midtrans dengan kartu, transfer virtual account, QRIS, atau e-wallet.",
     transferTitle: "Transfer ke rekening berikut",
     bank: "Bank",
     holder: "Atas nama",
@@ -277,7 +281,7 @@ const words = {
       "After this time the booking may be cancelled and the place released to other guests.",
     pay: (amount) => `Pay now · ${amount}`,
     payHint:
-      "Secure payment with Midtrans: card, virtual account transfer, QRIS and e-wallets.",
+      "Secure payment with Midtrans by card, virtual account transfer, QRIS or e-wallet.",
     transferTitle: "Transfer to this account",
     bank: "Bank",
     holder: "Account name",
@@ -546,24 +550,26 @@ ${itemsTable(lines, t, lang, [[t.totalDue, total, true]])}`;
       t.orderTitle + ".",
       t.orderIntro,
       "",
-      due ? `${t.dueBy}: ${dueText}` : "",
+      due ? pair(t.dueBy, dueText) : "",
       due ? (transfer ? t.dueTransfer : t.dueMidtrans) : "",
       "",
       transfer
         ? [
-            t.transferTitle + ":",
+            t.transferTitle,
             ...accounts.map((a) => `- ${a.bank} ${a.number} a.n. ${a.holder}`),
             t.transferNote(total, reference),
-            proof ? `${t.sendProof}: ${proof}` : "",
+            proof ? pair(t.sendProof, proof) : "",
           ].join("\n")
         : payment.redirectUrl
-          ? `${t.pay(total)}: ${payment.redirectUrl}`
+          ? pair(t.pay(total), payment.redirectUrl)
           : "",
       "",
       t.summary.toUpperCase(),
-      ...details.filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`),
-      ...lines.map((l) => `${l.name} × ${l.quantity}: ${money(l.total, lang)}`),
-      `${t.totalDue}: ${total}`,
+      ...details.filter(([, v]) => v).map(([l, v]) => pair(l, v)),
+      ...lines.map((l) =>
+        pair(`${l.name} × ${l.quantity}`, money(l.total, lang)),
+      ),
+      pair(t.totalDue, total),
       "",
       `${t.questions} ${t.questionsText}`,
       wa,
@@ -577,7 +583,7 @@ ${itemsTable(lines, t, lang, [[t.totalDue, total, true]])}`;
       html: layout({
         lang,
         title: subject,
-        preheader: due ? `${t.dueBy}: ${dueText}` : t.orderTitle,
+        preheader: due ? `${t.dueBy} ${dueText}` : t.orderTitle,
         badge: tag(t.orderTag, "order"),
         reference,
         body,
@@ -661,15 +667,22 @@ ${note ? paragraph(esc(note).replace(/\n/g, "<br>"), `font-size:13px;color:${bra
       t.paidIntro,
       "",
       `${t.invoice.toUpperCase()} ${number} · ${t.paidTag.toUpperCase()}`,
-      ...meta.filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`),
-      `${t.billedTo}: ${[booking.guestName, booking.phone, booking.email].filter(Boolean).join(", ")}`,
+      ...meta.filter(([, v]) => v).map(([l, v]) => pair(l, v)),
+      pair(
+        t.billedTo,
+        [booking.guestName, booking.phone, booking.email]
+          .filter(Boolean)
+          .join(", "),
+      ),
       "",
       t.summary.toUpperCase(),
-      ...details.filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`),
-      ...lines.map((l) => `${l.name} × ${l.quantity}: ${money(l.total, lang)}`),
-      `${t.total}: ${total}`,
-      `${t.paid}: ${money(amount, lang)}`,
-      `${t.balance}: ${money(0, lang)}`,
+      ...details.filter(([, v]) => v).map(([l, v]) => pair(l, v)),
+      ...lines.map((l) =>
+        pair(`${l.name} × ${l.quantity}`, money(l.total, lang)),
+      ),
+      pair(t.total, total),
+      pair(t.paid, money(amount, lang)),
+      pair(t.balance, money(0, lang)),
       "",
       t.nextText,
       note,
@@ -718,9 +731,9 @@ ${table(rows(details), "margin:0 0 14px;")}`;
       t.expiredTitle,
       t.expiredIntro(when || "-"),
       t.expiredAgain,
-      `${t.bookAgain}: ${again}`,
+      pair(t.bookAgain, again),
       "",
-      ...details.filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`),
+      ...details.filter(([, v]) => v).map(([l, v]) => pair(l, v)),
       "",
       wa,
     ].join("\n");

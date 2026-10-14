@@ -113,7 +113,7 @@ export async function withBilling({
   // A Midtrans payment link for this booking, sent to the guest.
   if (!paymentsReady(content))
     throw fail(
-      "Link Midtrans belum bisa dibuat: aktifkan pembayaran Midtrans dan pastikan server key terpasang.",
+      "Link Midtrans belum bisa dibuat. Aktifkan pembayaran Midtrans dan pastikan server key terpasang.",
       409,
     );
   const orderId = newOrderId();

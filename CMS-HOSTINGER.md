@@ -204,6 +204,10 @@ Langkah mendaftarkan situs (perlu akun Google pemilik):
 
 Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga memperingatkan bila admin dibuka di domain lain dari alamat yang dipakai untuk Google.
 
+## Tentang kami: profil perusahaan
+
+Halaman **Tentang kami** memuat bagian **Profil perusahaan** setelah cerita: nama perusahaan (PT Zanclus Daya Cipta), profil singkat, kalimat sorotan, portofolio (sampai 6 bidang), dan mitra kerja, dalam bahasa Indonesia dan Inggris. Isinya diubah di **Situs web → Tentang kami → Profil perusahaan**. Halaman yang tersimpan sebelum bagian ini ada otomatis memakai isi bawaan dari company profile.
+
 ## Email tamu & invoice
 
 Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia atau Inggris. Email dikirim lewat SMTP yang sama dengan kode OTP (lihat tabel `SMTP_*` di atas). Balasan tamu masuk ke email di menu **Kontak & sosial media**.
