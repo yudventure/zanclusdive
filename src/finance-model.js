@@ -103,27 +103,33 @@ const programCategory = {
   service: "service",
 };
 export function midtransIncome(bookings) {
-  return bookings
-    .filter((b) => b.payment?.status === "paid")
-    .map((b) => ({
-      id: "tx:mt:" + b.id,
-      date: (
-        b.payment.paidAt ??
-        b.payment.updatedAt ??
-        b.updatedAt ??
-        b.createdAt ??
-        b.startDate
-      ).slice(0, 10),
-      kind: "in",
-      category: programCategory[b.experience] ?? "other",
-      amount: Number(b.payment.amount ?? b.amount) || 0,
-      description: `${b.guestName || "Tamu"} · pembayaran online`,
-      method: "midtrans",
-      reference: b.payment.orderId ?? "",
-      note: "",
-      source: "midtrans",
-      bookingId: b.id,
-    }));
+  return (
+    bookings
+      // Payments recorded by hand (transfer, cash) are entered in the
+      // cashbook by the finance team, so only Midtrans is added here.
+      .filter(
+        (b) => b.payment?.status === "paid" && b.payment.provider !== "manual",
+      )
+      .map((b) => ({
+        id: "tx:mt:" + b.id,
+        date: (
+          b.payment.paidAt ??
+          b.payment.updatedAt ??
+          b.updatedAt ??
+          b.createdAt ??
+          b.startDate
+        ).slice(0, 10),
+        kind: "in",
+        category: programCategory[b.experience] ?? "other",
+        amount: Number(b.payment.amount ?? b.amount) || 0,
+        description: `${b.guestName || "Tamu"} · pembayaran online`,
+        method: "midtrans",
+        reference: b.payment.orderId ?? "",
+        note: "",
+        source: "midtrans",
+        bookingId: b.id,
+      }))
+  );
 }
 const inMonth = (tx, month) => tx.date.startsWith(month + "-");
 const sum = (list) => list.reduce((total, tx) => total + tx.amount, 0);

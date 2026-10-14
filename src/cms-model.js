@@ -483,6 +483,9 @@ export function validateBooking(input) {
   const phone = plain(input.phone || "", "Telepon", 30, false);
   if (phone && !/^\+?[\d\s()-]{6,30}$/.test(phone))
     throw new Error("Telepon tidak valid.");
+  const email = plain(input.email || "", "Email", 200, false).trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new Error("Email tamu tidak valid.");
   return {
     experience: input.experience,
     status: input.status,
@@ -499,6 +502,8 @@ export function validateBooking(input) {
     participants,
     amount,
     notes: plain(input.notes || "", "Catatan", 2000, false),
-    ...(input.email ? { email: plain(input.email, "Email", 200, false) } : {}),
+    ...(email ? { email } : {}),
+    // The language of the emails to the guest.
+    ...(input.lang === "en" || input.lang === "id" ? { lang: input.lang } : {}),
   };
 }

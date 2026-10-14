@@ -12,6 +12,10 @@ export function mailIssues() {
   return issues;
 }
 export const mailConfigured = () => mailIssues().length === 0;
+// The address guests see the email from.
+export const mailSender = () =>
+  env("SMTP_FROM") ||
+  (env("SMTP_USER") ? `"Zanclus Dive Center" <${env("SMTP_USER")}>` : "");
 
 // Where codes go: a staff account's own inbox; for the built-in accounts
 // ADMIN_OTP_EMAIL, or their own email.
@@ -28,7 +32,7 @@ export function maskEmail(email) {
   return `${name.slice(0, 2)}${"•".repeat(Math.max(3, name.length - 2))}@${domain}`;
 }
 
-export async function sendMail({ to, subject, text, html }) {
+export async function sendMail({ to, subject, text, html, bcc, replyTo }) {
   const port = Number(env("SMTP_PORT") || 465);
   const transport = nodemailer.createTransport({
     host: env("SMTP_HOST"),
@@ -39,9 +43,16 @@ export async function sendMail({ to, subject, text, html }) {
     greetingTimeout: 15000,
     socketTimeout: 20000,
   });
-  const from =
-    env("SMTP_FROM") || `"Zanclus Dive Center" <${env("SMTP_USER")}>`;
-  await transport.sendMail({ from, to, subject, text, html });
+  const from = mailSender();
+  await transport.sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html,
+    ...(bcc ? { bcc } : {}),
+    ...(replyTo ? { replyTo } : {}),
+  });
 }
 
 // Why a send failed, in words the owner can act on.

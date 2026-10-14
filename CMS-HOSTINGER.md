@@ -204,6 +204,34 @@ Langkah mendaftarkan situs (perlu akun Google pemilik):
 
 Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga memperingatkan bila admin dibuka di domain lain dari alamat yang dipakai untuk Google.
 
+## Email tamu & invoice
+
+Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia atau Inggris. Email dikirim lewat SMTP yang sama dengan kode OTP (lihat tabel `SMTP_*` di atas). Balasan tamu masuk ke email di menu **Kontak & sosial media**.
+
+| Email | Kapan dikirim |
+| --- | --- |
+| **Pesanan & batas bayar** | Pesanan website dibayar lewat Midtrans, atau reservasi di admin ditagih lewat transfer bank atau link Midtrans. Berisi batas bayar (WIT), tombol bayar atau rekening transfer, dan rincian pesanan. |
+| **Invoice** | Begitu Midtrans melaporkan lunas, atau admin mencatat reservasi **Sudah lunas**. Berisi nomor invoice `INV-tanggal-kode`, metode bayar, rincian, dan status LUNAS. |
+| **Pesanan dibatalkan** | Link Midtrans kedaluwarsa sebelum dibayar. Tempatnya dilepas dan tamu diajak memesan lagi. |
+
+Pengaturan ada di **Keuangan → Pembayaran online → Email tamu & invoice** (superadmin dan keuangan):
+
+- **Batas waktu pembayaran**: 1 jam sampai 3 hari, bawaan 24 jam. Link Midtrans kedaluwarsa pada batas ini.
+- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer.
+- **Catatan di invoice**: mis. ketentuan pembatalan, dalam bahasa Indonesia dan Inggris.
+- **Salinan setiap email ke**: email kantor yang menerima salinan (BCC) untuk arsip.
+- **Pratinjau** dan **Kirim ke email saya** menampilkan contoh setiap email dengan pengaturan yang sudah disimpan.
+- Sakelar di kanan atas mematikan email otomatis dari website dan Midtrans.
+
+Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Reservasi**. Isi **Email tamu** dan **Bahasa email**, lalu pilih **Pembayaran**:
+
+- **Tanpa tagihan**: hanya dicatat.
+- **Tagih lewat transfer bank**: tamu menerima rekening dan batas bayar. Setelah bukti transfer masuk, ubah ke **Sudah lunas**.
+- **Tagih lewat link Midtrans**: website membuat link pembayaran Midtrans untuk nilai reservasi. Begitu dibayar, reservasi otomatis Dikonfirmasi dan invoice terkirim.
+- **Sudah lunas** (transfer, tunai, kartu, QRIS): reservasi menjadi Dikonfirmasi dan invoice terkirim.
+
+Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyimpan. Saat mengedit, kotak **Email ke tamu** menampilkan riwayat kirim, **Pratinjau**, dan **Kirim ulang**. Tagihan transfer yang lewat batas ditandai **Lewat batas bayar**; tagihan transfer tidak dibatalkan otomatis. Pembayaran Midtrans yang masih berjalan atau sudah lunas hanya berubah lewat Midtrans. Pembayaran tunai dan transfer tidak otomatis masuk Buku kas; tim keuangan mencatatnya di sana. Logo dan foto email diambil dari `https://zanclusdivecenter.com/assets/email/`, jadi tampil setelah versi ini di-deploy.
+
 ## Data dan reservasi
 
 Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu secara manual. Kalender di halaman aktivitas menampilkan sisa slot per hari dari reservasi yang dikonfirmasi dan pembayaran online yang sedang menunggu. Kuotanya diatur di **Aktivitas → Kuota peserta per hari**; diving bawaannya 30 orang per hari, dipakai bersama program diving dan kursus. Tanggal penuh atau ditutup tidak bisa dipilih dan pembayarannya ditolak server. Pesan WhatsApp tetap perlu dicatat manual.

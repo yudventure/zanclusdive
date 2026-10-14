@@ -206,8 +206,14 @@ export function agentFeed({
     if (b.endDate < from || b.status === "cancelled") continue;
     // Gear sales, rentals and servicing are not dive days.
     if (["shop", "service"].includes(b.experience)) continue;
-    // Online payments count once they are paid.
-    if (b.payment && b.payment.status !== "paid") continue;
+    // Online payments count once they are paid; a bill the team tracks
+    // by hand does not change what partners see.
+    if (
+      b.payment &&
+      b.payment.provider !== "manual" &&
+      b.payment.status !== "paid"
+    )
+      continue;
     const title = programTitle(content, b.experience);
     if (b.status === "closed") {
       lines.push(

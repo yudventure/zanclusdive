@@ -18,7 +18,11 @@ import {
   keyIssues,
   lastMidtransError,
 } from "../../../../src/server/midtrans.js";
-import { paymentsBlockedByDemo } from "../../../../src/server/payments.js";
+import {
+  paymentsBlockedByDemo,
+  paymentsReady,
+} from "../../../../src/server/payments.js";
+import { mailConfigured, mailSender } from "../../../../src/server/mailer.js";
 export const dynamic = "force-dynamic";
 // The admin's working data. Site content is what the website shows, so
 // every role gets it; bookings, media, agents and the payment settings
@@ -52,6 +56,16 @@ export async function GET(request) {
           role: admin.role,
           areas: admin.areas,
         },
+        // Whether guest emails can go out, for the reservation and payment
+        // pages.
+        mail:
+          can("bookings") || can("payments")
+            ? { configured: mailConfigured(), from: mailSender() }
+            : null,
+        // Whether the reservation form can bill by Midtrans link.
+        billing: can("bookings")
+          ? { midtrans: paymentsReady(site.content) }
+          : null,
         payments: can("payments")
           ? {
               configured: midtransConfigured(),

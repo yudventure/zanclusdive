@@ -2,7 +2,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { programTitle } from "../cms-model.js";
-import { paymentStatusLabels, paymentItemLabel } from "../payment-model.js";
+import {
+  paymentStatusLabels,
+  paymentItemLabel,
+  manualMethods,
+  isManual,
+  overdue,
+} from "../payment-model.js";
+import { methodLabel } from "../booking-mail.js";
 import { bookingReference } from "../booking-model.js";
 
 const money = (n) =>
@@ -128,6 +135,7 @@ export default function PaymentsEditor({
   onSave,
   onSync,
   busy,
+  children,
 }) {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
@@ -225,6 +233,7 @@ export default function PaymentsEditor({
           {busy ? "Menyimpan…" : "Simpan pengaturan pembayaran"}
         </button>
       </form>
+      {children}
 
       <section className="admin-card">
         <div className="admin-pay-head">
@@ -268,18 +277,34 @@ export default function PaymentsEditor({
                     <td>{money(b.payment.amount)}</td>
                     <td>
                       <PaymentBadge payment={b.payment} />
-                      <small>{b.payment.orderId}</small>
-                      {b.payment.method && <small>{b.payment.method}</small>}
+                      {isManual(b.payment) ? (
+                        <small>Dicatat admin</small>
+                      ) : (
+                        <small>{b.payment.orderId}</small>
+                      )}
+                      {b.payment.method && (
+                        <small>
+                          {manualMethods[b.payment.method] ??
+                            methodLabel(b.payment.method)}
+                        </small>
+                      )}
+                      {overdue(b.payment) && (
+                        <small className="admin-overdue">
+                          Lewat batas bayar
+                        </small>
+                      )}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="admin-inline"
-                        disabled={busy || !configured}
-                        onClick={() => onSync(b.payment.orderId)}
-                      >
-                        Cek status
-                      </button>
+                      {!isManual(b.payment) && (
+                        <button
+                          type="button"
+                          className="admin-inline"
+                          disabled={busy || !configured}
+                          onClick={() => onSync(b.payment.orderId)}
+                        >
+                          Cek status
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

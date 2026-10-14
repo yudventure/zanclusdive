@@ -27,6 +27,8 @@ import { visitorLocks } from "../developer.js";
 import { isDemo } from "../cms-mode.js";
 import { withCourses, courseProfile } from "../course-model.js";
 import { withService } from "../service-model.js";
+import { dueAt, invoiceNumber } from "../booking-mail.js";
+import { autoMail, later } from "./booking-mail.js";
 
 // Online payment is offered when the owner switched it on and the hosting
 // has a Midtrans server key. Real payments need the MySQL database: demo
@@ -128,6 +130,7 @@ export async function startPayment(input, { origin, locale = "id" }) {
       email,
       participants: order.participants,
       amount,
+      lang: locale,
       notes: [
         `Bayar online: ${orderLabel(lines, "id")}`,
         certification && `Lisensi: ${certification}`,
@@ -140,7 +143,11 @@ export async function startPayment(input, { origin, locale = "id" }) {
   } catch (error) {
     throw fail(error.message);
   }
-  const orderId = `ZC-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+  const orderId = newOrderId();
+  // The guest has the hours set in the admin to pay; then the Midtrans
+  // link expires and the booking is cancelled.
+  const dueHours = content.payments?.dueHours ?? 24;
+  const createdAt = new Date().toISOString();
   const booking = await createPaymentBooking({
     ...payload,
     payment: {
@@ -169,7 +176,9 @@ export async function startPayment(input, { origin, locale = "id" }) {
         price: line.price,
         quantity: line.quantity,
       })),
-      createdAt: new Date().toISOString(),
+      createdAt,
+      dueHours,
+      dueAt: dueAt(createdAt, dueHours),
     },
   });
   try {
@@ -187,10 +196,10 @@ export async function startPayment(input, { origin, locale = "id" }) {
         ...(email ? { email } : {}),
       },
       callbacks: { finish: `${origin}/payment/finish?lang=${locale}` },
-      expiry: { unit: "hours", duration: 24 },
+      expiry: { unit: "hours", duration: dueHours },
     });
     // A notification may already have moved the status on.
-    await updateBooking(booking.id, (current) => ({
+    const saved = await updateBooking(booking.id, (current) => ({
       ...current,
       payment: {
         ...current.payment,
@@ -201,6 +210,9 @@ export async function startPayment(input, { origin, locale = "id" }) {
         redirectUrl: snap.redirect_url,
       },
     }));
+    // The order and its payment deadline, to the guest's inbox.
+    if (saved?.email && saved.payment.status === "pending")
+      later(() => autoMail(saved, "order"));
     return {
       redirectUrl: snap.redirect_url,
       orderId,
@@ -223,18 +235,33 @@ export async function startPayment(input, { origin, locale = "id" }) {
 const findOrder = async (orderId) =>
   (await listBookings()).find((b) => b.payment?.orderId === orderId) ?? null;
 
+export const newOrderId = () =>
+  `ZC-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+
 // Applies a Midtrans status (from a notification or a status check) after
-// checking it belongs to the order and its amount.
+// checking it belongs to the order and its amount. The change is decided
+// inside the locked update, so the invoice or the cancellation goes out
+// once even when Midtrans repeats its notification.
 async function apply(booking, status) {
   if (Number(status.gross_amount) !== booking.payment.amount)
     throw new Error("MIDTRANS_AMOUNT_MISMATCH");
   const outcome = paymentOutcome(status);
-  const updated = await updateBooking(booking.id, (current) =>
-    withPaymentStatus(current, outcome, {
+  let changed = null;
+  const updated = await updateBooking(booking.id, (current) => {
+    const next = withPaymentStatus(current, outcome, {
       method: status.payment_type,
       transactionId: status.transaction_id,
-    }),
-  );
+    });
+    if (next) {
+      changed = next.payment.status;
+      if (changed === "paid")
+        next.payment.invoiceNumber = invoiceNumber(next, next.payment.paidAt);
+    }
+    return next;
+  });
+  if (changed === "paid") later(() => autoMail(updated, "invoice"));
+  if (changed === "expired" && updated?.status === "cancelled")
+    later(() => autoMail(updated, "expired"));
   return updated ?? booking;
 }
 

@@ -71,7 +71,8 @@ export const sections = {
   payments: {
     title: "Pembayaran online",
     area: "payments",
-    intro: "Pembayaran Midtrans: pengaturan, riwayat, dan pemeriksaan status.",
+    intro:
+      "Pembayaran Midtrans, email tamu & invoice, rekening transfer, dan riwayat pembayaran.",
   },
   events: {
     title: "Kalender kegiatan",

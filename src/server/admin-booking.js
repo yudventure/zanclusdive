@@ -1,0 +1,51 @@
+import "server-only";
+import { getContent, listBookings, saveBooking } from "./store.js";
+import { withBilling, BillingError } from "./billing.js";
+import { sendBookingMail } from "./booking-mail.js";
+import { siteOrigin } from "./payments.js";
+
+// Saves a booking from the admin with its payment, then emails the guest
+// when asked: the order with its deadline for a new bill, the invoice when
+// it was just recorded as paid. The answer says whether the email went.
+export async function saveWithBilling({ request, payload, body, id }) {
+  const [{ content }, bookings] = await Promise.all([
+    getContent(),
+    id ? listBookings() : [],
+  ]);
+  const current = id ? bookings.find((b) => b.id === id) : null;
+  if (id && !current)
+    return Response.json(
+      { error: "Reservasi tidak ditemukan." },
+      { status: 404 },
+    );
+  let result;
+  try {
+    result = await withBilling({
+      payload,
+      current,
+      input: body.billing,
+      content,
+      origin: siteOrigin(request),
+    });
+  } catch (error) {
+    if (error instanceof BillingError)
+      return Response.json({ error: error.message }, { status: error.status });
+    throw error;
+  }
+  const saved = await saveBooking(result.booking, id);
+  if (!saved)
+    return Response.json(
+      { error: "Reservasi tidak ditemukan." },
+      { status: 404 },
+    );
+  let mail = null;
+  if (result.mail) {
+    const sent = await sendBookingMail(saved, result.mail, content);
+    mail = { kind: result.mail, ...sent };
+  } else if (result.notify && !saved.email && saved.payment)
+    mail = {
+      ok: false,
+      error: "Email tamu belum diisi, jadi tidak ada email yang dikirim.",
+    };
+  return Response.json({ ...saved, mail }, { status: id ? 200 : 201 });
+}

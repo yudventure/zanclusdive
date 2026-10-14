@@ -11,6 +11,14 @@ import AboutEditor from "./AboutEditor.jsx";
 import ServiceEditor from "./ServiceEditor.jsx";
 import DeveloperEditor from "./DeveloperEditor.jsx";
 import PaymentsEditor, { PaymentBadge } from "./PaymentsEditor.jsx";
+import GuestMailSettings from "./GuestMailSettings.jsx";
+import {
+  BookingBilling,
+  GuestMailLog,
+  billingFrom,
+} from "./BookingBilling.jsx";
+import { overdue } from "../payment-model.js";
+import { mailKindLabels } from "../booking-mail.js";
 import AgentsEditor from "./AgentsEditor.jsx";
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
@@ -85,6 +93,9 @@ const blankBooking = (today) => ({
   participants: 1,
   amount: 0,
   notes: "",
+  email: "",
+  lang: "id",
+  billing: billingFrom(null, today),
 });
 async function request(url, method = "GET", body) {
   const options = { method, cache: "no-store" };
@@ -124,6 +135,9 @@ function BookingEditor({
   busy,
   editing,
   content,
+  billingInfo,
+  canSettings,
+  onMailSent,
 }) {
   function change(key, v) {
     setValue({
@@ -209,6 +223,24 @@ function BookingEditor({
               onChange={(e) => change("phone", e.target.value)}
             />
           </Field>
+          <Field label="Email tamu">
+            <input
+              type="email"
+              maxLength={200}
+              placeholder="untuk tagihan dan invoice"
+              value={value.email ?? ""}
+              onChange={(e) => change("email", e.target.value)}
+            />
+          </Field>
+          <Field label="Bahasa email">
+            <select
+              value={value.lang ?? "id"}
+              onChange={(e) => change("lang", e.target.value)}
+            >
+              <option value="id">Bahasa Indonesia</option>
+              <option value="en">English</option>
+            </select>
+          </Field>
           <Field label="Jumlah peserta">
             <input
               type="number"
@@ -238,6 +270,13 @@ function BookingEditor({
             onChange={(e) => change("notes", e.target.value)}
           />
         </Field>
+        <BookingBilling
+          value={value}
+          setBilling={(billing) => setValue({ ...value, billing })}
+          info={billingInfo}
+          canSettings={canSettings}
+        />
+        {editing && <GuestMailLog booking={value} onSent={onMailSent} />}
         <div className="admin-actions">
           <button className="admin-button" disabled={busy}>
             {busy
@@ -379,7 +418,7 @@ export default function Dashboard({ section, account, today }) {
     setNotice("");
     setError("");
     try {
-      await request(
+      const saved = await request(
         "/api/admin/bookings" + (editing ? "/" + editing : ""),
         editing ? "PUT" : "POST",
         booking,
@@ -387,7 +426,13 @@ export default function Dashboard({ section, account, today }) {
       await refresh();
       setBooking(blankBooking(today));
       setEditing(null);
-      setNotice("Reservasi tersimpan.");
+      const mail = saved.mail;
+      if (mail && !mail.ok) setError("Reservasi tersimpan. " + mail.error);
+      setNotice(
+        mail?.ok
+          ? `Reservasi tersimpan. ${mailKindLabels[mail.kind]} terkirim ke ${mail.to}.`
+          : "Reservasi tersimpan.",
+      );
     } catch (e) {
       setError(e.message);
     } finally {
@@ -396,7 +441,12 @@ export default function Dashboard({ section, account, today }) {
   }
   function editReservation(item) {
     setNotice("");
-    setBooking({ ...item });
+    setBooking({
+      ...item,
+      email: item.email ?? "",
+      lang: item.lang ?? "id",
+      billing: billingFrom(item.payment, today),
+    });
     setEditing(item.id);
     setTimeout(
       () =>
@@ -539,6 +589,19 @@ export default function Dashboard({ section, account, today }) {
                   {statuses[b.status]}
                 </span>
                 {b.payment && <PaymentBadge payment={b.payment} />}
+                {overdue(b.payment) && (
+                  <small className="admin-overdue">Lewat batas bayar</small>
+                )}
+                {b.mails?.length > 0 && (
+                  <small
+                    className={
+                      "admin-mail-flag " + (b.mails.at(-1).ok ? "ok" : "warn")
+                    }
+                  >
+                    {b.mails.at(-1).ok ? "Email " : "Email gagal: "}
+                    {mailKindLabels[b.mails.at(-1).kind]?.toLowerCase()}
+                  </small>
+                )}
               </td>
               <td>{b.participants}</td>
               <td>{money(b.amount)}</td>
@@ -578,6 +641,20 @@ export default function Dashboard({ section, account, today }) {
       busy={busy}
       editing={editing}
       content={content}
+      billingInfo={{
+        ...data?.billing,
+        accounts: (content.payments?.accounts ?? []).filter(
+          (a) => a.bank && a.number,
+        ).length,
+        dueHours: content.payments?.dueHours ?? 24,
+      }}
+      canSettings={can("payments")}
+      onMailSent={async () => {
+        const next = await refresh();
+        const fresh = next?.bookings.find((b) => b.id === editing);
+        if (fresh)
+          setBooking((current) => ({ ...current, mails: fresh.mails }));
+      }}
     />
   );
   return (
@@ -1222,7 +1299,22 @@ export default function Dashboard({ section, account, today }) {
                     }
                   }}
                   busy={busy}
-                />
+                >
+                  <GuestMailSettings
+                    settings={content.payments ?? {}}
+                    mail={data.mail}
+                    busy={busy}
+                    onChange={(patch) =>
+                      setContent((current) => ({
+                        ...current,
+                        payments: { ...current.payments, ...patch },
+                      }))
+                    }
+                    onSave={(event) =>
+                      saveSettings(event, "Pengaturan email tamu tersimpan.")
+                    }
+                  />
+                </PaymentsEditor>
               )}
               {section === "security" && <PasswordEditor request={request} />}
               {section === "developer" && (

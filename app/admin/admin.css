@@ -1405,7 +1405,8 @@
   color: #22663d;
 }
 .admin-pay-badge.pending,
-.admin-pay-badge.created {
+.admin-pay-badge.created,
+.admin-pay-badge.unpaid {
   background: #fff4d6;
   color: #7a5a00;
 }
@@ -2350,4 +2351,159 @@
   .admin-seo-list li > small {
     grid-column: 1 / -1;
   }
+}
+
+/* Guest emails: payment choice in the reservation form, the email log,
+   and the settings on the payments page */
+.admin-billing {
+  margin: 18px 0 0;
+  padding: 18px 20px 16px;
+  border: 1px solid #dfe9ee;
+  border-radius: 16px;
+  background: #f7fbfc;
+  display: grid;
+  gap: 12px;
+}
+.admin-billing legend {
+  padding: 0 8px;
+  font-weight: 700;
+  color: #062b3b;
+}
+.admin-billing .admin-form-grid {
+  margin: 0;
+}
+.admin-billing-locked p,
+.admin-billing-open p {
+  margin: 0 0 4px;
+  color: #23495b;
+}
+.admin-billing-locked .admin-pay-badge {
+  margin: 0 6px 0 0;
+}
+.admin-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #23495b;
+  font-size: 14px;
+}
+.admin-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #062b3b;
+}
+.admin-billing-note {
+  display: block;
+  margin: 4px 0 0 26px;
+}
+.admin-overdue {
+  display: block;
+  margin-top: 4px;
+  color: #b23b2d;
+  font-weight: 600;
+}
+strong.admin-overdue {
+  display: inline;
+}
+.admin-mail-flag {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.admin-mail-flag.ok {
+  color: #17695f;
+}
+.admin-mail-flag.warn {
+  color: #b23b2d;
+}
+.admin-mail-log {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid #dfe9ee;
+  border-radius: 16px;
+}
+.admin-mail-log h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #062b3b;
+}
+.admin-mail-log ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.admin-mail-log li.ok {
+  color: #23495b;
+}
+.admin-mail-log li.warn {
+  color: #b23b2d;
+}
+.admin-mail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 10px;
+}
+.admin-guest-mail-title {
+  margin: 22px 0 4px;
+  font-size: 16px;
+  color: #062b3b;
+}
+.admin-account-rows {
+  display: grid;
+  gap: 4px;
+}
+.admin-account-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.4fr);
+  gap: 12px;
+}
+.admin-guest-mail-preview {
+  margin: 22px 0 18px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #f4f8fa;
+}
+.admin-guest-mail-preview .admin-guest-mail-title {
+  margin-top: 0;
+}
+.admin-mail-samples {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.admin-mail-samples li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e3ebef;
+}
+.admin-mail-samples li:last-child {
+  border-bottom: 0;
+}
+.admin-mail-samples li span {
+  flex: 1 1 200px;
+  color: #23495b;
+}
+@media (max-width: 700px) {
+  .admin-account-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e3ebef;
+  }
+}
+.admin-mail-actions .admin-inline,
+.admin-mail-samples .admin-inline {
+  padding: 6px 0;
+  font-size: 14px;
+  text-decoration: none;
 }

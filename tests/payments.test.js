@@ -5,6 +5,7 @@ import {
   paymentOutcome,
   withPaymentStatus,
   validatePayments,
+  defaultPayments,
 } from "../src/payment-model.js";
 import { defaultPriceList } from "../src/price-list.js";
 import {
@@ -69,8 +70,10 @@ test("a paid booking is confirmed; expiry cancels a waiting one", () => {
 });
 
 test("payment settings and activity bookings validate", () => {
-  assert.deepEqual(validatePayments(undefined), { enabled: false });
+  assert.deepEqual(validatePayments(undefined), defaultPayments);
+  // Older settings with only the switch get the defaults for the rest.
   assert.deepEqual(validatePayments({ enabled: true, other: 1 }), {
+    ...defaultPayments,
     enabled: true,
   });
   assert.equal(
