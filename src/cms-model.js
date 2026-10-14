@@ -1,4 +1,5 @@
 import { experiences } from "./domain.js";
+import { validateSeo, defaultSeo } from "./seo.js";
 import {
   defaultGallery,
   galleryLimit,
@@ -87,6 +88,7 @@ export const defaultContent = {
     instagram: "",
   },
   images: { ...defaultSiteImages },
+  seo: { ...defaultSeo },
   priceList: structuredClone(defaultPriceList),
   gallery: structuredClone(defaultGallery),
   calendar: structuredClone(defaultCalendar),
@@ -307,6 +309,7 @@ export function validateContent(input) {
     service: validateService(input.service),
     developer: validateDeveloper(input.developer),
     payments: validatePayments(input.payments),
+    seo: validateSeo(input.seo),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }

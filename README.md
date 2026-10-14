@@ -25,7 +25,7 @@ Port default 3000; server menggunakan `PORT` yang disediakan hosting. Tidak ada 
 
 Lihat [HOSTINGER-DEPLOY.md](./HOSTINGER-DEPLOY.md). Repository ini sudah berisi proyek Next.js di root. Di Hostinger Node.js Web App, pilih repository GitHub `yudventure/zanclusdive`, branch `main`, dan root direktori `.`. Hostinger tidak perlu mengekstrak ZIP. File `Zanclus-Website-Source.zip` dipertahankan sebagai arsip versi sebelumnya dan tidak dipakai oleh build.
 
-Salin `.env.example` menjadi `.env.local` untuk konfigurasi lokal. `NEXT_PUBLIC_WHATSAPP_NUMBER` mengatur nomor tujuan dan label kontak. `NEXT_PUBLIC_SITE_URL` opsional untuk URL gambar share sosial. Variabel publik memerlukan rebuild saat berubah.
+Salin `.env.example` menjadi `.env.local` untuk konfigurasi lokal. `NEXT_PUBLIC_WHATSAPP_NUMBER` mengatur nomor tujuan dan label kontak. `NEXT_PUBLIC_SITE_URL` (atau `SITE_URL` saat berjalan) mengatur alamat lengkap untuk link kanonik, sitemap, dan gambar share; bawaannya `https://zanclusdivecenter.com`. Variabel publik memerlukan rebuild saat berubah.
 
 ## Fitur & status
 
@@ -194,6 +194,10 @@ Tes diagnosis menggunakan `scripts/verify-database-check.mjs` dengan `BASE_URL` 
 ## Peran dan pengguna (CMS per kategori)
 
 Menu admin dikelompokkan per kategori (meja harian, Situs web, PR & mitra, HRD, Keuangan, Gudang, Sistem, Pengguna & peran) dan setiap akun punya satu peran: **Superadmin** (owner, developer, manager: semua menu), **HRD**, **Finance** (pembayaran online dan keuangan), **Gudang**, atau **PR** (media sosial, website, reservasi, kalender mitra). Peran ditetapkan di `src/roles.js`, yang dipakai sidebar untuk menyusun menu dan setiap route `/api/admin/*` untuk menolak peran lain dengan 403. Superadmin membuat akun di `/admin/users` (**Pengguna & peran**); akun dari hPanel selalu superadmin. Modul **HRD** sudah berisi Pegawai (data, gaji, tunjangan, potongan, BPJS, rekening), Absensi harian dengan rekap bulanan, dan Slip gaji bulanan yang bisa dikunci setelah dibayar, masing-masing dengan unduhan Excel (`src/hr-model.js`, `src/server/xlsx.js`, `/api/admin/hr/*`). Modul **Keuangan** berisi Buku kas (pembayaran Midtrans yang lunas masuk otomatis), Laba rugi dua belas bulan per kategori, dan rekap pajak dengan tarif yang bisa diatur (`src/finance-model.js`, `/api/admin/finance/*`). Modul **Gudang** menghitung stok tiap barang dari catatan masuk/keluar/koreksi dengan peringatan stok menipis (`src/inventory-model.js`, `/api/admin/inventory/*`). **Kalender konten** untuk PR merencanakan konten per platform dari ide sampai tayang dan mencatat angka hasilnya (`src/content-plan-model.js`, `/api/admin/social/*`). Semua modul punya unduhan Excel dan menyimpan record di tabel yang sama. Rincian di [CMS-HOSTINGER.md](./CMS-HOSTINGER.md#peran-dan-pengguna). Uji dengan `node scripts/verify-users.mjs`, `node scripts/verify-hr.mjs`, dan `node scripts/verify-modules.mjs` pada server demo yang dijalankan seperti untuk `verify-password`.
+
+## Google Search Console
+
+`/sitemap.xml` (`app/sitemap.js`, halaman publik ID/EN dengan hreflang) dan `/robots.txt` (`app/robots.js`) dibuat dari konten CMS. Link kanonik, hreflang, dan gambar share memakai alamat lengkap dari `SITE_URL`, `NEXT_PUBLIC_SITE_URL`, atau bawaan `https://zanclusdivecenter.com` (`src/seo.js`). Beranda memuat data bisnis schema.org. Kode verifikasi Search Console ditempel di admin **Situs web → SEO & Search Console** dan tampil sebagai `<meta name="google-site-verification">` di semua halaman. Langkah lengkap di [CMS-HOSTINGER.md](./CMS-HOSTINGER.md#google-search-console). Uji dengan `node scripts/verify-seo.mjs`.
 
 ## Daftar harga paket
 

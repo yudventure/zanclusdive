@@ -45,6 +45,7 @@ const paths = {
   attendance: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4",
   payroll: "M3 7h18v10H3zM3 11h18M7 14h3M12 4v3M12 17v3",
   cashbook: "M4 5h16v14H4zM4 9h16M8 13h4M8 16h8",
+  seo: "M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM15.5 15.5 20 20M8 10.5h5M10.5 8v5",
   reports: "M4 20h16M6 16v-5M10 16V7M14 16v-4M18 16V5M4 4l5 3 4-2 7 3",
   stock: "M3 9l9-5 9 5-9 5zM3 9v8l9 5 9-5V9M12 14v8",
   movements: "M4 8h12l-3-3M20 16H8l3 3M4 8v8M20 8v8",

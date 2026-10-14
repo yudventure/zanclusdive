@@ -48,7 +48,7 @@ Tidak perlu memasukkan nilai tersebut ke file repository. Jangan menggunakan con
 
 Jika penyedia database mensyaratkan TLS, atur `MYSQL_SSL=true`. Sertifikat tetap diverifikasi; aplikasi tidak menonaktifkan verifikasi TLS.
 
-`NEXT_PUBLIC_WHATSAPP_NUMBER` tetap menjadi default awal website. Setelah CMS aktif, nomor dan konten dapat diganti melalui menu CMS tanpa rebuild. `NEXT_PUBLIC_SITE_URL=https://zanclusdive.com` tetap dipakai untuk metadata sosial pada waktu build.
+`NEXT_PUBLIC_WHATSAPP_NUMBER` tetap menjadi default awal website. Setelah CMS aktif, nomor dan konten dapat diganti melalui menu CMS tanpa rebuild. `NEXT_PUBLIC_SITE_URL=https://zanclusdivecenter.com` dipakai untuk link kanonik, sitemap, dan gambar share; tanpa variabel ini situs memakai alamat itu juga.
 
 ## 3. Deploy dan masuk
 
@@ -184,6 +184,25 @@ Peran **PR** (dan superadmin), grup **PR & mitra** → **Kalender konten**:
 - Saat status Tayang atau Dievaluasi, isi angka hasilnya (tayangan, jangkauan, suka, komentar, simpan, bagikan) dan catatan evaluasi. Kartu **Hasil bulan ini** menjumlahkan konten yang tayang per platform dan angkanya, dan unduhan Excel memuat semua konten bulan itu beserta ringkasannya.
 
 Data ketiga modul tersimpan sebagai record `transaction`, `setting`, `item`, `movement`, dan `post` di tabel `zanclus_records`; tidak ada tabel baru.
+
+## Google Search Console
+
+Situs sudah menyiapkan semua yang dibaca Google:
+
+- **`/sitemap.xml`**: semua halaman publik dalam bahasa Inggris dan Indonesia (`/id/...`) dengan hreflang. Halaman yang dimatikan di CMS (aktivitas, kursus, servis) otomatis keluar dari sitemap.
+- **`/robots.txt`**: halaman publik boleh dirayapi; `/admin`, `/api/admin/`, `/partner/`, dan `/payment/` tidak. Foto upload di `/api/media/` tetap boleh dirayapi. Keduanya tetap terbuka saat mode developer mengunci situs.
+- **Link kanonik, hreflang, dan gambar share** memakai alamat lengkap `https://zanclusdivecenter.com`. Bila domain utama lain, isi `SITE_URL=https://domain-utama` di hPanel → Variabel environment (dibaca saat berjalan).
+- **Data bisnis (schema.org)** di beranda: nama, WhatsApp, email, alamat (Waisai, Papua Barat Daya), dan tautan sosial media dari menu **Kontak & sosial media**.
+
+Langkah mendaftarkan situs (perlu akun Google pemilik):
+
+1. Buka [search.google.com/search-console](https://search.google.com/search-console), **Tambahkan properti**, pilih **Awalan URL**, isi `https://zanclusdivecenter.com/`.
+2. Pilih metode **Tag HTML**, salin tag `<meta name="google-site-verification" …>`. Di admin buka **Situs web → SEO & Search Console**, tempel tag itu (atau isi `content`-nya saja), lalu **Simpan kode verifikasi**. Kembali ke Search Console dan tekan **Verifikasi**. Kode juga bisa diisi lewat `GOOGLE_SITE_VERIFICATION` di hPanel.
+   - Alternatif: properti **Domain** lewat catatan TXT di hPanel → Domain → DNS. Cara ini mencakup www dan http sekaligus, tetapi menunggu DNS menyebar.
+3. Buka **Sitemap**, isi `sitemap.xml`, tekan **Kirim**.
+4. Di **Pemeriksaan URL**, periksa `https://zanclusdivecenter.com/` dan `/id`, lalu **Minta pengindeksan**.
+
+Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga memperingatkan bila admin dibuka di domain lain dari alamat yang dipakai untuk Google.
 
 ## Data dan reservasi
 

@@ -6,7 +6,8 @@ import { adminCookie, knownLocks, pageForPath } from "./src/developer.js";
 const indonesianPages =
   /^\/id(\/(diving|snorkeling|trip|course|about|service|dive-shop|calendar))?\/?$/;
 // Open even while the whole website is locked.
-const openPaths = /^\/(admin|status|maintenance|payment|partner|sw\.js)(\/|$)/;
+const openPaths =
+  /^\/(admin|status|maintenance|payment|partner|sw\.js|robots\.txt|sitemap\.xml)(\/|$)/;
 
 export function proxy(request) {
   const { pathname } = request.nextUrl;

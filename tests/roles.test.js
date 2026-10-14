@@ -72,7 +72,8 @@ test("the menu shows each role its own groups only", () => {
     "customers",
   ]);
   assert.equal(pr[1].key, "website");
-  assert.equal(pr[1].items.length, 11);
+  assert.equal(pr[1].items.length, 12);
+  assert.equal(pr[1].items.at(-1), "seo");
   assert.deepEqual(pr[2].items, ["social", "agents"]);
   assert.deepEqual(pr[3].items, ["security"]);
   // Every section is reachable from the superadmin's menu, once.

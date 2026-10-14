@@ -2289,3 +2289,68 @@
     display: none;
   }
 }
+
+/* SEO & Search Console */
+.admin-seo-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-seo-list li {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) auto;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f5;
+  font-size: 14px;
+}
+.admin-seo-list li:last-child {
+  border-bottom: 0;
+}
+.admin-seo-list li > span {
+  color: #6c8193;
+}
+.admin-seo-list li > a,
+.admin-seo-list li > strong {
+  overflow-wrap: anywhere;
+}
+.admin-seo-list li > small {
+  grid-column: 2 / -1;
+  color: #7a93a5;
+}
+.admin-seo-list .is-ok {
+  color: #17695f;
+}
+.admin-seo-list .is-warn {
+  color: #a35a12;
+}
+.admin-seo-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.6;
+}
+.admin-seo-steps small {
+  display: block;
+  margin-top: 4px;
+  color: #6c8193;
+}
+.admin-seo-steps code,
+.admin-seo-list code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .admin-seo-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .admin-seo-list li > span {
+    grid-column: 1 / -1;
+  }
+  .admin-seo-list li > small {
+    grid-column: 1 / -1;
+  }
+}

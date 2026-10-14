@@ -21,12 +21,28 @@ import { currentAdmin } from "../src/server/auth.js";
 import { publicContent } from "../src/server/store.js";
 import { DeveloperBar } from "../src/server/developer-gate.jsx";
 import ConnectionNotice from "../src/components/ConnectionNotice.jsx";
-const siteURL = process.env.NEXT_PUBLIC_SITE_URL;
+import { siteUrl } from "../src/seo.js";
+// The Google Search Console code from the CMS (SEO & Search Console), or
+// GOOGLE_SITE_VERIFICATION in the hosting panel.
+async function googleVerification() {
+  try {
+    return (
+      (await publicContent()).seo?.googleVerification ||
+      process.env.GOOGLE_SITE_VERIFICATION?.trim() ||
+      ""
+    );
+  } catch {
+    return process.env.GOOGLE_SITE_VERIFICATION?.trim() || "";
+  }
+}
 export async function generateMetadata() {
   const locale = await requestLocale();
   const t = dictionary(locale).meta;
+  const google = await googleVerification();
   return {
-    ...(siteURL ? { metadataBase: new URL(siteURL) } : {}),
+    // Canonical, hreflang and share images as full https addresses.
+    metadataBase: new URL(siteUrl()),
+    ...(google ? { verification: { google } } : {}),
     title: t.title,
     description: t.description,
     alternates: {
@@ -46,16 +62,14 @@ export async function generateMetadata() {
       locale: t.ogLocale,
       alternateLocale: locale === "id" ? "en_US" : "id_ID",
       type: "website",
-      images: siteURL
-        ? [
-            {
-              url: "/assets/hero.webp",
-              width: 1672,
-              height: 941,
-              alt: t.heroAlt,
-            },
-          ]
-        : [],
+      images: [
+        {
+          url: "/assets/hero.webp",
+          width: 1672,
+          height: 941,
+          alt: t.heroAlt,
+        },
+      ],
     },
   };
 }

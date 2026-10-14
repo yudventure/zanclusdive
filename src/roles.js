@@ -140,6 +140,12 @@ export const sections = {
     area: "website",
     intro: "Nomor WhatsApp, email, lokasi, dan tautan sosial media.",
   },
+  seo: {
+    title: "SEO & Search Console",
+    area: "website",
+    intro:
+      "Sitemap, robots.txt, dan kode verifikasi supaya situs terdaftar di Google Search Console.",
+  },
   employees: {
     title: "Pegawai",
     area: "hrd",
@@ -221,6 +227,7 @@ export const menuGroups = [
       "service",
       "about",
       "contact",
+      "seo",
     ],
   },
   {

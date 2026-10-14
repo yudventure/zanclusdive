@@ -23,6 +23,7 @@ import { prepareImage, prepareLogo } from "./image-upload.js";
 import PasswordEditor from "./PasswordEditor.jsx";
 import UsersEditor from "./UsersEditor.jsx";
 import { RoleHome } from "./RoleHome.jsx";
+import SeoEditor from "./SeoEditor.jsx";
 import CashbookEditor from "./finance/CashbookEditor.jsx";
 import ReportsEditor from "./finance/ReportsEditor.jsx";
 import StockEditor from "./inventory/StockEditor.jsx";
@@ -995,6 +996,19 @@ export default function Dashboard({ section, account, today }) {
                     </button>
                   </section>
                 </form>
+              )}
+              {section === "seo" && (
+                <SeoEditor
+                  seo={content.seo}
+                  site={data.site}
+                  busy={busy}
+                  onChange={(seo) =>
+                    setContent((current) => ({ ...current, seo }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(event, "Pengaturan SEO tersimpan.")
+                  }
+                />
               )}
               {section === "contact" && (
                 <form onSubmit={saveSettings}>

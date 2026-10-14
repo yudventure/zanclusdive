@@ -38,7 +38,7 @@ Buat ZIP dari commit terakhir dengan `npm run zip:hostinger`. Hasilnya `Zanclus-
 3. Pilih Next.js dan Node.js 22.x, lalu periksa pengaturan build di tabel.
 4. Tambahkan environment variable publik berikut sebelum build:
    - `NEXT_PUBLIC_WHATSAPP_NUMBER=6285190969308`
-   - `NEXT_PUBLIC_SITE_URL=https://domain-kamu` — ganti dengan domain asli lengkap, tanpa path. Variabel ini opsional; tanpanya gambar share sosial tidak dikonfigurasi.
+   - `NEXT_PUBLIC_SITE_URL=https://zanclusdivecenter.com` — domain asli lengkap, tanpa path. Dipakai untuk link kanonik, sitemap, dan gambar share. Tanpa variabel ini situs memakai `https://zanclusdivecenter.com`; isi `SITE_URL` bila domain utamanya lain (dibaca saat berjalan, tanpa build ulang).
 5. Jalankan deployment/build dari hPanel, lalu periksa log build dan runtime. Upload kode saja belum berarti aplikasi telah online.
 6. Hubungkan domain menggunakan instruksi DNS yang ditampilkan Hostinger dan aktifkan/periksa HTTPS.
 7. Uji website live: tampilan mobile, logo, kalender, kuis, formulir, serta nomor WhatsApp pada pesan yang disiapkan. Tidak perlu mengirim pesan untuk menguji tautan.

@@ -11,6 +11,7 @@ import {
 } from "../../../../src/server/store.js";
 import { cmsMode } from "../../../../src/cms-mode.js";
 import { hasArea } from "../../../../src/roles.js";
+import { siteUrl } from "../../../../src/seo.js";
 import {
   midtransConfigured,
   midtransProduction,
@@ -44,6 +45,7 @@ export async function GET(request) {
         media,
         agents,
         mode: cmsMode(),
+        site: { url: siteUrl() },
         account: {
           email: admin.email,
           name: admin.name,
