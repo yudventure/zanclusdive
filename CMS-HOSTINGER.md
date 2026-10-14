@@ -196,10 +196,10 @@ Situs sudah menyiapkan semua yang dibaca Google:
 
 Langkah mendaftarkan situs (perlu akun Google pemilik):
 
-1. Buka [search.google.com/search-console](https://search.google.com/search-console), **Tambahkan properti**, pilih **Awalan URL**, isi `https://zanclusdivecenter.com/`.
-2. Pilih metode **Tag HTML**, salin tag `<meta name="google-site-verification" …>`. Di admin buka **Situs web → SEO & Search Console**, tempel tag itu (atau isi `content`-nya saja), lalu **Simpan kode verifikasi**. Kembali ke Search Console dan tekan **Verifikasi**. Kode juga bisa diisi lewat `GOOGLE_SITE_VERIFICATION` di hPanel.
-   - Alternatif: properti **Domain** lewat catatan TXT di hPanel → Domain → DNS. Cara ini mencakup www dan http sekaligus, tetapi menunggu DNS menyebar.
-3. Buka **Sitemap**, isi `sitemap.xml`, tekan **Kirim**.
+1. Buka [search.google.com/search-console](https://search.google.com/search-console), **Tambahkan properti**, pilih **Domain**, isi `zanclusdivecenter.com` (tanpa `https://` dan `www`). Properti Domain mencakup www, non-www, http, dan https.
+2. Salin catatan TXT dari Google. Di hPanel → **Domain → DNS**, tambah catatan **TXT** dengan nama `@` dan isi catatan tadi. Kembali ke Search Console dan tekan **Verifikasi**; bila belum berhasil, tunggu DNS menyebar lalu coba lagi. Catatan TXT jangan dihapus. Cara ini tidak memakai kolom tag HTML di admin.
+   - Tanpa akses DNS: properti **Awalan URL** `https://zanclusdivecenter.com/` dengan metode **Tag HTML**. Tempel tag `<meta name="google-site-verification" …>` (atau `content`-nya saja) di admin **Situs web → SEO & Search Console → Tag HTML (opsional)**, simpan, lalu tekan **Verifikasi**. Kode juga bisa diisi lewat `GOOGLE_SITE_VERIFICATION` di hPanel.
+3. Buka **Sitemap**, isi `https://zanclusdivecenter.com/sitemap.xml`, tekan **Kirim**. Status **Couldn't fetch** sesaat setelah dikirim biasanya berubah menjadi **Success** dalam beberapa jam. Sitemap tidak perlu dikirim ulang saat halaman di CMS berubah.
 4. Di **Pemeriksaan URL**, periksa `https://zanclusdivecenter.com/` dan `/id`, lalu **Minta pengindeksan**.
 
 Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga memperingatkan bila admin dibuka di domain lain dari alamat yang dipakai untuk Google.

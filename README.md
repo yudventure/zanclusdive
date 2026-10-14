@@ -197,7 +197,7 @@ Menu admin dikelompokkan per kategori (meja harian, Situs web, PR & mitra, HRD, 
 
 ## Google Search Console
 
-`/sitemap.xml` (`app/sitemap.js`, halaman publik ID/EN dengan hreflang) dan `/robots.txt` (`app/robots.js`) dibuat dari konten CMS. Link kanonik, hreflang, dan gambar share memakai alamat lengkap dari `SITE_URL`, `NEXT_PUBLIC_SITE_URL`, atau bawaan `https://zanclusdivecenter.com` (`src/seo.js`). Beranda memuat data bisnis schema.org. Kode verifikasi Search Console ditempel di admin **Situs web → SEO & Search Console** dan tampil sebagai `<meta name="google-site-verification">` di semua halaman. Langkah lengkap di [CMS-HOSTINGER.md](./CMS-HOSTINGER.md#google-search-console). Uji dengan `node scripts/verify-seo.mjs`.
+`/sitemap.xml` (`app/sitemap.js`, halaman publik ID/EN dengan hreflang) dan `/robots.txt` (`app/robots.js`) dibuat dari konten CMS. Link kanonik, hreflang, dan gambar share memakai alamat lengkap dari `SITE_URL`, `NEXT_PUBLIC_SITE_URL`, atau bawaan `https://zanclusdivecenter.com` (`src/seo.js`). Beranda memuat data bisnis schema.org. Search Console memakai properti Domain yang diverifikasi lewat catatan TXT di DNS. Untuk properti Awalan URL, tag verifikasi bisa ditempel di admin **Situs web → SEO & Search Console** dan tampil sebagai `<meta name="google-site-verification">` di semua halaman. Langkah lengkap di [CMS-HOSTINGER.md](./CMS-HOSTINGER.md#google-search-console). Uji dengan `node scripts/verify-seo.mjs`.
 
 ## Daftar harga paket
 

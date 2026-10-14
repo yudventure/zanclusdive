@@ -2324,9 +2324,6 @@
 .admin-seo-list .is-ok {
   color: #17695f;
 }
-.admin-seo-list .is-warn {
-  color: #a35a12;
-}
 .admin-seo-steps {
   display: grid;
   gap: 12px;

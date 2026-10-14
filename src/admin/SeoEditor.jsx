@@ -21,22 +21,23 @@ function Copy({ text }) {
   );
 }
 
-// SEO & Search Console: what Google reads from the site, the verification
-// code from Search Console, and the steps there.
+// SEO & Search Console: what Google reads from the site, the steps there,
+// and the HTML tag for a URL-prefix property. A Domain property is verified
+// in DNS and needs no tag.
 export default function SeoEditor({ seo, site, onChange, onSave, busy }) {
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   const base = site?.url ?? "";
+  const domain = base.replace(/^https?:\/\/(www\.)?/, "");
   const sitemap = base + "/sitemap.xml";
   const robots = base + "/robots.txt";
-  const verified = Boolean(seo?.googleVerification);
+  const tagged = Boolean(seo?.googleVerification);
   // The admin opened on another domain than the one in canonical links.
   const otherDomain =
     origin &&
     base &&
     !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) &&
-    origin.replace(/^https?:\/\/(www\.)?/, "") !==
-      base.replace(/^https?:\/\/(www\.)?/, "");
+    origin.replace(/^https?:\/\/(www\.)?/, "") !== domain;
   return (
     <div className="admin-hr">
       <section className="admin-card">
@@ -64,9 +65,16 @@ export default function SeoEditor({ seo, site, onChange, onSave, busy }) {
           </li>
           <li>
             <span>Verifikasi Google</span>
-            <strong className={verified ? "is-ok" : "is-warn"}>
-              {verified ? "Kode terpasang" : "Belum ada kode"}
-            </strong>
+            {tagged ? (
+              <strong className="is-ok">Tag HTML terpasang</strong>
+            ) : (
+              <strong>Lewat DNS</strong>
+            )}
+            <small>
+              {tagged
+                ? "Untuk properti Awalan URL. Properti Domain tetap diverifikasi lewat catatan TXT di DNS."
+                : "Properti Domain diverifikasi lewat catatan TXT di DNS, tanpa tag HTML. Tag di bawah hanya untuk properti Awalan URL."}
+            </small>
           </li>
           <li>
             <span>Data bisnis</span>
@@ -88,7 +96,57 @@ export default function SeoEditor({ seo, site, onChange, onSave, busy }) {
       </section>
 
       <section className="admin-card">
-        <h2>Kode verifikasi Google Search Console</h2>
+        <h2>Langkah di Google Search Console</h2>
+        <ol className="admin-seo-steps">
+          <li>
+            Buka{" "}
+            <a
+              href="https://search.google.com/search-console"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              search.google.com/search-console
+            </a>{" "}
+            dengan akun Google bisnis, <b>Tambahkan properti</b>, pilih{" "}
+            <b>Domain</b>, lalu isi <code>{domain}</code> tanpa https:// dan
+            www.
+          </li>
+          <li>
+            Salin catatan TXT dari Google. Di hPanel → Domain → DNS, tambah
+            catatan <b>TXT</b> dengan nama <code>@</code> dan isi catatan tadi,
+            lalu kembali ke Search Console dan tekan <b>Verifikasi</b>. Bila
+            belum berhasil, tunggu DNS menyebar dan coba lagi. Catatan TXT
+            jangan dihapus.
+            <small>
+              Tanpa akses DNS: pilih properti <b>Awalan URL</b>{" "}
+              <code>{base}/</code> dengan metode <b>Tag HTML</b>, lalu tempel
+              tagnya di kolom di bawah.
+            </small>
+          </li>
+          <li>
+            Setelah terverifikasi, buka <b>Sitemap</b>, isi alamat lengkap{" "}
+            <code>{sitemap}</code>, lalu <b>Kirim</b>. Status{" "}
+            <b>Couldn&apos;t fetch</b> sesaat setelah dikirim biasanya berubah
+            menjadi <b>Success</b> dalam beberapa jam.
+          </li>
+          <li>
+            Di <b>Pemeriksaan URL</b>, periksa <code>{base}/</code> dan{" "}
+            <code>{base}/id</code>, lalu tekan <b>Minta pengindeksan</b>.
+          </li>
+          <li>
+            Data mulai tampil dalam beberapa hari. Laporan <b>Halaman</b>{" "}
+            menunjukkan halaman yang sudah atau belum diindeks.
+          </li>
+        </ol>
+      </section>
+
+      <section className="admin-card">
+        <h2>Tag HTML (opsional)</h2>
+        <p className="admin-subtle">
+          Hanya untuk properti <b>Awalan URL</b> yang memilih metode Tag HTML.
+          Properti Domain yang sudah terverifikasi lewat DNS tidak
+          memerlukannya.
+        </p>
         <form onSubmit={onSave} className="admin-hr-form">
           <Field
             label="Tag meta verifikasi"
@@ -108,46 +166,6 @@ export default function SeoEditor({ seo, site, onChange, onSave, busy }) {
             </button>
           </div>
         </form>
-      </section>
-
-      <section className="admin-card">
-        <h2>Langkah di Google Search Console</h2>
-        <ol className="admin-seo-steps">
-          <li>
-            Buka{" "}
-            <a
-              href="https://search.google.com/search-console"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              search.google.com/search-console
-            </a>{" "}
-            dengan akun Google bisnis, lalu <b>Tambahkan properti</b>.
-          </li>
-          <li>
-            Pilih <b>Awalan URL</b> dan isi <code>{base}/</code>. Pada metode
-            verifikasi, pilih <b>Tag HTML</b>, salin tagnya, tempel di kolom di
-            atas, simpan, lalu kembali ke Search Console dan tekan{" "}
-            <b>Verifikasi</b>.
-            <small>
-              Alternatif: properti <b>Domain</b> lewat catatan TXT di hPanel →
-              Domain → DNS. Cara ini juga mencakup www dan http, tetapi perlu
-              waktu sampai DNS menyebar.
-            </small>
-          </li>
-          <li>
-            Setelah terverifikasi, buka <b>Sitemap</b>, isi{" "}
-            <code>sitemap.xml</code>, lalu <b>Kirim</b>.
-          </li>
-          <li>
-            Di <b>Pemeriksaan URL</b>, periksa <code>{base}/</code> dan{" "}
-            <code>{base}/id</code>, lalu tekan <b>Minta pengindeksan</b>.
-          </li>
-          <li>
-            Data mulai tampil dalam beberapa hari. Laporan <b>Halaman</b>{" "}
-            menunjukkan halaman yang sudah atau belum diindeks.
-          </li>
-        </ol>
       </section>
     </div>
   );

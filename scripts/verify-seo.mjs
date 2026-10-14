@@ -112,7 +112,13 @@ try {
   await page.goto(base + "/admin/seo", { waitUntil: "networkidle" });
   assert.equal(await page.locator("h1").textContent(), "SEO & Search Console");
   const status = page.locator(".admin-seo-list");
-  await status.getByText("Belum ada kode").waitFor();
+  // Without a tag the page reads as verified in DNS, not as a warning.
+  await status.getByText("Lewat DNS").waitFor();
+  assert.ok(
+    (await page.locator(".admin-seo-steps").textContent()).includes(
+      "pilih Domain, lalu isi zanclusdivecenter.com",
+    ),
+  );
   assert.match(
     await status.textContent(),
     new RegExp(`${site.replace(/\./g, "\\.")}/sitemap\\.xml`),
@@ -122,7 +128,7 @@ try {
     .fill(`<meta name="google-site-verification" content="${code}" />`);
   await page.getByRole("button", { name: "Simpan kode verifikasi" }).click();
   await page.getByText("Pengaturan SEO tersimpan.").waitFor();
-  await status.getByText("Kode terpasang").waitFor();
+  await status.getByText("Tag HTML terpasang").waitFor();
   assert.equal(await page.getByLabel("Tag meta verifikasi").inputValue(), code);
   await page.screenshot({ path: shots + "/admin-seo.png", fullPage: true });
   // A file name (the HTML file method) is refused with the way to go.
