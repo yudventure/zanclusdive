@@ -87,7 +87,8 @@ export const sections = {
   social: {
     title: "Kalender konten",
     area: "social",
-    intro: "Rencana sampai evaluasi konten media sosial.",
+    intro:
+      "Rencana konten per platform, dari ide sampai tayang, dengan angka hasilnya.",
   },
   media: {
     title: "Foto & media",
@@ -156,15 +157,27 @@ export const sections = {
     intro:
       "Slip gaji bulanan dari gaji, tunjangan, potongan, dan absensi. Kunci slip yang sudah dibayar.",
   },
-  finance: {
-    title: "Keuangan",
+  cashbook: {
+    title: "Buku kas",
     area: "finance",
-    intro: "Buku kas, laba rugi, dan pajak.",
+    intro:
+      "Pemasukan dan pengeluaran per bulan. Pembayaran online yang lunas masuk sendiri.",
   },
-  gudang: {
-    title: "Gudang",
+  reports: {
+    title: "Laba rugi & pajak",
+    area: "finance",
+    intro: "Laba rugi dua belas bulan, rincian per kategori, dan rekap pajak.",
+  },
+  stock: {
+    title: "Barang & stok",
     area: "gudang",
-    intro: "Stok dan barang masuk/keluar.",
+    intro:
+      "Stok tiap barang dari catatan masuk dan keluar, dengan peringatan stok menipis.",
+  },
+  movements: {
+    title: "Keluar masuk",
+    area: "gudang",
+    intro: "Catatan barang masuk, keluar, dan koreksi stok per bulan.",
   },
   users: {
     title: "Pengguna & peran",
@@ -226,9 +239,14 @@ export const menuGroups = [
     key: "finance",
     title: "Keuangan",
     icon: "finance",
-    items: ["payments", "finance"],
+    items: ["payments", "cashbook", "reports"],
   },
-  { key: "gudang", title: "Gudang", icon: "gudang", items: ["gudang"] },
+  {
+    key: "gudang",
+    title: "Gudang",
+    icon: "gudang",
+    items: ["stock", "movements"],
+  },
   {
     key: "system",
     title: "Sistem",

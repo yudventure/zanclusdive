@@ -51,15 +51,14 @@ try {
   watch(page);
   await page.goto(base + "/admin/users", { waitUntil: "networkidle" });
   assert.equal(await page.locator("h1").textContent(), "Pengguna & peran");
-  // Gudang has one page for now, so it shows as a plain link.
   assert.deepEqual(await groups(page), [
     "Situs web",
     "PR & mitra",
     "HRD",
     "Keuangan",
+    "Gudang",
     "Sistem",
   ]);
-  assert.ok((await links(page)).includes("Gudang"));
   await page.getByText("Akun bawaan").first().waitFor();
   assert.match(
     await page.locator(".admin-user-table").textContent(),
@@ -311,7 +310,7 @@ try {
   ])
     assert.ok(!prLinks.includes(name), "no " + name);
   await pp.goto(base + "/admin/social", { waitUntil: "networkidle" });
-  await pp.getByText("Tahap 5 · Belum tersedia").waitFor();
+  await pp.getByRole("heading", { name: "Kalender konten" }).first().waitFor();
   assert.equal((await call(pr, "/api/admin/users")).status(), 403);
 
   // Finance: online payments only.
@@ -339,7 +338,8 @@ try {
   assert.deepEqual(await links(fp), [
     "Ringkasan cepat",
     "Pembayaran online",
-    "Keuangan",
+    "Buku kas",
+    "Laba rugi & pajak",
     "Ubah password",
   ]);
   assert.equal(

@@ -283,6 +283,37 @@ export async function deleteAgent(id) {
     return state.agents.length < before;
   });
 }
+// Generic records by kind, as the MySQL store keeps them. A "where" of
+// "AND id LIKE ?" with one pattern is honoured; anything else is ignored.
+export async function listRecords(kind, where = "", params = []) {
+  const all = Object.values((await read()).records?.[kind] ?? {});
+  if (where.includes("LIKE") && typeof params[0] === "string") {
+    const pattern = new RegExp(
+      "^" +
+        params[0]
+          .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          .replace(/%/g, ".*")
+          .replace(/_/g, ".") +
+        "$",
+    );
+    return all.filter((record) => pattern.test(record.id));
+  }
+  return all.sort((a, b) => a.id.localeCompare(b.id));
+}
+export async function saveRecord(kind, record) {
+  return mutate((state) => {
+    ((state.records ||= {})[kind] ||= {})[record.id] = record;
+    return record;
+  });
+}
+export async function deleteRecord(kind, id) {
+  return mutate((state) => {
+    const bucket = (state.records ||= {})[kind] ?? {};
+    const existed = Boolean(bucket[id]);
+    if (existed) delete bucket[id];
+    return existed;
+  });
+}
 // HRD: employees, attendance by day and locked payslips.
 export async function listEmployees() {
   return (await read()).employees ?? [];

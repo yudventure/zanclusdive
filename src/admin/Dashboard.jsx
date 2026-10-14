@@ -22,7 +22,12 @@ import ImageUpload from "./ImageUpload.jsx";
 import { prepareImage, prepareLogo } from "./image-upload.js";
 import PasswordEditor from "./PasswordEditor.jsx";
 import UsersEditor from "./UsersEditor.jsx";
-import ModulePlaceholder, { RoleHome } from "./ModulePlaceholder.jsx";
+import { RoleHome } from "./RoleHome.jsx";
+import CashbookEditor from "./finance/CashbookEditor.jsx";
+import ReportsEditor from "./finance/ReportsEditor.jsx";
+import StockEditor from "./inventory/StockEditor.jsx";
+import MovementsEditor from "./inventory/MovementsEditor.jsx";
+import SocialEditor from "./social/SocialEditor.jsx";
 import MonthCalendar from "./MonthCalendar.jsx";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
@@ -55,7 +60,6 @@ import {
 const sections = Object.fromEntries(
   Object.entries(sectionInfo).map(([key, info]) => [key, info.title]),
 );
-const placeholderSections = ["finance", "gudang", "social"];
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -823,8 +827,20 @@ export default function Dashboard({ section, account, today }) {
               {section === "users" && (
                 <UsersEditor request={request} account={account} />
               )}
-              {placeholderSections.includes(section) && (
-                <ModulePlaceholder module={section} />
+              {section === "cashbook" && (
+                <CashbookEditor request={request} today={today} />
+              )}
+              {section === "reports" && (
+                <ReportsEditor request={request} today={today} />
+              )}
+              {section === "stock" && (
+                <StockEditor request={request} today={today} />
+              )}
+              {section === "movements" && (
+                <MovementsEditor request={request} today={today} />
+              )}
+              {section === "social" && (
+                <SocialEditor request={request} today={today} />
               )}
               {section === "employees" && <EmployeesEditor request={request} />}
               {section === "attendance" && (

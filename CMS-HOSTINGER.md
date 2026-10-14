@@ -136,9 +136,9 @@ Admin dibagi per kategori, dan setiap akun punya satu peran yang menentukan menu
 | --- | --- | --- |
 | **Superadmin** | Owner, developer, manager | Semua menu, termasuk **Pengguna & peran** dan **Mode developer** |
 | **HRD** | Urusan pegawai | **HRD**: Pegawai, Absensi, Slip gaji (lihat Modul HRD) |
-| **Finance** | Keuangan | **Pembayaran online**, **Keuangan** (buku kas, laba rugi, pajak; tahap 3) |
-| **Gudang** | Stok | **Gudang** (stok dan barang masuk/keluar; tahap 4) |
-| **PR** | Media sosial dan website | **Operasional** (kalender reservasi, reservasi, tamu), **Website & PR** (kalender kegiatan, agen & kalender, kalender konten tahap 5, pengaturan situs) |
+| **Finance** | Keuangan | **Keuangan**: Pembayaran online, Buku kas, Laba rugi & pajak (lihat Modul Keuangan) |
+| **Gudang** | Stok | **Gudang**: Barang & stok, Keluar masuk (lihat Modul Gudang) |
+| **PR** | Media sosial dan website | Kalender reservasi, Reservasi, Tamu, **Situs web**, **PR & mitra** (Kalender konten, Agen & kalender) |
 
 Setiap peran juga bisa mengganti password sendiri lewat **Ubah password**.
 
@@ -159,6 +159,31 @@ Peran **HRD** (dan superadmin) mengelola tiga halaman di grup **HRD**:
 - **Unduh Excel** di tiap halaman: daftar pegawai, rekap dan rincian absensi per bulan, dan daftar gaji per bulan (`.xlsx`, dibuat server tanpa pustaka tambahan).
 
 Data tersimpan di tabel `zanclus_records` sebagai record `employee`, `attendance` (satu per pegawai per hari), dan `payslip` (slip terkunci). Tidak ada tabel baru. Data gaji termasuk data pribadi; jaga backup database seperti data tamu.
+
+## Modul Keuangan
+
+Peran **Finance** (dan superadmin), grup **Keuangan**:
+
+- **Pembayaran online**: pengaturan Midtrans dan riwayat pembayaran (sudah ada).
+- **Buku kas**: pemasukan dan pengeluaran per bulan dengan kategori (diving, snorkeling, trip, kursus, Dive Shop, sewa alat, servis; gaji, operasional, perlengkapan, sewa/listrik, pemasaran, konsumsi, pajak), cara bayar, referensi nota, dan catatan. **Pembayaran online yang lunas masuk sendiri** sebagai baris "Otomatis" (dari data reservasi, tidak diketik ulang dan tidak bisa diubah di sini). Total masuk, keluar, dan bersih per bulan, serta unduhan Excel.
+- **Laba rugi & pajak**: dua belas bulan dalam setahun (pemasukan, pengeluaran, laba, pajak), rincian per kategori, dan rekap pajak. Pajak dihitung dari pemasukan kotor dengan tarif yang bisa diatur; bawaannya PPh final UMKM 0,5% (PP 55/2022). Ini perkiraan untuk setoran, bukan pengganti perhitungan konsultan pajak. Unduhan Excel per tahun.
+
+## Modul Gudang
+
+Peran **Gudang** (dan superadmin), grup **Gudang**:
+
+- **Barang & stok**: nama, kode, kategori (alat selam, suku cadang, bahan habis pakai, merchandise, perahu & mesin), satuan, stok minimum, harga beli, lokasi simpan. Stok dihitung dari catatan masuk/keluar, bukan diketik; nilai stok = stok × harga beli. Barang dengan stok di bawah atau sama dengan minimum ditandai **Menipis** dan disebut di atas daftar. Tombol **Masuk** dan **Keluar** di tiap baris mencatat mutasi tanpa pindah halaman.
+- **Keluar masuk**: catatan per bulan (masuk: pembelian, sewa kembali; keluar: penjualan, sewa keluar, dipakai, rusak/hilang; koreksi stok ± dari stock opname). Mutasi yang salah dihapus lalu dicatat ulang supaya riwayatnya jujur. Unduhan Excel untuk stok dan mutasi per bulan.
+
+## Modul PR: Kalender konten
+
+Peran **PR** (dan superadmin), grup **PR & mitra** → **Kalender konten**:
+
+- Satu kalender bulanan untuk Instagram, TikTok, Facebook, YouTube, dan website. Tiap konten punya judul/ide, format (reel, foto, carousel, story, video panjang, artikel, live), tanggal dan jam tayang, penanggung jawab, caption/catatan produksi, dan tautan setelah tayang.
+- Status mengikuti alur kerja: **Ide → Draf → Terjadwal → Tayang → Dievaluasi**. Di kalender, konten ide/draf tampil pudar dan konten yang tayang tampil tebal, dengan warna per platform.
+- Saat status Tayang atau Dievaluasi, isi angka hasilnya (tayangan, jangkauan, suka, komentar, simpan, bagikan) dan catatan evaluasi. Kartu **Hasil bulan ini** menjumlahkan konten yang tayang per platform dan angkanya, dan unduhan Excel memuat semua konten bulan itu beserta ringkasannya.
+
+Data ketiga modul tersimpan sebagai record `transaction`, `setting`, `item`, `movement`, dan `post` di tabel `zanclus_records`; tidak ada tabel baru.
 
 ## Data dan reservasi
 

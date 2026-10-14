@@ -349,6 +349,20 @@ export async function deleteAgent(id) {
   );
   return Boolean(r.affectedRows);
 }
+// Generic records for the modules (finance, inventory, content plan): one
+// kind per record type, the payload as JSON.
+export async function listRecords(kind, where = "", params = []) {
+  if (isDemo()) return demo.listRecords(kind, where, params);
+  return listKind(kind, where, params);
+}
+export async function saveRecord(kind, record) {
+  if (isDemo()) return demo.saveRecord(kind, record);
+  return upsertKind(kind, record);
+}
+export async function deleteRecord(kind, id) {
+  if (isDemo()) return demo.deleteRecord(kind, id);
+  return deleteKind(kind, id);
+}
 // HRD records: kinds "employee", "attendance" (id att:<employee>:<date>)
 // and "payslip" (id slip:<employee>:<month>).
 async function listKind(kind, where = "", params = []) {
