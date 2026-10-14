@@ -12,7 +12,6 @@ import ServiceEditor from "./ServiceEditor.jsx";
 import DeveloperEditor from "./DeveloperEditor.jsx";
 import PaymentsEditor, { PaymentBadge } from "./PaymentsEditor.jsx";
 import AgentsEditor from "./AgentsEditor.jsx";
-import { paymentStatusLabels } from "../payment-model.js";
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
@@ -24,9 +23,13 @@ import { prepareImage, prepareLogo } from "./image-upload.js";
 import PasswordEditor from "./PasswordEditor.jsx";
 import UsersEditor from "./UsersEditor.jsx";
 import ModulePlaceholder, { RoleHome } from "./ModulePlaceholder.jsx";
+import MonthCalendar from "./MonthCalendar.jsx";
+import EmployeesEditor from "./hr/EmployeesEditor.jsx";
+import AttendanceEditor from "./hr/AttendanceEditor.jsx";
+import PayrollEditor from "./hr/PayrollEditor.jsx";
 import {
   sections as sectionInfo,
-  menuGroups,
+  groupOf,
   visibleMenu,
   sectionAllowed,
   hasArea,
@@ -41,20 +44,18 @@ import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
   experienceKeys,
   bookingPrograms,
-  orderPrograms,
   programTitle,
   textFields,
   statuses,
   sources,
   defaultContent,
 } from "../cms-model.js";
-// Page titles and the collapsible website group come from the shared
-// roles model, which also decides what each role sees.
+// Page titles come from the shared roles model, which also decides what
+// each role sees.
 const sections = Object.fromEntries(
   Object.entries(sectionInfo).map(([key, info]) => [key, info.title]),
 );
-const siteSections = menuGroups.find((group) => group.sub).sub.items;
-const placeholderSections = ["hrd", "finance", "gudang", "social"];
+const placeholderSections = ["finance", "gudang", "social"];
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -274,7 +275,7 @@ export default function Dashboard({ section, account, today }) {
     [booking, setBooking] = useState(blankBooking(today)),
     [editing, setEditing] = useState(null),
     [editLocale, setEditLocale] = useState("id"),
-    [siteOpen, setSiteOpen] = useState(siteSections.includes(section)),
+    [openGroups, setOpenGroups] = useState(() => new Set([groupOf(section)])),
     [autoSave, setAutoSave] = useState(0);
   // Copy sections can be edited per language; prices, photos and visibility
   // are shared by both versions of the website.
@@ -295,17 +296,24 @@ export default function Dashboard({ section, account, today }) {
     account.name ||
     (displayName(email) === "tim Zanclus" ? "Operator" : displayName(email));
   const initials = ownerName.slice(0, 2).toUpperCase();
-  const link = (key) => (
+  const link = (key, icon = key) => (
     <Link
       key={key}
       href={"/admin/" + key}
       aria-current={section === key ? "page" : undefined}
       className={section === key ? "active" : ""}
     >
-      <AdminIcon name={key} />
+      <AdminIcon name={icon} />
       {sections[key]}
     </Link>
   );
+  const toggleGroup = (key) =>
+    setOpenGroups((open) => {
+      const next = new Set(open);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   async function refresh() {
     try {
       const next = await request("/api/admin/state");
@@ -323,7 +331,7 @@ export default function Dashboard({ section, account, today }) {
   useEffect(() => {
     setMobileMenu(false);
     setOwnerMenu(false);
-    if (siteSections.includes(section)) setSiteOpen(true);
+    setOpenGroups((open) => new Set([...open, groupOf(section)]));
     setNotification(false);
     setNotice("");
   }, [section]);
@@ -470,24 +478,7 @@ export default function Dashboard({ section, account, today }) {
     d.setMonth(d.getMonth() + delta);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
-  // Events read from the travel agents' own calendars.
-  const agentEvents = (data?.agents ?? [])
-    .filter((agent) => agent.enabled)
-    .flatMap((agent) =>
-      (agent.events ?? []).map((event) => ({ agent, event })),
-    );
-  const monthCount = new Date(
-    Number(month.slice(0, 4)),
-    Number(month.slice(5, 7)),
-    0,
-  ).getDate();
   const bookings = data?.bookings || [];
-  const thisMonth = bookings.filter(
-    (b) =>
-      b.startDate.slice(0, 7) <= month &&
-      b.endDate.slice(0, 7) >= month &&
-      b.status !== "cancelled",
-  );
   const filtered = bookings.filter(
     (b) =>
       (statusFilter === "all" || b.status === statusFilter) &&
@@ -694,40 +685,40 @@ export default function Dashboard({ section, account, today }) {
             role="navigation"
             aria-label="Menu admin"
           >
-            {menu.map((group) => (
-              <div key={group.key} className="admin-menu-group">
-                {group.title && (
-                  <p className="admin-menu-title">{group.title}</p>
-                )}
-                {group.items.map(link)}
-                {group.sub && (
-                  <>
-                    <button
-                      type="button"
-                      className={
-                        "admin-group-toggle" +
-                        (group.sub.items.includes(section) ? " current" : "")
-                      }
-                      aria-expanded={siteOpen}
-                      onClick={() => setSiteOpen(!siteOpen)}
-                    >
-                      <AdminIcon name="settings" />
-                      {group.sub.title}
-                      <AdminIcon
-                        name="chevron"
-                        size={16}
-                        className="admin-chevron"
-                      />
-                    </button>
-                    {siteOpen && (
-                      <div className="admin-sublinks">
-                        {group.sub.items.map(link)}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
+            {menu.map((group) => {
+              // A run of top-level links, a single page under the group's
+              // icon, or a folding group.
+              if (!group.title) return group.items.map((key) => link(key));
+              if (group.items.length === 1)
+                return link(group.items[0], group.icon);
+              const open = openGroups.has(group.key);
+              return (
+                <div key={group.key} className="admin-menu-group">
+                  <button
+                    type="button"
+                    className={
+                      "admin-group-toggle" +
+                      (group.items.includes(section) ? " current" : "")
+                    }
+                    aria-expanded={open}
+                    onClick={() => toggleGroup(group.key)}
+                  >
+                    <AdminIcon name={group.icon} />
+                    {group.title}
+                    <AdminIcon
+                      name="chevron"
+                      size={16}
+                      className="admin-chevron"
+                    />
+                  </button>
+                  {open && (
+                    <div className="admin-sublinks">
+                      {group.items.map((key) => link(key))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {can("settings") && lockCount(content?.developer) > 0 && (
               <p className="admin-dev-flag">
                 Mode developer aktif · {lockCount(content.developer)} kunci
@@ -761,21 +752,28 @@ export default function Dashboard({ section, account, today }) {
         </aside>
         <main className="admin-main">
           {section !== "overview" && (
-            <p className="admin-eyebrow">ZANCLUS / RUANG KERJA</p>
+            <p className="admin-eyebrow">
+              RUANG KERJA ·{" "}
+              {section === "calendar"
+                ? new Date(month + "-01T12:00:00")
+                    .toLocaleDateString("id-ID", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                    .toUpperCase()
+                : roleLabel(role).toUpperCase()}
+            </p>
           )}
           <div
             className="admin-title-row"
             hidden={section === "overview" && !!data}
           >
-            <h1>{sections[section]}</h1>
-            {section === "calendar" && (
-              <span>
-                {new Date(month + "-01T12:00:00").toLocaleDateString("id-ID", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-            )}
+            <div>
+              <h1>{sections[section]}</h1>
+              {sectionInfo[section]?.intro && (
+                <p className="admin-intro">{sectionInfo[section].intro}</p>
+              )}
+            </div>
           </div>
           {error && (
             <div className="admin-error" role="alert">
@@ -828,213 +826,33 @@ export default function Dashboard({ section, account, today }) {
               {placeholderSections.includes(section) && (
                 <ModulePlaceholder module={section} />
               )}
+              {section === "employees" && <EmployeesEditor request={request} />}
+              {section === "attendance" && (
+                <AttendanceEditor request={request} today={today} />
+              )}
+              {section === "payroll" && (
+                <PayrollEditor request={request} today={today} />
+              )}
               {section === "calendar" && (
                 <>
-                  <div className="admin-toolbar">
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => moveMonth(-1)}
-                    >
-                      ← Bulan lalu
-                    </button>
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => setMonth(today.slice(0, 7))}
-                    >
-                      Bulan ini
-                    </button>
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => moveMonth(1)}
-                    >
-                      Bulan berikut →
-                    </button>
-                    <Link
-                      href="/admin/reservations"
-                      className="admin-button secondary"
-                    >
-                      Semua reservasi
-                    </Link>
-                  </div>
-                  <div className="admin-calendar-scroll">
-                    <table className="admin-calendar">
-                      <thead>
-                        <tr>
-                          <th>Pengalaman</th>
-                          {Array.from({ length: monthCount }, (_, i) => {
-                            const date =
-                              month + "-" + String(i + 1).padStart(2, "0");
-                            return (
-                              <th
-                                key={date}
-                                className={date === today ? "today" : ""}
-                              >
-                                <small>
-                                  {new Date(
-                                    date + "T12:00:00",
-                                  ).toLocaleDateString("id-ID", {
-                                    weekday: "short",
-                                  })}
-                                </small>
-                                {i + 1}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bookingPrograms.map((key) => (
-                          <tr key={key}>
-                            <th>
-                              {programTitle(content, key)}
-                              <small>
-                                {orderPrograms[key] ||
-                                (
-                                  content.experiences[key] ??
-                                  content.activities?.[key]
-                                )?.enabled
-                                  ? "Aktif"
-                                  : "Tidak ditampilkan"}
-                              </small>
-                            </th>
-                            {Array.from({ length: monthCount }, (_, i) => {
-                              const date =
-                                  month + "-" + String(i + 1).padStart(2, "0"),
-                                items = thisMonth.filter(
-                                  (b) =>
-                                    b.experience === key &&
-                                    date >= b.startDate &&
-                                    date <= b.endDate,
-                                );
-                              return (
-                                <td
-                                  key={date}
-                                  className={date === today ? "today" : ""}
-                                >
-                                  {items.length ? (
-                                    items.map((b) => (
-                                      <button
-                                        key={b.id}
-                                        className={
-                                          "calendar-booking " +
-                                          b.status +
-                                          (b.payment?.status === "paid"
-                                            ? " paid"
-                                            : "")
-                                        }
-                                        title={`${b.guestName || "Ditutup"} · ${statuses[b.status]} · ${sources[b.source]}${b.payment ? " · Pembayaran: " + paymentStatusLabels[b.payment.status] : ""}`}
-                                        onClick={() => editReservation(b)}
-                                      >
-                                        {b.status === "closed"
-                                          ? "Ditutup"
-                                          : b.guestName}
-                                        {b.payment?.status === "paid" && " ✓"}
-                                      </button>
-                                    ))
-                                  ) : (
-                                    <button
-                                      className="calendar-day"
-                                      aria-label={`Tambah reservasi ${programTitle(content, key)}, ${date}`}
-                                      onClick={() => {
-                                        setEditing(null);
-                                        setBooking({
-                                          ...blankBooking(date),
-                                          experience: key,
-                                        });
-                                        document
-                                          .getElementById("booking-editor")
-                                          ?.scrollIntoView({
-                                            behavior: "smooth",
-                                          });
-                                      }}
-                                    >
-                                      +
-                                    </button>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                        {agentEvents.length > 0 && (
-                          <tr className="calendar-agents">
-                            <th>
-                              Agen & partner
-                              <small>Dari kalender agen</small>
-                            </th>
-                            {Array.from({ length: monthCount }, (_, i) => {
-                              const date =
-                                month + "-" + String(i + 1).padStart(2, "0");
-                              const items = agentEvents.filter(
-                                ({ event }) =>
-                                  date >= event.start && date <= event.end,
-                              );
-                              return (
-                                <td
-                                  key={date}
-                                  className={date === today ? "today" : ""}
-                                >
-                                  {items.map(({ agent, event }) => (
-                                    <span
-                                      key={agent.id + event.uid}
-                                      className="calendar-agent"
-                                      title={`${agent.name}: ${event.summary}`}
-                                    >
-                                      {agent.name}
-                                    </span>
-                                  ))}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="admin-legend">
-                    {Object.entries(statuses).map(([key, label]) => (
-                      <span key={key} className={"admin-status " + key}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="admin-two-column calendar-bottom">
-                    {editor}
-                    <section className="admin-card">
-                      <h2>Reservasi bulan ini</h2>
-                      <p className="admin-subtle">
-                        {thisMonth.length} catatan · tanggal selesai dihitung
-                        termasuk hari terakhir.
-                      </p>
-                      {thisMonth.length ? (
-                        thisMonth.map((b) => (
-                          <button
-                            className="admin-booking-summary"
-                            key={b.id}
-                            onClick={() => editReservation(b)}
-                          >
-                            <strong>
-                              {b.guestName || "Penutupan tanggal"}
-                            </strong>
-                            <span>
-                              {programTitle(content, b.experience)}
-                              {b.payment?.status === "paid" && " · Lunas"}
-                            </span>
-                            <small>
-                              {dateLabel(b.startDate)} — {dateLabel(b.endDate)}
-                            </small>
-                            <span className={"admin-status " + b.status}>
-                              {statuses[b.status]}
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <p className="admin-empty">
-                          Belum ada reservasi bulan ini.
-                        </p>
-                      )}
-                    </section>
-                  </div>
+                  <MonthCalendar
+                    month={month}
+                    today={today}
+                    bookings={bookings}
+                    agents={data.agents ?? []}
+                    content={content}
+                    onMove={moveMonth}
+                    onToday={() => setMonth(today.slice(0, 7))}
+                    onPick={(date) => {
+                      setEditing(null);
+                      setBooking(blankBooking(date));
+                      document
+                        .getElementById("booking-editor")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    onEdit={editReservation}
+                  />
+                  {editor}
                 </>
               )}
               {section === "reservations" && (

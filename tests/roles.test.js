@@ -10,6 +10,7 @@ import {
   sectionKeys,
   sectionAllowed,
   visibleMenu,
+  groupOf,
   mergeByRole,
 } from "../src/roles.js";
 import { validateUser, publicUser } from "../src/users-model.js";
@@ -33,6 +34,8 @@ test("sections belong to a known area; the shared ones are open to all", () => {
   assert.ok(sectionAllowed("superadmin", "users"));
   assert.ok(!sectionAllowed("pr", "users"));
   assert.ok(!sectionAllowed("hrd", "reservations"));
+  assert.ok(sectionAllowed("hrd", "payroll"));
+  assert.ok(!sectionAllowed("gudang", "payroll"));
   assert.ok(sectionAllowed("pr", "reservations"));
   assert.ok(sectionAllowed("finance", "payments"));
   assert.ok(!sectionAllowed("pr", "payments"));
@@ -40,39 +43,44 @@ test("sections belong to a known area; the shared ones are open to all", () => {
   assert.ok(hasArea("gudang", null));
 });
 
-test("the menu shows each role its own categories only", () => {
+test("the menu shows each role its own groups only", () => {
   const keys = (role) => visibleMenu(role).map((group) => group.key);
   assert.deepEqual(keys("superadmin"), [
-    "main",
-    "operations",
+    "desk",
+    "website",
     "pr",
     "hrd",
     "finance",
     "gudang",
-    "settings",
+    "system",
+    "users",
   ]);
-  assert.deepEqual(keys("hrd"), ["main", "hrd", "settings"]);
-  assert.deepEqual(keys("finance"), [
-    "main",
-    "operations",
-    "finance",
-    "settings",
-  ]);
+  assert.deepEqual(keys("hrd"), ["desk", "hrd", "system"]);
+  assert.deepEqual(keys("finance"), ["desk", "finance", "system"]);
   const finance = visibleMenu("finance");
-  assert.deepEqual(finance[1].items, ["payments"]);
-  assert.deepEqual(finance[3].items, ["security"]);
+  assert.deepEqual(finance[0].items, ["overview"]);
+  assert.deepEqual(finance[1].items, ["payments", "finance"]);
+  assert.deepEqual(finance[2].items, ["security"]);
   const pr = visibleMenu("pr");
-  assert.deepEqual(pr[1].items, ["calendar", "reservations", "customers"]);
-  assert.deepEqual(pr[2].items, ["events", "agents", "social"]);
-  assert.equal(pr[2].sub.items.length, 10);
-  // HRD gets no website group at all, not even an empty one.
-  assert.ok(!visibleMenu("hrd").some((group) => group.sub));
-  // Every section is reachable from the superadmin's menu.
-  const listed = visibleMenu("superadmin").flatMap((group) => [
-    ...group.items,
-    ...(group.sub?.items ?? []),
+  assert.deepEqual(pr[0].items, [
+    "overview",
+    "calendar",
+    "reservations",
+    "customers",
   ]);
+  assert.equal(pr[1].key, "website");
+  assert.equal(pr[1].items.length, 11);
+  assert.deepEqual(pr[2].items, ["social", "agents"]);
+  assert.deepEqual(pr[3].items, ["security"]);
+  // Every section is reachable from the superadmin's menu, once.
+  const listed = visibleMenu("superadmin").flatMap((group) => group.items);
   assert.deepEqual([...listed].sort(), [...sectionKeys].sort());
+  assert.equal(groupOf("contact"), "website");
+  assert.equal(groupOf("users"), "users");
+  assert.equal(groupOf("missing"), null);
+  // Every page has an intro except the overview, which has its own hero.
+  for (const key of sectionKeys)
+    assert.equal(typeof sections[key].intro, "string", key);
 });
 
 test("saving content keeps the groups a role may not change", () => {

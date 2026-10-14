@@ -349,6 +349,66 @@ export async function deleteAgent(id) {
   );
   return Boolean(r.affectedRows);
 }
+// HRD records: kinds "employee", "attendance" (id att:<employee>:<date>)
+// and "payslip" (id slip:<employee>:<month>).
+async function listKind(kind, where = "", params = []) {
+  const pool = await db();
+  const [rows] = await pool.execute(
+    `SELECT id,payload FROM zanclus_records WHERE kind=? ${where} ORDER BY id`,
+    [kind, ...params],
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+async function upsertKind(kind, record) {
+  const pool = await db();
+  const { id, ...payload } = record;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, kind, JSON.stringify(payload)],
+  );
+  return record;
+}
+async function deleteKind(kind, id) {
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind=?",
+    [id, kind],
+  );
+  return Boolean(r.affectedRows);
+}
+export async function listEmployees() {
+  if (isDemo()) return demo.listEmployees();
+  return listKind("employee");
+}
+export async function saveEmployee(employee) {
+  if (isDemo()) return demo.saveEmployee(employee);
+  return upsertKind("employee", employee);
+}
+export async function deleteEmployee(id) {
+  if (isDemo()) return demo.deleteEmployee(id);
+  return deleteKind("employee", id);
+}
+export async function listAttendance(month) {
+  if (isDemo()) return demo.listAttendance(month);
+  return listKind("attendance", "AND id LIKE ?", [`att:%:${month}-%`]);
+}
+export async function saveAttendance(records) {
+  if (isDemo()) return demo.saveAttendance(records);
+  for (const record of records) await upsertKind("attendance", record);
+  return records;
+}
+export async function listPayslips(month) {
+  if (isDemo()) return demo.listPayslips(month);
+  return listKind("payslip", "AND id LIKE ?", [`slip:%:${month}`]);
+}
+export async function savePayslip(slip) {
+  if (isDemo()) return demo.savePayslip(slip);
+  return upsertKind("payslip", slip);
+}
+export async function deletePayslip(id) {
+  if (isDemo()) return demo.deletePayslip(id);
+  return deleteKind("payslip", id);
+}
 // Staff accounts made in the admin (kind "user").
 export async function listUsers() {
   if (isDemo()) return demo.listUsers();

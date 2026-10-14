@@ -135,7 +135,7 @@ Admin dibagi per kategori, dan setiap akun punya satu peran yang menentukan menu
 | Peran | Dipakai oleh | Menu yang terlihat |
 | --- | --- | --- |
 | **Superadmin** | Owner, developer, manager | Semua menu, termasuk **Pengguna & peran** dan **Mode developer** |
-| **HRD** | Urusan pegawai | **HRD** (pegawai, absensi, kesejahteraan; isi menyusul di tahap 2) |
+| **HRD** | Urusan pegawai | **HRD**: Pegawai, Absensi, Slip gaji (lihat Modul HRD) |
 | **Finance** | Keuangan | **Pembayaran online**, **Keuangan** (buku kas, laba rugi, pajak; tahap 3) |
 | **Gudang** | Stok | **Gudang** (stok dan barang masuk/keluar; tahap 4) |
 | **PR** | Media sosial dan website | **Operasional** (kalender reservasi, reservasi, tamu), **Website & PR** (kalender kegiatan, agen & kalender, kalender konten tahap 5, pengaturan situs) |
@@ -148,6 +148,17 @@ Setiap peran juga bisa mengganti password sendiri lewat **Ubah password**.
 - Halaman di luar peran menampilkan pemberitahuan, dan API-nya menjawab 403. Data admin yang dimuat pun mengikuti peran: HRD dan Gudang tidak menerima reservasi, media, atau agen; Finance hanya menerima reservasi dengan pembayaran online.
 - Saat PR menyimpan isi website, bagian yang bukan haknya (kunci mode developer, saklar pembayaran) tetap seperti tersimpan.
 - Data akun tersimpan sebagai record `user` di tabel `zanclus_records` (atau folder data demo); password sebagai hash scrypt seperti password yang diganti. Tidak ada tabel baru. Maksimal 50 akun.
+
+## Modul HRD
+
+Peran **HRD** (dan superadmin) mengelola tiga halaman di grup **HRD**:
+
+- **Pegawai**: nama, jabatan, jenis (pegawai tetap, kontrak, harian lepas, magang), tanggal mulai dan akhir kontrak, WhatsApp, email, NIK, status aktif. Di kartu yang sama: gaji pokok per bulan atau upah per hari hadir (harian lepas), potongan per hari tanpa keterangan, tunjangan tetap dan potongan tetap (maksimal 8 baris masing-masing), jatah cuti, BPJS Kesehatan/Ketenagakerjaan, asuransi lain, dan rekening bank. Pegawai nonaktif tidak masuk absensi dan slip gaji baru; hapus hanya menghapus data pegawainya.
+- **Absensi**: satu tanggal untuk semua pegawai aktif (hadir, izin, sakit, cuti, tanpa keterangan, libur) dengan jam masuk/pulang dan catatan; simpan sekali untuk semua. Tanggal yang sudah diisi bisa dibuka dan diubah lagi. Di bawahnya rekap per bulan.
+- **Slip gaji**: per bulan, satu slip per pegawai aktif. Pegawai tetap/kontrak: gaji pokok + tunjangan − potongan − (hari tanpa keterangan × potongan per hari). Harian lepas: upah harian × hari hadir + tunjangan − potongan. Slip bersifat **draf** dan mengikuti data terbaru sampai ditekan **Kunci (dibayar)**; setelah itu angkanya tersimpan dan tidak berubah walau gaji atau absensi diubah. **Buka** mengembalikannya menjadi draf.
+- **Unduh Excel** di tiap halaman: daftar pegawai, rekap dan rincian absensi per bulan, dan daftar gaji per bulan (`.xlsx`, dibuat server tanpa pustaka tambahan).
+
+Data tersimpan di tabel `zanclus_records` sebagai record `employee`, `attendance` (satu per pegawai per hari), dan `payslip` (slip terkunci). Tidak ada tabel baru. Data gaji termasuk data pribadi; jaga backup database seperti data tamu.
 
 ## Data dan reservasi
 

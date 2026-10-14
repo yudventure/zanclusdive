@@ -261,14 +261,19 @@ try {
 
   // The agent's trip shows in the admin reservation calendar.
   await a.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
-  const chip = a.locator(".calendar-agents td.today .calendar-agent");
-  assert.equal(await chip.textContent(), "Papua Travel");
+  const chip = a.locator(".admin-month-day.is-today .calendar-agent");
+  assert.equal(await chip.textContent(), "Papua Travel · Grup Budi 8 orang");
   assert.equal(
     await chip.getAttribute("title"),
     "Papua Travel: Grup Budi 8 orang",
   );
+  // The day panel lists it too.
+  assert.match(
+    await a.locator(".admin-day-card").textContent(),
+    /Papua Travel[\s\S]*Grup Budi 8 orang[\s\S]*Agen/,
+  );
   if (process.env.SHOT_DIR)
-    await a.locator(".calendar-agents").screenshot({
+    await a.locator(".admin-month").screenshot({
       path: process.env.SHOT_DIR + "/agents-calendar-row.png",
     });
 

@@ -507,18 +507,11 @@
 .admin-toolbar select {
   width: 190px;
 }
-.admin-table-scroll,
-.admin-calendar-scroll {
+.admin-table-scroll {
   overflow: auto;
   max-width: 100%;
 }
-.admin-calendar-scroll {
-  border: 1px solid #e0eaf0;
-  border-radius: 18px;
-  margin-bottom: 16px;
-}
-.admin-table,
-.admin-calendar {
+.admin-table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
@@ -550,106 +543,6 @@
 }
 .admin-table tbody tr:last-child td {
   border-bottom: 0;
-}
-.admin-calendar {
-  width: max-content;
-  min-width: 100%;
-}
-.admin-calendar th,
-.admin-calendar td {
-  border-right: 1px solid #e8eff4;
-  border-bottom: 1px solid #e8eff4;
-}
-.admin-calendar thead th {
-  background: #f3f7fa;
-  text-align: center;
-  min-width: 43px;
-  width: 43px;
-  font-size: 12px;
-  padding: 10px 4px;
-}
-.admin-calendar thead th small {
-  display: block;
-  font-size: 9px;
-  font-weight: 400;
-  color: #7b91a2;
-}
-.admin-calendar th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: white;
-  width: 175px;
-  min-width: 175px;
-  padding: 13px 15px;
-  text-align: left;
-  font-size: 12px;
-  box-shadow: 1px 0 0 #e0eaf0;
-}
-.admin-calendar thead th:first-child {
-  z-index: 3;
-}
-.admin-calendar tbody th small {
-  display: block;
-  font-size: 10px;
-  color: #8a9eac;
-  font-weight: 400;
-  margin-top: 3px;
-}
-.admin-calendar td {
-  height: 74px;
-  min-width: 43px;
-  padding: 2px;
-  vertical-align: top;
-}
-.admin-calendar tr:last-child td,
-.admin-calendar tr:last-child th {
-  border-bottom: 0;
-}
-.admin-calendar .today {
-  background: #faf1ca;
-}
-.calendar-day {
-  background: transparent;
-  border: 0;
-  width: 100%;
-  height: 68px;
-  color: transparent;
-  cursor: pointer;
-}
-.calendar-day:hover,
-.calendar-day:focus-visible {
-  color: #244c68;
-  background: #e9f2f7;
-}
-.calendar-booking {
-  display: block;
-  background: #244c68;
-  color: white;
-  border: 0;
-  padding: 5px 3px;
-  margin: 4px 0;
-  border-radius: 5px;
-  font-size: 9px;
-  max-width: 38px;
-  width: 38px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-  cursor: pointer;
-}
-.calendar-booking.pending {
-  background: #fff;
-  color: #244c68;
-  border: 1px dashed #244c68;
-}
-.calendar-booking.closed {
-  background: #8a9aa7;
-}
-.calendar-booking.cancelled {
-  background: #f1f2f4;
-  color: #8a9aa7;
 }
 .admin-legend {
   display: flex;
@@ -1179,12 +1072,6 @@
     align-items: start;
     flex-wrap: wrap;
   }
-  .admin-calendar th:first-child {
-    min-width: 142px;
-    width: 142px;
-    padding: 10px;
-    font-size: 10px;
-  }
   .admin-button {
     font-size: 11px;
     padding: 10px 14px;
@@ -1580,9 +1467,6 @@
   justify-content: space-between;
   gap: 16px;
 }
-.calendar-booking.paid {
-  box-shadow: inset 0 0 0 2px #2f8f5b;
-}
 @media (max-width: 700px) {
   .admin-pay-copy {
     grid-template-columns: minmax(0, 1fr);
@@ -1678,18 +1562,6 @@
   align-items: center;
   gap: 10px;
   margin-top: 16px;
-}
-.calendar-agent {
-  display: block;
-  margin: 2px;
-  padding: 3px 6px;
-  overflow: hidden;
-  border-radius: 6px;
-  background: #ece6fb;
-  color: #4b3a8f;
-  font-size: 10px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 /* Midtrans connection test and last refusal. */
@@ -1866,4 +1738,360 @@
   display: grid;
   gap: 10px;
   justify-items: start;
+}
+
+/* Reservation calendar as a month grid */
+.admin-month-card {
+  padding: 22px 24px 20px;
+}
+.admin-month-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.admin-month-nav h2 {
+  margin: 0 8px;
+  font-size: 20px;
+}
+.admin-month-nav select {
+  margin-left: auto;
+  min-width: 190px;
+}
+.admin-round {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--admin-line);
+  border-radius: 50%;
+  background: white;
+  color: var(--admin-ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.admin-round:hover {
+  background: #f1f6fa;
+}
+.admin-month {
+  overflow: hidden;
+  border: 1px solid #d5ebe7;
+  border-radius: 18px;
+  background: #eef8f6;
+}
+.admin-month-head {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 12px 8px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4f7a84;
+  text-align: center;
+}
+.admin-month-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+.admin-month-day {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-width: 0;
+  min-height: 96px;
+  padding: 6px 6px 8px;
+  border: 1px solid #e3eef0;
+  border-radius: 12px;
+  background: white;
+}
+.admin-month-day.is-outside {
+  background: #f6fbfa;
+  color: #8aa0a8;
+}
+.admin-month-day.is-selected {
+  box-shadow: inset 0 0 0 2px var(--admin-blue);
+}
+.admin-month-date {
+  justify-self: start;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-month-date:hover {
+  background: #e9f2f7;
+}
+.admin-month-day.is-today .admin-month-date {
+  background: var(--admin-blue);
+  color: white;
+}
+.calendar-booking,
+.calendar-agent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 7px;
+  background: #e7f0f7;
+  color: #1f425c;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+.calendar-booking > span,
+.calendar-agent > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.calendar-booking > i,
+.calendar-agent > i,
+.admin-legend .dot {
+  flex: none;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #244c68;
+}
+.calendar-booking.pending {
+  background: #fff6e6;
+  color: #8a5a12;
+}
+.calendar-booking.pending > i,
+.admin-legend .dot.pending {
+  background: #e3a230;
+}
+.calendar-booking.closed {
+  background: #eef1f3;
+  color: #5f7280;
+}
+.calendar-booking.closed > i,
+.admin-legend .dot.closed {
+  background: #8a9aa7;
+}
+.calendar-booking.paid {
+  background: #e4f5f2;
+  color: #135f58;
+}
+.calendar-booking.paid > i,
+.admin-legend .dot.paid {
+  background: #1f9e94;
+}
+.calendar-agent {
+  background: #efeafb;
+  color: #4b3a8f;
+  cursor: default;
+}
+.calendar-agent > i,
+.admin-legend .dot.agent {
+  background: #7c5cd6;
+}
+.admin-month-more {
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: #4f7a84;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-month-legend {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: #3e5b70;
+}
+.admin-month-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.admin-day-card {
+  margin-top: 22px;
+}
+.admin-day-card .admin-card-heading {
+  align-items: flex-start;
+}
+.admin-booking-summary.is-agent {
+  cursor: default;
+}
+.admin-status.agent {
+  background: #7c5cd6;
+}
+.admin-intro {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: #6c8193;
+}
+@media (max-width: 760px) {
+  .admin-month-card {
+    padding: 16px 12px 14px;
+  }
+  .admin-month-days {
+    gap: 3px;
+    padding: 0 4px 4px;
+  }
+  .admin-month-day {
+    min-height: 64px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+  .admin-month-date {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  .calendar-booking,
+  .calendar-agent {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+  .calendar-booking > i,
+  .calendar-agent > i {
+    display: none;
+  }
+  .admin-month-nav select {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* HRD: employees, attendance and payslips */
+.admin-hr {
+  display: grid;
+  gap: 22px;
+}
+.admin-hr-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.admin-hr-tools input[type="date"] {
+  width: auto;
+}
+.admin-hr-export {
+  margin-left: auto;
+}
+.admin-hr-form {
+  display: grid;
+  gap: 16px;
+}
+.admin-hr-form h3 {
+  margin: 10px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-line);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #2d7a92;
+}
+.admin-hr-form h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.admin-hr-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.admin-hr-lines {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.admin-hr-lines-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3b617c;
+}
+.admin-hr-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.admin-hr-line .admin-inline {
+  font-size: 18px;
+  line-height: 1;
+}
+.admin-hr-table td {
+  white-space: normal;
+}
+.admin-hr-table td select,
+.admin-hr-table td input {
+  min-width: 110px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.admin-hr-table td input[type="time"] {
+  min-width: 96px;
+}
+.admin-payroll tr.is-selected td {
+  background: #f2f8fb;
+}
+.admin-payroll-total td {
+  border-top: 2px solid var(--admin-line);
+  background: #f8fbfc;
+}
+.admin-payslip-lines {
+  display: grid;
+  gap: 0;
+  margin: 0 0 14px;
+  max-width: 560px;
+}
+.admin-payslip-lines > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf2f5;
+  font-size: 14px;
+}
+.admin-payslip-lines dt {
+  color: #3e5b70;
+}
+.admin-payslip-lines dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.admin-payslip-lines .is-sum dd,
+.admin-payslip-lines .is-sum dt {
+  font-weight: 600;
+}
+.admin-payslip-lines .is-minus dd {
+  color: #b23b2d;
+}
+.admin-payslip-lines .is-net {
+  border-bottom: 0;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 2px solid var(--admin-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  .admin-hr-line {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+  .admin-hr-export {
+    margin-left: 0;
+  }
 }

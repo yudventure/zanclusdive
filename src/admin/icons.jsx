@@ -40,6 +40,10 @@ const paths = {
   gudang: "M3 20V9l9-5 9 5v11zM3 20h18M9 20v-6h6v6M12 10h.01",
   social:
     "M4 10v4a1 1 0 0 0 1 1h3l7 4V5L8 9H5a1 1 0 0 0-1 1zM18 9.5a3.5 3.5 0 0 1 0 5M9 15v4",
+  employees:
+    "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5M17 8h4M19 6v4",
+  attendance: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4",
+  payroll: "M3 7h18v10H3zM3 11h18M7 14h3M12 4v3M12 17v3",
 };
 
 export function AdminIcon({ name, size = 19, className }) {

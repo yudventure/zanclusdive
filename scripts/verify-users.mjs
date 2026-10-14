@@ -31,10 +31,11 @@ const links = async (page) =>
   page
     .locator(".admin-links a")
     .evaluateAll((list) => list.map((a) => a.textContent.trim()));
+// The folding groups in the sidebar; a group with one page shows as a link.
 const groups = async (page) =>
   page
-    .locator(".admin-menu-title")
-    .evaluateAll((list) => list.map((p) => p.textContent.trim()));
+    .locator(".admin-links .admin-group-toggle")
+    .evaluateAll((list) => list.map((b) => b.textContent.trim()));
 const watch = (page) =>
   page.on("pageerror", (error) => errors.push(error.message));
 try {
@@ -50,14 +51,15 @@ try {
   watch(page);
   await page.goto(base + "/admin/users", { waitUntil: "networkidle" });
   assert.equal(await page.locator("h1").textContent(), "Pengguna & peran");
+  // Gudang has one page for now, so it shows as a plain link.
   assert.deepEqual(await groups(page), [
-    "Operasional",
-    "Website & PR",
+    "Situs web",
+    "PR & mitra",
     "HRD",
-    "Finance",
-    "Gudang",
-    "Pengaturan",
+    "Keuangan",
+    "Sistem",
   ]);
+  assert.ok((await links(page)).includes("Gudang"));
   await page.getByText("Akun bawaan").first().waitFor();
   assert.match(
     await page.locator(".admin-user-table").textContent(),
@@ -178,10 +180,15 @@ try {
   watch(hp);
   await hp.goto(base + "/admin", { waitUntil: "networkidle" });
   await hp.getByRole("heading", { name: /, Siti Rahma$/ }).waitFor();
-  assert.deepEqual(await groups(hp), ["HRD", "Pengaturan"]);
+  assert.deepEqual(await groups(hp), ["HRD"]);
+  // HRD is a folding group: its pages show once it is open.
+  assert.deepEqual(await links(hp), ["Ringkasan cepat", "Ubah password"]);
+  await hp.getByRole("button", { name: "HRD", exact: true }).click();
   assert.deepEqual(await links(hp), [
     "Ringkasan cepat",
-    "HRD",
+    "Pegawai",
+    "Absensi",
+    "Slip gaji",
     "Ubah password",
   ]);
   assert.equal(
@@ -194,8 +201,8 @@ try {
   );
   assert.match(await hp.locator(".admin-role-home").textContent(), /Peran HRD/);
   await hp.screenshot({ path: shots + "/admin-role-hrd.png" });
-  await hp.goto(base + "/admin/hrd", { waitUntil: "networkidle" });
-  await hp.getByText("Tahap 2 · Belum tersedia").waitFor();
+  await hp.goto(base + "/admin/employees", { waitUntil: "networkidle" });
+  await hp.getByRole("heading", { name: "Pegawai" }).first().waitFor();
   await hp.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
   await hp.getByText("Bagian ini tidak tersedia untuk peran HRD").waitFor();
   const hrdState = await (await state(hrd)).json();
@@ -285,11 +292,9 @@ try {
   const pp = await pr.newPage();
   watch(pp);
   await pp.goto(base + "/admin", { waitUntil: "networkidle" });
-  assert.deepEqual(await groups(pp), [
-    "Operasional",
-    "Website & PR",
-    "Pengaturan",
-  ]);
+  assert.deepEqual(await groups(pp), ["Situs web", "PR & mitra"]);
+  await pp.getByRole("button", { name: "Situs web", exact: true }).click();
+  await pp.getByRole("button", { name: "PR & mitra", exact: true }).click();
   const prLinks = await links(pp);
   for (const name of [
     "Reservasi",
@@ -305,9 +310,6 @@ try {
     "Pembayaran online",
   ])
     assert.ok(!prLinks.includes(name), "no " + name);
-  await pp
-    .getByRole("button", { name: "Pengaturan situs", exact: true })
-    .waitFor();
   await pp.goto(base + "/admin/social", { waitUntil: "networkidle" });
   await pp.getByText("Tahap 5 · Belum tersedia").waitFor();
   assert.equal((await call(pr, "/api/admin/users")).status(), 403);
@@ -332,6 +334,8 @@ try {
   const fp = await finance.newPage();
   watch(fp);
   await fp.goto(base + "/admin", { waitUntil: "networkidle" });
+  assert.deepEqual(await links(fp), ["Ringkasan cepat", "Ubah password"]);
+  await fp.getByRole("button", { name: "Keuangan", exact: true }).click();
   assert.deepEqual(await links(fp), [
     "Ringkasan cepat",
     "Pembayaran online",

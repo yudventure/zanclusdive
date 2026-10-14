@@ -25,18 +25,6 @@ function useHour() {
 // The modules that come in the next phases. Each already has its place in
 // the menu and its role, so accounts can be made now.
 const modules = {
-  hrd: {
-    phase: 2,
-    role: "hrd",
-    intro:
-      "Mengurus pegawai: data, absensi, dan kesejahteraan (gaji, asuransi, tunjangan).",
-    items: [
-      "Data pegawai: jabatan, kontrak, dokumen",
-      "Absensi harian: masuk, pulang, izin, cuti",
-      "Kesejahteraan: gaji pokok, tunjangan, potongan, BPJS/asuransi",
-      "Slip gaji bulanan dan ekspor Excel",
-    ],
-  },
   finance: {
     phase: 3,
     role: "finance",
@@ -99,10 +87,7 @@ export default function ModulePlaceholder({ module }) {
 export function RoleHome({ account, menu }) {
   const hour = useHour();
   const name = account.name || account.email.split("@")[0];
-  const items = menu.flatMap((group) => [
-    ...group.items,
-    ...(group.sub?.items ?? []),
-  ]);
+  const items = menu.flatMap((group) => group.items);
   return (
     <div className="admin-role-home">
       <section className="admin-card">

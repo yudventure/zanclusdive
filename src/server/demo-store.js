@@ -283,6 +283,56 @@ export async function deleteAgent(id) {
     return state.agents.length < before;
   });
 }
+// HRD: employees, attendance by day and locked payslips.
+export async function listEmployees() {
+  return (await read()).employees ?? [];
+}
+export async function saveEmployee(employee) {
+  return mutate((state) => {
+    state.employees ||= [];
+    const index = state.employees.findIndex((e) => e.id === employee.id);
+    if (index < 0) state.employees.push(employee);
+    else state.employees[index] = employee;
+    return employee;
+  });
+}
+export async function deleteEmployee(id) {
+  return mutate((state) => {
+    const before = (state.employees ||= []).length;
+    state.employees = state.employees.filter((e) => e.id !== id);
+    return state.employees.length < before;
+  });
+}
+export async function listAttendance(month) {
+  return Object.values((await read()).attendance ?? {}).filter((record) =>
+    record.date.startsWith(month + "-"),
+  );
+}
+export async function saveAttendance(records) {
+  return mutate((state) => {
+    state.attendance ||= {};
+    for (const record of records) state.attendance[record.id] = record;
+    return records;
+  });
+}
+export async function listPayslips(month) {
+  return Object.values((await read()).payslips ?? {}).filter(
+    (slip) => slip.month === month,
+  );
+}
+export async function savePayslip(slip) {
+  return mutate((state) => {
+    (state.payslips ||= {})[slip.id] = slip;
+    return slip;
+  });
+}
+export async function deletePayslip(id) {
+  return mutate((state) => {
+    const existed = Boolean(state.payslips?.[id]);
+    if (existed) delete state.payslips[id];
+    return existed;
+  });
+}
 // Staff accounts made in the admin.
 export async function listUsers() {
   return (await read()).users ?? [];
