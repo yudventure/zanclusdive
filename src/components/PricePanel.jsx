@@ -1,5 +1,5 @@
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
-import { priceText } from "../price-list.js";
+import { addOnItems, priceText } from "../price-list.js";
 
 // Package prices for one activity. Collapsed panels stay in the layout for
 // the width animation but are inert, so they are skipped by keyboard and
@@ -8,6 +8,8 @@ export default function PricePanel({ priceList, group, locale, hidden }) {
   const t = dictionary(locale);
   const p = t.prices;
   const label = t.activityLabels[group];
+  // Gear and services offered beside the packages, in short.
+  const addOns = addOnItems(priceList, group);
   return (
     <div className="price-card" inert={hidden} aria-hidden={hidden}>
       <div className="price-inner">
@@ -32,6 +34,24 @@ export default function PricePanel({ priceList, group, locale, hidden }) {
               </li>
             ))}
           </ul>
+          {addOns.length > 0 && (
+            <>
+              <p className="price-addons-title">{p.addOns}</p>
+              <ul className="price-addons">
+                {addOns.map((item) => (
+                  <li key={item.id}>
+                    <span>{priceText(item.name, locale)}</span>
+                    <span className="price-amount">
+                      {formatIDR(item.price, locale)}
+                      {priceText(item.unit, locale) && (
+                        <small>{priceText(item.unit, locale)}</small>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
         <a
           className="button dark price-cta"

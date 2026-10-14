@@ -671,8 +671,7 @@ nav.open a::after {
   justify-content: space-between;
   align-items: flex-start;
   gap: 14px;
-  padding: 9px 0;
-  border-top: 1px solid #062b3b1a;
+  padding: 7px 0;
 }
 .price-list li > span:first-child {
   min-width: 0;
@@ -698,6 +697,41 @@ nav.open a::after {
 }
 .price-amount small {
   font-weight: 400;
+}
+/* Add-ons under the packages, one short line each. */
+.price-addons-title {
+  margin: 12px 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #1f8f8a;
+}
+.price-addons {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.price-addons li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #ffffff8c;
+  font-size: 12px;
+}
+.price-addons .price-amount {
+  font-size: 12px;
+  font-weight: 600;
+}
+.price-addons .price-amount small {
+  display: inline;
+  margin-left: 3px;
+  font-size: 10.5px;
+  color: #60747e;
 }
 .price-cta {
   justify-content: center;

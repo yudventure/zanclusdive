@@ -402,6 +402,7 @@ const id = {
     title: (label) => `Harga paket ${label.toLowerCase()}`,
     cta: (label) => `Rencanakan ${label.toLowerCase()}`,
     note: "Harga dalam rupiah dan dapat berubah. Konfirmasi ketersediaan lewat WhatsApp.",
+    addOns: "Add-on yang bisa ditambahkan",
   },
   weather: {
     label: "Cuaca terkini",
@@ -1528,6 +1529,7 @@ const en = {
     title: (label) => `${label} package prices`,
     cta: (label) => `Plan your ${label.toLowerCase()}`,
     note: "Prices in Indonesian rupiah and subject to change. Confirm availability on WhatsApp.",
+    addOns: "Add-ons you can include",
   },
   weather: {
     label: "Current weather",
