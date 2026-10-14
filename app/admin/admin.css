@@ -1756,8 +1756,10 @@
   font-size: 20px;
 }
 .admin-month-nav select {
-  margin-left: auto;
+  width: auto;
   min-width: 190px;
+  max-width: 260px;
+  margin-left: auto;
 }
 .admin-round {
   display: grid;
