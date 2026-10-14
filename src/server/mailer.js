@@ -13,9 +13,12 @@ export function mailIssues() {
 }
 export const mailConfigured = () => mailIssues().length === 0;
 
-// Where admin codes go: ADMIN_OTP_EMAIL, or the account's own email.
+// Where codes go: a staff account's own inbox; for the built-in accounts
+// ADMIN_OTP_EMAIL, or their own email.
 export const otpRecipient = (account) =>
-  env("ADMIN_OTP_EMAIL") || account.email;
+  account.kind === "user"
+    ? account.email
+    : env("ADMIN_OTP_EMAIL") || account.email;
 
 // "ku••••••@gmail.com", so the page shows where the code went without
 // printing the whole address.

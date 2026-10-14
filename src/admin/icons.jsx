@@ -33,6 +33,13 @@ const paths = {
   check: "M5 12.5l4.5 4.5L19 7",
   logout: "M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10",
   security: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2",
+  users:
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 10.5a3 3 0 1 0 0-6M17 14.5c2.5.5 4 2.5 4 5.5",
+  hrd: "M3 6h18v13H3zM7 15c0-1.7 1.3-3 3-3s3 1.3 3 3M10 11a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6zM15.5 10h3M15.5 13h3",
+  finance: "M4 20h16M6 16v-5M10 16V7M14 16v-4M18 16V5",
+  gudang: "M3 20V9l9-5 9 5v11zM3 20h18M9 20v-6h6v6M12 10h.01",
+  social:
+    "M4 10v4a1 1 0 0 0 1 1h3l7 4V5L8 9H5a1 1 0 0 0-1 1zM18 9.5a3.5 3.5 0 0 1 0 5M9 15v4",
 };
 
 export function AdminIcon({ name, size = 19, className }) {

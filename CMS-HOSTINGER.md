@@ -104,7 +104,7 @@ Upload gambar saja belum mengganti gambar website: pilih gambar pada slot hero/r
 
 Login memakai cookie HttpOnly, SameSite=Lax, Secure pada HTTPS produksi, dan sesi 8 jam. API admin memerlukan sesi sah, perubahan memerlukan origin yang sesuai, serta login dibatasi setelah 8 kegagalan selama jendela 15 menit. Mengganti password atau SESSION_SECRET membatalkan sesi lama.
 
-Tidak ada akun staf, MFA, atau integrasi OTA otomatis.
+Akun staf dengan peran dibuat di **Pengguna & peran** (lihat di bawah). Belum ada MFA.
 
 ### Ganti password dengan kode OTP email
 
@@ -127,6 +127,27 @@ Kode dikirim lewat akun email SMTP yang diisi di hPanel → Variabel environment
 | `ADMIN_OTP_EMAIL` | Opsional. Email yang menerima kode. Tanpa ini, kode dikirim ke email login |
 
 Isi `ADMIN_OTP_EMAIL` dengan email yang benar-benar kamu buka. Alamat login operator belum tentu punya kotak masuk. Selama SMTP belum diisi, halaman **Ubah password** menampilkan variabel yang masih kurang. Jika server email menolak login, halaman menampilkan alasannya. Jangan menetapkan `CMS_COOKIE_SECURE=false` di Hostinger; pengaturan tersebut hanya dipakai untuk pengujian HTTP localhost.
+
+## Peran dan pengguna
+
+Admin dibagi per kategori, dan setiap akun punya satu peran yang menentukan menu dan API yang bisa dipakainya:
+
+| Peran | Dipakai oleh | Menu yang terlihat |
+| --- | --- | --- |
+| **Superadmin** | Owner, developer, manager | Semua menu, termasuk **Pengguna & peran** dan **Mode developer** |
+| **HRD** | Urusan pegawai | **HRD** (pegawai, absensi, kesejahteraan; isi menyusul di tahap 2) |
+| **Finance** | Keuangan | **Pembayaran online**, **Keuangan** (buku kas, laba rugi, pajak; tahap 3) |
+| **Gudang** | Stok | **Gudang** (stok dan barang masuk/keluar; tahap 4) |
+| **PR** | Media sosial dan website | **Operasional** (kalender reservasi, reservasi, tamu), **Website & PR** (kalender kegiatan, agen & kalender, kalender konten tahap 5, pengaturan situs) |
+
+Setiap peran juga bisa mengganti password sendiri lewat **Ubah password**.
+
+- Akun dari hPanel (`ADMIN_EMAIL`/`ADMIN_PASSWORD`) dan akun operator bawaan selalu superadmin dan tidak bisa dihapus dari admin, jadi pemilik tidak pernah terkunci.
+- Superadmin membuat akun di **Pengaturan → Pengguna & peran**: nama, email login, peran, dan password awal (minimal 10 karakter). Beri tahu password awalnya; orang itu lalu menggantinya di **Ubah password** dengan kode OTP yang dikirim ke emailnya sendiri (bukan `ADMIN_OTP_EMAIL`, yang hanya berlaku untuk akun bawaan).
+- Superadmin bisa mengganti peran, menonaktifkan, mengatur ulang password, dan menghapus akun. Menonaktifkan atau mengatur ulang password langsung mengakhiri sesi akun itu. Akun yang sedang dipakai tidak bisa menonaktifkan atau menurunkan perannya sendiri.
+- Halaman di luar peran menampilkan pemberitahuan, dan API-nya menjawab 403. Data admin yang dimuat pun mengikuti peran: HRD dan Gudang tidak menerima reservasi, media, atau agen; Finance hanya menerima reservasi dengan pembayaran online.
+- Saat PR menyimpan isi website, bagian yang bukan haknya (kunci mode developer, saklar pembayaran) tetap seperti tersimpan.
+- Data akun tersimpan sebagai record `user` di tabel `zanclus_records` (atau folder data demo); password sebagai hash scrypt seperti password yang diganti. Tidak ada tabel baru. Maksimal 50 akun.
 
 ## Data dan reservasi
 

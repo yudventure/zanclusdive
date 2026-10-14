@@ -6,7 +6,7 @@ import {
 import { saveBooking } from "../../../../src/server/store.js";
 import { validateBooking } from "../../../../src/cms-model.js";
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
   let payload;
   try {

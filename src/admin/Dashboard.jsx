@@ -22,6 +22,16 @@ import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { prepareImage, prepareLogo } from "./image-upload.js";
 import PasswordEditor from "./PasswordEditor.jsx";
+import UsersEditor from "./UsersEditor.jsx";
+import ModulePlaceholder, { RoleHome } from "./ModulePlaceholder.jsx";
+import {
+  sections as sectionInfo,
+  menuGroups,
+  visibleMenu,
+  sectionAllowed,
+  hasArea,
+  roleLabel,
+} from "../roles.js";
 import { defaultCalendar } from "../calendar-model.js";
 import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
@@ -38,48 +48,13 @@ import {
   sources,
   defaultContent,
 } from "../cms-model.js";
-const sections = {
-  overview: "Ringkasan cepat",
-  calendar: "Kalender reservasi",
-  reservations: "Reservasi",
-  customers: "Tamu",
-  website: "Teks website",
-  media: "Foto & media",
-  experiences: "Pengalaman & harga",
-  contact: "Kontak & sosial media",
-  shop: "Dive Shop",
-  activities: "Halaman aktivitas",
-  prices: "Daftar harga",
-  events: "Kalender kegiatan",
-  courses: "Kursus selam",
-  service: "Servis alat selam",
-  about: "Tentang kami",
-  developer: "Mode developer",
-  payments: "Pembayaran online",
-  agents: "Agen & kalender",
-  security: "Ubah password",
-};
-const mainSections = [
-  "overview",
-  "calendar",
-  "reservations",
-  "payments",
-  "agents",
-  "customers",
-  "events",
-];
-const siteSections = [
-  "media",
-  "website",
-  "experiences",
-  "activities",
-  "courses",
-  "prices",
-  "shop",
-  "service",
-  "about",
-  "contact",
-];
+// Page titles and the collapsible website group come from the shared
+// roles model, which also decides what each role sees.
+const sections = Object.fromEntries(
+  Object.entries(sectionInfo).map(([key, info]) => [key, info.title]),
+);
+const siteSections = menuGroups.find((group) => group.sub).sub.items;
+const placeholderSections = ["hrd", "finance", "gudang", "social"];
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -279,7 +254,12 @@ function BookingEditor({
     </section>
   );
 }
-export default function Dashboard({ section, email, today }) {
+export default function Dashboard({ section, account, today }) {
+  const email = account.email;
+  const role = account.role;
+  const can = (area) => hasArea(role, area);
+  const menu = visibleMenu(role);
+  const allowed = sectionAllowed(role, section);
   const [data, setData] = useState(null),
     [content, setContent] = useState(structuredClone(defaultContent)),
     [busy, setBusy] = useState(false),
@@ -312,7 +292,8 @@ export default function Dashboard({ section, email, today }) {
     ? dailySchedule(data.bookings, today, 1)[0].guests
     : 0;
   const ownerName =
-    displayName(email) === "tim Zanclus" ? "Operator" : displayName(email);
+    account.name ||
+    (displayName(email) === "tim Zanclus" ? "Operator" : displayName(email));
   const initials = ownerName.slice(0, 2).toUpperCase();
   const link = (key) => (
     <Link
@@ -625,38 +606,40 @@ export default function Dashboard({ section, email, today }) {
             >
               Kembali ke situs <AdminIcon name="arrow" size={15} />
             </a>
-            <div className="admin-menu-anchor">
-              <button
-                className="admin-icon-button"
-                aria-label="Notifikasi reservasi"
-                aria-expanded={notification}
-                onClick={() => {
-                  setNotification(!notification);
-                  setOwnerMenu(false);
-                }}
-              >
-                <AdminIcon name="bell" />
-                {pending.length > 0 && (
-                  <span className="admin-notification-count">
-                    {pending.length}
-                  </span>
-                )}
-              </button>
-              {notification && (
-                <div className="admin-popover">
-                  <h3>Perlu konfirmasi</h3>
-                  {pending.length ? (
-                    pending.slice(0, 5).map((b) => (
-                      <Link key={b.id} href="/admin/reservations">
-                        {b.guestName} · {dateLabel(b.startDate)}
-                      </Link>
-                    ))
-                  ) : (
-                    <p>Tidak ada reservasi menunggu.</p>
+            {can("bookings") && (
+              <div className="admin-menu-anchor">
+                <button
+                  className="admin-icon-button"
+                  aria-label="Notifikasi reservasi"
+                  aria-expanded={notification}
+                  onClick={() => {
+                    setNotification(!notification);
+                    setOwnerMenu(false);
+                  }}
+                >
+                  <AdminIcon name="bell" />
+                  {pending.length > 0 && (
+                    <span className="admin-notification-count">
+                      {pending.length}
+                    </span>
                   )}
-                </div>
-              )}
-            </div>
+                </button>
+                {notification && (
+                  <div className="admin-popover">
+                    <h3>Perlu konfirmasi</h3>
+                    {pending.length ? (
+                      pending.slice(0, 5).map((b) => (
+                        <Link key={b.id} href="/admin/reservations">
+                          {b.guestName} · {dateLabel(b.startDate)}
+                        </Link>
+                      ))
+                    ) : (
+                      <p>Tidak ada reservasi menunggu.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <div className="admin-menu-anchor">
               <button
                 className="admin-owner"
@@ -673,7 +656,11 @@ export default function Dashboard({ section, email, today }) {
               </button>
               {ownerMenu && (
                 <div className="admin-popover">
-                  <p>{email}</p>
+                  <p>
+                    {email}
+                    <br />
+                    <small>Peran: {roleLabel(role)}</small>
+                  </p>
                   <Link
                     className="admin-inline"
                     href="/admin/security"
@@ -707,48 +694,70 @@ export default function Dashboard({ section, email, today }) {
             role="navigation"
             aria-label="Menu admin"
           >
-            {mainSections.map(link)}
-            <button
-              type="button"
-              className={
-                "admin-group-toggle" +
-                (siteSections.includes(section) ? " current" : "")
-              }
-              aria-expanded={siteOpen}
-              onClick={() => setSiteOpen(!siteOpen)}
-            >
-              <AdminIcon name="settings" />
-              Pengaturan situs
-              <AdminIcon name="chevron" size={16} className="admin-chevron" />
-            </button>
-            {siteOpen && (
-              <div className="admin-sublinks">{siteSections.map(link)}</div>
-            )}
-            {link("developer")}
-            {link("security")}
-            {lockCount(content?.developer) > 0 && (
+            {menu.map((group) => (
+              <div key={group.key} className="admin-menu-group">
+                {group.title && (
+                  <p className="admin-menu-title">{group.title}</p>
+                )}
+                {group.items.map(link)}
+                {group.sub && (
+                  <>
+                    <button
+                      type="button"
+                      className={
+                        "admin-group-toggle" +
+                        (group.sub.items.includes(section) ? " current" : "")
+                      }
+                      aria-expanded={siteOpen}
+                      onClick={() => setSiteOpen(!siteOpen)}
+                    >
+                      <AdminIcon name="settings" />
+                      {group.sub.title}
+                      <AdminIcon
+                        name="chevron"
+                        size={16}
+                        className="admin-chevron"
+                      />
+                    </button>
+                    {siteOpen && (
+                      <div className="admin-sublinks">
+                        {group.sub.items.map(link)}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+            {can("settings") && lockCount(content?.developer) > 0 && (
               <p className="admin-dev-flag">
                 Mode developer aktif · {lockCount(content.developer)} kunci
               </p>
             )}
           </div>
-          <div
-            className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
-          >
-            <strong>STATUS HARI INI</strong>
-            <p>
-              {!data
-                ? "Memuat catatan…"
-                : pending.length
-                  ? `${pending.length} reservasi menunggu konfirmasi.`
-                  : "Semua reservasi sudah dikonfirmasi."}{" "}
-              {todayGuests
-                ? `${todayGuests} tamu ke laut hari ini.`
-                : data
-                  ? "Belum ada tamu ke laut hari ini."
-                  : ""}
-            </p>
-          </div>
+          {can("bookings") ? (
+            <div
+              className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
+            >
+              <strong>STATUS HARI INI</strong>
+              <p>
+                {!data
+                  ? "Memuat catatan…"
+                  : pending.length
+                    ? `${pending.length} reservasi menunggu konfirmasi.`
+                    : "Semua reservasi sudah dikonfirmasi."}{" "}
+                {todayGuests
+                  ? `${todayGuests} tamu ke laut hari ini.`
+                  : data
+                    ? "Belum ada tamu ke laut hari ini."
+                    : ""}
+              </p>
+            </div>
+          ) : (
+            <div className="admin-sidebar-note">
+              <strong>PERAN {roleLabel(role).toUpperCase()}</strong>
+              <p>Menu di atas adalah bagian yang bisa dibuka peran ini.</p>
+            </div>
+          )}
         </aside>
         <main className="admin-main">
           {section !== "overview" && (
@@ -781,7 +790,17 @@ export default function Dashboard({ section, email, today }) {
               {notice}
             </div>
           )}
-          {!data ? (
+          {!allowed ? (
+            <section className="admin-card admin-forbidden">
+              <h2>Bagian ini tidak tersedia untuk peran {roleLabel(role)}</h2>
+              <p className="admin-subtle">
+                Minta superadmin bila peran Anda perlu akses ke bagian ini.
+              </p>
+              <Link className="admin-button secondary" href="/admin">
+                Ke ringkasan
+              </Link>
+            </section>
+          ) : !data ? (
             <p className="admin-empty">
               {error
                 ? "Periksa konfigurasi MySQL pada hPanel."
@@ -789,16 +808,25 @@ export default function Dashboard({ section, email, today }) {
             </p>
           ) : (
             <>
-              {section === "overview" && (
-                <Overview
-                  bookings={bookings}
-                  content={content}
-                  customers={customers}
-                  pending={pending}
-                  today={today}
-                  email={email}
-                  table={bookingTable(bookings.slice(0, 5))}
-                />
+              {section === "overview" &&
+                (can("bookings") ? (
+                  <Overview
+                    bookings={bookings}
+                    content={content}
+                    customers={customers}
+                    pending={pending}
+                    today={today}
+                    email={email}
+                    table={bookingTable(bookings.slice(0, 5))}
+                  />
+                ) : (
+                  <RoleHome account={account} menu={menu} />
+                ))}
+              {section === "users" && (
+                <UsersEditor request={request} account={account} />
+              )}
+              {placeholderSections.includes(section) && (
+                <ModulePlaceholder module={section} />
               )}
               {section === "calendar" && (
                 <>

@@ -349,6 +349,34 @@ export async function deleteAgent(id) {
   );
   return Boolean(r.affectedRows);
 }
+// Staff accounts made in the admin (kind "user").
+export async function listUsers() {
+  if (isDemo()) return demo.listUsers();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT id,payload FROM zanclus_records WHERE kind='user' ORDER BY id",
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+export async function saveUser(user) {
+  if (isDemo()) return demo.saveUser(user);
+  const pool = await db();
+  const { id, ...payload } = user;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'user',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, JSON.stringify(payload)],
+  );
+  return user;
+}
+export async function deleteUser(id) {
+  if (isDemo()) return demo.deleteUser(id);
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='user'",
+    [id],
+  );
+  return Boolean(r.affectedRows);
+}
 export async function deleteBooking(id) {
   if (isDemo()) return demo.deleteBooking(id);
   const pool = await db();
@@ -417,6 +445,14 @@ export async function savePassword(email, record) {
   await pool.execute(
     "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'password',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
     [passwordId(key), JSON.stringify({ email: key, ...record })],
+  );
+}
+export async function deletePassword(email) {
+  if (isDemo()) return demo.deletePassword(email);
+  const pool = await db();
+  await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='password'",
+    [passwordId(email.trim().toLowerCase())],
   );
 }
 export async function loginBlocked() {

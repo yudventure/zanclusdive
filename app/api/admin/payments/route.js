@@ -13,7 +13,7 @@ import {
 // { action: "test" } checks that Midtrans accepts the server key.
 export const dynamic = "force-dynamic";
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "payments");
   if (denied) return denied;
   try {
     const { orderId, action } = await jsonBody(request, 2000);

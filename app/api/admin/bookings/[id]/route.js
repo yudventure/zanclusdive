@@ -10,7 +10,7 @@ import {
 } from "../../../../../src/server/store.js";
 import { validateBooking } from "../../../../../src/cms-model.js";
 export async function PUT(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
   const { id } = await params;
   let payload;
@@ -32,7 +32,7 @@ export async function PUT(request, { params }) {
   }
 }
 export async function DELETE(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
   const { id } = await params;
   try {

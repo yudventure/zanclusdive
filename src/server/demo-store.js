@@ -283,6 +283,26 @@ export async function deleteAgent(id) {
     return state.agents.length < before;
   });
 }
+// Staff accounts made in the admin.
+export async function listUsers() {
+  return (await read()).users ?? [];
+}
+export async function saveUser(user) {
+  return mutate((state) => {
+    state.users ||= [];
+    const index = state.users.findIndex((u) => u.id === user.id);
+    if (index < 0) state.users.push(user);
+    else state.users[index] = user;
+    return user;
+  });
+}
+export async function deleteUser(id) {
+  return mutate((state) => {
+    const before = (state.users ||= []).length;
+    state.users = state.users.filter((u) => u.id !== id);
+    return state.users.length < before;
+  });
+}
 export async function deleteBooking(id) {
   return mutate((state) => {
     const index = state.bookings.findIndex((booking) => booking.id === id);
@@ -346,6 +366,11 @@ export async function savePassword(email, record) {
   return mutate((state) => {
     state.passwords ||= {};
     state.passwords[email.trim().toLowerCase()] = record;
+  });
+}
+export async function deletePassword(email) {
+  return mutate((state) => {
+    delete (state.passwords ||= {})[email.trim().toLowerCase()];
   });
 }
 export async function loginBlocked() {

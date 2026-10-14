@@ -4,6 +4,7 @@ import { configurationIssues } from "../../../src/cms-config.js";
 import { isDemo } from "../../../src/cms-mode.js";
 import Login from "../../../src/admin/Login.jsx";
 import Dashboard from "../../../src/admin/Dashboard.jsx";
+import { sectionKeys } from "../../../src/roles.js";
 import "../admin.css";
 import "../admin-shell.css";
 export const dynamic = "force-dynamic";
@@ -14,31 +15,7 @@ export const metadata = {
 export default async function AdminPage({ params }) {
   const { section } = await params;
   const active = section?.[0] || "overview";
-  if (
-    section?.length > 1 ||
-    ![
-      "overview",
-      "calendar",
-      "reservations",
-      "customers",
-      "website",
-      "media",
-      "experiences",
-      "contact",
-      "shop",
-      "activities",
-      "prices",
-      "events",
-      "courses",
-      "service",
-      "about",
-      "developer",
-      "payments",
-      "agents",
-      "security",
-    ].includes(active)
-  )
-    notFound();
+  if (section?.length > 1 || !sectionKeys.includes(active)) notFound();
   const admin = await currentAdmin();
   if (!admin) {
     const demo = isDemo();
@@ -55,7 +32,7 @@ export default async function AdminPage({ params }) {
   return (
     <Dashboard
       section={active}
-      email={admin.email}
+      account={admin}
       today={new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Jayapura",
       })}

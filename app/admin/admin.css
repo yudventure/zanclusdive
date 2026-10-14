@@ -1761,3 +1761,109 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Pengguna & peran, and the module pages that come later */
+.admin-users,
+.admin-role-home {
+  display: grid;
+  gap: 22px;
+}
+.admin-user-table td small {
+  display: block;
+}
+.admin-user-state {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-user-state.is-on {
+  background: #e3f6ef;
+  color: #17695f;
+}
+.admin-user-state.is-off {
+  background: #f1f3f5;
+  color: #6b7a86;
+}
+.admin-user-actions {
+  white-space: nowrap;
+}
+.admin-user-actions .admin-inline + .admin-inline {
+  margin-left: 10px;
+}
+.admin-inline.danger {
+  color: #b23b2d;
+}
+.admin-user-form {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+.admin-user-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.admin-role-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: white;
+  color: var(--admin-ink);
+  text-decoration: none;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.admin-role-card:not(.is-static):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px #244c6822;
+}
+.admin-role-card > svg {
+  color: var(--admin-blue);
+}
+.admin-role-card strong {
+  font-size: 15px;
+}
+.admin-role-card span {
+  font-size: 13px;
+  color: #5b7382;
+}
+.admin-role-card ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #3e5b70;
+  line-height: 1.5;
+}
+.admin-phase {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff6ec;
+  color: #a35a12;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.admin-module-list {
+  margin: 10px 0 16px;
+  padding-left: 20px;
+  line-height: 1.7;
+}
+.admin-forbidden {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}

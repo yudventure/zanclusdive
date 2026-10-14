@@ -13,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 // Agents, with calendars older than 30 minutes read again.
 export async function GET(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "agents");
   if (denied) return denied;
   try {
     return Response.json(
@@ -25,7 +25,7 @@ export async function GET(request) {
   }
 }
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "agents");
   if (denied) return denied;
   let agent;
   try {

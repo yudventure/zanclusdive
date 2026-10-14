@@ -13,7 +13,8 @@ import { isDemo } from "../cms-mode.js";
 import { demoAccount } from "../demo-data.js";
 import { operatorAccount } from "./operator-account.js";
 import { adminCookie } from "../developer.js";
-import { listPasswords, savePassword } from "./store.js";
+import { areasOf, hasArea, roleLabel } from "../roles.js";
+import { listPasswords, savePassword, listUsers } from "./store.js";
 export const COOKIE = adminCookie;
 // The public demo login only works when CMS_DEMO_LOGIN=true (local tests).
 export const demoLoginEnabled = () =>
@@ -44,14 +45,42 @@ function baseAccounts() {
   return demoLoginEnabled() ? [...own, demoAccount] : own;
 }
 const emailKey = (email) => String(email).trim().toLowerCase();
-// A password changed in the admin replaces the account's original one.
+// The accounts from the hosting panel or the code: always superadmin.
+export const builtInAccounts = () =>
+  baseAccounts().map((account) => ({
+    email: account.email,
+    role: "superadmin",
+  }));
+// Built-in accounts plus the staff accounts made in the admin. A password
+// changed in the admin replaces the account's original one; a staff
+// account only exists while it is active and has a password.
 async function accounts() {
-  const changed = await listPasswords();
-  return baseAccounts().map((account) => {
+  const [changed, users] = await Promise.all([listPasswords(), listUsers()]);
+  const base = baseAccounts().map((account) => ({
+    ...account,
+    role: "superadmin",
+    kind: "base",
+  }));
+  const own = new Set(base.map((account) => emailKey(account.email)));
+  const staff = users
+    .filter(
+      (user) =>
+        user.active !== false &&
+        !own.has(emailKey(user.email)) &&
+        changed[emailKey(user.email)],
+    )
+    .map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      kind: "user",
+    }));
+  return [...base, ...staff].map((account) => {
     const record = changed[emailKey(account.email)];
-    return record
-      ? { email: account.email, salt: record.salt, hash: record.hash }
-      : account;
+    if (!record) return account;
+    const { password: _password, ...rest } = account;
+    return { ...rest, salt: record.salt, hash: record.hash };
   });
 }
 export function authConfigured() {
@@ -150,7 +179,14 @@ export async function currentAdmin() {
       equal(sign(account, data), sig) &&
       Number.isFinite(value.expires) &&
       value.expires > Date.now()
-      ? { email: value.email }
+      ? {
+          email: value.email,
+          name: account.name ?? "",
+          role: account.role,
+          areas: areasOf(account.role),
+          kind: account.kind,
+          id: account.id ?? null,
+        }
       : null;
   } catch {
     return null;
@@ -182,8 +218,10 @@ export function sameOrigin(request) {
     return false;
   }
 }
-export async function requireAdmin(request) {
-  if (!(await currentAdmin()))
+// A signed-in account whose role covers the area, or the refusal to send.
+export async function requireAdmin(request, area = null) {
+  const admin = await currentAdmin();
+  if (!admin)
     return Response.json(
       { error: "Silakan login sebagai admin." },
       { status: 401 },
@@ -191,6 +229,13 @@ export async function requireAdmin(request) {
   if (request.method !== "GET" && !sameOrigin(request))
     return Response.json(
       { error: "Permintaan dari origin lain ditolak." },
+      { status: 403 },
+    );
+  if (!hasArea(admin.role, area))
+    return Response.json(
+      {
+        error: `Peran ${roleLabel(admin.role)} tidak punya akses ke bagian ini.`,
+      },
       { status: 403 },
     );
   return null;

@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 // Edit an agent; { action: "token" } makes a new feed link (the old one
 // stops working) and { action: "sync" } reads their calendar now.
 export async function PUT(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "agents");
   if (denied) return denied;
   const { id } = await params;
   try {
@@ -54,7 +54,7 @@ export async function PUT(request, { params }) {
   }
 }
 export async function DELETE(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "agents");
   if (denied) return denied;
   const { id } = await params;
   try {

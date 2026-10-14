@@ -4,7 +4,7 @@ import { expandVideoLink } from "../../../../src/server/video-links.js";
 export const dynamic = "force-dynamic";
 // Opens a TikTok or Facebook share link and returns the full video link.
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "website");
   if (denied) return denied;
   let url;
   try {
