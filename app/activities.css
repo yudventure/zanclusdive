@@ -465,9 +465,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  margin-top: 22px;
-  padding-top: 22px;
-  border-top: 1px solid #d9e5df;
+  margin-top: 26px;
   flex-wrap: wrap;
 }
 .activity-inquiry-contact svg {

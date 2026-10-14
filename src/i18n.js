@@ -224,8 +224,14 @@ const id = {
     events: "Kegiatan di tanggal ini",
     seasonsTitle: "Bulan terbaik untuk diving",
     seasonsIntro:
-      "Raja Ampat bisa diselami sepanjang tahun; suhu air sekitar 27–30 °C.",
+      "Raja Ampat bisa diselami sepanjang tahun. Suhu air sekitar 27–30 °C.",
     leftFor: (left) => `${left} slot tersisa di tanggal ini.`,
+    checkoutDates: "Tanggal & slot",
+    checkoutDatesIntro: (n) =>
+      `Angka di tiap tanggal adalah slot yang masih tersedia, dari ${n} orang per hari.`,
+    pickDate: "Pilih tanggal di kalender.",
+    pickedOn: (date) => `${date} dipilih.`,
+    pickedLeft: (date, left, n) => `${date}. ${left} dari ${n} slot tersisa.`,
     tooFew: (left) =>
       `Slot tanggal ini tinggal ${left} orang. Kurangi peserta atau pilih tanggal lain.`,
     fullDate: "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.",
@@ -269,7 +275,18 @@ const id = {
     less: (name) => `Kurangi ${name}`,
     more: (name) => `Tambah ${name}`,
     remove: (name) => `Hapus ${name}`,
-    cartBar: (n) => `Keranjang · ${n} paket`,
+    cartBar: (n, addOns = 0) =>
+      `Keranjang · ${n} paket` + (addOns ? ` + ${addOns} add-on` : ""),
+    addOnTag: "Add-on",
+    addOnsLabel: "Add-on",
+    addOnsTitle: (label) => `Add-on ${label.toLowerCase()}`,
+    addOnsIntro:
+      "Tambahkan kalau perlu, bersama paket utama di atas. Alat dan layanannya sama dengan yang ada di Dive Shop dan layanan Zanclus lainnya.",
+    addOnsPick: "Mau tambah sesuatu?",
+    addOnLabel: (name) => `Tambahkan add-on ${name}`,
+    extrasSource: "Layanan Zanclus",
+    needMain:
+      "Add-on dipesan bersama minimal satu paket utama dari daftar harga.",
     checkout: "Checkout",
     pickPackage: "Pilih minimal satu paket dari daftar harga.",
     quantity: (unit) => (unit ? `Jumlah (${unit})` : "Jumlah"),
@@ -1331,9 +1348,15 @@ const en = {
     events: "On this date",
     seasonsTitle: "The best months to dive",
     seasonsIntro:
-      "Raja Ampat can be dived all year; the water is around 27–30 °C.",
+      "Raja Ampat can be dived all year. The water is around 27–30 °C.",
     leftFor: (left) =>
       `${left} ${left === 1 ? "place" : "places"} left on this date.`,
+    checkoutDates: "Date & places",
+    checkoutDatesIntro: (n) =>
+      `The number on each date is the places still free, out of ${n} a day.`,
+    pickDate: "Pick a date in the calendar.",
+    pickedOn: (date) => `${date} chosen.`,
+    pickedLeft: (date, left, n) => `${date}. ${left} of ${n} places left.`,
     tooFew: (left) =>
       `Only ${left} ${left === 1 ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`,
     fullDate: "This date is fully booked. Please choose another date.",
@@ -1377,7 +1400,19 @@ const en = {
     less: (name) => `One less ${name}`,
     more: (name) => `One more ${name}`,
     remove: (name) => `Remove ${name}`,
-    cartBar: (n) => `Cart · ${n} ${n === 1 ? "package" : "packages"}`,
+    cartBar: (n, addOns = 0) =>
+      `Cart · ${n} ${n === 1 ? "package" : "packages"}` +
+      (addOns ? ` + ${addOns} ${addOns === 1 ? "add-on" : "add-ons"}` : ""),
+    addOnTag: "Add-on",
+    addOnsLabel: "Add-ons",
+    addOnsTitle: (label) => `${label} add-ons`,
+    addOnsIntro:
+      "Add them if you need, together with a main package above. The gear and services are the same ones offered in our Dive Shop and other Zanclus services.",
+    addOnsPick: "Anything to add?",
+    addOnLabel: (name) => `Add the ${name} add-on`,
+    extrasSource: "Zanclus services",
+    needMain:
+      "Add-ons come with at least one main package from the price list.",
     checkout: "Checkout",
     pickPackage: "Choose at least one package from the price list.",
     quantity: (unit) => (unit ? `Quantity (${unit})` : "Quantity"),

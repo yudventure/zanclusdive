@@ -41,11 +41,21 @@ const state = async () =>
   (await admin.request.get(base + "/api/admin/state")).json();
 const order = async (orderId) =>
   (await state()).bookings.find((b) => b.payment?.orderId === orderId);
+// The checkout date is picked from the days with their places left.
+async function pickDate(date) {
+  const day = page.locator(`.plan-dates .slot-day[data-date="${date}"]`);
+  if (!(await day.count()))
+    await page
+      .locator(".plan-dates")
+      .getByRole("button", { name: "Next month" })
+      .click();
+  if ((await day.getAttribute("aria-pressed")) !== "true") await day.click();
+}
 async function fillForm(name, participants = "2") {
   await page.locator("#inquiry-name").fill(name);
   await page.locator("#inquiry-whatsapp").fill("081234567890");
   await page.locator("#inquiry-email").fill("tamu@example.com");
-  await page.locator("#inquiry-date").fill(today);
+  await pickDate(today);
   await page.locator("#inquiry-participants").fill(participants);
 }
 try {
@@ -238,18 +248,26 @@ try {
   delete mock.orders.get(expiredId).gross;
 
   // A payment finished without a notification is picked up by "Cek status".
-  // It is also an order of two packages, added from the cards and the panel.
+  // It is also an order of two packages, added from the cards and the panel,
+  // and an add-on from the checkout.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
   await page
     .getByRole("button", { name: "Add Discovery Dive to the cart" })
     .click();
   await page.locator(".activity-cart-bar .button").click();
+  // Without a date, the checkout starts at the days and their places.
   assert.equal(
-    await page.evaluate(() => document.activeElement.id),
-    "inquiry-name",
+    await page.evaluate(() =>
+      Boolean(document.activeElement.closest("#inquiry-date .slot-grid")),
+    ),
+    true,
   );
   await page.locator(".plan-add").selectOption({ index: 1 });
   assert.equal(await page.locator(".plan-cart li").count(), 2);
+  await page
+    .getByRole("button", { name: "Add the Documentation add-on" })
+    .click();
+  assert.equal(await page.locator(".plan-cart li").count(), 3);
   await fillForm("Tamu Cek", "1");
   await page
     .getByRole("button", { name: "Continue to payment summary" })
@@ -260,10 +278,21 @@ try {
     ).length,
     2,
   );
+  assert.equal(
+    await page.locator(".plan-summary-list dd").nth(2).textContent(),
+    "Documentation × 1 day",
+  );
   await page.locator(".pay-submit").click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const checkId = new URL(page.url()).pathname.split("/").pop();
-  assert.equal(mock.orders.get(checkId).items.length, 2);
+  assert.equal(mock.orders.get(checkId).items.length, 3);
+  assert.deepEqual(
+    mock.orders
+      .get(checkId)
+      .items.filter((item) => item.id.startsWith("addon-"))
+      .map((item) => [item.id, item.price, item.quantity]),
+    [["addon-extras-dokumentasi", 500000, 1]],
+  );
   assert.equal(
     mock.orders.get(checkId).amount,
     mock.orders
@@ -278,6 +307,38 @@ try {
     .click();
   await a.getByText("Status pembayaran diperbarui dari Midtrans.").waitFor();
   assert.equal((await order(checkId)).payment.status, "paid");
+  // An add-on alone, or one renamed since the page loaded, is refused.
+  for (const [lines, status, error] of [
+    [
+      [{ addOn: "extras-dokumentasi", itemName: "Dokumentasi", quantity: 1 }],
+      400,
+      "Add-ons come with at least one main package.",
+    ],
+    [
+      [
+        { item: 0, itemName: "Discovery Dive", quantity: 1 },
+        { addOn: "extras-dokumentasi", itemName: "Foto", quantity: 1 },
+      ],
+      409,
+      "The price list was just updated. Please reload the page.",
+    ],
+  ]) {
+    const refused = await page.request.post(base + "/api/payments?locale=en", {
+      headers: { Origin: base, "x-real-ip": "203.0.113.7" },
+      data: {
+        activity: "diving",
+        lines,
+        name: "Tamu Add-on",
+        whatsapp: "081234567890",
+        email: "",
+        notes: "",
+        date: today,
+        participants: 1,
+      },
+    });
+    assert.equal(refused.status(), status);
+    assert.equal((await refused.json()).error, error);
+  }
 
   // Every other form pays with Midtrans too. pay() opens the payment page
   // from a summary and returns the Midtrans order.
@@ -532,7 +593,7 @@ try {
     });
   assert.equal((await walkIn(29)).status(), 201);
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  const slotDay = page.locator(`.slot-day[data-date="${busy}"]`);
+  const slotDay = page.locator(`.slot-calendar .slot-day[data-date="${busy}"]`);
   if (busy.slice(0, 7) !== today.slice(0, 7))
     await page.getByRole("button", { name: "Next month" }).click();
   assert.match(await slotDay.getAttribute("class"), /is-low/);
@@ -547,10 +608,16 @@ try {
     .click();
   await page.getByRole("button", { name: "Checkout for this date" }).click();
   await fillForm("Tamu Penuh", "2");
-  await page.locator("#inquiry-date").fill(busy);
+  await pickDate(busy);
   assert.match(
-    await page.locator(".slot-note").textContent(),
-    /1 place left on this date/,
+    await page.locator(".plan-dates .slot-note").textContent(),
+    /\. 1 of 30 places left\.$/,
+  );
+  assert.equal(
+    await page
+      .locator(`.plan-dates .slot-day[data-date="${busy}"] small`)
+      .textContent(),
+    "1",
   );
   await page
     .getByRole("button", { name: "Continue to payment summary" })
@@ -593,7 +660,9 @@ try {
   if (busy.slice(0, 7) !== today.slice(0, 7))
     await page.getByRole("button", { name: "Next month" }).click();
   assert.match(
-    await page.locator(`.slot-day[data-date="${busy}"]`).getAttribute("class"),
+    await page
+      .locator(`.slot-calendar .slot-day[data-date="${busy}"]`)
+      .getAttribute("class"),
     /is-open/,
   );
 

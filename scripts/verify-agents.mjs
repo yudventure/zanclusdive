@@ -395,7 +395,7 @@ try {
     await p.goto(base + "/id/diving", { waitUntil: "networkidle" });
     if (date.slice(0, 7) !== today.slice(0, 7))
       await p.getByRole("button", { name: "Bulan berikutnya" }).click();
-    return p.locator(`.slot-day[data-date="${date}"]`);
+    return p.locator(`.slot-calendar .slot-day[data-date="${date}"]`);
   };
   let otaDay = await showDay(plus(6));
   assert.equal(await otaDay.locator("small").textContent(), "4");

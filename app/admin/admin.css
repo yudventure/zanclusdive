@@ -2507,3 +2507,40 @@ strong.admin-overdue {
   font-size: 14px;
   text-decoration: none;
 }
+
+/* Add-ons for an activity, ticked from the other price lists. */
+.admin-addon-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+.admin-addon-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: #23495b;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-addons .admin-check {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #f4f8f6;
+}
+.admin-addons .admin-check input {
+  flex: none;
+  margin-top: 2px;
+}
+.admin-addons .admin-check small {
+  display: block;
+  margin-top: 2px;
+  color: #5b7480;
+  font-size: 12px;
+}
+.admin-addons > .admin-button {
+  margin-top: 18px;
+}

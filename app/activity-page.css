@@ -58,8 +58,8 @@
   gap: 8px;
   margin: 0 -40px;
   padding: 14px 40px;
-  border-bottom: 1px solid #e3ecea;
   background: #ffffffeb;
+  box-shadow: 0 10px 18px -16px #062b3b59;
   backdrop-filter: blur(12px);
   overflow-x: auto;
   scrollbar-width: none;
@@ -606,8 +606,84 @@ nav.open .nav-sub a {
   font-size: 12px;
   color: #6b8289;
 }
+/* A card left alone on the last row takes the whole row. */
+.activity-prices li:last-child:nth-child(odd),
+.activity-addon-list li:last-child:nth-child(odd),
+.plan-addons li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Add-ons: gear, cameras and services from the other price lists, offered
+   beside the main packages. */
+.activity-addons {
+  margin-top: 26px;
+}
+.activity-addons h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+.activity-addons > p {
+  margin: 6px 0 14px;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.activity-addon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.activity-addon-list li {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #e3ecea;
+  border-radius: 14px;
+  background: #f6faf8;
+}
+.activity-addon-list em {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #1f8f8a;
+}
+.activity-addon-list strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.activity-addon-list span small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #57717a;
+}
+.activity-addon-list b {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--act-ink, #062b3b);
+}
+.activity-addon-list b small {
+  margin-left: 4px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #57717a;
+}
 @media (max-width: 700px) {
-  .activity-prices {
+  .activity-prices,
+  .activity-addon-list {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -733,6 +809,123 @@ nav.open .nav-sub a {
   height: 28px;
   font-size: 15px;
 }
+.plan-cart li.is-addon {
+  background: #f4f6fb;
+}
+.plan-addon-tag {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #1f8f8a;
+}
+/* Add-ons still to pick, one tap each. */
+.plan-addons > p {
+  margin: 2px 0 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #33525a;
+}
+.plan-addons ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-addons button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 9px 11px;
+  border: 1px solid #cfe3d6;
+  border-radius: 12px;
+  background: #fff;
+  color: #062b3b;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.plan-addons button > span {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e5f4ea;
+  color: #087873;
+  font-size: 15px;
+  font-weight: 700;
+}
+.plan-addons button strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.plan-addons button small {
+  font-size: 11px;
+  color: #57717a;
+}
+.plan-addons button:hover {
+  border-color: #20b8b1;
+}
+.plan-addons button:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+@media (max-width: 340px) {
+  .plan-addons ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* The date, picked from the places left on each day. */
+.plan-dates {
+  margin: 0 0 14px;
+  padding: 14px 14px 12px;
+  border: 1px solid #cfe3d6;
+  border-radius: 16px;
+  background: #f4f8f5;
+}
+.plan-dates legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.plan-dates-intro {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.plan-dates .slot-month-name {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.plan-dates .slot-day {
+  aspect-ratio: 1 / 0.92;
+}
+.plan-dates .slot-legend {
+  margin-top: 8px;
+}
+.plan-dates .slot-note {
+  margin: 10px 0 0;
+  font-weight: 600;
+}
 .plan-cart-empty {
   margin: 0;
   font-size: 12.5px;
@@ -773,14 +966,16 @@ nav.open .nav-sub a {
 }
 .plan-summary-list {
   display: grid;
+  gap: 6px;
   margin: 0;
 }
 .plan-summary-list div {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
   gap: 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid #edf2ef;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f6faf8;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -831,7 +1026,6 @@ nav.open .nav-sub a {
   justify-content: space-between;
   gap: 10px 16px;
   padding-top: 4px;
-  border-top: 1px solid #edf2ef;
 }
 .plan-back {
   padding: 8px 0;
@@ -893,7 +1087,7 @@ nav.open .nav-sub a {
   gap: 10px;
   margin-bottom: 10px;
 }
-.slot-month-bar h3 {
+.slot-month-bar .slot-month-name {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
@@ -1083,9 +1277,7 @@ nav.open .nav-sub a {
   color: #6b8086;
 }
 .slot-seasons {
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid #dbe8e1;
+  margin-top: 26px;
   scroll-margin-top: 170px;
 }
 .slot-seasons h3 {
@@ -1147,6 +1339,7 @@ nav.open .nav-sub a {
   color: #3d5b63;
 }
 .slot-season-note strong {
+  display: block;
   text-transform: capitalize;
 }
 

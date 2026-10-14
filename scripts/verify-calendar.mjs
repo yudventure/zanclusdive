@@ -92,7 +92,7 @@ try {
   await page.getByRole("button", { name: "Simpan kalender" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
-  const cell = page.locator(".slot-day.is-today");
+  const cell = page.locator(".slot-calendar .slot-day.is-today");
   assert.match(await cell.getAttribute("class"), /has-events/);
   assert.match(await cell.locator("small").textContent(), /^\d+$/);
   await cell.click();
@@ -118,7 +118,7 @@ try {
   await page.getByRole("button", { name: "Previous month" }).click();
   assert.equal(await page.locator(".slot-month-bar h3").textContent(), before);
   await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
-  await page.locator(".slot-day.is-today").click();
+  await page.locator(".slot-calendar .slot-day.is-today").click();
   assert.match(
     await page.locator(".slot-events").textContent(),
     /Bersih dermaga Waisai/,

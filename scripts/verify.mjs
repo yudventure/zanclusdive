@@ -113,9 +113,10 @@ assert.equal(
   await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket diving",
 );
+// Diving lists its main packages; gear and services are add-ons on its page.
 assert.equal(
   await page.locator(".experience-item.is-open .price-list li").count(),
-  6,
+  2,
 );
 await page.locator('.course-card[data-activity="snorkeling"]').hover();
 assert.equal(

@@ -119,7 +119,8 @@ export const sections = {
   prices: {
     title: "Daftar harga",
     area: "website",
-    intro: "Daftar harga paket per aktivitas.",
+    intro:
+      "Paket utama per aktivitas, sewa alat, layanan tambahan, dan add-on.",
   },
   shop: {
     title: "Dive Shop",

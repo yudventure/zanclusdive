@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { dictionary, intlLocale } from "../i18n.js";
 import { calendarText, monthGrid } from "../calendar-model.js";
 
@@ -9,28 +9,51 @@ const iso = (y, m, d) =>
 // Five places or fewer is "almost full".
 const lowAt = 5;
 
-// The calendar beside an activity page: each day shows the places still
-// free (when the activity has a daily limit), closed days and scheduled
-// activities. The chosen day is the date used at checkout. Below it, the
-// best months to dive.
-export default function SlotCalendar({
+// What a day is for booking: open | low | full | closed | past, and the
+// places still free on it.
+export function slotState(slots, today, lastDate) {
+  const capacity = slots?.capacity ?? 0;
+  const closed = (key) =>
+    (slots?.closed ?? []).some(([from, to]) => key >= from && key <= to);
+  const left = (key) => Math.max(0, capacity - (slots?.used?.[key] ?? 0));
+  function state(key) {
+    if (key < today || key > lastDate) return "past";
+    if (closed(key)) return "closed";
+    if (!capacity) return "open";
+    const n = left(key);
+    return n === 0 ? "full" : n <= lowAt ? "low" : "open";
+  }
+  return { capacity, left, state };
+}
+
+// A month of days with the places left on each, used beside the page and
+// in the checkout window. Full, closed and past days can't be picked.
+export function SlotMonth({
   slots,
   events = [],
-  seasons = [],
   today,
   lastDate,
   date,
   onSelect,
-  canCheckout,
-  onCheckout,
-  label,
+  onMonth,
+  monthTag: MonthTag = "h3",
   locale,
 }) {
   const t = dictionary(locale).slots;
   const c = dictionary(locale).calendarPage;
   const [year, month] = (date || today).split("-").map(Number);
   const [view, setView] = useState({ year, month: month - 1 });
-  const capacity = slots?.capacity ?? 0;
+  // A date picked elsewhere (beside the page or in the checkout) brings
+  // its month into view.
+  useEffect(() => {
+    if (!date) return;
+    const [y, m] = date.split("-").map(Number);
+    setView((v) =>
+      v.year === y && v.month === m - 1 ? v : { year: y, month: m - 1 },
+    );
+  }, [date]);
+  useEffect(() => onMonth?.(view.month), [view.month, onMonth]);
+  const { capacity, left, state } = slotState(slots, today, lastDate);
   const fmt = (value, options) =>
     value.toLocaleDateString(intlLocale[locale], {
       timeZone: "UTC",
@@ -54,30 +77,9 @@ export default function SlotCalendar({
     const d = utc(view.year, view.month + delta);
     setView({ year: d.getUTCFullYear(), month: d.getUTCMonth() });
   }
-  const closed = (key) =>
-    (slots?.closed ?? []).some(([from, to]) => key >= from && key <= to);
-  const left = (key) => Math.max(0, capacity - (slots?.used?.[key] ?? 0));
-  // open | low | full | closed | past
-  function state(key) {
-    if (key < today || key > lastDate) return "past";
-    if (closed(key)) return "closed";
-    if (!capacity) return "open";
-    const n = left(key);
-    return n === 0 ? "full" : n <= lowAt ? "low" : "open";
-  }
   const eventsOn = (key) => events.filter((e) => e.date === key);
-  const picked = date ? state(date) : null;
   return (
-    <aside
-      className="slot-calendar"
-      id="calendar"
-      aria-labelledby="slot-calendar-title"
-    >
-      <p className="eyebrow">{t.eyebrow}</p>
-      <h2 id="slot-calendar-title">{t.title(label)}</h2>
-      <p className="slot-intro">
-        {capacity ? t.introCapacity(capacity, label) : t.intro}
-      </p>
+    <>
       <div className="slot-month-bar">
         <button
           type="button"
@@ -87,7 +89,9 @@ export default function SlotCalendar({
         >
           ←
         </button>
-        <h3 aria-live="polite">{monthName}</h3>
+        <MonthTag className="slot-month-name" aria-live="polite">
+          {monthName}
+        </MonthTag>
         <button
           type="button"
           aria-label={c.next}
@@ -162,6 +166,66 @@ export default function SlotCalendar({
           </li>
         ))}
       </ul>
+    </>
+  );
+}
+
+// The calendar beside an activity page: each day shows the places still
+// free (when the activity has a daily limit), closed days and scheduled
+// activities. The chosen day is the date used at checkout. Below it, the
+// best months to dive.
+export default function SlotCalendar({
+  slots,
+  events = [],
+  seasons = [],
+  today,
+  lastDate,
+  date,
+  onSelect,
+  canCheckout,
+  onCheckout,
+  label,
+  locale,
+}) {
+  const t = dictionary(locale).slots;
+  const c = dictionary(locale).calendarPage;
+  const [shown, setShown] = useState(Number((date || today).slice(5, 7)) - 1);
+  const { capacity, left, state } = slotState(slots, today, lastDate);
+  const fmt = (value, options) =>
+    value.toLocaleDateString(intlLocale[locale], {
+      timeZone: "UTC",
+      ...options,
+    });
+  const longDate = (key) =>
+    fmt(new Date(key + "T12:00:00Z"), {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  const eventsOn = (key) => events.filter((e) => e.date === key);
+  const picked = date ? state(date) : null;
+  return (
+    <aside
+      className="slot-calendar"
+      id="calendar"
+      aria-labelledby="slot-calendar-title"
+    >
+      <p className="eyebrow">{t.eyebrow}</p>
+      <h2 id="slot-calendar-title">{t.title(label)}</h2>
+      <p className="slot-intro">
+        {capacity ? t.introCapacity(capacity, label) : t.intro}
+      </p>
+      <SlotMonth
+        slots={slots}
+        events={events}
+        today={today}
+        lastDate={lastDate}
+        date={date}
+        onSelect={onSelect}
+        onMonth={setShown}
+        locale={locale}
+      />
       {date && (
         <div className="slot-picked" role="status">
           <strong>{longDate(date)}</strong>
@@ -207,7 +271,7 @@ export default function SlotCalendar({
               <li
                 key={i}
                 className={
-                  "season-" + s.rating + (i === view.month ? " is-current" : "")
+                  "season-" + s.rating + (i === shown ? " is-current" : "")
                 }
                 title={calendarText(s.note, locale)}
               >
@@ -216,10 +280,10 @@ export default function SlotCalendar({
               </li>
             ))}
           </ol>
-          {calendarText(seasons[view.month]?.note, locale) && (
+          {calendarText(seasons[shown]?.note, locale) && (
             <p className="slot-season-note">
-              <strong>{fmt(utc(2026, view.month), { month: "long" })}:</strong>{" "}
-              {calendarText(seasons[view.month].note, locale)}
+              <strong>{fmt(utc(2026, shown), { month: "long" })}</strong>
+              {calendarText(seasons[shown].note, locale)}
             </p>
           )}
         </section>

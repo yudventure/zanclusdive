@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { activityKeys, activityLabels } from "../src/activity-model.js";
 import { demoAccount } from "../src/demo-data.js";
+import { addOnItems } from "../src/price-list.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3190";
 // The Indonesian website (/id); English is served at the root.
@@ -115,6 +116,34 @@ try {
       await page.locator(".plan-add option").count(),
       packages.length + 1,
     );
+    // Gear, cameras and services from the other lists are add-ons, after
+    // the main packages. Diving offers them by default.
+    const addOns = addOnItems(originals.content.priceList, key);
+    assert.equal(addOns.length, key === "diving" ? 7 : 0);
+    assert.equal(
+      await page.locator(".activity-addon-list li").count(),
+      addOns.length,
+    );
+    assert.equal(
+      await page.locator(".plan-addons button").count(),
+      addOns.length,
+    );
+    if (key === "diving") {
+      assert.deepEqual(
+        packages.map((item) => item.name.id),
+        ["Discovery Dive", "Pemandu selam"],
+      );
+      assert.equal(
+        await page.locator("#add-ons-title").textContent(),
+        "Add-on diving",
+      );
+      // The seventh add-on is alone on its row and takes all of it.
+      const [list, last] = await Promise.all([
+        page.locator(".activity-addon-list").boundingBox(),
+        page.locator(".activity-addon-list li").last().boundingBox(),
+      ]);
+      assert.ok(Math.abs(list.width - last.width) < 2, "lone add-on full row");
+    }
     // The cart bar appears with the first package; the old side panel is
     // gone and checkout opens in a window.
     assert.equal(await page.locator(".activity-cart-bar").count(), 0);
@@ -185,6 +214,21 @@ try {
       /Keranjang · 1 paket/,
     );
     assert.equal(await page.locator(".plan-cart li").count(), 1);
+    if (key === "diving") {
+      await page
+        .locator(".activity-addon-list")
+        .getByRole("button", { name: "Tambahkan Dokumentasi ke keranjang" })
+        .click();
+      assert.match(
+        await page.locator(".activity-cart-bar").textContent(),
+        /Keranjang · 1 paket \+ 1 add-on/,
+      );
+      assert.equal(await page.locator(".plan-cart li.is-addon").count(), 1);
+      assert.equal(
+        await page.locator(".plan-addons button").count(),
+        addOns.length - 1,
+      );
+    }
     // A day picked in the calendar is the checkout date.
     const day = slotCalendar.locator(".slot-day:not([disabled])").nth(8);
     const date = await day.getAttribute("data-date");
@@ -200,7 +244,15 @@ try {
       .click();
     const dialog = page.locator(".activity-checkout");
     await dialog.locator("#inquiry-name").waitFor({ state: "visible" });
-    assert.equal(await page.getByLabel("Usulan tanggal").inputValue(), date);
+    // The checkout shows the same day, with the places left on it.
+    const checkoutDay = dialog.locator(
+      `.plan-dates .slot-day[data-date="${date}"]`,
+    );
+    assert.equal(await checkoutDay.getAttribute("aria-pressed"), "true");
+    assert.match(
+      await dialog.locator(".plan-dates .slot-note").textContent(),
+      capacity ? new RegExp(`dari ${capacity} slot tersisa`) : /dipilih\.$/,
+    );
     // The first field still to fill has the focus.
     assert.equal(
       await page.evaluate(() => document.activeElement?.id),
@@ -233,6 +285,11 @@ try {
       await page.locator(".plan-summary-list").textContent(),
       /Tamu Uji Aktivitas[\s\S]*\+62 812 3456 7890[\s\S]*Perlu fins ukuran M/,
     );
+    if (key === "diving")
+      assert.match(
+        await page.locator(".plan-summary-list").textContent(),
+        /PaketDiscovery Dive × 3 orangAdd-onDokumentasi × 1 hari/,
+      );
     const url = new URL(
       await page
         .getByRole("link", { name: "Lanjutkan ke WhatsApp" })
@@ -248,6 +305,7 @@ try {
       date,
       "3 orang",
       "Perlu fins ukuran M",
+      ...(key === "diving" ? ["Dokumentasi (Add-on) × 1"] : []),
       "WhatsApp: +62 812 3456 7890",
       "Email: tamu@example.com",
       "belum menjadi reservasi",
@@ -415,6 +473,94 @@ try {
     path: "artifacts/admin-activities.png",
     fullPage: true,
   });
+  // Price lists: a service offered only as an add-on, added in Layanan
+  // tambahan and ticked for diving; a camera rental ticked for snorkeling.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Layanan tambahan", exact: true })
+    .click();
+  assert.equal(await page.locator(".admin-addons").count(), 0);
+  await page.getByRole("button", { name: "+ Tambah item" }).click();
+  const fresh = page.locator(".admin-price-item").last();
+  await fresh.getByLabel("Nama (Indonesia)").fill("Antar jemput mobil");
+  await fresh.getByLabel("Name (English)").fill("Car pick-up");
+  await fresh.getByLabel("Harga (Rp)").fill("250000");
+  await fresh.getByLabel("Satuan (Indonesia)").fill("/ trip");
+  await fresh.getByLabel("Unit (English)").fill("/ trip");
+  await page.getByRole("button", { name: "Diving", exact: true }).click();
+  const divingAddOns = page.locator(".admin-addons");
+  assert.match(
+    await divingAddOns.locator("h2").textContent(),
+    /^Add-on Diving$/,
+  );
+  assert.equal(
+    await divingAddOns.locator("input:checked").count(),
+    7,
+    "diving starts with its gear, cameras and documentation",
+  );
+  await divingAddOns
+    .getByRole("checkbox", { name: /^Antar jemput mobil/ })
+    .check();
+  await page.getByRole("button", { name: "Simpan add-on" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  await page.getByRole("button", { name: "Snorkeling", exact: true }).click();
+  await page
+    .locator(".admin-addons")
+    .getByRole("checkbox", { name: /^Kamera bawah air TG-5/ })
+    .check();
+  await page.getByRole("button", { name: "Simpan add-on" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  let priced = (await state()).content.priceList;
+  const car = priced.extras.find(
+    (item) => item.name.id === "Antar jemput mobil",
+  );
+  assert.match(car.id, /^extras-/);
+  assert.equal(priced.addOns.diving.at(-1), car.id);
+  assert.deepEqual(priced.addOns.snorkeling, [
+    "rentalcamera-kamera-bawah-air-tg-5",
+  ]);
+  await page.setViewportSize({ width: 390, height: 900 });
+  await noOverflow("admin add-ons at 390");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(site + "/diving", { waitUntil: "networkidle" });
+  assert.match(
+    await page.locator(".activity-addon-list li").last().textContent(),
+    /Layanan Zanclus[\s\S]*Antar jemput mobil[\s\S]*Rp\s?250\.000/,
+  );
+  await page.goto(base + "/snorkeling", { waitUntil: "networkidle" });
+  assert.equal(await page.textContent("#add-ons-title"), "Snorkeling add-ons");
+  assert.match(
+    await page.locator(".activity-addon-list").textContent(),
+    /Rent an underwater camera[\s\S]*Underwater camera TG-5/,
+  );
+  // Deleting the item from its list drops it from the add-ons.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Layanan tambahan", exact: true })
+    .click();
+  await page
+    .locator(".admin-price-item", {
+      has: page.locator('input[value="Antar jemput mobil"]'),
+    })
+    .getByRole("button", { name: "Hapus" })
+    .click();
+  await page.getByRole("button", { name: "Simpan daftar harga" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  priced = (await state()).content.priceList;
+  assert.ok(!priced.addOns.diving.includes(car.id));
+  assert.equal(priced.addOns.diving.length, 7);
   await page.goto(site + "/snorkeling", { waitUntil: "networkidle" });
   assert.equal(
     await page.locator("h1").textContent(),

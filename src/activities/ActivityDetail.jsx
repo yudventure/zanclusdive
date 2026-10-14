@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import { activityInquiry } from "../activity-model.js";
-import { priceText } from "../price-list.js";
+import { addOnItems, priceText } from "../price-list.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import ActivityCards from "./ActivityCards.jsx";
@@ -16,7 +16,7 @@ import SectionBanner from "./SectionBanner.jsx";
 import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { payableItems, quantityLimit } from "../payment-model.js";
 import CartIcon from "../components/CartIcon.jsx";
-import SlotCalendar from "./SlotCalendar.jsx";
+import SlotCalendar, { SlotMonth, slotState } from "./SlotCalendar.jsx";
 
 // Per-person packages count one unit for each participant.
 const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
@@ -34,6 +34,7 @@ function Inquiry({
   activity,
   contact,
   packages,
+  offers,
   cart,
   changeCart,
   participants,
@@ -41,6 +42,8 @@ function Inquiry({
   date,
   changeDate,
   slots,
+  events,
+  calendarToday,
   lastDate,
   payments,
   locale,
@@ -72,6 +75,9 @@ function Inquiry({
     capacity && date
       ? Math.max(0, capacity - (slots?.used?.[date] ?? 0))
       : null;
+  const dayKind = date
+    ? slotState(slots, calendarToday, lastDate).state(date)
+    : null;
   const [error, setError] = useState("");
   const panelRef = useRef(null);
   const stepsRef = useRef(null);
@@ -88,9 +94,11 @@ function Inquiry({
   const lines = cart
     .map((line) => ({
       ...line,
-      item: packages.find((item) => item.index === line.index),
+      item: offers.find((item) => item.key === line.key),
     }))
     .filter((line) => line.item);
+  const mainLines = lines.filter((line) => !line.item.addOn);
+  const addOnLines = lines.filter((line) => line.item.addOn);
   const total = lines.reduce(
     (sum, line) => sum + line.item.price * line.quantity,
     0,
@@ -101,17 +109,19 @@ function Inquiry({
     `${priceText(line.item.name, locale)} × ${line.quantity}${unitOf(line) ? " " + unitOf(line) : ""}`;
   const order = lines.length
     ? {
-        lines: lines.map((line) => ({
-          item: priceText(line.item.name, locale),
+        lines: [...mainLines, ...addOnLines].map((line) => ({
+          item:
+            priceText(line.item.name, locale) +
+            (line.item.addOn ? ` (${p.addOnTag})` : ""),
           quantity: line.quantity,
           unit: unitOf(line),
         })),
         total,
       }
     : null;
-  const unchosen = packages.filter(
-    (item) => !cart.some((line) => line.index === item.index),
-  );
+  const chosen = (item) => cart.some((line) => line.key === item.key);
+  const unchosen = offers.filter((item) => !item.addOn && !chosen(item));
+  const unchosenAddOns = offers.filter((item) => item.addOn && !chosen(item));
 
   function change(key, value) {
     if (key === "participants") changeParticipants(value);
@@ -140,8 +150,8 @@ function Inquiry({
   }
   function toSummary(nextIntent) {
     if (!check()) return;
-    if (nextIntent === "pay" && !lines.length) {
-      setError(p.pickPackage);
+    if (nextIntent === "pay" && !mainLines.length) {
+      setError(lines.length ? p.needMain : p.pickPackage);
       return;
     }
     if (nextIntent === "pay" && Number(details.participants) > quantityLimit) {
@@ -166,7 +176,7 @@ function Inquiry({
     setStep("summary");
   }
   async function pay() {
-    if (!lines.length || !check()) return;
+    if (!mainLines.length || !check()) return;
     setError("");
     setPaying(true);
     try {
@@ -176,7 +186,9 @@ function Inquiry({
         body: JSON.stringify({
           activity: activityKey,
           lines: lines.map((line) => ({
-            item: line.index,
+            ...(line.item.addOn
+              ? { addOn: line.item.id }
+              : { item: line.item.index }),
             itemName: priceText(line.item.name, "id"),
             quantity: line.quantity,
           })),
@@ -245,11 +257,17 @@ function Inquiry({
                 <legend>{p.cartTitle}</legend>
                 {lines.length ? (
                   <ul className="plan-cart">
-                    {lines.map((line) => {
+                    {[...mainLines, ...addOnLines].map((line) => {
                       const name = priceText(line.item.name, locale);
                       return (
-                        <li key={line.index}>
+                        <li
+                          key={line.key}
+                          className={line.item.addOn ? "is-addon" : undefined}
+                        >
                           <span>
+                            {line.item.addOn && (
+                              <em className="plan-addon-tag">{p.addOnTag}</em>
+                            )}
                             <strong>{name}</strong>
                             <small>
                               {formatIDR(line.item.price, locale)}{" "}
@@ -264,7 +282,7 @@ function Inquiry({
                                   ? p.less(name)
                                   : p.remove(name)
                               }
-                              onClick={() => changeCart(line.index, -1)}
+                              onClick={() => changeCart(line.key, -1)}
                             >
                               −
                             </button>
@@ -273,7 +291,7 @@ function Inquiry({
                               type="button"
                               aria-label={p.more(name)}
                               disabled={line.quantity >= quantityLimit}
-                              onClick={() => changeCart(line.index, 1)}
+                              onClick={() => changeCart(line.key, 1)}
                             >
                               +
                             </button>
@@ -292,19 +310,48 @@ function Inquiry({
                     value=""
                     onChange={(e) => {
                       if (e.target.value === "") return;
-                      changeCart(Number(e.target.value), 1);
+                      changeCart(e.target.value, 1);
                       setError("");
                     }}
                   >
                     <option value="">{p.addPackage}</option>
                     {unchosen.map((item) => (
-                      <option key={item.index} value={item.index}>
+                      <option key={item.key} value={item.key}>
                         {priceText(item.name, locale)} ·{" "}
                         {formatIDR(item.price, locale)}{" "}
                         {priceText(item.unit, locale)}
                       </option>
                     ))}
                   </select>
+                )}
+                {unchosenAddOns.length > 0 && (
+                  <div className="plan-addons">
+                    <p>{p.addOnsPick}</p>
+                    <ul>
+                      {unchosenAddOns.map((item) => {
+                        const name = priceText(item.name, locale);
+                        return (
+                          <li key={item.key}>
+                            <button
+                              type="button"
+                              aria-label={p.addOnLabel(name)}
+                              onClick={() => {
+                                changeCart(item.key, 1);
+                                setError("");
+                              }}
+                            >
+                              <span aria-hidden="true">+</span>
+                              <strong>{name}</strong>
+                              <small>
+                                {formatIDR(item.price, locale)}{" "}
+                                {priceText(item.unit, locale)}
+                              </small>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
                 <p className="pay-total">
                   <span>
@@ -327,6 +374,63 @@ function Inquiry({
                 <p>{t.priceNote}</p>
               </div>
             )}
+            {/* The date is picked from the days and the places left on
+                each, the same as the calendar beside the page. */}
+            <fieldset className="plan-dates" id="inquiry-date">
+              <legend>
+                {sl.checkoutDates}{" "}
+                <span className="form-required" aria-hidden="true">
+                  *
+                </span>
+              </legend>
+              <p className="plan-dates-intro">
+                {capacity ? sl.checkoutDatesIntro(capacity) : sl.intro}
+              </p>
+              <SlotMonth
+                slots={slots}
+                events={events}
+                today={calendarToday}
+                lastDate={lastDate}
+                date={date}
+                onSelect={(key) => change("date", key)}
+                monthTag="strong"
+                locale={locale}
+              />
+              <p
+                className={
+                  "slot-note" +
+                  (dayKind === "closed" || dayKind === "full" ? " is-full" : "")
+                }
+                aria-live="polite"
+              >
+                {!date
+                  ? sl.pickDate
+                  : dayKind === "closed" || closedOn(date)
+                    ? sl.closedDate
+                    : placesLeft === null
+                      ? sl.pickedOn(dateText)
+                      : placesLeft
+                        ? sl.pickedLeft(dateText, placesLeft, capacity)
+                        : sl.fullDate}
+              </p>
+            </fieldset>
+            <FormField
+              id="inquiry-participants"
+              label={t.participants}
+              icon="people"
+              required
+            >
+              <input
+                id="inquiry-participants"
+                name="participants"
+                type="number"
+                min="1"
+                max="100"
+                required
+                value={details.participants}
+                onChange={(e) => change("participants", e.target.value)}
+              />
+            </FormField>
             <p className="form-required-note">
               <span aria-hidden="true">*</span> {t.requiredNote}
             </p>
@@ -379,56 +483,6 @@ function Inquiry({
                 placeholder={t.emailPlaceholder}
               />
             </FormField>
-            <div className="form-row">
-              <FormField
-                id="inquiry-date"
-                label={t.date}
-                icon="calendar"
-                required
-              >
-                <input
-                  id="inquiry-date"
-                  name="date"
-                  type="date"
-                  min={today || undefined}
-                  max={lastDate}
-                  required
-                  value={details.date}
-                  onChange={(e) => change("date", e.target.value)}
-                />
-              </FormField>
-              <FormField
-                id="inquiry-participants"
-                label={t.participants}
-                icon="people"
-                required
-              >
-                <input
-                  id="inquiry-participants"
-                  name="participants"
-                  type="number"
-                  min="1"
-                  max="100"
-                  required
-                  value={details.participants}
-                  onChange={(e) => change("participants", e.target.value)}
-                />
-              </FormField>
-            </div>
-            {date && (capacity > 0 || closedOn(date)) && (
-              <p
-                className={
-                  "slot-note" +
-                  (closedOn(date) || placesLeft === 0 ? " is-full" : "")
-                }
-              >
-                {closedOn(date)
-                  ? sl.closedDate
-                  : placesLeft
-                    ? sl.leftFor(placesLeft)
-                    : sl.fullDate}
-              </p>
-            )}
             <FormField
               id="inquiry-notes"
               label={t.notes}
@@ -470,8 +524,11 @@ function Inquiry({
           <dl className="plan-summary-list">
             {[
               [p.activity, label],
-              ...(lines.length
-                ? [[p.package, lines.map(lineText).join("\n")]]
+              ...(mainLines.length
+                ? [[p.package, mainLines.map(lineText).join("\n")]]
+                : []),
+              ...(addOnLines.length
+                ? [[p.addOnsLabel, addOnLines.map(lineText).join("\n")]]
                 : []),
               [p.date, dateText],
               [p.participants, p.people(Number(details.participants))],
@@ -663,6 +720,16 @@ export default function ActivityDetail({
   // participants unless their quantity was changed by hand.
   const p = dict.payment;
   const packages = payableItems(content.priceList, activityKey);
+  // Add-ons are items of the other price lists (gear rental, cameras,
+  // Zanclus services) offered beside the main packages.
+  const addOns = addOnItems(content.priceList, activityKey);
+  const offers = [
+    ...packages.map((item) => ({ ...item, key: "p" + item.index })),
+    ...addOns.map((item) => ({ ...item, key: "a:" + item.id, addOn: true })),
+  ];
+  const offerOf = (key) => offers.find((item) => item.key === key);
+  const sourceOf = (group) =>
+    dict.shop.teaser.groups[group]?.[0] ?? labels[group] ?? p.extrasSource;
   const ready = Boolean(payments?.ready) && packages.length > 0;
   const [cart, setCart] = useState([]);
   const [participants, setParticipants] = useState(1);
@@ -671,24 +738,28 @@ export default function ActivityDetail({
   const checkoutRef = useRef(null);
   const people = (value) =>
     Math.min(quantityLimit, Math.max(1, Math.round(Number(value)) || 1));
-  const byPerson = (index) =>
-    perPerson(packages.find((item) => item.index === index)?.unit?.id);
-  function changeCart(index, delta) {
+  const byPerson = (key) => perPerson(offerOf(key)?.unit?.id);
+  function changeCart(key, delta) {
     // More people on a per-person package means more participants.
-    const line = cart.find((entry) => entry.index === index);
-    if (line && byPerson(index) && line.quantity + delta > people(participants))
+    const line = cart.find((entry) => entry.key === key);
+    if (
+      line &&
+      byPerson(key) &&
+      !offerOf(key)?.addOn &&
+      line.quantity + delta > people(participants)
+    )
       setParticipants(Math.min(quantityLimit, line.quantity + delta));
     setCart((current) => {
-      const line = current.find((entry) => entry.index === index);
+      const line = current.find((entry) => entry.key === key);
       const quantity = line
         ? line.quantity + delta
         : delta > 0
-          ? byPerson(index)
+          ? byPerson(key)
             ? people(participants)
             : 1
           : 0;
       if (quantity <= 0) return current.filter((entry) => entry !== line);
-      const next = { index, quantity: Math.min(quantityLimit, quantity) };
+      const next = { key, quantity: Math.min(quantityLimit, quantity) };
       return line
         ? current.map((entry) => (entry === line ? next : entry))
         : [...current, next];
@@ -699,25 +770,59 @@ export default function ActivityDetail({
     setParticipants(value);
     setCart((current) =>
       current.map((line) =>
-        byPerson(line.index) && line.quantity === before
+        byPerson(line.key) && line.quantity === before
           ? { ...line, quantity: people(value) }
           : line,
       ),
     );
   }
   const cartTotal = cart.reduce(
-    (sum, line) =>
-      sum +
-      (packages.find((item) => item.index === line.index)?.price ?? 0) *
-        line.quantity,
+    (sum, line) => sum + (offerOf(line.key)?.price ?? 0) * line.quantity,
     0,
   );
+  const addOnCount = cart.filter((line) => offerOf(line.key)?.addOn).length;
+  // A stepper on a price or add-on card, or its add button.
+  const cardCart = (key, name) => {
+    const count = cart.find((line) => line.key === key)?.quantity ?? 0;
+    return count ? (
+      <span className="shop-item-stepper">
+        <button
+          type="button"
+          aria-label={count > 1 ? p.less(name) : p.remove(name)}
+          onClick={() => changeCart(key, -1)}
+        >
+          −
+        </button>
+        <span aria-live="polite">{count}</span>
+        <button
+          type="button"
+          aria-label={p.more(name)}
+          disabled={count >= quantityLimit}
+          onClick={() => changeCart(key, 1)}
+        >
+          +
+        </button>
+      </span>
+    ) : (
+      <button
+        type="button"
+        className="shop-item-add"
+        aria-label={p.addLabel(name)}
+        onClick={() => changeCart(key, 1)}
+      >
+        <CartIcon /> {p.addToCart}
+      </button>
+    );
+  };
   // Checkout opens over the page, on the first field still to fill.
   function checkout() {
     checkoutRef.current?.showModal();
-    const empty = [
-      ...document.querySelectorAll("#inquiry input[required]"),
-    ].find((input) => !input.value);
+    // Without a date, the guest picks one from the places left per day.
+    const empty = date
+      ? [...document.querySelectorAll("#inquiry input[required]")].find(
+          (input) => !input.value,
+        )
+      : document.querySelector("#inquiry-date .slot-day:not([disabled])");
     empty?.focus();
   }
   const helpURL = `https://wa.me/${content.contact.whatsapp}?text=${encodeURIComponent(t.helpMessage(labels[activityKey]))}`;
@@ -867,9 +972,6 @@ export default function ActivityDetail({
                         const payable = packages.some(
                           (entry) => entry.index === index,
                         );
-                        const count =
-                          cart.find((line) => line.index === index)?.quantity ??
-                          0;
                         return (
                           <li key={index}>
                             <span>
@@ -885,45 +987,50 @@ export default function ActivityDetail({
                                   <small>{priceText(item.unit, locale)}</small>
                                 )}
                               </b>
-                              {payable &&
-                                (count ? (
-                                  <span className="shop-item-stepper">
-                                    <button
-                                      type="button"
-                                      aria-label={
-                                        count > 1
-                                          ? p.less(name)
-                                          : p.remove(name)
-                                      }
-                                      onClick={() => changeCart(index, -1)}
-                                    >
-                                      −
-                                    </button>
-                                    <span aria-live="polite">{count}</span>
-                                    <button
-                                      type="button"
-                                      aria-label={p.more(name)}
-                                      disabled={count >= quantityLimit}
-                                      onClick={() => changeCart(index, 1)}
-                                    >
-                                      +
-                                    </button>
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className="shop-item-add"
-                                    aria-label={p.addLabel(name)}
-                                    onClick={() => changeCart(index, 1)}
-                                  >
-                                    <CartIcon /> {p.addToCart}
-                                  </button>
-                                ))}
+                              {payable && cardCart("p" + index, name)}
                             </div>
                           </li>
                         );
                       })}
                     </ul>
+                    {addOns.length > 0 && (
+                      <div
+                        className="activity-addons"
+                        id="add-ons"
+                        aria-labelledby="add-ons-title"
+                      >
+                        <h3 id="add-ons-title">
+                          {p.addOnsTitle(labels[activityKey])}
+                        </h3>
+                        <p>{p.addOnsIntro}</p>
+                        <ul className="activity-addon-list">
+                          {addOns.map((item) => {
+                            const name = priceText(item.name, locale);
+                            const info = priceText(item.info, locale);
+                            return (
+                              <li key={item.id}>
+                                <span>
+                                  <em>{sourceOf(item.group)}</em>
+                                  <strong>{name}</strong>
+                                  {info && <small>{info}</small>}
+                                </span>
+                                <div className="activity-price-foot">
+                                  <b>
+                                    {formatIDR(item.price, locale)}
+                                    {priceText(item.unit, locale) && (
+                                      <small>
+                                        {priceText(item.unit, locale)}
+                                      </small>
+                                    )}
+                                  </b>
+                                  {cardCart("a:" + item.id, name)}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
                     <p className="activity-price-note">{dict.prices.note}</p>
                   </section>
                 )}
@@ -994,7 +1101,9 @@ export default function ActivityDetail({
                     <p>
                       {packages.length ? (
                         <>
-                          <strong>{p.cartBar(cart.length)}</strong>
+                          <strong>
+                            {p.cartBar(cart.length - addOnCount, addOnCount)}
+                          </strong>
                           <small>
                             {`${ready ? p.total : p.estimate} ${formatIDR(cartTotal, locale)}`}
                           </small>
@@ -1046,6 +1155,7 @@ export default function ActivityDetail({
                 activity={activity}
                 contact={content.contact}
                 packages={packages}
+                offers={offers}
                 cart={cart}
                 changeCart={changeCart}
                 participants={participants}
@@ -1053,6 +1163,8 @@ export default function ActivityDetail({
                 date={date}
                 changeDate={setDate}
                 slots={slots}
+                events={calendar?.events ?? []}
+                calendarToday={today}
                 lastDate={lastDate}
                 payments={payments}
                 locale={locale}

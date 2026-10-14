@@ -52,6 +52,8 @@ const englishErrors = {
     "This date is fully booked. Please choose another date.",
   "Pilih minimal satu paket dari daftar harga.":
     "Choose at least one package from the price list.",
+  "Add-on dipesan bersama minimal satu paket utama.":
+    "Add-ons come with at least one main package.",
   "Pilih alat terlebih dahulu.": "Choose your gear first.",
   "Lama sewa harus 1–30 hari.": "Rental days must be between 1 and 30.",
   "Jumlah setiap alat harus 1–10.": "Each item can be 1 to 10 units.",

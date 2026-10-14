@@ -7,7 +7,7 @@ import {
   paymentActivities,
   quantityLimit,
 } from "./payment-model.js";
-import { priceText, rentalGroups } from "./price-list.js";
+import { addOnItems, priceText, rentalGroups } from "./price-list.js";
 import { itemLocked, pageLocked } from "./developer.js";
 
 export class PricingError extends Error {
@@ -41,7 +41,9 @@ function checkDate(date, { today, last }) {
 }
 
 // Packages from the activity's price list, chosen like a cart: one or more
-// lines { item, itemName, quantity } (or the single item of earlier pages).
+// lines { item, itemName, quantity } (or the single item of earlier pages),
+// with add-ons from the other lists as { addOn, itemName, quantity }. An
+// add-on comes with at least one package.
 function activityOrder(content, input, window, locks) {
   const activity = input.activity;
   if (
@@ -60,28 +62,35 @@ function activityOrder(content, input, window, locks) {
         },
       ];
   const packages = payableItems(content.priceList, activity);
-  if (!chosen.length || chosen.length > packages.length)
+  const addOns = addOnItems(content.priceList, activity);
+  if (!chosen.length || chosen.length > packages.length + addOns.length)
     fail("Pilih minimal satu paket dari daftar harga.", 400);
   const participants = whole(input.participants, 1, quantityLimit);
   if (!participants) fail("Jumlah paket dan peserta harus 1–30.", 400);
   const seen = new Set();
   const lines = chosen.map((line) => {
-    const item = packages.find((entry) => entry.index === Number(line?.item));
+    const addOn = line?.addOn !== undefined;
+    const item = addOn
+      ? addOns.find((entry) => entry.id === line.addOn)
+      : packages.find((entry) => entry.index === Number(line?.item));
     if (!item || priceText(item.name, "id") !== line.itemName)
       fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
-    if (seen.has(item.index))
-      fail("Pilih minimal satu paket dari daftar harga.", 400);
-    seen.add(item.index);
+    const id = addOn ? `addon-${item.id}` : `${activity}-${item.index}`;
+    if (seen.has(id)) fail("Pilih minimal satu paket dari daftar harga.", 400);
+    seen.add(id);
     const quantity = whole(line.quantity, 1, quantityLimit);
     if (!quantity) fail("Jumlah paket dan peserta harus 1–30.", 400);
     return {
-      id: `${activity}-${item.index}`,
+      id,
       name: item.name,
       unit: item.unit,
       price: item.price,
       quantity,
+      addOn,
     };
   });
+  if (lines.every((line) => line.addOn))
+    fail("Add-on dipesan bersama minimal satu paket utama.", 400);
   const date = checkDate(input.date, window);
   return {
     program: activity,

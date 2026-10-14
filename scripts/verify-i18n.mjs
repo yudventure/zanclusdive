@@ -176,12 +176,33 @@ try {
     .click();
   await page.fill("#inquiry-name", "Alex");
   await page.fill("#inquiry-whatsapp", "+44 7700 900123");
-  await page.fill("#inquiry-date", today);
+  // The date comes from the days in the checkout, in English.
+  assert.match(await page.textContent(".plan-dates legend"), /^Date & places/);
+  assert.equal(
+    await page.textContent(".plan-dates .slot-note"),
+    "Pick a date in the calendar.",
+  );
+  await page.locator(`.plan-dates .slot-day[data-date="${today}"]`).click();
+  assert.match(await page.textContent(".plan-dates .slot-note"), / chosen\.$/);
   await page.fill("#inquiry-participants", "3");
   await page.locator(".activity-form button[type=submit]").click();
   const inquiry = await page.textContent(".activity-message-preview");
   assert.ok(inquiry.startsWith("Hi Zanclus! I'd like to ask about Sea trip."));
   assert.ok(inquiry.includes("Participants: 3 people"));
+  assert.ok(inquiry.includes(today));
+
+  // Diving add-ons in English.
+  await page.goto(base + "/diving", { waitUntil: "networkidle" });
+  assert.equal(await page.textContent("#add-ons-title"), "Diving add-ons");
+  await page.locator(".activity-prices .shop-item-add").first().click();
+  await page
+    .locator(".activity-addon-list")
+    .getByRole("button", { name: "Add Underwater camera TG-5 to the cart" })
+    .click();
+  assert.match(
+    await page.textContent(".activity-cart-bar"),
+    /Cart · 1 package \+ 1 add-on/,
+  );
 
   await page.goto(base + "/dive-shop?mode=rental", {
     waitUntil: "networkidle",

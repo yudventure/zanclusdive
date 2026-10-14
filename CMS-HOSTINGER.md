@@ -208,6 +208,25 @@ Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga
 
 Halaman **Tentang kami** memuat bagian **Profil perusahaan** setelah cerita: nama perusahaan (PT Zanclus Daya Cipta), profil singkat, kalimat sorotan, portofolio (sampai 6 bidang), dan mitra kerja, dalam bahasa Indonesia dan Inggris. Isinya diubah di **Situs web → Tentang kami → Profil perusahaan**. Halaman yang tersimpan sebelum bagian ini ada otomatis memakai isi bawaan dari company profile.
 
+## Daftar harga, add-on, dan slot di keranjang
+
+Daftar harga diatur di **Situs web → Daftar harga**. Setiap aktivitas (Diving, Snorkeling, Trip laut) berisi layanan utamanya. Untuk diving itu Discovery Dive dan Pemandu selam.
+
+Alat dan layanan lain ditawarkan sebagai **add-on**, diambil dari daftar yang sudah ada, jadi nama dan harganya cukup diubah di satu tempat.
+
+- Daftar sewa Dive Shop (masker, scuba, tabung, dive computer, kamera) tetap tampil di Dive Shop beranda dan bisa dipakai sebagai add-on.
+- Daftar baru **Layanan tambahan** untuk layanan yang bukan alat, misalnya dokumentasi, antar jemput mobil, atau catering. Daftar ini hanya tampil sebagai add-on.
+- Di tab setiap aktivitas ada kartu **Add-on**. Centang item dari daftar lain (maksimal 16), lalu tekan **Simpan add-on**.
+- Item yang dihapus dari daftarnya otomatis hilang dari add-on.
+
+Di halaman aktivitas, add-on tampil di bawah paket utama dengan nama daftar asalnya, dan di jendela checkout di bagian **Mau tambah sesuatu?**. Add-on dibayar bersama minimal satu paket utama. Harga dihitung ulang di server dari CMS.
+
+Saat pembaruan ini dipasang, daftar diving yang tersimpan dipindahkan sekali secara otomatis. Perlengkapan scuba masuk ke daftar sewa BCD, regulator & wetsuit. Dokumentasi masuk ke Layanan tambahan dengan harga yang tersimpan. Tabung dan dive computer memakai item yang sudah ada di daftar sewa. Semuanya, ditambah tiga kamera sewa, menjadi add-on diving. Snorkeling dan trip tidak diubah dan belum punya add-on.
+
+Antar jemput mobil dan catering belum ada di daftar harga mana pun. Tambahkan di **Layanan tambahan** dengan harganya, lalu centang di kartu Add-on aktivitas yang menawarkannya.
+
+Di jendela checkout, tanggal dipilih dari kalender **Tanggal & slot** tepat di bawah keranjang. Setiap tanggal menunjukkan sisa slot hari itu, tanggal penuh atau tutup tidak bisa dipilih, dan di bawahnya tertulis tanggal yang dipilih beserta sisa slotnya.
+
 ## Email tamu & invoice
 
 Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia atau Inggris. Email dikirim lewat SMTP yang sama dengan kode OTP (lihat tabel `SMTP_*` di atas). Balasan tamu masuk ke email di menu **Kontak & sosial media**.
