@@ -75,14 +75,14 @@ try {
     .getByRole("heading", { name: "Bayar langsung dengan Midtrans" })
     .waitFor();
   assert.match(
-    await a.locator(".admin-pay-checks").textContent(),
+    await a.locator(".admin-dev-master .admin-pay-checks").textContent(),
     /Server key Midtrans terpasang[\s\S]*Mode sandbox/,
   );
   assert.match(
     await a.locator(".admin-pay-urls").textContent(),
     /\/api\/payments\/midtrans/,
   );
-  await a.locator(".admin-dev-switch").click();
+  await a.locator(".admin-dev-master .admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   // The admin checks that Midtrans accepts the server key.
@@ -599,7 +599,7 @@ try {
 
   // Switched off again: no pay option.
   await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
-  await a.locator(".admin-dev-switch").click();
+  await a.locator(".admin-dev-master .admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   await page.goto(base + "/diving", { waitUntil: "networkidle" });
