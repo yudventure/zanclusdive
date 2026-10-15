@@ -432,6 +432,14 @@ try {
   );
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const strip = page.locator(".partner-marquee");
+  // The logos load lazily, once the strip comes near the screen.
+  await strip.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => {
+    const img = document.querySelector(
+      '.partner-marquee li:not([aria-hidden]) img[alt="CMAS"]',
+    );
+    return img?.complete && img.naturalWidth > 0;
+  });
   // On the site: the emblem in colour, 44 px tall and loaded; PADI white.
   const emblem = await strip
     .locator('li:not([aria-hidden]) img[alt="CMAS"]')
