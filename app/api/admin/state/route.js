@@ -17,6 +17,7 @@ import {
   midtransProduction,
   keyIssues,
   lastMidtransError,
+  midtransKeyEnding,
 } from "../../../../src/server/midtrans.js";
 import {
   paymentsBlockedByDemo,
@@ -72,6 +73,7 @@ export async function GET(request) {
               production: midtransProduction(),
               blockedByDemo: paymentsBlockedByDemo(),
               issues: keyIssues(),
+              keyEnding: midtransKeyEnding(),
               lastError: lastMidtransError(),
             }
           : null,

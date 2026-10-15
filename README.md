@@ -242,13 +242,13 @@ Aktifkan dari `/admin/payments` setelah environment berikut diisi di hPanel (lal
 
 | Variabel | Isi |
 | --- | --- |
-| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys). Mulai dengan key sandbox `SB-Mid-server-…`. |
-| `MIDTRANS_PRODUCTION` | `true` hanya saat memakai server key production. Kosongkan untuk sandbox. |
+| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys), dan hanya key itu. Mulai dengan key sandbox `SB-Mid-server-…`. |
+| `MIDTRANS_PRODUCTION` | Variabel tersendiri berisi `true`, hanya saat memakai server key production (`Mid-server-…`). Kosongkan untuk sandbox. Jangan ditulis di belakang server key. |
 | `NEXT_PUBLIC_SITE_URL` | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar. |
 
 Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-kamu/api/payments/midtrans`. Halaman kembali `/payment/finish` dikirim otomatis pada setiap transaksi; mengisinya juga sebagai Finish Redirect URL tidak masalah. Pembayaran sungguhan (`MIDTRANS_PRODUCTION=true`) hanya ditawarkan bila `CMS_MODE=mysql`, karena penyimpanan demo bersifat sementara. Tidak ada tabel baru; data pembayaran tersimpan di catatan reservasi.
 
-**Jika tamu melihat "Pembayaran belum bisa dibuat"**, buka `/admin/payments`. Di sana tampil peringatan bila server key keliru (Client Key, atau key sandbox/production tidak sesuai mode), **penolakan terakhir dari Midtrans** beserta kodenya, dan tombol **Tes koneksi Midtrans** untuk mengecek server key langsung dari server website. Kode 401 berarti server key ditolak: pakai Server Key (bukan Client Key), key sandbox berawalan `SB-Mid-server-` tanpa `MIDTRANS_PRODUCTION`, key production berawalan `Mid-server-` dengan `MIDTRANS_PRODUCTION=true`, tanpa spasi atau tanda kutip, lalu deploy ulang. Tanda kutip atau spasi di awal/akhir key diabaikan otomatis.
+**Jika tamu melihat "Pembayaran belum bisa dibuat"**, buka `/admin/payments`. Di sana tampil peringatan bila server key keliru (Client Key, atau key sandbox/production tidak sesuai mode), **penolakan terakhir dari Midtrans** beserta kodenya, dan tombol **Tes koneksi Midtrans** untuk mengecek server key langsung dari server website. Kode 401 berarti server key ditolak: pakai Server Key (bukan Client Key), key sandbox berawalan `SB-Mid-server-` tanpa `MIDTRANS_PRODUCTION`, key production berawalan `Mid-server-` dengan `MIDTRANS_PRODUCTION=true`, tanpa spasi atau tanda kutip, lalu deploy ulang. Tanda kutip atau spasi di awal/akhir key diabaikan otomatis. Teks lain yang ikut tertempel di kolom key (misalnya `=true)` dari `MIDTRANS_PRODUCTION=true`) disebut di halaman itu, begitu juga isi `MIDTRANS_PRODUCTION` selain `true`. Halaman itu juga menampilkan empat karakter terakhir key yang dibaca server, untuk memastikan perubahan di hPanel sudah sampai setelah deploy ulang.
 
 Uji tanpa menghubungi Midtrans: jalankan server demo dengan `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499`, lalu `BASE_URL=… node scripts/verify-payments.mjs`. Tes memakai Midtrans tiruan (`scripts/mock-midtrans.mjs`).
 

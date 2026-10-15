@@ -1589,8 +1589,12 @@
   background: #fff0ec;
   color: #a73428;
 }
+/* Heading, the refusal, then what it means, each on its own line. */
+.admin-pay-last-error strong,
 .admin-pay-last-error span {
   display: block;
+}
+.admin-pay-last-error span {
   margin-top: 4px;
 }
 .admin-agent-kind {

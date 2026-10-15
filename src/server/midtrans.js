@@ -1,19 +1,21 @@
 import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
+import {
+  cleanKey,
+  keyEnding,
+  keyIssues as keyIssuesFor,
+  productionOn,
+} from "../midtrans-key.js";
 
 // Midtrans Snap and Core API. Keys come from the hosting environment:
 // MIDTRANS_SERVER_KEY, and MIDTRANS_PRODUCTION=true for real payments
 // (sandbox otherwise). MIDTRANS_SNAP_URL / MIDTRANS_API_URL point local
 // tests at a stand-in server.
 // Spaces or quotes pasted around the key in hPanel are ignored.
-const key = () =>
-  (process.env.MIDTRANS_SERVER_KEY ?? "")
-    .trim()
-    .replace(/^(["'])(.*)\1$/, "$2")
-    .trim();
+const key = () => cleanKey(process.env.MIDTRANS_SERVER_KEY);
 export const midtransConfigured = () => key().length > 0;
 export const midtransProduction = () =>
-  process.env.MIDTRANS_PRODUCTION === "true";
+  productionOn(process.env.MIDTRANS_PRODUCTION);
 function base(kind) {
   const custom =
     kind === "snap"
@@ -32,25 +34,15 @@ const headers = () => ({
 });
 
 // Mistakes in the hosting settings that Midtrans would reject: a client key
-// in place of the server key, or a key for the other mode.
-export function keyIssues() {
-  const value = key();
-  if (!value) return [];
-  const issues = [];
-  if (/^(SB-)?Mid-client-/i.test(value))
-    issues.push(
-      "Yang diisi di MIDTRANS_SERVER_KEY adalah Client Key. Isi dengan Server Key dari dashboard Midtrans (Settings → Access Keys).",
-    );
-  else if (!midtransProduction() && /^Mid-server-/i.test(value))
-    issues.push(
-      "Server key ini untuk mode production, tetapi MIDTRANS_PRODUCTION belum true. Untuk uji coba pakai server key sandbox (awalan SB-Mid-server-), atau isi MIDTRANS_PRODUCTION=true untuk pembayaran sungguhan.",
-    );
-  else if (midtransProduction() && /^SB-/i.test(value))
-    issues.push(
-      "Server key sandbox (awalan SB-) dipakai dengan MIDTRANS_PRODUCTION=true. Hapus MIDTRANS_PRODUCTION untuk uji coba, atau pakai server key production.",
-    );
-  return issues;
-}
+// in place of the server key, text pasted with the key, or a key for the
+// other mode.
+export const keyIssues = () =>
+  keyIssuesFor(
+    process.env.MIDTRANS_SERVER_KEY,
+    process.env.MIDTRANS_PRODUCTION,
+  );
+export const midtransKeyEnding = () =>
+  keyEnding(process.env.MIDTRANS_SERVER_KEY);
 
 // The last answer Midtrans refused, shown in the admin to find the cause.
 export const lastMidtransError = () =>

@@ -355,15 +355,15 @@
   border: 1px solid #dce7e0;
   border-radius: 22px;
   position: sticky;
-  top: 115px;
+  top: calc(var(--header-h) + 19px);
   min-width: 0;
-  scroll-margin-top: 115px;
+  scroll-margin-top: calc(var(--header-h) + 19px);
 }
 /* Taller than the window, the order panel scrolls by itself. */
 @media (min-width: 901px) {
   .shop-order {
-    max-height: max(420px, calc(100vh - 135px));
-    max-height: max(420px, calc(100dvh - 135px));
+    max-height: max(420px, calc(100vh - var(--header-h) - 39px));
+    max-height: max(420px, calc(100dvh - var(--header-h) - 39px));
     overflow-y: auto;
     scroll-padding: 12px 0 24px;
     scrollbar-width: thin;
@@ -1116,7 +1116,7 @@
     position: absolute;
     right: 28px;
     left: 28px;
-    top: 85px;
+    top: calc(var(--header-h) - 12px);
     padding: 12px;
     background: #062b3bf5;
     border-radius: 18px;

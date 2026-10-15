@@ -50,13 +50,15 @@
   --lime: #bef4a5;
   --teal: #20b8b1;
   --display: "Plus Jakarta Sans", Inter, Arial, sans-serif;
+  /* Height of the fixed site header; sticky panels sit below it. */
+  --header-h: 108px;
 }
 * {
   box-sizing: border-box;
 }
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 110px;
+  scroll-padding-top: calc(var(--header-h) + 14px);
 }
 body {
   margin: 0;
@@ -127,7 +129,7 @@ img {
   background: #052130;
 }
 .site-header {
-  height: 96px;
+  height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -140,16 +142,16 @@ img {
   color: white;
   background: transparent;
   backdrop-filter: none;
-  border-bottom: 1px solid transparent;
   transition:
     background 0.25s ease,
-    border-color 0.25s ease,
+    box-shadow 0.25s ease,
     backdrop-filter 0.25s ease;
 }
+/* Scrolled, the header gets a soft shadow instead of a line. */
 .site-header.is-scrolled {
   background: rgba(3, 27, 41, 0.65);
   backdrop-filter: blur(20px);
-  border-bottom-color: #b3d8e51a;
+  box-shadow: 0 10px 30px #01121b38;
 }
 .header-actions {
   display: flex;
@@ -162,12 +164,12 @@ img {
   align-items: center;
 }
 .language-switch a {
-  min-width: 34px;
-  min-height: 34px;
+  min-width: 38px;
+  min-height: 38px;
   display: grid;
   place-items: center;
   color: #a9c3cb;
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
 }
@@ -187,17 +189,18 @@ img {
   background: #bef4a5;
   color: #062b3b;
   gap: 10px;
-  font-size: 13px;
+  padding: 14px 24px;
+  font-size: 14.5px;
   font-weight: 600;
-  min-height: 44px;
+  min-height: 50px;
   box-shadow: 0 5px 24px #0002;
 }
 .quick-service:hover {
   background: #d4ffc1;
 }
 .quick-service svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
 }
 .button.quick-service span {
@@ -208,8 +211,9 @@ img {
   flex-shrink: 0;
 }
 .brand img {
-  width: 176px;
-  height: 44px;
+  width: 232px;
+  height: auto;
+  aspect-ratio: 4;
 }
 nav {
   display: flex;
@@ -218,16 +222,16 @@ nav {
 /* Plain links; the active page is marked with an underline. */
 nav a {
   position: relative;
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 10px 15px;
+  font-size: 15px;
   color: #dbe7eb;
   transition: color 0.2s ease;
 }
 nav a::after {
   content: "";
   position: absolute;
-  left: 14px;
-  right: 14px;
+  left: 15px;
+  right: 15px;
   bottom: 2px;
   height: 2px;
   border-radius: 2px;
@@ -253,6 +257,27 @@ nav a.active::after {
   nav a::after {
     left: 11px;
     right: 11px;
+  }
+}
+/* Small laptops keep the large menu on one line with less room per link. */
+@media (max-width: 1300px) {
+  .site-header {
+    gap: 16px;
+  }
+  .brand img {
+    width: 204px;
+  }
+  nav a {
+    padding: 10px 9px;
+    font-size: 14px;
+  }
+  nav a::after {
+    left: 9px;
+    right: 9px;
+  }
+  .quick-service {
+    padding: 12px 18px;
+    font-size: 14px;
   }
 }
 /* In the opened mobile menu the underline is a short accent. */
@@ -1074,7 +1099,7 @@ nav.open a::after {
     gap: 14px;
   }
   .brand img {
-    width: 132px;
+    width: 204px;
   }
   nav a {
     padding: 9px 10px;
@@ -1119,20 +1144,19 @@ nav.open a::after {
   }
 }
 @media (max-width: 700px) {
-  html {
-    scroll-padding-top: 90px;
+  :root {
+    --header-h: 84px;
   }
   .site-header {
-    height: 76px;
     padding: 0 16px;
     gap: 10px;
   }
   .site-header .brand {
     margin-right: auto;
   }
+  /* As wide as the WhatsApp button and the menu button leave room for. */
   .brand img {
-    width: 132px;
-    height: 33px;
+    width: min(164px, calc(100vw - 236px));
   }
   .quick-service {
     padding: 10px 12px;
@@ -1173,7 +1197,7 @@ nav.open a::after {
     position: absolute;
     right: 20px;
     left: 20px;
-    top: 70px;
+    top: calc(var(--header-h) - 6px);
     border-radius: 18px;
     background: #042a3cef;
     padding: 12px;
@@ -1384,8 +1408,7 @@ nav.open a::after {
     padding: 0 12px;
   }
   .site-header .brand img {
-    width: 116px;
-    height: 29px;
+    width: min(140px, calc(100vw - 214px));
   }
   .quick-service {
     padding: 9px 10px;
@@ -1411,8 +1434,7 @@ nav.open a::after {
     gap: 6px;
   }
   .site-header .brand img {
-    width: 104px;
-    height: 26px;
+    width: 136px;
   }
   .language-switch a {
     min-width: 30px;

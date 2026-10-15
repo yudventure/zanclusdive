@@ -97,7 +97,7 @@ try {
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   // The admin checks that Midtrans accepts the server key.
   await a.getByRole("button", { name: "Tes koneksi Midtrans" }).click();
-  await a.getByText("Berhasil: Midtrans menerima server key ini.").waitFor();
+  await a.getByText("Berhasil. Midtrans menerima server key ini.").waitFor();
 
   // A guest who is sure pays for two Discovery Dives for today.
   await page.goto(base + "/diving", { waitUntil: "networkidle" });

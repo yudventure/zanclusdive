@@ -53,7 +53,7 @@
 /* Sticky section menu */
 .activity-jump-links {
   position: sticky;
-  top: 96px;
+  top: var(--header-h);
   z-index: 5;
   gap: 8px;
   margin: 0 -40px;
@@ -263,7 +263,7 @@
 /* Plan card: shorter head */
 .activity-inquiry {
   --inquiry-bg: #f4f8f5;
-  top: 172px;
+  top: calc(var(--header-h) + 76px);
   padding: 26px;
 }
 /* The plan form stays in view while the page scrolls. When it is taller
@@ -272,8 +272,8 @@
    instead of after scrolling to the end of the page. */
 @media (min-width: 901px) {
   .activity-inquiry {
-    max-height: max(420px, calc(100vh - 192px));
-    max-height: max(420px, calc(100dvh - 192px));
+    max-height: max(420px, calc(100vh - var(--header-h) - 96px));
+    max-height: max(420px, calc(100dvh - var(--header-h) - 96px));
     overflow-y: auto;
     scroll-padding: 12px 0 96px;
     scrollbar-width: thin;
@@ -353,7 +353,7 @@
     padding: 11px 14px;
   }
   .activity-jump-links {
-    top: 76px;
+    top: var(--header-h);
     margin: 0 -24px;
     padding: 12px 24px;
     flex-wrap: nowrap;
@@ -1048,7 +1048,7 @@ nav.open .nav-sub a {
    scheduled activities, and the best months below. */
 .slot-calendar {
   position: sticky;
-  top: 172px;
+  top: calc(var(--header-h) + 76px);
   padding: 24px;
   border: 1px solid #dbe8e1;
   border-radius: 24px;
@@ -1056,8 +1056,8 @@ nav.open .nav-sub a {
 }
 @media (min-width: 901px) {
   .slot-calendar {
-    max-height: max(420px, calc(100vh - 192px));
-    max-height: max(420px, calc(100dvh - 192px));
+    max-height: max(420px, calc(100vh - var(--header-h) - 96px));
+    max-height: max(420px, calc(100dvh - var(--header-h) - 96px));
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #b9cfc4 transparent;

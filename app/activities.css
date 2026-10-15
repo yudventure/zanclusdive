@@ -410,7 +410,7 @@
 }
 .activity-inquiry {
   position: sticky;
-  top: 116px;
+  top: calc(var(--header-h) + 20px);
   padding: 30px;
   border: 1px solid #dbe8df;
   border-radius: 22px;

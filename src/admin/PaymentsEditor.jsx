@@ -62,9 +62,9 @@ const witTime = (value) =>
 // What a Midtrans refusal usually means, in plain words.
 function explain(status) {
   if (status === 401)
-    return "Midtrans menolak server key. Pastikan yang diisi Server Key (bukan Client Key), modenya sesuai (sandbox: awalan SB-Mid-server-, production: Mid-server- dengan MIDTRANS_PRODUCTION=true), tanpa spasi atau tanda kutip, lalu deploy ulang.";
+    return "Midtrans menolak server key. Pastikan MIDTRANS_SERVER_KEY berisi Server Key saja (bukan Client Key), tanpa teks lain di depan atau di belakangnya. Key berawalan SB-Mid-server- untuk uji coba. Key berawalan Mid-server- untuk pembayaran sungguhan dan butuh variabel MIDTRANS_PRODUCTION dengan isi true. Setelah mengubah hPanel, deploy ulang.";
   if (status === 0)
-    return "Server website tidak bisa terhubung ke Midtrans. Coba lagi beberapa menit lagi; jika tetap gagal, tanyakan ke Hostinger apakah koneksi keluar ke midtrans.com diizinkan.";
+    return "Server website tidak bisa terhubung ke Midtrans. Coba lagi beberapa menit lagi. Jika tetap gagal, tanyakan ke Hostinger apakah koneksi keluar ke midtrans.com diizinkan.";
   if (status >= 500) return "Midtrans sedang bermasalah. Coba lagi nanti.";
   return "Midtrans menolak data pembayaran. Kirim pesan ini ke pengembang website.";
 }
@@ -92,16 +92,16 @@ function ConnectionTest({ disabled }) {
   const text = !result
     ? null
     : result.ok
-      ? "Berhasil: Midtrans menerima server key ini."
+      ? "Berhasil. Midtrans menerima server key ini."
       : result.reason === "missing"
         ? "Server key belum diisi di hosting."
         : result.reason === "key"
-          ? "Gagal (401): " + explain(401)
+          ? "Gagal (401). " + explain(401)
           : result.reason === "network"
-            ? "Gagal: " +
+            ? "Gagal. " +
               explain(0) +
               (result.message ? ` (${result.message})` : "")
-            : `Gagal (${result.status}): ${result.message || explain(result.status)}`;
+            : `Gagal (${result.status}). ${result.message || explain(result.status)}`;
   return (
     <div className="admin-pay-test">
       <button
@@ -179,13 +179,14 @@ export default function PaymentsEditor({
         <ul className="admin-pay-checks">
           <li className={configured ? "ok" : "warn"}>
             {configured
-              ? "Server key Midtrans terpasang di hosting."
+              ? "Server key Midtrans terpasang di hosting" +
+                (status.keyEnding ? `, berakhiran ${status.keyEnding}.` : ".")
               : "Server key Midtrans belum diisi. Tambahkan MIDTRANS_SERVER_KEY di environment variable hPanel, lalu deploy ulang. Tombol bayar belum tampil sebelum key diisi."}
           </li>
           <li className={status?.production ? "ok" : "info"}>
             {status?.production
               ? "Mode production: pembayaran sungguhan."
-              : "Mode sandbox (uji coba): tidak ada uang sungguhan. Isi MIDTRANS_PRODUCTION=true dan server key production saat siap menerima pembayaran."}
+              : "Mode sandbox (uji coba), tidak ada uang sungguhan. Untuk pembayaran sungguhan, isi server key production lalu tambahkan variabel MIDTRANS_PRODUCTION dengan isi true di hPanel."}
           </li>
           {(status?.issues ?? []).map((issue) => (
             <li className="warn" key={issue}>
@@ -197,7 +198,7 @@ export default function PaymentsEditor({
               <strong>
                 Penolakan terakhir dari Midtrans{" "}
                 {stages[status.lastError.stage] ?? ""} (
-                {witTime(status.lastError.at)}):
+                {witTime(status.lastError.at)})
               </strong>{" "}
               {status.lastError.status ? `${status.lastError.status} · ` : ""}
               {status.lastError.message || "tanpa keterangan"}
@@ -216,8 +217,8 @@ export default function PaymentsEditor({
         {origin && (
           <div className="admin-pay-urls">
             <p className="admin-subtle">
-              Di dashboard Midtrans (Settings → Payment → Notification URL),
-              tempel alamat berikut supaya pembayaran langsung tercatat:
+              Tempel dua alamat di bawah ini di dashboard Midtrans (Settings →
+              Payment → Notification URL) supaya pembayaran langsung tercatat.
             </p>
             <CopyField
               label="Payment Notification URL"
