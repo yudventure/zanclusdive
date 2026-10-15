@@ -1,23 +1,316 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { calendarText, eventDates } from "../calendar-model.js";
-import { dictionary, localeHref } from "../i18n.js";
+import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import { photoSrcSet } from "../photography.js";
+import FormField from "./FormField.jsx";
+
+const newRequestId = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+    (c ^ ((Math.random() * 16) >> (c / 4))).toString(16),
+  );
+
+// The sign-up form for an event: the guest's details, the group size and,
+// for an event without dates, the start they would like. It is saved as a
+// reservation request; the team confirms on WhatsApp.
+function EventSignup({
+  banner,
+  title,
+  dates,
+  price,
+  whatsapp,
+  locale,
+  dialog,
+}) {
+  const t = dictionary(locale).home.eventBanner;
+  const f = t.form;
+  const min = banner.minPeople || 1;
+  const [fields, setFields] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    people: String(min),
+    date: "",
+    notes: "",
+  });
+  const [requestId, setRequestId] = useState(newRequestId);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(null);
+  const people = Math.max(0, Math.round(Number(fields.people)) || 0);
+  const set = (key) => (e) => {
+    setFields((current) => ({ ...current, [key]: e.target.value }));
+    setError("");
+  };
+  async function submit(event) {
+    event.preventDefault();
+    if (people < min) {
+      setError(f.tooFew(min));
+      return;
+    }
+    if (!banner.startDate && !fields.date) {
+      setError(f.needDate);
+      return;
+    }
+    setSending(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/events?locale=${locale}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId,
+          event: banner.title.id,
+          name: fields.name.trim(),
+          phone: fields.phone.trim(),
+          email: fields.email.trim(),
+          people,
+          date: fields.date,
+          notes: fields.notes.trim(),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || f.failed);
+      setDone(result);
+    } catch (err) {
+      setError(err.message || f.failed);
+    } finally {
+      setSending(false);
+    }
+  }
+  function again() {
+    setDone(null);
+    setRequestId(newRequestId());
+  }
+  const today = new Date().toLocaleDateString("en-CA");
+  return (
+    <dialog
+      ref={dialog}
+      className="modal activity-checkout event-signup"
+      aria-labelledby="event-signup-title"
+      onClose={() => done && again()}
+    >
+      <button
+        type="button"
+        className="close-modal"
+        aria-label={f.close}
+        onClick={() => dialog.current?.close()}
+      >
+        ×
+      </button>
+      <p className="eyebrow">{f.kicker}</p>
+      <h2 id="event-signup-title">{f.title(title)}</h2>
+      <div className="event-signup-offer">
+        {banner.image && <img src={banner.image} alt="" loading="lazy" />}
+        <dl>
+          <div>
+            <dt>{f.dates}</dt>
+            <dd>{dates || f.datesOpen}</dd>
+          </div>
+          {price && (
+            <div>
+              <dt>{f.pricePer}</dt>
+              <dd>
+                <strong>{price}</strong>
+                {calendarText(banner.note, locale) && (
+                  <small>{calendarText(banner.note, locale)}</small>
+                )}
+              </dd>
+            </div>
+          )}
+          {min > 1 && (
+            <div>
+              <dt>{f.group}</dt>
+              <dd>{t.minPeople(min)}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
+      {done ? (
+        <div className="event-signup-done" role="status">
+          <h3>{f.doneTitle}</h3>
+          <p>{f.doneText(done.reference)}</p>
+          <a
+            className="button lime"
+            href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(
+              f.message(title, done.reference, done.participants),
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {f.confirm} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      ) : (
+        <form className="activity-form" onSubmit={submit} noValidate>
+          <p className="form-required-note">
+            <span aria-hidden="true">*</span> {f.required}
+          </p>
+          <FormField id="event-name" label={f.name} icon="user" required>
+            <input
+              id="event-name"
+              autoComplete="name"
+              maxLength={80}
+              required
+              value={fields.name}
+              onChange={set("name")}
+            />
+          </FormField>
+          <FormField
+            id="event-phone"
+            label={f.whatsapp}
+            icon="whatsapp"
+            required
+          >
+            <input
+              id="event-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              maxLength={30}
+              required
+              placeholder="+62 812 3456 7890"
+              value={fields.phone}
+              onChange={set("phone")}
+            />
+          </FormField>
+          <FormField
+            id="event-email"
+            label="Email"
+            icon="email"
+            optional={f.optional}
+          >
+            <input
+              id="event-email"
+              type="email"
+              autoComplete="email"
+              maxLength={200}
+              value={fields.email}
+              onChange={set("email")}
+            />
+          </FormField>
+          <div className="form-row">
+            <FormField
+              id="event-people"
+              label={f.people}
+              icon="people"
+              required
+            >
+              <input
+                id="event-people"
+                type="number"
+                min={min}
+                max="30"
+                required
+                value={fields.people}
+                onChange={set("people")}
+              />
+            </FormField>
+            {!banner.startDate && (
+              <FormField
+                id="event-date"
+                label={f.pickDate}
+                icon="calendar"
+                required
+              >
+                <input
+                  id="event-date"
+                  type="date"
+                  min={today}
+                  required
+                  value={fields.date}
+                  onChange={set("date")}
+                />
+              </FormField>
+            )}
+          </div>
+          <FormField
+            id="event-notes"
+            label={f.notes}
+            icon="note"
+            optional={f.optional}
+          >
+            <textarea
+              id="event-notes"
+              rows="3"
+              maxLength={1000}
+              placeholder={f.notesPlaceholder}
+              value={fields.notes}
+              onChange={set("notes")}
+            />
+          </FormField>
+          {banner.amount > 0 && people >= 1 && (
+            <p className="pay-total">
+              <span>
+                {f.total}
+                <span className="plan-breakdown">
+                  {price} × {people}
+                </span>
+              </span>
+              <strong>{formatIDR(banner.amount * people, locale)}</strong>
+            </p>
+          )}
+          {error && (
+            <p className="activity-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="button dark" type="submit" disabled={sending}>
+            {sending ? f.sending : f.submit} <span aria-hidden="true">→</span>
+          </button>
+          <p className="activity-form-note">{f.note}</p>
+        </form>
+      )}
+    </dialog>
+  );
+}
 
 function Banner({ banner, whatsapp, locale }) {
   const t = dictionary(locale).home.eventBanner;
   const flyer = useRef(null);
+  const signup = useRef(null);
   const text = (value) => calendarText(value, locale);
   const title = text(banner.title);
   const dates = eventDates(banner.startDate, banner.endDate, locale);
-  // A page of the site opens in the visitor's language.
-  const href = !banner.link
-    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(t.message(title, dates))}`
+  // Prices are in rupiah, per person.
+  const price =
+    banner.amount > 0
+      ? `${formatIDR(banner.amount, locale)} / ${t.perPerson}`
+      : "";
+  const details = [
+    text(banner.note),
+    banner.minPeople > 1 ? t.minPeople(banner.minPeople) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  // One button: the owner's link, or the sign-up form. A page of the site
+  // opens in the visitor's language.
+  const link = !banner.link
+    ? ""
     : banner.link.startsWith("/") && !/^\/(id|en)(\/|$)/.test(banner.link)
       ? localeHref(locale, banner.link)
       : banner.link;
-  const external = !banner.link || banner.link.startsWith("https://");
+  const external = link.startsWith("https://");
   const open = () => flyer.current?.showModal();
+  const register = () => {
+    flyer.current?.close();
+    signup.current?.showModal();
+    signup.current?.querySelector("input")?.focus();
+  };
+  const action = link ? (
+    <a
+      className="button lime small"
+      href={link}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {t.more} <span aria-hidden="true">↗</span>
+    </a>
+  ) : (
+    <button type="button" className="button lime small" onClick={register}>
+      {t.register} <span aria-hidden="true">→</span>
+    </button>
+  );
   return (
     <aside
       className={"event-banner" + (banner.background ? " has-photo" : "")}
@@ -77,28 +370,13 @@ function Banner({ banner, whatsapp, locale }) {
         {text(banner.subtitle) && <p>{text(banner.subtitle)}</p>}
       </div>
       <div className="event-banner-offer">
-        {(text(banner.price) || text(banner.note)) && (
+        {(price || details) && (
           <p className="event-banner-price">
-            {text(banner.price) && <strong>{text(banner.price)}</strong>}
-            {text(banner.note) && <small>{text(banner.note)}</small>}
+            {price && <strong>{price}</strong>}
+            {details && <small>{details}</small>}
           </p>
         )}
-        <div className="event-banner-actions">
-          <a
-            className="button lime small"
-            href={href}
-            {...(external
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
-          >
-            {banner.link ? t.more : t.book} <span aria-hidden="true">↗</span>
-          </a>
-          {banner.image && (
-            <button type="button" className="event-banner-flyer" onClick={open}>
-              {t.flyer}
-            </button>
-          )}
-        </div>
+        <div className="event-banner-actions">{action}</div>
       </div>
       {banner.image && (
         <dialog
@@ -115,16 +393,19 @@ function Banner({ banner, whatsapp, locale }) {
             ×
           </button>
           <img src={banner.image} alt={t.flyerAlt(title)} />
-          <a
-            className="button lime"
-            href={href}
-            {...(external
-              ? { target: "_blank", rel: "noopener noreferrer" }
-              : {})}
-          >
-            {banner.link ? t.more : t.book} <span aria-hidden="true">↗</span>
-          </a>
+          {action}
         </dialog>
+      )}
+      {!link && (
+        <EventSignup
+          banner={banner}
+          title={title}
+          dates={dates}
+          price={price}
+          whatsapp={whatsapp}
+          locale={locale}
+          dialog={signup}
+        />
       )}
     </aside>
   );

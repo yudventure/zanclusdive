@@ -52,6 +52,8 @@ const englishErrors = {
     "This date is fully booked. Please choose another date.",
   "Pilih minimal satu paket dari daftar harga.":
     "Choose at least one package from the price list.",
+  "Event ini sudah tidak menerima pendaftaran. Muat ulang halaman.":
+    "This event is no longer taking sign-ups. Please reload the page.",
   "Add-on dipesan bersama minimal satu paket utama.":
     "Add-ons come with at least one main package.",
   "Pilih alat terlebih dahulu.": "Choose your gear first.",
@@ -73,6 +75,8 @@ const englishErrors = {
 };
 export function bookingErrorMessage(message, locale) {
   if (locale !== "en") return message;
+  const least = /^Event ini untuk minimal (\d+) peserta/.exec(message);
+  if (least) return `This event is for groups of at least ${least[1]}.`;
   const left = /^Slot tanggal ini tinggal (\d+) orang/.exec(message);
   if (left)
     return `Only ${left[1]} ${left[1] === "1" ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`;

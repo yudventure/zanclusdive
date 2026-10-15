@@ -1,7 +1,6 @@
 // Zanclus activity calendar page: dated activities, a month by month season
 // guide, popular dive spots and environmental care plans. Editable in the
 // CMS; texts carry Indonesian and English.
-import { bannerPhotos } from "./photography.js";
 
 export const eventTypes = ["dive", "course", "eco", "community"];
 export const eventTypeLabels = {
@@ -29,14 +28,16 @@ const event = (date, type, place, title, description) => ({
 
 // Wide banners above the experience cards on the homepage, shown only while
 // an event is on: from showFrom (or at once) until the event's endDate.
-// Without a link the button opens WhatsApp with the event's name. A
-// background photo fills the banner behind the text; image is the flyer.
+// The price is in rupiah per person; the one button opens a sign-up form,
+// or the link when one is set. A background photo can fill the banner
+// behind the text; image is the flyer.
 export const blankBanner = () => ({
   enabled: false,
   badge: { id: "EVENT", en: "EVENT" },
   title: { id: "", en: "" },
   subtitle: { id: "", en: "" },
-  price: { id: "", en: "" },
+  amount: 0,
+  minPeople: 1,
   note: { id: "", en: "" },
   startDate: "",
   endDate: "",
@@ -45,49 +46,23 @@ export const blankBanner = () => ({
   background: "",
   link: "",
 });
-// A draft from the Zanclus dive trip flyer, off until dates are set.
+// The Zanclus dive trip, on from the start at its special price. Without
+// dates it shows until switched off and guests pick their date.
+export const diveTripPrice = 27500000;
 export const sampleBanner = () => ({
   ...blankBanner(),
+  enabled: true,
   title: t("Dive Trip with Zanclus", "Dive Trip with Zanclus"),
   subtitle: t(
     "Raja Ampat The Last Paradise · 8 hari 7 malam · 15 log dive",
     "Raja Ampat, The Last Paradise · 8 days 7 nights · 15 logged dives",
   ),
-  price: t("$1.680 / pax", "$1,680 / pax"),
-  note: t("Minimal 4 pax", "Minimum 4 pax"),
+  amount: diveTripPrice,
+  minPeople: 4,
+  note: t("Harga spesial", "Special price"),
   image: "/assets/photos/event-dive-trip.webp",
 });
-// Two banners on from the start, with the owner's photos behind the text,
-// then the dive trip draft. Without dates they show until switched off.
-export const defaultBanners = () => [
-  {
-    ...blankBanner(),
-    enabled: true,
-    badge: t("DISCOVERY DIVE", "DISCOVERY DIVE"),
-    title: t("Menyelam pertama di Raja Ampat", "Your first dive in Raja Ampat"),
-    subtitle: t(
-      "2x selam bersama pemandu Zanclus. Gratis dokumentasi untuk grup lebih dari 4 orang.",
-      "2 dives with a Zanclus guide. Free documentation for groups over 4.",
-    ),
-    price: t("Rp 1.200.000 / orang", "IDR 1,200,000 / person"),
-    background: bannerPhotos.turtle,
-    link: "/diving#prices",
-  },
-  {
-    ...blankBanner(),
-    enabled: true,
-    badge: t("FUN DIVE", "FUN DIVE"),
-    title: t("Jelajahi gua dan dinding karang", "Explore caves and reef walls"),
-    subtitle: t(
-      "Pemandu selam Zanclus, 2x selam dalam satu hari.",
-      "A Zanclus dive guide, 2 dives in one day.",
-    ),
-    price: t("Rp 750.000 / hari", "IDR 750,000 / day"),
-    background: bannerPhotos.cave,
-    link: "/diving#prices",
-  },
-  sampleBanner(),
-];
+export const defaultBanners = () => [sampleBanner()];
 export const defaultCalendar = {
   events: [
     event(
@@ -378,6 +353,14 @@ function bannerURL(value, label, internal) {
     throw new Error(`${label} pada banner event tidak valid.`);
   return url;
 }
+// Whole rupiah or people; an empty field is 0.
+function whole(value, min, max, label) {
+  const n =
+    value === "" || value === undefined || value === null ? 0 : Number(value);
+  if (!Number.isSafeInteger(n) || n < min || n > max)
+    throw new Error(`${label} pada banner event tidak valid.`);
+  return n;
+}
 function validateBanner(b) {
   const date = (value, label) => {
     const out = String(value ?? "").trim();
@@ -390,7 +373,8 @@ function validateBanner(b) {
     badge: text(b?.badge, "Label banner", 24, false),
     title: text(b?.title, "Judul banner", 80, true),
     subtitle: text(b?.subtitle, "Keterangan banner", 140, false),
-    price: text(b?.price, "Harga banner", 40, false),
+    amount: whole(b?.amount, 0, 1e9, "Harga per orang"),
+    minPeople: whole(b?.minPeople ?? 1, 1, 30, "Minimal peserta"),
     note: text(b?.note, "Catatan banner", 60, false),
     startDate: date(b?.startDate, "Tanggal mulai"),
     endDate: date(b?.endDate, "Tanggal selesai"),
@@ -404,23 +388,60 @@ function validateBanner(b) {
   return banner;
 }
 
-// Older CMS documents gain the calendar defaults. One saved before the photo
-// banners held only the dive trip draft; while it is untouched it becomes
-// the default banners. A draft the owner changed stays as it is.
-const bannerFields = Object.keys(blankBanner()).filter(
-  (k) => k !== "background",
-);
-const untouchedDraft = (banners) =>
-  banners?.length === 1 &&
-  !banners[0]?.background &&
-  JSON.stringify(bannerFields.map((k) => banners[0]?.[k] ?? "")) ===
-    JSON.stringify(bannerFields.map((k) => sampleBanner()[k]));
+// Older CMS documents gain the calendar defaults. Saved banners are brought
+// up to date once:
+// - the two photo banners shipped for a day, untouched, are taken out
+//   (the owner wanted the photos in the flyer, not new banners);
+// - the dive trip, priced in dollars as text before, gets its rupiah price
+//   and minimum group. Left as the untouched draft, it is switched on.
+const retiredBanners = [
+  "Menyelam pertama di Raja Ampat",
+  "Jelajahi gua dan dinding karang",
+];
+const retired = (b) =>
+  retiredBanners.includes(b?.title?.id) &&
+  /^\/assets\/photos\/banner-/.test(b?.background ?? "") &&
+  !b.startDate &&
+  !b.endDate;
+function upgradeTrip(b) {
+  const sample = sampleBanner();
+  const untouched = !b.enabled && !b.startDate && !b.endDate && !b.showFrom;
+  const rest = { ...b };
+  delete rest.price;
+  return {
+    ...rest,
+    enabled: b.enabled || untouched,
+    amount: diveTripPrice,
+    minPeople: 4,
+    // "Minimal 4 pax" now comes from the minimum group.
+    note: !b.note || b.note.id === "Minimal 4 pax" ? sample.note : b.note,
+  };
+}
+function upgradeBanners(banners) {
+  let changed = false;
+  const list = [];
+  for (const b of banners) {
+    if (retired(b)) {
+      changed = true;
+      continue;
+    }
+    if (b?.title?.id === sampleBanner().title.id && !(b.amount > 0)) {
+      changed = true;
+      list.push(upgradeTrip(b));
+    } else list.push(b);
+  }
+  return changed ? list : banners;
+}
 export function withCalendar(content) {
   const calendar = content.calendar;
   if (!calendar)
     return { ...content, calendar: structuredClone(defaultCalendar) };
-  if (calendar.banners && !untouchedDraft(calendar.banners)) return content;
-  return { ...content, calendar: { ...calendar, banners: defaultBanners() } };
+  const banners = calendar.banners
+    ? upgradeBanners(calendar.banners)
+    : defaultBanners();
+  return banners === calendar.banners
+    ? content
+    : { ...content, calendar: { ...calendar, banners } };
 }
 
 function text(value, label, max, required) {

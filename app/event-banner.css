@@ -137,19 +137,6 @@
   white-space: nowrap;
   color: #062b3b;
 }
-.event-banner-flyer {
-  padding: 6px 0;
-  border: 0;
-  background: none;
-  color: #fff;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.event-banner-flyer:focus-visible,
 .event-banner-photo:focus-visible {
   outline: 3px solid #c8f28a;
   outline-offset: 3px;
@@ -226,15 +213,18 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-  /* Price and button on one row; the photo opens the flyer. */
+  /* The rupiah price, then the one button across the banner; the photo
+     opens the flyer. */
   .event-banner-offer {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
   .event-banner-actions {
-    justify-self: end;
+    justify-self: stretch;
   }
-  .event-banner-flyer {
-    display: none;
+  .event-banner-actions .button {
+    flex: 1;
+    justify-content: center;
   }
   .event-banner-price strong {
     padding: 3px 10px;
@@ -347,4 +337,79 @@
   .event-banner > .event-banner-bg {
     transition: none;
   }
+}
+
+/* The event sign-up window: what the event is, then the guest's details. */
+.event-signup-offer {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #eef6f2;
+}
+.event-signup-offer:not(:has(img)) {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 14px 16px;
+}
+.event-signup-offer img {
+  width: 96px;
+  height: 120px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 12px;
+}
+.event-signup-offer dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.event-signup-offer dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.event-signup-offer dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #062b3b;
+}
+.event-signup-offer dd strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+.event-signup-offer dd small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f8f8a;
+}
+.event-signup .activity-form .button[type="submit"] {
+  width: 100%;
+  justify-content: center;
+}
+.event-signup-done {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #e5f4ea;
+}
+.event-signup-done h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.event-signup-done p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #33525a;
+}
+.event-signup-done .button {
+  justify-self: start;
 }

@@ -142,10 +142,13 @@ export default function CalendarEditor({
             tanggal <b>Mulai tampil</b> (atau langsung) sampai{" "}
             <b>Tanggal selesai</b> event, lalu hilang sendiri. Tanpa tanggal
             selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil
-            bersamaan. <b>Foto latar</b> mengisi banner di belakang tulisan,
-            sedangkan <b>flyer</b> tampil kecil di kiri dan bisa dibuka penuh.
-            Tanpa link, tombolnya membuka WhatsApp dengan nama event. Kolom
-            English yang kosong memakai teks Indonesia.
+            bersamaan. <b>Flyer</b> tampil kecil di kiri dan bisa dibuka penuh.
+            <b>Foto latar</b> yang opsional mengisi banner di belakang tulisan.
+            Harga ditulis dalam rupiah per orang. Banner punya satu tombol yang
+            membuka formulir pendaftaran event. Pendaftaran masuk ke Reservasi
+            sebagai Trip laut yang menunggu konfirmasi. Bila link diisi,
+            tombolnya membuka link itu. Kolom English yang kosong memakai teks
+            Indonesia.
           </p>
         ) : (
           <p className="admin-subtle">
@@ -189,18 +192,18 @@ export default function CalendarEditor({
                 <div className="admin-gallery-item admin-banner-item">
                   <div className="admin-banner-photos">
                     <PhotoField
-                      label="Foto latar banner"
-                      value={banner.background}
-                      media={media}
-                      placePhoto={placePhoto}
-                      onChange={(url) => set({ background: url })}
-                    />
-                    <PhotoField
-                      label="Flyer event (opsional)"
+                      label="Flyer event"
                       value={banner.image}
                       media={media}
                       placePhoto={placePhoto}
                       onChange={(url) => set({ image: url })}
+                    />
+                    <PhotoField
+                      label="Foto latar banner (opsional)"
+                      value={banner.background}
+                      media={media}
+                      placePhoto={placePhoto}
+                      onChange={(url) => set({ background: url })}
                     />
                   </div>
                   <div className="admin-form-grid">
@@ -239,7 +242,34 @@ export default function CalendarEditor({
                         onChange={(e) => set({ showFrom: e.target.value })}
                       />
                     </Field>
-                    <Field label="Link tombol (kosong = WhatsApp)">
+                    <Field label="Harga per orang (Rp)">
+                      <input
+                        type="number"
+                        min="0"
+                        max="1000000000"
+                        value={banner.amount || ""}
+                        onChange={(e) =>
+                          set({
+                            amount:
+                              e.target.value === ""
+                                ? 0
+                                : Number(e.target.value),
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Minimal peserta">
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={banner.minPeople || 1}
+                        onChange={(e) =>
+                          set({ minPeople: Number(e.target.value) || 1 })
+                        }
+                      />
+                    </Field>
+                    <Field label="Link tombol (kosong = formulir pendaftaran)">
                       <input
                         maxLength={1200}
                         placeholder="/id/trip atau https://…"
@@ -250,8 +280,7 @@ export default function CalendarEditor({
                     {[
                       ["title", "Judul", 80],
                       ["subtitle", "Keterangan singkat", 140],
-                      ["price", "Harga (mis. $1.680 / pax)", 40],
-                      ["note", "Catatan (mis. Minimal 4 pax)", 60],
+                      ["note", "Catatan (mis. Harga spesial)", 60],
                       ["badge", "Label kecil", 24],
                     ].flatMap(([field, label, max]) =>
                       ["id", "en"].map((lang) => (

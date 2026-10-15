@@ -136,36 +136,38 @@ try {
     (await context.request.get(base + "/id/calendar/x")).status(),
     404,
   );
-  // Event banners: two with the owner's photos are on from the start; the
-  // dive trip draft shows only while its event is on, with its flyer.
+  // Event banner: the dive trip is on from the start, priced in rupiah per
+  // person, with one button that opens its sign-up form.
+  const days = (n) =>
+    new Date(Date.parse(today + "T12:00:00Z") + n * 864e5)
+      .toISOString()
+      .slice(0, 10);
+  const state = async () =>
+    (await context.request.get(base + "/api/admin/state")).json();
   await page.setViewportSize({ width: 1440, height: 950 });
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const shown = page.locator(".event-banner");
   await shown.first().scrollIntoViewIfNeeded();
-  assert.equal(await shown.count(), 2);
-  assert.equal(await page.locator(".event-banner.has-photo").count(), 2);
-  for (const bg of await page.locator(".event-banner-bg").all()) {
-    await bg.scrollIntoViewIfNeeded();
-    await page.waitForFunction(
-      (img) => img.complete && img.naturalWidth > 0,
-      await bg.elementHandle(),
-    );
-  }
+  assert.equal(await shown.count(), 1);
+  assert.equal(await page.locator(".event-banner.has-photo").count(), 0);
   assert.match(
-    await shown.first().textContent(),
-    /DISCOVERY DIVE[\s\S]*Menyelam pertama di Raja Ampat[\s\S]*Rp 1\.200\.000 \/ orang/,
+    await shown.textContent(),
+    /EVENT[\s\S]*Dive Trip with Zanclus[\s\S]*Raja Ampat The Last Paradise · 8 hari 7 malam[\s\S]*Rp\s?27\.500\.000 \/ orang[\s\S]*Harga spesial · Minimal 4 orang/,
   );
-  assert.equal(
+  assert.doesNotMatch(await shown.textContent(), /\$|pax/);
+  // One button, no WhatsApp link straight from the banner.
+  assert.deepEqual(
     await shown
-      .first()
-      .getByRole("link", { name: "Info lengkap" })
-      .getAttribute("href"),
-    "/id/diving#prices",
+      .locator(".event-banner-offer")
+      .locator("a, button")
+      .allTextContents(),
+    ["Daftar sekarang →"],
   );
-  for (const box of await Promise.all(
-    (await shown.all()).map((b) => b.boundingBox()),
-  ))
-    assert.ok(box.height <= 180, "photo banners stay short");
+  assert.equal(await shown.locator('a[href*="wa.me"]').count(), 0);
+  assert.ok(
+    (await shown.boundingBox()).height <= 170,
+    "the banner stays short",
+  );
   // Between the section title and the experience cards.
   assert.equal(
     await page.evaluate(() =>
@@ -175,128 +177,197 @@ try {
     ),
     true,
   );
+  // The flyer opens from its photo, and its button leads to the same form.
+  await shown.locator(".event-banner-photo").click();
+  const flyer = page.locator(".event-flyer[open]");
+  await flyer.waitFor();
+  assert.equal(
+    await flyer
+      .locator("img")
+      .evaluate((img) => img.complete && img.naturalWidth >= 1080),
+    true,
+  );
   await page.screenshot({
-    path: (process.env.SHOT_DIR || "artifacts") + "/photo-banners-desktop.png",
-    clip: {
-      x: 0,
-      y: Math.max(0, (await shown.first().boundingBox()).y - 160),
-      width: 1440,
-      height: 560,
+    path: (process.env.SHOT_DIR || "artifacts") + "/event-flyer.png",
+  });
+  await flyer.getByRole("button", { name: "Daftar sekarang" }).click();
+  const signup = page.locator("dialog.event-signup[open]");
+  await signup.waitFor();
+  assert.equal(await page.locator(".event-flyer[open]").count(), 0);
+  assert.equal(
+    await signup.locator("h2").textContent(),
+    "Ikut Dive Trip with Zanclus",
+  );
+  assert.match(
+    await signup.locator(".event-signup-offer").textContent(),
+    /Pilih tanggal mulaimu di bawah[\s\S]*Rp\s?27\.500\.000 \/ orang[\s\S]*Minimal 4 orang/,
+  );
+  // The minimum group and a start date are checked; the total follows.
+  await signup.locator("#event-name").fill("Tamu Event");
+  await signup.locator("#event-phone").fill("+62 812 3456 7890");
+  await signup.locator("#event-email").fill("event@example.com");
+  await signup.locator("#event-people").fill("3");
+  await signup.getByRole("button", { name: "Kirim pendaftaran" }).click();
+  assert.equal(
+    await signup.locator(".activity-error").textContent(),
+    "Event ini untuk minimal 4 peserta.",
+  );
+  await signup.locator("#event-people").fill("5");
+  assert.match(
+    await signup.locator(".pay-total").textContent(),
+    /Perkiraan biaya[\s\S]*× 5[\s\S]*Rp\s?137\.500\.000/,
+  );
+  await signup.getByRole("button", { name: "Kirim pendaftaran" }).click();
+  assert.equal(
+    await signup.locator(".activity-error").textContent(),
+    "Pilih tanggal mulai dulu.",
+  );
+  await signup.locator("#event-date").fill(days(30));
+  await signup.locator("#event-notes").fill("Open Water, 20 log dive");
+  await page.screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/event-signup.png",
+  });
+  await signup.getByRole("button", { name: "Kirim pendaftaran" }).click();
+  const done = signup.locator(".event-signup-done");
+  await done.waitFor();
+  const reference = (await done.textContent()).match(/ZC-[A-Z0-9]+/)[0];
+  const confirm = new URL(
+    await done
+      .getByRole("link", { name: "Kabari tim lewat WhatsApp" })
+      .getAttribute("href"),
+  );
+  assert.equal(confirm.hostname, "wa.me");
+  assert.match(
+    confirm.searchParams.get("text"),
+    new RegExp(
+      `mendaftar Dive Trip with Zanclus untuk 5 orang dengan kode ${reference}`,
+    ),
+  );
+  // It waits in the reservations as a sea trip request at the event price.
+  const signedUp = (await state()).bookings.find(
+    (b) => b.guestName === "Tamu Event",
+  );
+  assert.deepEqual(
+    [
+      signedUp.experience,
+      signedUp.status,
+      signedUp.source,
+      signedUp.startDate,
+      signedUp.participants,
+      signedUp.amount,
+      signedUp.email,
+    ],
+    ["trip", "pending", "website", days(30), 5, 137500000, "event@example.com"],
+  );
+  assert.match(
+    signedUp.notes,
+    /^Daftar event Dive Trip with Zanclus · tanggal pilihan tamu · Rp\s?27\.500\.000 \/ orang\nOpen Water, 20 log dive$/,
+  );
+  await page.keyboard.press("Escape");
+  // The API refuses another site and an event that is not showing.
+  assert.equal(
+    (
+      await context.request.post(base + "/api/events", {
+        headers: { Origin: "https://example.com" },
+        data: {},
+      })
+    ).status(),
+    403,
+  );
+  const unknown = await context.request.post(base + "/api/events?locale=en", {
+    headers,
+    data: {
+      requestId: "6f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b",
+      event: "Promo lain",
+      name: "X",
+      phone: "+62 812 3456 7890",
+      people: 4,
+      date: days(30),
     },
   });
+  assert.equal(unknown.status(), 409);
+  assert.equal(
+    (await unknown.json()).error,
+    "This event is no longer taking sign-ups. Please reload the page.",
+  );
+
+  // The admin: rupiah price and minimum group, then dates for the event.
   await page.goto(base + "/admin/events", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Banner event" }).click();
-  const banners = page.locator("fieldset.admin-price-item");
-  assert.equal(await banners.count(), 3);
-  assert.match(
-    await banners.first().locator("legend").textContent(),
-    /Tampil sekarang/,
-  );
-  const banner = banners.nth(2);
+  const banner = page.locator("fieldset.admin-price-item").first();
+  assert.equal(await page.locator("fieldset.admin-price-item").count(), 1);
+  assert.match(await banner.locator("legend").textContent(), /Tampil sekarang/);
   assert.equal(
-    await banner.getByLabel("Judul (Indonesia)").inputValue(),
-    "Dive Trip with Zanclus",
+    await banner.getByLabel("Harga per orang (Rp)").inputValue(),
+    "27500000",
   );
-  assert.match(await banner.locator("legend").textContent(), /Tidak tampil/);
-  const days = (n) =>
-    new Date(Date.parse(today + "T12:00:00Z") + n * 864e5)
-      .toISOString()
-      .slice(0, 10);
-  // The fun dive banner off, the dive trip on with its dates.
-  await banners.nth(1).getByLabel("Tampilkan di beranda").uncheck();
-  await banner.getByLabel("Tampilkan di beranda").check();
+  assert.equal(await banner.getByLabel("Minimal peserta").inputValue(), "4");
   await banner.getByLabel("Tanggal mulai event").fill(days(10));
   await banner
     .getByLabel("Tanggal selesai event (banner hilang setelahnya)")
     .fill(days(17));
   await page.getByRole("button", { name: "Simpan kalender" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
-  assert.match(await banner.locator("legend").textContent(), /Tampil sekarang/);
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   await shown.first().scrollIntoViewIfNeeded();
-  // The event with dates comes first, beside the discovery dive.
-  assert.deepEqual(await shown.locator("h3").allTextContents(), [
-    "Dive Trip with Zanclus",
-    "Menyelam pertama di Raja Ampat",
-  ]);
-  const trip = shown.first();
-  assert.match(
-    await trip.textContent(),
-    /EVENT[\s\S]*Raja Ampat The Last Paradise · 8 hari 7 malam[\s\S]*\$1\.680 \/ pax[\s\S]*Minimal 4 pax/,
-  );
   // Dates are written tight, without spaces round the dash.
-  assert.doesNotMatch(
-    await trip.locator(".event-banner-dates").textContent(),
-    /\s–|–\s/,
-  );
-  assert.ok((await trip.boundingBox()).height <= 170, "the banner stays short");
-  const book = new URL(
-    await trip
-      .getByRole("link", { name: "Daftar lewat WhatsApp" })
-      .getAttribute("href"),
-  );
-  assert.equal(book.hostname, "wa.me");
-  assert.match(
-    book.searchParams.get("text"),
-    /tertarik dengan Dive Trip with Zanclus \(.+\)/,
-  );
+  const pill = await shown.locator(".event-banner-dates").textContent();
+  assert.doesNotMatch(pill, /\s–|–\s/);
   await page.screenshot({
     path: (process.env.SHOT_DIR || "artifacts") + "/event-banner-desktop.png",
     clip: {
       x: 0,
-      y: Math.max(0, (await trip.boundingBox()).y - 160),
+      y: Math.max(0, (await shown.boundingBox()).y - 160),
       width: 1440,
-      height: 560,
+      height: 420,
     },
   });
-  await trip.getByRole("button", { name: "Lihat flyer", exact: true }).click();
-  const flyer = page.locator(".event-flyer[open]");
-  await flyer.waitFor();
-  assert.equal(
-    await flyer
-      .locator("img")
-      .evaluate((img) => img.complete && img.naturalWidth > 0),
-    true,
+  // A dated event has no date to pick.
+  await shown.getByRole("button", { name: "Daftar sekarang" }).click();
+  await signup.waitFor();
+  assert.equal(await signup.locator("#event-date").count(), 0);
+  assert.match(
+    await signup.locator(".event-signup-offer").textContent(),
+    new RegExp(pill),
   );
   await page.keyboard.press("Escape");
-  assert.equal(await page.locator(".event-flyer[open]").count(), 0);
   // English, and a phone.
   await page.goto(base + "/", { waitUntil: "networkidle" });
   assert.match(
-    await page.locator(".event-banner").first().textContent(),
-    /\$1,680 \/ pax[\s\S]*Minimum 4 pax[\s\S]*Book on WhatsApp/,
-  );
-  assert.match(
-    await page.locator(".event-banner").nth(1).textContent(),
-    /Your first dive in Raja Ampat[\s\S]*IDR 1,200,000 \/ person/,
-  );
-  assert.equal(
-    await page
-      .locator(".event-banner")
-      .nth(1)
-      .getByRole("link", { name: "Full details" })
-      .getAttribute("href"),
-    "/diving#prices",
+    await page.locator(".event-banner").textContent(),
+    /IDR\s?27,500,000 \/ person[\s\S]*Special price · Minimum 4 people[\s\S]*Sign up now/,
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/id", { waitUntil: "networkidle" });
-  const phone = page.locator(".event-banners");
+  const phone = page.locator(".event-banner");
   await phone.scrollIntoViewIfNeeded();
-  for (const box of await Promise.all(
-    (await page.locator(".event-banner").all()).map((b) => b.boundingBox()),
-  ))
-    assert.ok(box.height <= 260, "short on a phone too");
+  assert.ok((await phone.boundingBox()).height <= 280, "short on a phone too");
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
     "no sideways scroll with the banner",
   );
+  // Price and button do not overlap on a phone.
+  const [tag, button] = await Promise.all([
+    phone.locator(".event-banner-price strong").boundingBox(),
+    phone.getByRole("button", { name: "Daftar sekarang" }).boundingBox(),
+  ]);
+  assert.ok(tag.y + tag.height <= button.y, "the price sits above the button");
   await phone.screenshot({
     path: (process.env.SHOT_DIR || "artifacts") + "/event-banner-mobile.png",
   });
+  await phone.getByRole("button", { name: "Daftar sekarang" }).click();
+  await signup.waitFor();
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    "no sideways scroll with the sign-up form",
+  );
+  await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1440, height: 950 });
-  // A new photo is placed and saved in one step.
+  // A new flyer is placed and saved in one step.
   await page.goto(base + "/admin/events", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Banner event" }).click();
   const photo = await page.evaluate(async () => {
@@ -311,7 +382,6 @@ try {
     const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
     return [...new Uint8Array(await blob.arrayBuffer())];
   });
-  // Into the discovery dive's background photo.
   await page
     .locator("fieldset.admin-price-item")
     .first()
@@ -325,24 +395,21 @@ try {
   await page
     .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
     .waitFor({ timeout: 60000 });
-  const saved = await (
-    await context.request.get(base + "/api/admin/state")
-  ).json();
-  assert.match(saved.content.calendar.banners[0].background, /^\/api\/media\//);
+  const saved = await state();
+  assert.match(saved.content.calendar.banners[0].image, /^\/api\/media\//);
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   assert.match(
-    await page
-      .locator(".event-banner.has-photo .event-banner-bg")
-      .getAttribute("src"),
+    await page.locator(".event-banner-photo img").getAttribute("src"),
     /^\/api\/media\//,
   );
-  // Unsafe links are refused; after the event the banner is gone.
-  const current = await (
-    await context.request.get(base + "/api/admin/state")
-  ).json();
+  // Unsafe links and photos, and a price that is not whole rupiah, are
+  // refused; after the event the banner is gone.
+  const current = await state();
   for (const [field, value] of [
     ["link", "javascript:alert(1)"],
     ["background", "http://example.com/a.jpg"],
+    ["amount", 1.5],
+    ["minPeople", 0],
   ]) {
     const unsafe = structuredClone(current.content);
     unsafe.calendar.banners[0][field] = value;
@@ -354,13 +421,12 @@ try {
         })
       ).status(),
       400,
+      field,
     );
   }
   const over = structuredClone(current.content);
-  for (const b of over.calendar.banners) {
-    b.startDate = days(-9);
-    b.endDate = days(-1);
-  }
+  over.calendar.banners[0].startDate = days(-9);
+  over.calendar.banners[0].endDate = days(-1);
   assert.equal(
     (
       await context.request.put(base + "/api/admin/settings", {
@@ -375,7 +441,7 @@ try {
 
   assert.deepEqual(errors, []);
   console.log(
-    "PASS event banners (two photo banners on by default, the dive trip draft off until switched on with dates, event first, shown between the experiences title and cards while the event is on, short on desktop and phone, WhatsApp button with the event, flyer window, English, one-step background photo upload, unsafe link and photo refused, gone after the event), side calendar: old address redirects to the diving calendar, on every activity page with the best months on diving, daily places, spots, ocean care, admin adds an activity shown on today's cell and in the picked day, month navigation from this month, mobile without horizontal scroll.",
+    "PASS event banner (the dive trip on by default in rupiah with one button, flyer from its photo, sign-up form with minimum group, date and total saved as a sea trip request, WhatsApp after, API refusals, admin price and dates, shown between the experiences title and cards while the event is on, short on desktop and phone, WhatsApp button with the event, flyer window, English, one-step flyer upload, unsafe link, photo and price refused, gone after the event), side calendar: old address redirects to the diving calendar, on every activity page with the best months on diving, daily places, spots, ocean care, admin adds an activity shown on today's cell and in the picked day, month navigation from this month, mobile without horizontal scroll.",
   );
 } finally {
   await browser.close();
