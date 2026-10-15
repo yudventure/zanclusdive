@@ -140,9 +140,12 @@ export default function CalendarEditor({
             Banner lebar di beranda, di atas kartu Diving, Snorkeling, dan Trip
             laut. Banner hanya tampil bila <b>Tampilkan</b> dicentang, mulai
             tanggal <b>Mulai tampil</b> (atau langsung) sampai{" "}
-            <b>Tanggal selesai</b> event, lalu hilang sendiri. Maksimal 2 banner
-            tampil bersamaan. Tanpa link, tombolnya membuka WhatsApp dengan nama
-            event. Kolom English yang kosong memakai teks Indonesia.
+            <b>Tanggal selesai</b> event, lalu hilang sendiri. Tanpa tanggal
+            selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil
+            bersamaan. <b>Foto latar</b> mengisi banner di belakang tulisan,
+            sedangkan <b>flyer</b> tampil kecil di kiri dan bisa dibuka penuh.
+            Tanpa link, tombolnya membuka WhatsApp dengan nama event. Kolom
+            English yang kosong memakai teks Indonesia.
           </p>
         ) : (
           <p className="admin-subtle">
@@ -184,13 +187,22 @@ export default function CalendarEditor({
                   </span>
                 </legend>
                 <div className="admin-gallery-item admin-banner-item">
-                  <PhotoField
-                    label="Foto / flyer event"
-                    value={banner.image}
-                    media={media}
-                    placePhoto={placePhoto}
-                    onChange={(url) => set({ image: url })}
-                  />
+                  <div className="admin-banner-photos">
+                    <PhotoField
+                      label="Foto latar banner"
+                      value={banner.background}
+                      media={media}
+                      placePhoto={placePhoto}
+                      onChange={(url) => set({ background: url })}
+                    />
+                    <PhotoField
+                      label="Flyer event (opsional)"
+                      value={banner.image}
+                      media={media}
+                      placePhoto={placePhoto}
+                      onChange={(url) => set({ image: url })}
+                    />
+                  </div>
                   <div className="admin-form-grid">
                     <label className="admin-dev-choice admin-agent-wide">
                       <input

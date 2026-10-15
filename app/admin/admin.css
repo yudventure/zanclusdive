@@ -1615,6 +1615,16 @@
   object-fit: cover;
   object-position: top;
 }
+/* Background photo above the flyer, each with its own upload. */
+.admin-banner-photos {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+.admin-banner-photos .admin-image-slot:first-child img {
+  height: 120px;
+  object-position: center;
+}
 .admin-banner-state {
   margin-right: 10px;
   padding: 2px 10px;

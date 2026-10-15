@@ -109,25 +109,27 @@ Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jua
 
 ## Banner event di beranda
 
-Banner promosi lebar dan pendek tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner hanya muncul saat ada event.
+Banner promosi lebar dan pendek tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
 
 **Cara mengatur.** Buka `/admin/events` → tab **Banner event**. Isi setiap banner:
-- **Foto / flyer**: upload dari PC atau HP. Foto langsung terpasang dan tersimpan.
+- **Foto latar banner**: foto lebar yang mengisi banner di belakang tulisan, digelapkan di sisi tulisan supaya tetap terbaca.
+- **Flyer event** (opsional): tampil kecil di kiri dan bisa dibuka penuh.
+- Kedua foto di-upload dari PC atau HP, langsung terpasang dan tersimpan.
 - **Teks**: judul, keterangan singkat, harga (mis. `$1.680 / pax`), catatan (mis. `Minimal 4 pax`), dan label kecil (bawaan `EVENT`), dalam Indonesia dan English.
 - **Tanggal**: tanggal mulai dan selesai event, serta tanggal mulai tampil (opsional).
 - **Link tombol**: opsional, mis. `/id/trip` atau `https://…`.
 
 Simpan dengan **Simpan kalender**.
 
-**Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Maksimal 2 banner tampil bersamaan. Label di admin menunjukkan statusnya: *Tampil sekarang*, *Terjadwal / selesai*, atau *Tidak tampil*.
+**Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Tanpa tanggal selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil bersamaan, yang bertanggal lebih dulu. Label di admin menunjukkan statusnya: *Tampil sekarang*, *Terjadwal / selesai*, atau *Tidak tampil*.
 
 **Yang dilihat tamu.**
 - Tombol utama membuka WhatsApp dengan nama dan tanggal event. Bila link tombol diisi, tombol membuka **Info lengkap** di link itu.
 - Foto bisa diketuk untuk membuka flyer lengkap.
 
-**Ukuran.** Tinggi banner sekitar 140 px di desktop dan 180 px di HP.
+**Ukuran.** Tinggi banner sekitar 140 px di desktop dan 180 px di HP. Banner dengan foto latar sekitar 170 px di desktop dan 210 px di HP.
 
-**Draf bawaan.** Sudah ada satu draf dari flyer *Dive Trip with Zanclus* (8 hari 7 malam, $1.680/pax, minimal 4 pax). Draf ini belum tampil sampai tanggalnya diisi dan **Tampilkan di beranda** dicentang.
+**Banner bawaan.** Dua banner menyala sejak awal dengan foto pemilik (`public/assets/photos/banner-penyu.webp` dan `banner-gua.webp`, juga ada di pilihan foto bawaan), yaitu **Discovery Dive** (Rp 1.200.000 / orang) dan **Fun dive** bersama pemandu (Rp 750.000 / hari), keduanya menuju daftar harga diving. Lalu draf *Dive Trip with Zanclus* (8 hari 7 malam, $1.680/pax, minimal 4 pax) yang belum tampil sampai tanggalnya diisi dan **Tampilkan di beranda** dicentang. Konten yang tersimpan hanya dengan draf itu, belum diubah, otomatis mendapat banner bawaan ini (`withCalendar`). Draf yang sudah diubah atau daftar yang dikosongkan tidak disentuh.
 
 ## Halaman aktivitas
 

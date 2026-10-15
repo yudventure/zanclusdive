@@ -136,47 +136,36 @@ try {
     (await context.request.get(base + "/id/calendar/x")).status(),
     404,
   );
-  // Event banner: off by default, shown on the homepage only while the
-  // event is on, with its flyer.
+  // Event banners: two with the owner's photos are on from the start; the
+  // dive trip draft shows only while its event is on, with its flyer.
   await page.setViewportSize({ width: 1440, height: 950 });
   await page.goto(base + "/id", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".event-banner").count(), 0);
-  await page.goto(base + "/admin/events", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Banner event" }).click();
-  const banner = page.locator("fieldset.admin-price-item").first();
-  assert.equal(
-    await banner.getByLabel("Judul (Indonesia)").inputValue(),
-    "Dive Trip with Zanclus",
-  );
-  assert.match(await banner.locator("legend").textContent(), /Tidak tampil/);
-  const days = (n) =>
-    new Date(Date.parse(today + "T12:00:00Z") + n * 864e5)
-      .toISOString()
-      .slice(0, 10);
-  await banner.getByLabel("Tampilkan di beranda").check();
-  await banner.getByLabel("Tanggal mulai event").fill(days(10));
-  await banner
-    .getByLabel("Tanggal selesai event (banner hilang setelahnya)")
-    .fill(days(17));
-  await page.getByRole("button", { name: "Simpan kalender" }).click();
-  await page.getByText("Perubahan sudah tersimpan").waitFor();
-  assert.match(await banner.locator("legend").textContent(), /Tampil sekarang/);
-  await page.goto(base + "/id", { waitUntil: "networkidle" });
   const shown = page.locator(".event-banner");
-  await shown.scrollIntoViewIfNeeded();
-  assert.equal(await shown.count(), 1);
-  assert.equal(
-    await shown.locator("h3").textContent(),
-    "Dive Trip with Zanclus",
-  );
+  await shown.first().scrollIntoViewIfNeeded();
+  assert.equal(await shown.count(), 2);
+  assert.equal(await page.locator(".event-banner.has-photo").count(), 2);
+  for (const bg of await page.locator(".event-banner-bg").all()) {
+    await bg.scrollIntoViewIfNeeded();
+    await page.waitForFunction(
+      (img) => img.complete && img.naturalWidth > 0,
+      await bg.elementHandle(),
+    );
+  }
   assert.match(
-    await shown.textContent(),
-    /EVENT[\s\S]*Raja Ampat The Last Paradise · 8 hari 7 malam[\s\S]*\$1\.680 \/ pax[\s\S]*Minimal 4 pax/,
+    await shown.first().textContent(),
+    /DISCOVERY DIVE[\s\S]*Menyelam pertama di Raja Ampat[\s\S]*Rp 1\.200\.000 \/ orang/,
   );
-  assert.ok(
-    (await shown.boundingBox()).height <= 170,
-    "the banner stays short",
+  assert.equal(
+    await shown
+      .first()
+      .getByRole("link", { name: "Info lengkap" })
+      .getAttribute("href"),
+    "/id/diving#prices",
   );
+  for (const box of await Promise.all(
+    (await shown.all()).map((b) => b.boundingBox()),
+  ))
+    assert.ok(box.height <= 180, "photo banners stay short");
   // Between the section title and the experience cards.
   assert.equal(
     await page.evaluate(() =>
@@ -186,8 +175,63 @@ try {
     ),
     true,
   );
+  await page.screenshot({
+    path: (process.env.SHOT_DIR || "artifacts") + "/photo-banners-desktop.png",
+    clip: {
+      x: 0,
+      y: Math.max(0, (await shown.first().boundingBox()).y - 160),
+      width: 1440,
+      height: 560,
+    },
+  });
+  await page.goto(base + "/admin/events", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Banner event" }).click();
+  const banners = page.locator("fieldset.admin-price-item");
+  assert.equal(await banners.count(), 3);
+  assert.match(
+    await banners.first().locator("legend").textContent(),
+    /Tampil sekarang/,
+  );
+  const banner = banners.nth(2);
+  assert.equal(
+    await banner.getByLabel("Judul (Indonesia)").inputValue(),
+    "Dive Trip with Zanclus",
+  );
+  assert.match(await banner.locator("legend").textContent(), /Tidak tampil/);
+  const days = (n) =>
+    new Date(Date.parse(today + "T12:00:00Z") + n * 864e5)
+      .toISOString()
+      .slice(0, 10);
+  // The fun dive banner off, the dive trip on with its dates.
+  await banners.nth(1).getByLabel("Tampilkan di beranda").uncheck();
+  await banner.getByLabel("Tampilkan di beranda").check();
+  await banner.getByLabel("Tanggal mulai event").fill(days(10));
+  await banner
+    .getByLabel("Tanggal selesai event (banner hilang setelahnya)")
+    .fill(days(17));
+  await page.getByRole("button", { name: "Simpan kalender" }).click();
+  await page.getByText("Perubahan sudah tersimpan").waitFor();
+  assert.match(await banner.locator("legend").textContent(), /Tampil sekarang/);
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
+  await shown.first().scrollIntoViewIfNeeded();
+  // The event with dates comes first, beside the discovery dive.
+  assert.deepEqual(await shown.locator("h3").allTextContents(), [
+    "Dive Trip with Zanclus",
+    "Menyelam pertama di Raja Ampat",
+  ]);
+  const trip = shown.first();
+  assert.match(
+    await trip.textContent(),
+    /EVENT[\s\S]*Raja Ampat The Last Paradise · 8 hari 7 malam[\s\S]*\$1\.680 \/ pax[\s\S]*Minimal 4 pax/,
+  );
+  // Dates are written tight, without spaces round the dash.
+  assert.doesNotMatch(
+    await trip.locator(".event-banner-dates").textContent(),
+    /\s–|–\s/,
+  );
+  assert.ok((await trip.boundingBox()).height <= 170, "the banner stays short");
   const book = new URL(
-    await shown
+    await trip
       .getByRole("link", { name: "Daftar lewat WhatsApp" })
       .getAttribute("href"),
   );
@@ -200,12 +244,12 @@ try {
     path: (process.env.SHOT_DIR || "artifacts") + "/event-banner-desktop.png",
     clip: {
       x: 0,
-      y: Math.max(0, (await shown.boundingBox()).y - 160),
+      y: Math.max(0, (await trip.boundingBox()).y - 160),
       width: 1440,
-      height: 520,
+      height: 560,
     },
   });
-  await shown.getByRole("button", { name: "Lihat flyer", exact: true }).click();
+  await trip.getByRole("button", { name: "Lihat flyer", exact: true }).click();
   const flyer = page.locator(".event-flyer[open]");
   await flyer.waitFor();
   assert.equal(
@@ -219,14 +263,29 @@ try {
   // English, and a phone.
   await page.goto(base + "/", { waitUntil: "networkidle" });
   assert.match(
-    await page.locator(".event-banner").textContent(),
+    await page.locator(".event-banner").first().textContent(),
     /\$1,680 \/ pax[\s\S]*Minimum 4 pax[\s\S]*Book on WhatsApp/,
+  );
+  assert.match(
+    await page.locator(".event-banner").nth(1).textContent(),
+    /Your first dive in Raja Ampat[\s\S]*IDR 1,200,000 \/ person/,
+  );
+  assert.equal(
+    await page
+      .locator(".event-banner")
+      .nth(1)
+      .getByRole("link", { name: "Full details" })
+      .getAttribute("href"),
+    "/diving#prices",
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/id", { waitUntil: "networkidle" });
-  const phone = page.locator(".event-banner");
+  const phone = page.locator(".event-banners");
   await phone.scrollIntoViewIfNeeded();
-  assert.ok((await phone.boundingBox()).height <= 260, "short on a phone too");
+  for (const box of await Promise.all(
+    (await page.locator(".event-banner").all()).map((b) => b.boundingBox()),
+  ))
+    assert.ok(box.height <= 260, "short on a phone too");
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -252,10 +311,12 @@ try {
     const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
     return [...new Uint8Array(await blob.arrayBuffer())];
   });
+  // Into the discovery dive's background photo.
   await page
     .locator("fieldset.admin-price-item")
     .first()
     .locator('input[type="file"]')
+    .first()
     .setInputFiles({
       name: "event.png",
       mimeType: "image/png",
@@ -267,30 +328,39 @@ try {
   const saved = await (
     await context.request.get(base + "/api/admin/state")
   ).json();
-  assert.match(saved.content.calendar.banners[0].image, /^\/api\/media\//);
+  assert.match(saved.content.calendar.banners[0].background, /^\/api\/media\//);
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   assert.match(
-    await page.locator(".event-banner-photo img").getAttribute("src"),
+    await page
+      .locator(".event-banner.has-photo .event-banner-bg")
+      .getAttribute("src"),
     /^\/api\/media\//,
   );
   // Unsafe links are refused; after the event the banner is gone.
   const current = await (
     await context.request.get(base + "/api/admin/state")
   ).json();
-  const unsafe = structuredClone(current.content);
-  unsafe.calendar.banners[0].link = "javascript:alert(1)";
-  assert.equal(
-    (
-      await context.request.put(base + "/api/admin/settings", {
-        headers,
-        data: { content: unsafe, version: current.version },
-      })
-    ).status(),
-    400,
-  );
+  for (const [field, value] of [
+    ["link", "javascript:alert(1)"],
+    ["background", "http://example.com/a.jpg"],
+  ]) {
+    const unsafe = structuredClone(current.content);
+    unsafe.calendar.banners[0][field] = value;
+    assert.equal(
+      (
+        await context.request.put(base + "/api/admin/settings", {
+          headers,
+          data: { content: unsafe, version: current.version },
+        })
+      ).status(),
+      400,
+    );
+  }
   const over = structuredClone(current.content);
-  over.calendar.banners[0].startDate = days(-9);
-  over.calendar.banners[0].endDate = days(-1);
+  for (const b of over.calendar.banners) {
+    b.startDate = days(-9);
+    b.endDate = days(-1);
+  }
   assert.equal(
     (
       await context.request.put(base + "/api/admin/settings", {
@@ -305,7 +375,7 @@ try {
 
   assert.deepEqual(errors, []);
   console.log(
-    "PASS event banner (off by default, shown between the experiences title and cards while the event is on, short on desktop and phone, WhatsApp button with the event, flyer window, English, one-step photo upload, unsafe link refused, gone after the event), side calendar: old address redirects to the diving calendar, on every activity page with the best months on diving, daily places, spots, ocean care, admin adds an activity shown on today's cell and in the picked day, month navigation from this month, mobile without horizontal scroll.",
+    "PASS event banners (two photo banners on by default, the dive trip draft off until switched on with dates, event first, shown between the experiences title and cards while the event is on, short on desktop and phone, WhatsApp button with the event, flyer window, English, one-step background photo upload, unsafe link and photo refused, gone after the event), side calendar: old address redirects to the diving calendar, on every activity page with the best months on diving, daily places, spots, ocean care, admin adds an activity shown on today's cell and in the picked day, month navigation from this month, mobile without horizontal scroll.",
   );
 } finally {
   await browser.close();

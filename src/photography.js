@@ -46,8 +46,15 @@ export const activityPhotos = {
     cardImageAlt: "Visual konsep kapal trip melintasi laguna dan pulau karst",
   },
 };
+// The owner's photos behind the homepage banners.
+export const bannerPhotos = {
+  turtle: "/assets/photos/banner-penyu.webp",
+  cave: "/assets/photos/banner-gua.webp",
+};
 export const builtInPhotos = [
   ...siteImageFields.map(([key, label]) => [defaultSiteImages[key], label]),
+  [bannerPhotos.turtle, "Banner, penyelam dan penyu"],
+  [bannerPhotos.cave, "Banner, penyelam di gua bawah laut"],
   ...Object.entries(activityPhotos).flatMap(([key, photo]) => [
     [photo.cardImage, `${key} — kartu pengalaman`],
     [photo.image, `${key} — sampul halaman`],
@@ -61,16 +68,19 @@ const responsivePhotos = [
   defaultSiteImages.shop,
   defaultSiteImages.ocean,
   defaultSiteImages.course,
+  ...Object.values(bannerPhotos),
 ];
 export function photoSrcSet(url) {
   if (!responsivePhotos.includes(url)) return undefined;
   const width = url.includes("-cover.")
     ? 1536
-    : url === defaultSiteImages.shop
-      ? 1000
-      : url === defaultSiteImages.ocean
-        ? 1200
-        : 900;
+    : url.includes("/banner-")
+      ? 1600
+      : url === defaultSiteImages.shop
+        ? 1000
+        : url === defaultSiteImages.ocean
+          ? 1200
+          : 900;
   return `${url.replace(".webp", "-small.webp")} ${width === 1536 ? 768 : width / 2}w, ${url} ${width}w`;
 }
 const legacyActivityImages = {

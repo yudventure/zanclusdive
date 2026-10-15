@@ -1,7 +1,8 @@
 "use client";
 import { useRef } from "react";
 import { calendarText, eventDates } from "../calendar-model.js";
-import { dictionary } from "../i18n.js";
+import { dictionary, localeHref } from "../i18n.js";
+import { photoSrcSet } from "../photography.js";
 
 function Banner({ banner, whatsapp, locale }) {
   const t = dictionary(locale).home.eventBanner;
@@ -9,13 +10,29 @@ function Banner({ banner, whatsapp, locale }) {
   const text = (value) => calendarText(value, locale);
   const title = text(banner.title);
   const dates = eventDates(banner.startDate, banner.endDate, locale);
-  const href =
-    banner.link ||
-    `https://wa.me/${whatsapp}?text=${encodeURIComponent(t.message(title, dates))}`;
+  // A page of the site opens in the visitor's language.
+  const href = !banner.link
+    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(t.message(title, dates))}`
+    : banner.link.startsWith("/") && !/^\/(id|en)(\/|$)/.test(banner.link)
+      ? localeHref(locale, banner.link)
+      : banner.link;
   const external = !banner.link || banner.link.startsWith("https://");
   const open = () => flyer.current?.showModal();
   return (
-    <aside className="event-banner" aria-label={`${t.label}: ${title}`}>
+    <aside
+      className={"event-banner" + (banner.background ? " has-photo" : "")}
+      aria-label={`${t.label}: ${title}`}
+    >
+      {banner.background && (
+        <img
+          className="event-banner-bg"
+          src={banner.background}
+          srcSet={photoSrcSet(banner.background)}
+          sizes="(max-width: 1440px) 100vw, 1440px"
+          alt=""
+          loading="lazy"
+        />
+      )}
       <svg
         className="event-banner-sea"
         viewBox="0 0 600 160"
@@ -45,7 +62,9 @@ function Banner({ banner, whatsapp, locale }) {
           <img src={banner.image} alt="" loading="lazy" />
         </button>
       ) : (
-        <span className="event-banner-photo is-empty" aria-hidden="true" />
+        !banner.background && (
+          <span className="event-banner-photo is-empty" aria-hidden="true" />
+        )
       )}
       <div className="event-banner-text">
         <p className="event-banner-meta">

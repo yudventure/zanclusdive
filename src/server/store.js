@@ -16,6 +16,7 @@ import {
   withActivityRefresh,
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
+import { withCalendar } from "../calendar-model.js";
 import { rememberLocks } from "../developer.js";
 import { agentHolds } from "../agent-calendar.js";
 import {
@@ -73,13 +74,15 @@ async function storedContent() {
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withPriceList(
-      withActivityRefresh(
-        withRajaAmpatTitle(
-          withTranslations(
-            withActivities(
-              withPhotography(
-                withContactFields(withShop(JSON.parse(rows[0].payload))),
+    content: withCalendar(
+      withPriceList(
+        withActivityRefresh(
+          withRajaAmpatTitle(
+            withTranslations(
+              withActivities(
+                withPhotography(
+                  withContactFields(withShop(JSON.parse(rows[0].payload))),
+                ),
               ),
             ),
           ),

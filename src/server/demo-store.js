@@ -22,6 +22,7 @@ import {
   withActivityRefresh,
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
+import { withCalendar } from "../calendar-model.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -124,8 +125,8 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
-      const titled = withPriceList(
-        withActivityRefresh(withRajaAmpatTitle(state.content)),
+      const titled = withCalendar(
+        withPriceList(withActivityRefresh(withRajaAmpatTitle(state.content))),
       );
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;

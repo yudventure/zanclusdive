@@ -1,6 +1,7 @@
 // Zanclus activity calendar page: dated activities, a month by month season
 // guide, popular dive spots and environmental care plans. Editable in the
 // CMS; texts carry Indonesian and English.
+import { bannerPhotos } from "./photography.js";
 
 export const eventTypes = ["dive", "course", "eco", "community"];
 export const eventTypeLabels = {
@@ -28,7 +29,8 @@ const event = (date, type, place, title, description) => ({
 
 // Wide banners above the experience cards on the homepage, shown only while
 // an event is on: from showFrom (or at once) until the event's endDate.
-// Without a link the button opens WhatsApp with the event's name.
+// Without a link the button opens WhatsApp with the event's name. A
+// background photo fills the banner behind the text; image is the flyer.
 export const blankBanner = () => ({
   enabled: false,
   badge: { id: "EVENT", en: "EVENT" },
@@ -40,6 +42,7 @@ export const blankBanner = () => ({
   endDate: "",
   showFrom: "",
   image: "",
+  background: "",
   link: "",
 });
 // A draft from the Zanclus dive trip flyer, off until dates are set.
@@ -54,6 +57,37 @@ export const sampleBanner = () => ({
   note: t("Minimal 4 pax", "Minimum 4 pax"),
   image: "/assets/photos/event-dive-trip.webp",
 });
+// Two banners on from the start, with the owner's photos behind the text,
+// then the dive trip draft. Without dates they show until switched off.
+export const defaultBanners = () => [
+  {
+    ...blankBanner(),
+    enabled: true,
+    badge: t("DISCOVERY DIVE", "DISCOVERY DIVE"),
+    title: t("Menyelam pertama di Raja Ampat", "Your first dive in Raja Ampat"),
+    subtitle: t(
+      "2x selam bersama pemandu Zanclus. Gratis dokumentasi untuk grup lebih dari 4 orang.",
+      "2 dives with a Zanclus guide. Free documentation for groups over 4.",
+    ),
+    price: t("Rp 1.200.000 / orang", "IDR 1,200,000 / person"),
+    background: bannerPhotos.turtle,
+    link: "/diving#prices",
+  },
+  {
+    ...blankBanner(),
+    enabled: true,
+    badge: t("FUN DIVE", "FUN DIVE"),
+    title: t("Jelajahi gua dan dinding karang", "Explore caves and reef walls"),
+    subtitle: t(
+      "Pemandu selam Zanclus, 2x selam dalam satu hari.",
+      "A Zanclus dive guide, 2 dives in one day.",
+    ),
+    price: t("Rp 750.000 / hari", "IDR 750,000 / day"),
+    background: bannerPhotos.cave,
+    link: "/diving#prices",
+  },
+  sampleBanner(),
+];
 export const defaultCalendar = {
   events: [
     event(
@@ -297,7 +331,7 @@ export const defaultCalendar = {
       ),
     ],
   ].map(([title, when, description]) => ({ title, when, description })),
-  banners: [sampleBanner()],
+  banners: defaultBanners(),
 };
 
 // Older CMS documents gain the calendar defaults.
@@ -312,9 +346,10 @@ export function eventDates(start, end, locale) {
     year: "numeric",
   });
   const day = (date) => new Date(date + "T12:00:00Z");
+  // Ranges are written tight ("Jun 1–8, 2030"), without spaces round the dash.
   return !end || end === start
     ? format.format(day(start))
-    : format.formatRange(day(start), day(end));
+    : format.formatRange(day(start), day(end)).replace(/\s*–\s*/g, "–");
 }
 // Banners to show on a day, earliest event first; at most two.
 export function activeBanners(calendar, today) {
@@ -361,6 +396,7 @@ function validateBanner(b) {
     endDate: date(b?.endDate, "Tanggal selesai"),
     showFrom: date(b?.showFrom, "Mulai tampil"),
     image: bannerURL(b?.image, "Foto", false),
+    background: bannerURL(b?.background, "Foto latar", false),
     link: bannerURL(b?.link, "Link tombol", true),
   };
   if (banner.startDate && banner.endDate && banner.endDate < banner.startDate)
@@ -368,10 +404,23 @@ function validateBanner(b) {
   return banner;
 }
 
+// Older CMS documents gain the calendar defaults. One saved before the photo
+// banners held only the dive trip draft; while it is untouched it becomes
+// the default banners. A draft the owner changed stays as it is.
+const bannerFields = Object.keys(blankBanner()).filter(
+  (k) => k !== "background",
+);
+const untouchedDraft = (banners) =>
+  banners?.length === 1 &&
+  !banners[0]?.background &&
+  JSON.stringify(bannerFields.map((k) => banners[0]?.[k] ?? "")) ===
+    JSON.stringify(bannerFields.map((k) => sampleBanner()[k]));
 export function withCalendar(content) {
-  return content.calendar
-    ? content
-    : { ...content, calendar: structuredClone(defaultCalendar) };
+  const calendar = content.calendar;
+  if (!calendar)
+    return { ...content, calendar: structuredClone(defaultCalendar) };
+  if (calendar.banners && !untouchedDraft(calendar.banners)) return content;
+  return { ...content, calendar: { ...calendar, banners: defaultBanners() } };
 }
 
 function text(value, label, max, required) {
