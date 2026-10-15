@@ -106,7 +106,11 @@ function EventSignup({
         <dl>
           <div>
             <dt>{f.dates}</dt>
-            <dd>{dates || f.datesOpen}</dd>
+            <dd>
+              {dates ||
+                (done ? eventDates(done.date, done.endDate, locale) : "") ||
+                f.datesOpen}
+            </dd>
           </div>
           {price && (
             <div>
