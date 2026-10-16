@@ -62,6 +62,12 @@ async function dataDirectory() {
   return directory;
 }
 
+// The folder the store writes to, once it has been opened.
+export const demoStorageDirectory = () =>
+  globalThis.__zanclusDemoStores?.get(
+    process.env.CMS_DEMO_DATA_DIR || "default",
+  )?.directory ?? null;
+
 // Local test servers (CMS_DEMO_LOGIN=true) keep the sample bookings.
 const sampleMode = () => process.env.CMS_DEMO_LOGIN === "true";
 

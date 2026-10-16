@@ -6,6 +6,7 @@ import {
   keyIssues,
   productionOn,
 } from "../src/midtrans-key.js";
+import { temporaryFolder } from "../src/cms-mode.js";
 
 // Made-up keys, put together here so secret scanning does not take them
 // for real ones.
@@ -79,4 +80,18 @@ test("no message uses a colon, semicolon or long dash", () => {
     ...keyIssues(sandbox, "true"),
   ];
   for (const message of all) assert.doesNotMatch(message, /[;—]|:(?!\/\/)/);
+});
+
+test("real payments may use the demo store only outside temporary folders", () => {
+  // The hosting account's folder survives a redeploy.
+  assert.equal(temporaryFolder("/home/u509575013/zanclus-cms-data"), false);
+  assert.equal(temporaryFolder("/srv/data/zanclus"), false);
+  // The /tmp fallback, the system's own temporary folder, or none yet.
+  assert.equal(temporaryFolder("/tmp/zanclus-demo-cms-v1"), true);
+  assert.equal(temporaryFolder("/tmp"), true);
+  assert.equal(temporaryFolder("/var/tmp/x"), true);
+  assert.equal(temporaryFolder("/scratch/t/data", "/scratch/t/"), true);
+  assert.equal(temporaryFolder("/tmpfiles/data"), false);
+  assert.equal(temporaryFolder(null), true);
+  assert.equal(temporaryFolder(""), true);
 });

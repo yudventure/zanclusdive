@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 import {
   getContent,
   listBookings,
@@ -24,16 +25,21 @@ import { validateBooking } from "../cms-model.js";
 import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 import { priceText } from "../price-list.js";
 import { visitorLocks } from "../developer.js";
-import { isDemo } from "../cms-mode.js";
+import { isDemo, temporaryFolder } from "../cms-mode.js";
+import { demoStorageDirectory } from "./demo-store.js";
 import { withCourses, courseProfile } from "../course-model.js";
 import { withService } from "../service-model.js";
 import { dueAt, invoiceNumber } from "../booking-mail.js";
 import { autoMail, later } from "./booking-mail.js";
 
 // Online payment is offered when the owner switched it on and the hosting
-// has a Midtrans server key. Real payments need the MySQL database: demo
-// storage is temporary and a paid booking must not disappear.
-export const paymentsBlockedByDemo = () => midtransProduction() && isDemo();
+// has a Midtrans server key. A paid booking must not disappear, so real
+// payments need MySQL or the demo store's folder in the hosting account,
+// which a redeploy leaves alone. A demo store under /tmp is not enough.
+export const paymentsBlockedByDemo = () =>
+  midtransProduction() &&
+  isDemo() &&
+  temporaryFolder(demoStorageDirectory(), tmpdir());
 export const paymentsReady = (content) =>
   content.payments?.enabled === true &&
   midtransConfigured() &&

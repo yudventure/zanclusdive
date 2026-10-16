@@ -205,12 +205,24 @@ export default function PaymentsEditor({
               <span>{explain(status.lastError.status)}</span>
             </li>
           )}
-          {status?.blockedByDemo && (
+          {status?.blockedByDemo ? (
             <li className="warn">
-              Pembayaran sungguhan butuh database MySQL (CMS_MODE=mysql).
-              Penyimpanan demo bersifat sementara, jadi tombol bayar
-              disembunyikan sampai CMS memakai MySQL.
+              Pembayaran sungguhan butuh penyimpanan yang tidak hilang saat
+              server dimulai ulang. Data CMS sekarang tersimpan di folder
+              sementara{status.demoFolder ? ` (${status.demoFolder})` : ""},
+              jadi tombol bayar disembunyikan. Pastikan folder zanclus-cms-data
+              di akun hosting bisa ditulis, atau pakai database MySQL
+              (CMS_MODE=mysql).
             </li>
+          ) : (
+            status?.production &&
+            status?.demoFolder && (
+              <li className="ok">
+                Pesanan dan pembayaran tersimpan di folder {status.demoFolder}{" "}
+                di akun hosting, dan tetap ada saat deploy ulang. Cadangkan
+                folder itu secara berkala.
+              </li>
+            )
           )}
         </ul>
         <ConnectionTest disabled={!configured} />

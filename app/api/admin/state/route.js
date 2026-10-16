@@ -24,6 +24,7 @@ import {
   paymentsReady,
 } from "../../../../src/server/payments.js";
 import { mailConfigured, mailSender } from "../../../../src/server/mailer.js";
+import { demoStorageDirectory } from "../../../../src/server/demo-store.js";
 export const dynamic = "force-dynamic";
 // The admin's working data. Site content is what the website shows, so
 // every role gets it; bookings, media, agents and the payment settings
@@ -72,6 +73,8 @@ export async function GET(request) {
               configured: midtransConfigured(),
               production: midtransProduction(),
               blockedByDemo: paymentsBlockedByDemo(),
+              // Where bookings and payments are kept without MySQL.
+              demoFolder: cmsMode() === "demo" ? demoStorageDirectory() : null,
               issues: keyIssues(),
               keyEnding: midtransKeyEnding(),
               lastError: lastMidtransError(),
