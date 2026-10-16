@@ -171,10 +171,8 @@ await page.locator("#download-plan").click();
 const download = await downloadPromise;
 assert.match(download.suggestedFilename(), /^zanclus-rencana-/);
 await page.locator("#booking-dialog .close-modal").click();
-await page.locator("#see-all").click();
-assert.equal(await page.locator("#more-courses").isVisible(), true);
-await page.locator("#see-all").click();
-assert.equal(await page.locator("#more-courses").isVisible(), false);
+// The experiences heading has no "See all" button any more.
+assert.equal(await page.locator("#see-all").count(), 0);
 await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(site, { waitUntil: "networkidle" });
 assert.equal(await quickChat.isVisible(), true, "Mobile quick service visible");

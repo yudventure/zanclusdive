@@ -241,10 +241,6 @@ export default function HomePage({
                       {content.text.experiencesHeading}
                     </h2>
                   </div>
-                  <button className="button lime small" id="see-all">
-                    {h.seeAll + " "}
-                    <span>{"↗"}</span>
-                  </button>
                 </div>
                 <EventBanners
                   banners={banners}
@@ -368,13 +364,6 @@ export default function HomePage({
                 </div>
               </div>
             )}
-            <div id="more-courses" className="more-courses" hidden>
-              <p>{h.moreCourses}</p>
-              <button className="button dark" data-book>
-                {h.planDive + " "}
-                <span>{"↗"}</span>
-              </button>
-            </div>
           </section>
           {sectionLocked(locks, "dive-sites") ? (
             <LockedSection

@@ -105,7 +105,6 @@ const id = {
   },
   home: {
     heroAlt: "Visual konsep petualangan scuba diving di bawah laut",
-    seeAll: "Lihat semua",
     eventBanner: {
       label: "Event Zanclus",
       flyer: "Lihat flyer",
@@ -152,9 +151,6 @@ const id = {
     snorkelingKicker: "DEKAT DENGAN LAUT",
     tripKicker: "JELAJAH BERSAMA",
     findChoice: "Temukan pilihanmu",
-    moreCourses:
-      "Setiap pengalaman disesuaikan dengan kemampuan dan kondisi laut. Pilih kartu untuk melihat detail, lalu diskusikan rencanamu dengan tim Zanclus.",
-    planDive: "Susun rencana dive",
     reefAlt: "Visual konsep penyu dan kehidupan terumbu",
     reefTitle: ["Warna yang", "tak pernah biasa."],
     oceanAlt: "Visual konsep manta di laut terbuka",
@@ -527,8 +523,6 @@ const id = {
     },
   },
   booking: {
-    seeAllHtml: "Lihat semua <span>↗</span>",
-    closeHtml: "Tutup <span>−</span>",
     quizStep: (n) => `LANGKAH ${n} DARI 2`,
     quizResult: "PILIHAN UNTUKMU",
     quizQ1: "Sudah pernah menyelam?",
@@ -1374,15 +1368,11 @@ const en = {
         close: "Close sign-up",
       },
     },
-    seeAll: "See all",
     close: "Close",
     divingKicker: "DIVE INTO A NEW STORY",
     snorkelingKicker: "CLOSE TO THE SEA",
     tripKicker: "EXPLORE TOGETHER",
     findChoice: "Find your match",
-    moreCourses:
-      "Every experience is tailored to your ability and sea conditions. Pick a card to see the details, then talk your plan through with the Zanclus team.",
-    planDive: "Plan your dive",
     reefAlt: "Concept visual of a sea turtle and reef life",
     reefTitle: ["Colors that are", "never ordinary."],
     oceanAlt: "Concept visual of a manta ray in open water",
@@ -1756,8 +1746,6 @@ const en = {
     },
   },
   booking: {
-    seeAllHtml: "See all <span>↗</span>",
-    closeHtml: "Close <span>−</span>",
     quizStep: (n) => `STEP ${n} OF 2`,
     quizResult: "YOUR MATCH",
     quizQ1: "Have you been diving before?",
