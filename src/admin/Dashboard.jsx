@@ -513,7 +513,7 @@ export default function Dashboard({ section, account, today }) {
       throw e;
     }
     const url = await uploadPhoto(logo.file);
-    apply(url, logo.style);
+    apply(url, logo.style, logo.ratio);
     setAutoSave((n) => n + 1);
   }
   useEffect(() => {

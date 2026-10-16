@@ -319,8 +319,8 @@ export default function CourseEditor({
                   compact
                   label={partner.logo ? "Ganti logo" : "Upload logo"}
                   onFile={(file) =>
-                    placeLogo(file, (url, logoStyle) =>
-                      changePartner(index, { logo: url, logoStyle }),
+                    placeLogo(file, (url, logoStyle, logoRatio) =>
+                      changePartner(index, { logo: url, logoStyle, logoRatio }),
                     )
                   }
                 />
@@ -404,6 +404,7 @@ export default function CourseEditor({
                   full: { id: "", en: "" },
                   logo: "",
                   logoStyle: "color",
+                  logoRatio: 0,
                 },
               ])
             }

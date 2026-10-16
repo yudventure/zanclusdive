@@ -29,7 +29,8 @@
   height: 100%;
   pointer-events: none;
 }
-.event-banner > :not(.event-banner-sea) {
+/* The flyer and sign-up dialogs stay fixed to the screen. */
+.event-banner > :not(.event-banner-sea, dialog) {
   position: relative;
 }
 .event-banner-photo {
@@ -288,7 +289,7 @@
     #031b2c1a 100%
   );
 }
-.event-banner.has-photo > :not(.event-banner-bg):not(.event-banner-sea) {
+.event-banner.has-photo > :not(.event-banner-bg, .event-banner-sea, dialog) {
   z-index: 2;
 }
 .event-banner.has-photo .event-banner-sea {

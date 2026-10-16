@@ -274,28 +274,39 @@ try {
       "PARTNER SERTIFIKASI SELAM",
     );
     const names = await strip
-      .locator("li:not([aria-hidden]) .partner-name")
+      .locator("ul:not([aria-hidden]) .partner-name")
       .allTextContents();
     assert.deepEqual(names, ["SSI", "CMAS", "PADI"]);
     const look = await strip.evaluate((el) => {
       const item = getComputedStyle(el.querySelector("li"));
       const name = getComputedStyle(el.querySelector(".partner-name"));
-      const items = el.querySelectorAll("li");
-      const half = items[items.length / 2];
+      const track = el.querySelector(".partner-marquee-track");
+      const copies = [...track.querySelectorAll(":scope > ul")];
+      const copy = copies[0].getBoundingClientRect().width;
       return {
         border: item.borderTopWidth,
         background: item.backgroundColor,
         nameBackground: name.backgroundColor,
         color: name.color,
-        // The second copy starts exactly half the track along: no jump.
+        // Each copy starts one copy's width after the last, and the strip
+        // moves by exactly that width: no jump.
         loop:
+          copies.length >= 2 &&
+          copies.every(
+            (ul, index) =>
+              Math.abs(
+                ul.getBoundingClientRect().left -
+                  copies[0].getBoundingClientRect().left -
+                  index * copy,
+              ) < 1,
+          ) &&
           Math.abs(
-            half.getBoundingClientRect().left -
-              items[0].getBoundingClientRect().left -
-              el.querySelector(".partner-marquee-track").getBoundingClientRect()
-                .width /
-                2,
+            parseFloat(track.style.getPropertyValue("--copy-w")) - copy,
           ) < 1,
+        // Only as many copies as the screen needs, so the moving strip stays
+        // narrow.
+        narrow: track.scrollWidth <= innerWidth + 2 * copy + 1,
+        hidden: copies.slice(1).every((ul) => ul.ariaHidden === "true"),
       };
     });
     assert.deepEqual(look, {
@@ -304,6 +315,8 @@ try {
       nameBackground: "rgba(0, 0, 0, 0)",
       color: "rgb(255, 255, 255)",
       loop: true,
+      narrow: true,
+      hidden: true,
     });
   }
   // The homepage panel sits on a dark diving photo, like the hero.
@@ -430,44 +443,48 @@ try {
     (await savedPartners()).map((p) => p.logoStyle),
     ["color", "color", "white", "color"],
   );
+  // The shape of each logo is saved with it.
+  const ratios = (await savedPartners()).map((p) => p.logoRatio);
+  assert.ok(Math.abs(ratios[1] - 1) < 0.2, "emblem ratio " + ratios[1]);
+  assert.ok(Math.abs(ratios[2] - 4.33) < 0.2, "word mark ratio " + ratios[2]);
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const strip = page.locator(".partner-marquee");
-  // The logos load lazily, once the strip comes near the screen.
   await strip.scrollIntoViewIfNeeded();
   await page.waitForFunction(() => {
     const img = document.querySelector(
-      '.partner-marquee li:not([aria-hidden]) img[alt="CMAS"]',
+      '.partner-marquee ul:not([aria-hidden]) img[alt="CMAS"]',
     );
     return img?.complete && img.naturalWidth > 0;
   });
-  // On the site: the emblem in colour, 44 px tall and loaded; PADI white.
-  const emblem = await strip
-    .locator('li:not([aria-hidden]) img[alt="CMAS"]')
-    .evaluate((img) => ({
-      loaded: img.complete && img.naturalWidth > 0,
-      className: img.className,
-      height: img.getBoundingClientRect().height,
-      filter: getComputedStyle(img).filter,
-    }));
+  // On the site: the emblem in colour and loaded; PADI white. The round
+  // emblem and the wide word mark get boxes that look the same size.
+  const shownLogo = (alt) =>
+    strip
+      .locator(`ul:not([aria-hidden]) img[alt="${alt}"]`)
+      .evaluate((img) => ({
+        loaded: img.complete && img.naturalWidth > 0,
+        className: img.className,
+        width: img.getBoundingClientRect().width,
+        height: img.getBoundingClientRect().height,
+        filter: getComputedStyle(img).filter,
+      }));
+  const emblem = await shownLogo("CMAS");
+  const wordMark = await shownLogo("PADI");
   assert.equal(emblem.loaded, true);
   assert.equal(emblem.className, "is-color");
-  assert.equal(emblem.height, 44);
+  assert.deepEqual([emblem.width, emblem.height], [46, 46]);
+  assert.deepEqual([wordMark.width, wordMark.height], [111, 26]);
   assert.doesNotMatch(emblem.filter, /invert/);
+  assert.match(wordMark.filter, /invert/);
   assert.match(
     await strip
-      .locator('li:not([aria-hidden]) img[alt="PADI"]')
-      .evaluate((img) => getComputedStyle(img).filter),
-    /invert/,
-  );
-  assert.match(
-    await strip
-      .locator('li:not([aria-hidden]) img[alt="SSI"]')
+      .locator('ul:not([aria-hidden]) img[alt="SSI"]')
       .getAttribute("src"),
     /^\/api\/media\//,
   );
   assert.deepEqual(
     await strip
-      .locator("li:not([aria-hidden]) .partner-name")
+      .locator("ul:not([aria-hidden]) .partner-name")
       .allTextContents(),
     ["NAUI"],
   );
@@ -485,10 +502,25 @@ try {
       ),
       "no sideways scroll on " + path,
     );
+    // On a phone the moving strip stays short (Safari on iPhone drops parts
+    // of a very wide moving layer), and long names wrap to two lines.
+    const strip = page.locator(".partner-marquee").first();
+    await strip.scrollIntoViewIfNeeded();
+    const phone = await strip.evaluate((el) => {
+      const track = el.querySelector(".partner-marquee-track");
+      return {
+        width: track.scrollWidth,
+        copies: track.querySelectorAll(":scope > ul").length,
+        measured: track.classList.contains("is-measured"),
+      };
+    });
+    assert.equal(phone.measured, true);
+    assert.ok(phone.width <= 2400, "strip width " + phone.width);
+    assert.ok(phone.copies >= 2);
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, dark photo panel, partner strip (no cards or borders, seamless loop) with admin-added partner, uploaded logos trimmed, a colourful transparent emblem in colour and a dark logo white, 390px without sideways scroll. No messages sent.",
+    "PASS course: full-screen hero at 7 sizes, hero line without 'di bawah laut', course invitation in the familiar panel with photo fan, quiz still opens, menu link, #course preselects the course, sign-up validation and WhatsApp message, English copy, admin price and visibility edits, dark photo panel, partner strip (no cards or borders, seamless loop of measured copies, short on a phone) with admin-added partner, uploaded logos trimmed, a colourful transparent emblem in colour and a dark logo white, both sized by their saved shape, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();

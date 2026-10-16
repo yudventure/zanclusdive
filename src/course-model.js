@@ -132,6 +132,7 @@ export const defaultCourses = {
       full: t("Scuba Schools International", "Scuba Schools International"),
       logo: "",
       logoStyle: "color",
+      logoRatio: 0,
     },
     {
       name: "CMAS",
@@ -141,6 +142,7 @@ export const defaultCourses = {
       ),
       logo: "",
       logoStyle: "color",
+      logoRatio: 0,
     },
     {
       name: "PADI",
@@ -150,10 +152,34 @@ export const defaultCourses = {
       ),
       logo: "",
       logoStyle: "color",
+      logoRatio: 0,
     },
   ],
 };
 export const partnerLimit = 12;
+
+// Logos of every shape look the same size in the running strip: a wide
+// word mark gets less height than a round emblem (height follows the
+// width-to-height ratio to the power -0.4), inside a 150 x 52 px box.
+export function logoBox(ratio) {
+  const r =
+    Number.isFinite(ratio) && ratio > 0
+      ? Math.min(8, Math.max(0.25, ratio))
+      : 1;
+  let height = Math.min(52, 46 * r ** -0.4);
+  let width = height * r;
+  if (width > 150) {
+    width = 150;
+    height = width / r;
+  }
+  return { width: Math.round(width), height: Math.round(height) };
+}
+const logoRatio = (value) => {
+  const ratio = Number(value);
+  return Number.isFinite(ratio) && ratio >= 0.1 && ratio <= 10
+    ? Math.round(ratio * 1000) / 1000
+    : 0;
+};
 
 export function withCourses(content) {
   return content.courses
@@ -208,6 +234,9 @@ export function validatePartners(input) {
       logo: mediaURL(p.logo, "Logo partner"),
       // "color" shows the logo as it is; "white" as a white silhouette.
       logoStyle: p.logoStyle === "white" ? "white" : "color",
+      // Width over height of the trimmed logo, measured when it was
+      // uploaded; 0 when unknown (older uploads are measured in the page).
+      logoRatio: p.logo ? logoRatio(p.logoRatio) : 0,
     };
   });
 }

@@ -146,5 +146,6 @@ export async function prepareLogo(file) {
   return {
     file: new File([blob], `${base}.${ext}`, { type: blob.type }),
     style,
+    ratio: out.width / out.height,
   };
 }

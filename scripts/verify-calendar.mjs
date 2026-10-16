@@ -178,9 +178,22 @@ try {
     true,
   );
   // The flyer opens from its photo, and its button leads to the same form.
+  // Both windows open on the screen the visitor is looking at, not at the
+  // top of the page.
+  const onScreen = (dialog) =>
+    dialog.evaluate((d) => {
+      const box = d.getBoundingClientRect();
+      return (
+        getComputedStyle(d).position === "fixed" &&
+        scrollY > 0 &&
+        box.top >= 0 &&
+        box.bottom <= innerHeight + 1
+      );
+    });
   await shown.locator(".event-banner-photo").click();
   const flyer = page.locator(".event-flyer[open]");
   await flyer.waitFor();
+  assert.equal(await onScreen(flyer), true, "the flyer opens on screen");
   assert.equal(
     await flyer
       .locator("img")
@@ -193,6 +206,11 @@ try {
   await flyer.getByRole("button", { name: "Daftar sekarang" }).click();
   const signup = page.locator("dialog.event-signup[open]");
   await signup.waitFor();
+  assert.equal(
+    await onScreen(signup),
+    true,
+    "the sign-up form opens on screen",
+  );
   assert.equal(await page.locator(".event-flyer[open]").count(), 0);
   assert.equal(
     await signup.locator("h2").textContent(),
@@ -359,6 +377,7 @@ try {
   });
   await phone.getByRole("button", { name: "Daftar sekarang" }).click();
   await signup.waitFor();
+  assert.equal(await onScreen(signup), true, "on a phone too");
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
