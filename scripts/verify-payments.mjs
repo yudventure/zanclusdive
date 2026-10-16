@@ -548,7 +548,7 @@ try {
   ).searchParams.get("text");
   assert.match(
     ask,
-    /Tamu Ragu[\s\S]*Package: Discovery Dive × 3 people\nEstimated cost: IDR\s?3,600,000/,
+    /Tamu Ragu[\s\S]*Package: Discovery Dive × 3 people\nStandard fare\nEstimated cost: IDR\s?3,600,000/,
   );
   // And back to paying online.
   await page.getByRole("button", { name: "Ready? Pay online now" }).click();
