@@ -4,6 +4,7 @@ import { requestLocale } from "../src/server/locale.js";
 import { localizeContent } from "../src/content-i18n.js";
 import { developerGate } from "../src/server/developer-gate.jsx";
 import { paymentOptions } from "../src/server/payments.js";
+import { publicShopStock } from "../src/server/shop-stock.js";
 import { activeBanners, withCalendar } from "../src/calendar-model.js";
 import { bookingDates } from "../src/booking-model.js";
 import { siteUrl, businessJsonLd, jsonLdText } from "../src/seo.js";
@@ -27,6 +28,7 @@ export default async function Page() {
         locale={locale}
         locks={locks}
         payments={paymentOptions(content)}
+        stock={await publicShopStock(content.shop?.products)}
         // Event banners on today's date in WIT.
         banners={activeBanners(
           withCalendar(content).calendar,

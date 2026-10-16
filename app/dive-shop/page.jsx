@@ -5,6 +5,7 @@ import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary } from "../../src/i18n.js";
 import { developerGate } from "../../src/server/developer-gate.jsx";
 import { paymentOptions } from "../../src/server/payments.js";
+import { publicShopStock } from "../../src/server/shop-stock.js";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -30,6 +31,8 @@ export default async function ShopPage({ searchParams }) {
       payments={paymentOptions(content)}
       fares={content.fares}
       shop={content.shop}
+      // Units left of the products that follow the warehouse stock.
+      stock={await publicShopStock(content.shop?.products)}
       contact={content.contact}
       images={content.images}
       activities={content.activities}

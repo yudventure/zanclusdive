@@ -28,7 +28,9 @@ export const movementReasons = {
 };
 export const inventoryLimits = { note: 300, items: 2000 };
 
-export function validateItem(input, current = null) {
+// "products" (the Dive Shop catalog) checks the product an item is linked
+// to; without it the link is kept as given.
+export function validateItem(input, current = null, { products } = {}) {
   if (!input || typeof input !== "object")
     throw new Error("Data barang tidak valid.");
   const pick = (key) => (key in input ? input[key] : current?.[key]);
@@ -45,6 +47,15 @@ export function validateItem(input, current = null) {
   });
   const cost = parseAmount(pick("cost"), "Harga beli");
   const active = typeof pick("active") === "boolean" ? pick("active") : true;
+  const productId =
+    typeof pick("productId") === "string" ? pick("productId") : "";
+  if (
+    productId &&
+    (!/^[a-z0-9-]{1,50}$/.test(productId) ||
+      (products && !products.some((p) => p.id === productId)))
+  )
+    throw new Error("Produk Dive Shop tidak ditemukan.");
+  const before = current?.productId ?? "";
   return {
     name,
     sku,
@@ -55,6 +66,11 @@ export function validateItem(input, current = null) {
     location: cleanText(pick("location"), 60, "Lokasi simpan"),
     note: cleanText(pick("note"), inventoryLimits.note, "Catatan"),
     active,
+    productId,
+    // The latest link wins when two items name the same product.
+    ...(productId && productId !== before
+      ? { linkedAt: new Date().toISOString() }
+      : {}),
   };
 }
 // One movement. Adjustments carry a signed quantity.
@@ -102,7 +118,12 @@ export function stockTable(items, movements) {
     return {
       ...item,
       stock,
-      low: item.active !== false && item.minStock > 0 && stock <= item.minStock,
+      empty: item.active !== false && stock <= 0,
+      low:
+        item.active !== false &&
+        stock > 0 &&
+        item.minStock > 0 &&
+        stock <= item.minStock,
       value: stock * (item.cost ?? 0),
     };
   });

@@ -155,9 +155,15 @@ try {
   );
   assert.ok(reportFile.includes("PPh final 1%"));
 
-  // Gudang: items, stock from movements, low-stock warning.
+  // Gudang: items, stock from movements, low-stock warning. The Dive Shop
+  // products are there from the start, each with its own item.
   await page.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  await page.getByText("Belum ada barang.").waitFor();
+  await page
+    .getByText(
+      "8 produk Dive Shop masuk ke gudang dengan stok 0. Catat stok awalnya lewat tombol Masuk.",
+    )
+    .waitFor();
+  assert.equal(await page.locator(".admin-stock-shop").count(), 8);
   await page.getByLabel("Nama barang").fill("BCD ukuran M");
   await page.getByLabel("Kode barang (opsional)").fill("bcd-m");
   await page.getByLabel("Kategori").selectOption("alat");
@@ -166,11 +172,10 @@ try {
   await page.getByRole("button", { name: "Simpan barang" }).click();
   await page.getByText("BCD ukuran M sudah ditambahkan.").waitFor();
   const row = page.locator("tr", { hasText: "BCD ukuran M" });
-  assert.match(await row.textContent(), /BCD-M[\s\S]*0 pcs[\s\S]*Menipis/);
+  assert.match(await row.textContent(), /BCD-M[\s\S]*0 pcs[\s\S]*Habis/);
   await row.getByRole("button", { name: "Masuk" }).click();
-  await page
-    .getByRole("heading", { name: "Barang masuk: BCD ukuran M" })
-    .waitFor();
+  await page.getByRole("heading", { name: "Barang masuk" }).waitFor();
+  await page.getByText("BCD ukuran M, stok sekarang 0 pcs.").waitFor();
   await page.getByLabel("Jumlah (pcs)").fill("5");
   await page.getByLabel("Alasan").selectOption("beli");
   await page.getByRole("button", { name: "Catat mutasi" }).click();
@@ -179,9 +184,11 @@ try {
     await row.textContent(),
     /5 pcs[\s\S]*nilai Rp\s17\.500\.000[\s\S]*Cukup/,
   );
-  const items = (await (await call(admin, "/api/admin/inventory/items")).json())
-    .items;
-  const bcd = items[0];
+  const stockOf = async () =>
+    (await (await call(admin, "/api/admin/inventory/items")).json()).items.find(
+      (i) => i.name === "BCD ukuran M",
+    );
+  const bcd = await stockOf();
   assert.equal(bcd.stock, 5);
   for (const [kind, qty, reason] of [
     ["out", 2, "sewa"],
@@ -207,12 +214,11 @@ try {
     reason: "jual",
   });
   assert.equal(zero.status(), 400);
-  const after = (await (await call(admin, "/api/admin/inventory/items")).json())
-    .items[0];
+  const after = await stockOf();
   assert.equal(after.stock, 2);
   assert.equal(after.low, true);
   await page.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  await page.getByText(/1 barang menipis: BCD ukuran M/).waitFor();
+  await page.getByText(/1 barang menipis \(BCD ukuran M\)/).waitFor();
   await page.screenshot({ path: shots + "/admin-stock.png" });
   await page.goto(base + "/admin/movements", { waitUntil: "networkidle" });
   const moves = page.locator(".admin-card").nth(1);
@@ -232,11 +238,7 @@ try {
     ).status(),
     200,
   );
-  assert.equal(
-    (await (await call(admin, "/api/admin/inventory/items")).json()).items[0]
-      .stock,
-    3,
-  );
+  assert.equal((await stockOf()).stock, 3);
   await page.screenshot({ path: shots + "/admin-movements.png" });
   const stockFile = await xlsx(
     await call(admin, "/api/admin/inventory/export?kind=stock"),

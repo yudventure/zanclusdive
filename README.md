@@ -99,13 +99,25 @@ Video tetap dihosting platformnya, jadi tidak membebani server. Pemutar baru dim
 
 ## Dive Shop
 
-Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, pencarian, filter kategori, serta pesanan gabungan. Rental dihitung per unit per hari (1–30 hari). Pengunjung menyiapkan pesan lalu mengirim sendiri lewat WhatsApp untuk konfirmasi stok, ukuran, harga, pembayaran, serta pengambilan/pengembalian. Tidak ada checkout pembayaran atau pencatatan stok otomatis.
+Halaman `/dive-shop` menyediakan katalog **Beli alat** dan **Rental alat**, pencarian, filter kategori, serta pesanan gabungan. Rental dihitung per unit per hari (1–30 hari). Pengunjung membayar online lewat Midtrans, atau menyiapkan pesan lalu mengirim sendiri lewat WhatsApp untuk konfirmasi ukuran, harga, serta pengambilan/pengembalian.
 
 Di beranda, banner **Servis alat selam** di bawah daftar Beli/Rental membuka `/service`. Harga "Mulai" pada banner diambil dari harga servis termurah yang aktif di CMS; judul dan teks banner ada di `src/i18n.js` (`shop.teaser.serviceBanner`).
 
 Seksi **Cara menuju ke sini** (`#getting-here`) berada di atas toko Waisai: ilustrasi rute Sorong → kapal cepat → Waisai, tiga langkah, dan tips perjalanan. Teksnya ada di `src/i18n.js` (`home.travel*`), belum diatur dari CMS; ilustrasinya di `src/components/TravelRoute.jsx`.
 
 Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jual dan rental, ketersediaan, tampilan publik, serta foto dari media library. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat delapan produk contoh; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
+
+### Dive Shop dan Gudang
+
+Setiap produk Dive Shop punya satu barang di **Gudang → Barang & stok** (`item.productId`, `src/shop-stock.js`, `src/server/shop-stock.js`). Barangnya dibuat otomatis saat katalog disimpan atau saat Barang & stok dibuka (stok 0, satuan set/pasang/pcs menurut jenis alat), atau memakai barang gudang yang sudah ada: pilih di kotak **Stok di gudang** pada detail produk, atau di kolom **Produk Dive Shop** pada formulir barang. Barang buatan gudang yang belum pernah dicatat dihapus saat produknya pindah ke barang lain, dan ikut berganti nama selama timnya belum memberi nama sendiri.
+
+- Pilih **Ikuti stok gudang** di **Ketersediaan produk** (bawaan produk baru). Website lalu menampilkan **Tersedia**, **Sisa 3** (tiga atau kurang), atau **Stok habis**, keranjang berhenti di sisa stok, dan server menolak pesanan online yang melebihinya. Produk dengan pilihan lain tidak diperiksa stoknya.
+- Pembelian yang lunas lewat Midtrans menjadi catatan **Keluar · Penjualan** dengan catatan "Pesanan online ZC-…" pada tanggal bayar, sekali per pesanan (`payment.stockRecorded`). Pesanan yang menunggu pembayaran menahan unitnya.
+- Sewa tidak membuat catatan keluar masuk. Selama reservasinya berlaku (lunas, atau pembayaran masih terbuka), unitnya terpakai pada tanggal sewa saja, jadi tanggal baru atau pembatalan langsung membebaskannya. Pembelian juga memperhitungkan sewa yang sudah dipesan untuk tanggal nanti.
+- Barang & stok menampilkan label Dive Shop, jumlah yang disewa hari ini, dipesan untuk sewa nanti, dan menunggu pembayaran, serta status **Habis** untuk stok 0.
+- Pesanan lewat WhatsApp dan reservasi yang dicatat tim tidak mengubah stok. Catat sendiri lewat tombol Masuk atau Keluar.
+
+Uji dengan `node scripts/verify-shop-stock.mjs` pada server demo yang dijalankan seperti untuk `verify-fares`.
 
 ## Banner event di beranda
 
@@ -224,7 +236,7 @@ Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-book
 Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
 
 - **Paket Diving, Snorkeling, Trip laut**: seperti Dive Shop. Setiap kartu di **Paket & harga** punya tombol **Keranjang** (lalu − / + untuk jumlah), dan bilah keranjang di bawah daftar harga menampilkan jumlah paket, total, serta tombol **Checkout** yang membuka jendela checkout. Jendela itu menampilkan **Paket dipilih** (bisa diubah atau ditambah dari pilihan **+ Tambah paket…**, dan add-on dari **Mau tambah sesuatu?**), kalender **Tanggal & slot** dengan sisa slot setiap hari, lalu tiga langkah **Isi data → Ringkasan → Pembayaran**. Paket per orang mengikuti jumlah peserta; beberapa paket dibayar dalam satu transaksi. Add-on dibayar bersama minimal satu paket utama. Pembayaran online dibatasi 30 peserta dan sisa slot tanggal yang dipilih.
-- **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp.
+- **Dive Shop** (keranjang di beranda dan halaman `/dive-shop`): beli dan sewa alat dalam satu pembayaran; sewa dihitung harga per hari × lama sewa. Jika ada alat yang harganya dikonfirmasi tim (tanpa harga), pesanan itu dikirim lewat WhatsApp. Alat yang mengikuti stok gudang diperiksa sisa stoknya (lihat [Dive Shop dan Gudang](#dive-shop-dan-gudang)).
 - **Kursus selam** (`/course`): harga kursus × jumlah peserta (1–20). Halaman kursus tidak punya panel samping lagi. Tombol **Pilih kursus ini** membuka jendela pendaftaran lengkap:
   - **Jadwal & peserta**: tanggal mulai (dengan sisa slot diving harian) dan jumlah peserta.
   - **Data peserta utama**: nama, tanggal lahir (dicek terhadap syarat usia kursus, mis. 12+), kewarganegaraan, WhatsApp, dan email (wajib, untuk sertifikasi).

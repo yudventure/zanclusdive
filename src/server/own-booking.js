@@ -9,6 +9,7 @@ import {
 import { fareActions, shiftDate } from "../fare-model.js";
 import { changeOwnBooking, listBookings } from "./store.js";
 import { later, autoMail } from "./booking-mail.js";
+import { guardShopMove } from "./shop-stock.js";
 
 // A guest's own page for a paid booking: the link in the invoice email and
 // on the payment result carries a key made when the booking was ordered.
@@ -99,58 +100,65 @@ export async function changeAsGuest(id, input, now = new Date()) {
       );
   }
   const at = now.toISOString();
-  const saved = await changeOwnBooking(id, (current) => {
-    if (!ownsBooking(current, input.t))
-      throw new GuestError(
-        "Link pesanan ini tidak berlaku.",
-        "This booking link is not valid.",
-        404,
-      );
-    const can = fareActions(current, today);
-    if (action === "reschedule") {
-      if (!can.canReschedule)
+  const change = () =>
+    changeOwnBooking(id, (current) => {
+      if (!ownsBooking(current, input.t))
         throw new GuestError(
-          "Tanggal pesanan ini sudah tidak bisa diganti sendiri. Hubungi tim kami lewat WhatsApp.",
-          "The date of this booking can no longer be changed here. Please contact our team on WhatsApp.",
+          "Link pesanan ini tidak berlaku.",
+          "This booking link is not valid.",
+          404,
         );
-      if (input.date === current.startDate)
+      const can = fareActions(current, today);
+      if (action === "reschedule") {
+        if (!can.canReschedule)
+          throw new GuestError(
+            "Tanggal pesanan ini sudah tidak bisa diganti sendiri. Hubungi tim kami lewat WhatsApp.",
+            "The date of this booking can no longer be changed here. Please contact our team on WhatsApp.",
+          );
+        if (input.date === current.startDate)
+          throw new GuestError(
+            "Pilih tanggal yang berbeda dari tanggal sekarang.",
+            "Choose a date other than the current one.",
+            400,
+          );
+        const length = Math.round(
+          (Date.parse(current.endDate) - Date.parse(current.startDate)) /
+            86400000,
+        );
+        return {
+          ...current,
+          startDate: input.date,
+          endDate: shiftDate(input.date, Math.max(0, length)),
+          reschedules: [
+            ...(current.reschedules ?? []),
+            { from: current.startDate, to: input.date, at, by: "guest" },
+          ].slice(-10),
+        };
+      }
+      if (!can.canRefund)
         throw new GuestError(
-          "Pilih tanggal yang berbeda dari tanggal sekarang.",
-          "Choose a date other than the current one.",
-          400,
+          "Pesanan ini sudah tidak bisa dibatalkan dengan refund. Hubungi tim kami lewat WhatsApp.",
+          "This booking can no longer be cancelled for a refund. Please contact our team on WhatsApp.",
         );
-      const length = Math.round(
-        (Date.parse(current.endDate) - Date.parse(current.startDate)) /
-          86400000,
-      );
       return {
         ...current,
-        startDate: input.date,
-        endDate: shiftDate(input.date, Math.max(0, length)),
-        reschedules: [
-          ...(current.reschedules ?? []),
-          { from: current.startDate, to: input.date, at, by: "guest" },
-        ].slice(-10),
-      };
-    }
-    if (!can.canRefund)
-      throw new GuestError(
-        "Pesanan ini sudah tidak bisa dibatalkan dengan refund. Hubungi tim kami lewat WhatsApp.",
-        "This booking can no longer be cancelled for a refund. Please contact our team on WhatsApp.",
-      );
-    return {
-      ...current,
-      status: "cancelled",
-      payment: {
-        ...current.payment,
-        refund: {
-          status: "requested",
-          amount: can.refundAmount,
-          requestedAt: at,
+        status: "cancelled",
+        payment: {
+          ...current.payment,
+          refund: {
+            status: "requested",
+            amount: can.refundAmount,
+            requestedAt: at,
+          },
         },
-      },
-    };
-  });
+      };
+    });
+  // Dive Shop rentals that follow the warehouse must be free on the new
+  // dates; the key is checked first so a wrong link learns nothing.
+  const saved =
+    action === "reschedule" && (await findOwnBooking(id, input.t))
+      ? await guardShopMove(id, input.date, change, now)
+      : await change();
   if (!saved)
     throw new GuestError(
       "Link pesanan ini tidak berlaku.",

@@ -89,6 +89,7 @@ export default function HomePage({
   locks = noLocks,
   payments,
   banners = [],
+  stock = {},
 }) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
@@ -470,6 +471,7 @@ export default function HomePage({
               locks={locks}
               payments={payments}
               fares={content.fares}
+              stock={stock}
             />
           )}
           {sectionLocked(locks, "travel") ? (

@@ -11,6 +11,7 @@ export const shopCategories = {
   light: "Lampu & aksesori",
 };
 export const availabilityLabels = {
+  stock: "Ikuti stok gudang",
   request: "Konfirmasi ketersediaan",
   available: "Tersedia",
   unavailable: "Tidak tersedia",
@@ -113,6 +114,30 @@ export function demoShop() {
         availability: "request",
       }),
     ),
+  };
+}
+// How many units a guest may take of a product in this mode: the
+// warehouse's free units for products that follow it (null while the stock
+// cannot be read), else 10.
+export function unitsLeft(product, stock, mode) {
+  if (product.availability !== "stock") return 10;
+  const left = stock?.[product.id]?.[mode];
+  return Number.isInteger(left) ? Math.min(10, left) : null;
+}
+// The badge on a product card: its availability, or the stock left.
+export function stockBadge(product, stock, mode, labels) {
+  if (product.availability !== "stock")
+    return {
+      state: product.availability,
+      label: labels[product.availability],
+    };
+  const left = stock?.[product.id]?.[mode];
+  if (!Number.isInteger(left))
+    return { state: "request", label: labels.request };
+  if (left <= 0) return { state: "unavailable", label: labels.out };
+  return {
+    state: "available",
+    label: left <= 3 ? labels.left(left) : labels.available,
   };
 }
 // Existing CMS documents acquire the new section without losing saved content.

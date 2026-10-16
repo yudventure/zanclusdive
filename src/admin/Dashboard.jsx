@@ -1419,6 +1419,8 @@ export default function Dashboard({ section, account, today }) {
                   busy={busy}
                   media={data.media}
                   placePhoto={placePhoto}
+                  request={request}
+                  canStock={can("gudang")}
                 />
               )}
               {section === "experiences" && (

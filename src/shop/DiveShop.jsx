@@ -7,7 +7,13 @@ import { photoSrcSet } from "../photography.js";
 import ProductVisual from "./ProductVisual.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
-import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
+import {
+  rupiah,
+  quoteOrder,
+  orderMessage,
+  unitsLeft,
+  stockBadge,
+} from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
@@ -27,6 +33,7 @@ export default function DiveShop({
   locks = noLocks,
   payments,
   fares,
+  stock = {},
 }) {
   const dict = dictionary(locale);
   const t = dict.shop;
@@ -99,8 +106,10 @@ export default function DiveShop({
   }
   function add(product) {
     const item = cart.find((p) => p.id === product.id && p.mode === mode);
-    if (item?.quantity >= 10) {
-      setNotice(t.maxUnits);
+    // Gear that follows the warehouse stops at the units left.
+    const left = unitsLeft(product, stock, mode) ?? 10;
+    if ((item?.quantity ?? 0) >= left) {
+      setNotice(left >= 10 ? t.maxUnits : t.onlyLeft(product.name, left));
       return;
     }
     changeCart(
@@ -296,6 +305,12 @@ export default function DiveShop({
                   const price =
                     product[mode === "sale" ? "salePrice" : "rentalPrice"];
                   const locked = itemLocked(locks, "product", product.id);
+                  const badge = stockBadge(
+                    product,
+                    stock,
+                    mode,
+                    dict.availability,
+                  );
                   return (
                     <article
                       className={
@@ -308,10 +323,8 @@ export default function DiveShop({
                       {locked && <LockedBadge locale={locale} />}
                       <div className="shop-product-image">
                         <ProductVisual product={product} locale={locale} />
-                        <span
-                          className={"shop-stock stock-" + product.availability}
-                        >
-                          {dict.availability[product.availability]}
+                        <span className={"shop-stock stock-" + badge.state}>
+                          {badge.label}
                         </span>
                       </div>
                       <div className="shop-product-info">
@@ -335,9 +348,7 @@ export default function DiveShop({
                             )}
                           </p>
                           <button
-                            disabled={
-                              locked || product.availability === "unavailable"
-                            }
+                            disabled={locked || badge.state === "unavailable"}
                             aria-label={t.add(product.name, mode === "sale")}
                             onClick={() => add(product)}
                           >
@@ -432,11 +443,21 @@ export default function DiveShop({
                                   )
                                 }
                               >
-                                {Array.from({ length: 10 }, (_, i) => (
-                                  <option key={i} value={i + 1}>
-                                    {i + 1}
-                                  </option>
-                                ))}
+                                {Array.from(
+                                  {
+                                    length: Math.max(
+                                      1,
+                                      item.quantity,
+                                      unitsLeft(product, stock, item.mode) ??
+                                        10,
+                                    ),
+                                  },
+                                  (_, i) => (
+                                    <option key={i} value={i + 1}>
+                                      {i + 1}
+                                    </option>
+                                  ),
+                                )}
                               </select>
                             </label>
                             <strong>

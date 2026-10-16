@@ -63,6 +63,9 @@ const id = {
     request: "Konfirmasi ketersediaan",
     available: "Tersedia",
     unavailable: "Tidak tersedia",
+    // Products that follow the warehouse stock.
+    out: "Stok habis",
+    left: (n) => `Sisa ${n}`,
   },
   language: {
     label: "Pilih bahasa",
@@ -1055,6 +1058,7 @@ const id = {
   },
   shop: {
     maxUnits: "Maksimal 10 unit per perlengkapan.",
+    onlyLeft: (name, n) => `Stok ${name} tinggal ${n}.`,
     added: (name, sale) =>
       `${name} ditambahkan untuk ${sale ? "dibeli" : "rental"}.`,
     pastDate: "Tanggal rental harus hari ini atau setelahnya.",
@@ -1148,6 +1152,7 @@ const id = {
         cta: "Pesan servis",
       },
       buyTag: "BELI",
+      out: "Stok habis",
       rentalTag: "SEWA HARIAN",
       askPrice: "Tanya harga",
       add: "Keranjang",
@@ -1285,6 +1290,8 @@ const en = {
     request: "Ask for availability",
     available: "Available",
     unavailable: "Unavailable",
+    out: "Out of stock",
+    left: (n) => `${n} left`,
   },
   language: {
     label: "Choose language",
@@ -2277,6 +2284,7 @@ const en = {
   },
   shop: {
     maxUnits: "Up to 10 units per item.",
+    onlyLeft: (name, n) => `Only ${n} left of ${name}.`,
     added: (name, sale) => `${name} added to ${sale ? "buy" : "rent"}.`,
     pastDate: "The rental date must be today or later.",
     help: "Hi Zanclus! I'd like help buying or renting diving gear.",
@@ -2365,6 +2373,7 @@ const en = {
         cta: "Book a service",
       },
       buyTag: "BUY",
+      out: "Out of stock",
       rentalTag: "DAILY RENTAL",
       askPrice: "Ask for price",
       add: "Add to cart",

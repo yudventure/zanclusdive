@@ -1,7 +1,7 @@
 "use client";
 import { useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
-import { rupiah } from "../shop-model.js";
+import { rupiah, unitsLeft } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
@@ -151,6 +151,7 @@ export default function ShopTeaser({
   locks = noLocks,
   payments,
   fares,
+  stock = {},
 }) {
   const t = dictionary(locale).shop;
   const s = t.teaser;
@@ -187,6 +188,8 @@ export default function ShopTeaser({
           mode: "sale",
           visual: p,
           locked: itemLocked(locks, "product", p.id),
+          // Gear that follows the warehouse stops at the units left.
+          left: unitsLeft(p, stock, "sale") ?? 10,
         }))
     : priceList[active].map((item, index) => ({
         key: `${active}:${index}`,
@@ -196,6 +199,7 @@ export default function ShopTeaser({
         unit: priceText(item.unit, locale),
         mode: "rental",
         visual: { category: visualFor(item.name.id), image: "" },
+        left: 10,
       }));
   const totals = cartTotals(cart, form.days || 1);
   // The fare's increase applies to the rentals, not the purchases.
@@ -377,12 +381,14 @@ export default function ShopTeaser({
                           <button
                             type="button"
                             aria-label={s.more(item.name)}
-                            disabled={count >= 10}
+                            disabled={count >= item.left}
                             onClick={() => change(item, 1)}
                           >
                             +
                           </button>
                         </div>
+                      ) : item.left <= 0 ? (
+                        <p className="shop-item-out">{s.out}</p>
                       ) : (
                         <button
                           type="button"

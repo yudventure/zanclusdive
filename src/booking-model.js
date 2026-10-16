@@ -24,6 +24,8 @@ const englishErrors = {
     "This program isn't taking bookings yet. Please choose another program.",
   "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.":
     "This date is closed for the selected program. Please choose another date.",
+  "Alat sewa pesanan ini sudah penuh dipesan pada tanggal itu. Pilih tanggal lain.":
+    "The rental gear in this booking is fully booked on that date. Please choose another date.",
   "Program atau bulan kalender tidak valid.":
     "Invalid program or calendar month.",
   "Bulan berada di luar rentang booking.":
@@ -80,6 +82,15 @@ export function bookingErrorMessage(message, locale) {
   const left = /^Slot tanggal ini tinggal (\d+) orang/.exec(message);
   if (left)
     return `Only ${left[1]} ${left[1] === "1" ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`;
+  // Dive Shop gear that follows the warehouse stock.
+  const stock = /^Stok (.+) tinggal (\d+)( untuk tanggal itu)?\./.exec(message);
+  if (stock)
+    return stock[3]
+      ? `Only ${stock[2]} left of ${stock[1]} for those dates. Choose fewer or other dates.`
+      : `Only ${stock[2]} left of ${stock[1]}. Choose fewer.`;
+  const gone = /^(.+) sedang habis\./.exec(message);
+  if (gone)
+    return `${gone[1]} is out of stock. Remove it from your order or chat with our team on WhatsApp.`;
   return englishErrors[message] ?? "Please check your booking details.";
 }
 

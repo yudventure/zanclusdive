@@ -2187,6 +2187,39 @@
 .admin-subtle.is-warn {
   color: #a35a12;
 }
+/* A warehouse item that a Dive Shop product sells or rents out. */
+.admin-stock-shop {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #e6f4f4;
+  color: #0d5f63;
+  font-size: 11px;
+  font-weight: 600;
+}
+.admin-stock td small {
+  display: block;
+}
+/* The Dive Shop editor's box for the product's warehouse item. */
+.admin-shop-stock {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f4f9f9;
+}
+.admin-shop-stock h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.admin-shop-stock p {
+  margin: 0;
+}
+.admin-shop-stock .admin-field {
+  margin: 0;
+}
 .admin-quick-move {
   border-color: #cfe6e2;
   background: #f4fbf9;

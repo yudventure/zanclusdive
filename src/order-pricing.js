@@ -122,11 +122,9 @@ function shopOrder(content, input, window, locks) {
   const priced = lines.map((line) => {
     const quantity = whole(line?.quantity, 1, 10);
     if (!quantity) fail("Jumlah setiap alat harus 1–10.", 400);
-    let name, price, key, rent;
+    let name, price, key, rent, product;
     if (line.source === "product") {
-      const product = (content.shop?.products ?? []).find(
-        (p) => p.id === line.id,
-      );
+      product = (content.shop?.products ?? []).find((p) => p.id === line.id);
       rent = line.mode === "rental";
       if (
         !product?.enabled ||
@@ -167,6 +165,8 @@ function shopOrder(content, input, window, locks) {
       price: rent ? price * days : price,
       quantity,
       rent,
+      // Dive Shop products are counted against the warehouse.
+      ...(product ? { product: product.id, mode: line.mode } : {}),
     };
   });
   const sum = (list) =>

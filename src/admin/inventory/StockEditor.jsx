@@ -19,6 +19,7 @@ const blank = () => ({
   location: "",
   note: "",
   active: true,
+  productId: "",
 });
 const blankMove = (today, kind) => ({
   date: today,
@@ -28,9 +29,20 @@ const blankMove = (today, kind) => ({
   note: "",
 });
 
+// What the Dive Shop holds of a linked item, as short lines.
+const shopLines = (shop) =>
+  [
+    shop.rentedToday && `${shop.rentedToday} disewa hari ini`,
+    shop.bookedLater && `${shop.bookedLater} dipesan untuk sewa nanti`,
+    shop.waiting && `${shop.waiting} menunggu pembayaran`,
+  ].filter(Boolean);
+
 // Barang & stok: every item with its stock, quick in/out, and the form.
+// Every Dive Shop product has its item here; the server makes the missing
+// ones when the list loads.
 export default function StockEditor({ request, today }) {
   const [items, setItems] = useState(null);
+  const [products, setProducts] = useState([]);
   const [form, setForm] = useState(blank());
   const [editing, setEditing] = useState(null);
   const [removing, setRemoving] = useState(null);
@@ -41,7 +53,13 @@ export default function StockEditor({ request, today }) {
   const [notice, setNotice] = useState("");
   async function load() {
     try {
-      setItems((await request("/api/admin/inventory/items")).items);
+      const result = await request("/api/admin/inventory/items");
+      setItems(result.items);
+      setProducts(result.products ?? []);
+      if (result.created)
+        setNotice(
+          `${result.created} produk Dive Shop masuk ke gudang dengan stok 0. Catat stok awalnya lewat tombol Masuk.`,
+        );
     } catch (e) {
       setError(e.message);
     }
@@ -78,6 +96,7 @@ export default function StockEditor({ request, today }) {
       ...item,
       minStock: String(item.minStock),
       cost: String(item.cost || ""),
+      productId: item.shop?.productId ?? "",
     });
     setMove(null);
     document.getElementById("item-form")?.scrollIntoView({ block: "start" });
@@ -124,13 +143,22 @@ export default function StockEditor({ request, today }) {
         : `${item.name} dinonaktifkan.`,
     );
   const remove = (item) =>
-    act(async () => {
-      await request(`/api/admin/inventory/items/${item.id}`, "DELETE");
-      setRemoving(null);
-      if (editing?.id === item.id) cancel();
-    }, `${item.name} dihapus.`);
+    act(
+      async () => {
+        await request(`/api/admin/inventory/items/${item.id}`, "DELETE");
+        setRemoving(null);
+        if (editing?.id === item.id) cancel();
+      },
+      `${item.name} dihapus.` +
+        (item.shop
+          ? ` Produk Dive Shop ${item.shop.productName} mendapat barang baru dengan stok 0.`
+          : ""),
+    );
   const shown = (items ?? []).filter((i) => showInactive || i.active !== false);
   const low = (items ?? []).filter((i) => i.low);
+  const empty = (items ?? []).filter((i) => i.empty);
+  const linkedTo = (productId) =>
+    (items ?? []).find((i) => i.shop?.productId === productId);
   const moveItem = move && items?.find((i) => i.id === move.itemId);
   return (
     <div className="admin-hr">
@@ -148,11 +176,21 @@ export default function StockEditor({ request, today }) {
         <div className="admin-card-heading">
           <div>
             <h2>Barang & stok</h2>
-            <p className={"admin-subtle" + (low.length ? " is-warn" : "")}>
+            <p
+              className={
+                "admin-subtle" + (low.length || empty.length ? " is-warn" : "")
+              }
+            >
               {!items
                 ? "Memuat…"
-                : low.length
-                  ? `${low.length} barang menipis: ${low.map((i) => i.name).join(", ")}.`
+                : low.length || empty.length
+                  ? [
+                      empty.length && `${empty.length} barang habis`,
+                      low.length &&
+                        `${low.length} barang menipis (${low.map((i) => i.name).join(", ")})`,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") + "."
                   : "Semua stok di atas batas minimum."}
             </p>
           </div>
@@ -190,12 +228,18 @@ export default function StockEditor({ request, today }) {
               </thead>
               <tbody>
                 {shown.map((i) => (
-                  <tr key={i.id} className={i.low ? "is-low" : ""}>
+                  <tr key={i.id} className={i.low || i.empty ? "is-low" : ""}>
                     <td>
                       <strong>{i.name}</strong>
                       <small>
                         {[i.sku, i.location].filter(Boolean).join(" · ")}
                       </small>
+                      {i.shop && (
+                        <span className="admin-stock-shop">
+                          Dive Shop · {i.shop.productName}
+                          {i.shop.shown ? "" : " (draft)"}
+                        </span>
+                      )}
                     </td>
                     <td>{itemCategories[i.category]}</td>
                     <td>
@@ -203,6 +247,10 @@ export default function StockEditor({ request, today }) {
                         {i.stock} {i.unit}
                       </strong>
                       {i.cost > 0 && <small>nilai {money(i.value)}</small>}
+                      {i.shop &&
+                        shopLines(i.shop).map((line) => (
+                          <small key={line}>{line}</small>
+                        ))}
                     </td>
                     <td>{i.minStock || "–"}</td>
                     <td>
@@ -211,16 +259,18 @@ export default function StockEditor({ request, today }) {
                           "admin-user-state " +
                           (i.active === false
                             ? "is-off"
-                            : i.low
+                            : i.low || i.empty
                               ? "is-warn"
                               : "is-on")
                         }
                       >
                         {i.active === false
                           ? "Nonaktif"
-                          : i.low
-                            ? "Menipis"
-                            : "Cukup"}
+                          : i.empty
+                            ? "Habis"
+                            : i.low
+                              ? "Menipis"
+                              : "Cukup"}
                       </span>
                     </td>
                     <td className="admin-user-actions">
@@ -306,12 +356,12 @@ export default function StockEditor({ request, today }) {
 
       {moveItem && (
         <section className="admin-card admin-quick-move">
-          <h2>
-            {move.kind === "in" ? "Barang masuk" : "Barang keluar"}:{" "}
-            {moveItem.name}
-          </h2>
+          <h2>{move.kind === "in" ? "Barang masuk" : "Barang keluar"}</h2>
           <p className="admin-subtle">
-            Stok sekarang {moveItem.stock} {moveItem.unit}.
+            {moveItem.name}, stok sekarang {moveItem.stock} {moveItem.unit}.
+            {moveItem.shop &&
+              move.kind === "out" &&
+              " Penjualan dan sewa dari pesanan online Dive Shop dihitung otomatis, jadi tidak perlu dicatat di sini."}
           </p>
           <form onSubmit={saveMove} className="admin-hr-form">
             <div className="admin-form-grid">
@@ -380,7 +430,7 @@ export default function StockEditor({ request, today }) {
       )}
 
       <section className="admin-card" id="item-form">
-        <h2>{editing ? `Ubah barang: ${editing.name}` : "Tambah barang"}</h2>
+        <h2>{editing ? `Ubah ${editing.name}` : "Tambah barang"}</h2>
         <form onSubmit={submit} className="admin-hr-form">
           <div className="admin-form-grid">
             <Field label="Nama barang">
@@ -452,6 +502,25 @@ export default function StockEditor({ request, today }) {
                 value={form.note}
                 onChange={set("note")}
               />
+            </Field>
+            <Field
+              label="Produk Dive Shop"
+              hint="Stok barang ini dipakai produk yang dipilih. Penjualan online mengurangi stok sendiri, dan sewa online memakai unitnya sesuai tanggal sewa. Produk tanpa barang pilihan mendapat barang baru sendiri."
+            >
+              <select value={form.productId} onChange={set("productId")}>
+                <option value="">Tidak dijual di Dive Shop</option>
+                {products.map((product) => {
+                  const other = linkedTo(product.id);
+                  return (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                      {other && other.id !== editing?.id
+                        ? ` (sekarang ${other.name})`
+                        : ""}
+                    </option>
+                  );
+                })}
+              </select>
             </Field>
           </div>
           {editing && (

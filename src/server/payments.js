@@ -32,6 +32,7 @@ import { withService } from "../service-model.js";
 import { dueAt, invoiceNumber } from "../booking-mail.js";
 import { fareNames } from "../fare-model.js";
 import { autoMail, later } from "./booking-mail.js";
+import { recordShopSales, reserveShopStock } from "./shop-stock.js";
 
 // Online payment is offered when the owner switched it on and the hosting
 // has a Midtrans server key. A paid booking must not disappear, so real
@@ -156,43 +157,51 @@ export async function startPayment(input, { origin, locale = "id" }) {
   // link expires and the booking is cancelled.
   const dueHours = content.payments?.dueHours ?? 24;
   const createdAt = new Date().toISOString();
-  const booking = await createPaymentBooking({
-    ...payload,
-    payment: {
-      provider: "midtrans",
-      orderId,
-      status: "created",
-      amount,
-      // One line keeps the item, quantity and unit fields of earlier
-      // payments; every payment also lists its lines.
-      ...(single
-        ? {
-            item: priceText(single.name, "id"),
-            itemEn: priceText(single.name, "en"),
-            quantity: single.quantity,
-            unit: single.unit ? priceText(single.unit, "id") : "",
-          }
-        : {
-            item: orderLabel(lines, "id"),
-            itemEn: orderLabel(lines, "en"),
-          }),
-      lines: lines.map((line) => ({
-        name: {
-          id: priceText(line.name, "id"),
-          en: priceText(line.name, "en"),
-        },
-        price: line.price,
-        quantity: line.quantity,
-      })),
-      createdAt,
-      dueHours,
-      dueAt: dueAt(createdAt, dueHours),
-      // The fare and its rules as they were when ordered, and the key to
-      // the guest's own page for moving the date or asking for a refund.
-      ...(order.fare ? { fare: order.fare } : {}),
-      manageToken: randomUUID(),
-    },
-  });
+  // Dive Shop gear that follows the warehouse is checked against its stock
+  // as the booking is saved.
+  const create = () =>
+    createPaymentBooking({
+      ...payload,
+      payment: {
+        provider: "midtrans",
+        orderId,
+        status: "created",
+        amount,
+        // One line keeps the item, quantity and unit fields of earlier
+        // payments; every payment also lists its lines.
+        ...(single
+          ? {
+              item: priceText(single.name, "id"),
+              itemEn: priceText(single.name, "en"),
+              quantity: single.quantity,
+              unit: single.unit ? priceText(single.unit, "id") : "",
+            }
+          : {
+              item: orderLabel(lines, "id"),
+              itemEn: orderLabel(lines, "en"),
+            }),
+        lines: lines.map((line) => ({
+          name: {
+            id: priceText(line.name, "id"),
+            en: priceText(line.name, "en"),
+          },
+          price: line.price,
+          quantity: line.quantity,
+          ...(line.product ? { product: line.product, mode: line.mode } : {}),
+        })),
+        createdAt,
+        dueHours,
+        dueAt: dueAt(createdAt, dueHours),
+        // The fare and its rules as they were when ordered, and the key to
+        // the guest's own page for moving the date or asking for a refund.
+        ...(order.fare ? { fare: order.fare } : {}),
+        manageToken: randomUUID(),
+      },
+    });
+  const booking =
+    order.program === "shop"
+      ? await reserveShopStock(order, create)
+      : await create();
   try {
     const snap = await createTransaction({
       transaction_details: { order_id: orderId, gross_amount: amount },
@@ -271,7 +280,15 @@ async function apply(booking, status) {
     }
     return next;
   });
-  if (changed === "paid") later(() => autoMail(updated, "invoice"));
+  if (changed === "paid") {
+    later(() => autoMail(updated, "invoice"));
+    // Purchases from the Dive Shop leave the warehouse.
+    later(() =>
+      recordShopSales(updated).catch((error) =>
+        console.error("Dive Shop stock not recorded:", error?.message),
+      ),
+    );
+  }
   if (changed === "expired" && updated?.status === "cancelled")
     later(() => autoMail(updated, "expired"));
   return updated ?? booking;

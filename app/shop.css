@@ -797,6 +797,16 @@
   font-weight: 400;
   color: #6b8580;
 }
+/* Gear that follows the warehouse and has none left. */
+.shop-item-out {
+  margin: auto 0 0;
+  padding: 11px 14px;
+  border-radius: 999px;
+  background: #f1f4f4;
+  color: #6b7c80;
+  font-size: 12px;
+  text-align: center;
+}
 .shop-item-add {
   display: inline-flex;
   align-items: center;

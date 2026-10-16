@@ -1,6 +1,6 @@
 "use client";
 import ImageUpload from "./ImageUpload.jsx";
-import { cloneElement, useId, useState } from "react";
+import { cloneElement, useEffect, useId, useState } from "react";
 import ProductVisual from "../shop/ProductVisual.jsx";
 import { shopCategories, availabilityLabels, rupiah } from "../shop-model.js";
 
@@ -20,8 +20,22 @@ export default function ShopEditor({
   busy,
   media,
   placePhoto,
+  request,
+  canStock = false,
 }) {
   const [selectedID, setSelectedID] = useState(shop.products[0]?.id);
+  // The warehouse items, with their stock and the product each one serves.
+  const [stock, setStock] = useState(null);
+  const [stockError, setStockError] = useState("");
+  useEffect(() => {
+    if (busy || !request) return;
+    request("/api/admin/shop-stock")
+      .then((result) => {
+        setStock(result.items);
+        setStockError("");
+      })
+      .catch((e) => setStockError(e.message));
+  }, [busy]);
   const product =
     shop.products.find((p) => p.id === selectedID) || shop.products[0];
   function edit(key, value) {
@@ -48,7 +62,7 @@ export default function ShopEditor({
         salePrice: null,
         rentalPrice: null,
         enabled: false,
-        availability: "request",
+        availability: "stock",
       },
     ]);
     setSelectedID(id);
@@ -257,7 +271,7 @@ export default function ShopEditor({
             </div>
             <p className="admin-subtle">
               Aktifkan minimal satu layanan. Harga kosong ditampilkan sebagai
-              permintaan penawaran; rental dihitung per unit per hari.
+              permintaan penawaran. Rental dihitung per unit per hari.
             </p>
             <Field label="Ketersediaan produk">
               <select
@@ -271,6 +285,13 @@ export default function ShopEditor({
                 ))}
               </select>
             </Field>
+            <ProductStock
+              product={product}
+              items={stock}
+              error={stockError}
+              canStock={canStock}
+              onPick={(itemId) => edit("stockItem", itemId)}
+            />
             <div className="admin-shop-image-editor">
               <div className="admin-shop-preview">
                 <ProductVisual product={product} />
@@ -324,10 +345,10 @@ export default function ShopEditor({
             </div>
             <p className="admin-shop-price-preview">
               {product.saleEnabled &&
-                `Jual: ${product.salePrice === null ? "Minta penawaran" : rupiah(product.salePrice)}`}
+                `Jual ${product.salePrice === null ? "dengan penawaran" : rupiah(product.salePrice)}`}
               {product.saleEnabled && product.rentalEnabled && " · "}
               {product.rentalEnabled &&
-                `Rental: ${product.rentalPrice === null ? "Minta penawaran" : rupiah(product.rentalPrice) + " / hari"}`}
+                `Rental ${product.rentalPrice === null ? "dengan penawaran" : rupiah(product.rentalPrice) + " per hari"}`}
             </p>
             <button
               type="button"
@@ -347,5 +368,87 @@ export default function ShopEditor({
         </button>
       </div>
     </form>
+  );
+}
+
+// The product's item in the warehouse: which one, its stock, and what the
+// shop holds of it. A new choice is applied when the catalog is saved.
+function ProductStock({ product, items, error, canStock, onPick }) {
+  const linked = items?.find((item) => item.productId === product.id);
+  const chosen = product.stockItem ?? linked?.id ?? "";
+  const picked = items?.find((item) => item.id === chosen);
+  const changed = chosen !== (linked?.id ?? "");
+  const options = (items ?? []).filter(
+    (item) => item.active || item.id === chosen,
+  );
+  return (
+    <div className="admin-shop-stock">
+      <h3>Stok di gudang</h3>
+      {error ? (
+        <p className="admin-error" role="alert">
+          {error}
+        </p>
+      ) : !items ? (
+        <p className="admin-subtle">Memuat stok gudang…</p>
+      ) : (
+        <>
+          <Field label="Barang di gudang">
+            <select value={chosen} onChange={(e) => onPick(e.target.value)}>
+              {!linked && (
+                <option value="">Buat barang baru saat katalog disimpan</option>
+              )}
+              {options.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} · stok {item.stock} {item.unit}
+                  {item.productId && item.productId !== product.id
+                    ? ` · dipakai ${item.shop?.productName ?? "produk lain"}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <p className="admin-subtle">
+            {changed
+              ? picked
+                ? `Produk ini memakai stok ${picked.name} setelah katalog disimpan.`
+                : "Barang gudang untuk produk ini dibuat setelah katalog disimpan."
+              : linked
+                ? [
+                    `Stok ${linked.stock} ${linked.unit}.`,
+                    linked.shop?.rentedToday
+                      ? `${linked.shop.rentedToday} disewa hari ini.`
+                      : "",
+                    linked.shop?.waiting
+                      ? `${linked.shop.waiting} menunggu pembayaran.`
+                      : "",
+                    "Penjualan online mengurangi stok sendiri, sewa online memakai unit sesuai tanggalnya.",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                : ""}
+          </p>
+          {!changed &&
+            linked &&
+            product.availability === "stock" &&
+            linked.stock <= 0 && (
+              <p className="admin-subtle is-warn">
+                Stok masih 0, jadi website menampilkan Stok habis. Catat barang
+                masuk di Gudang, Barang & stok.
+              </p>
+            )}
+          {product.availability !== "stock" && (
+            <p className="admin-subtle">
+              Pilih Ikuti stok gudang di Ketersediaan produk supaya website
+              menampilkan sisa stok dan pesanan online tidak melebihi stok.
+            </p>
+          )}
+          {canStock && linked && (
+            <a className="admin-inline" href="/admin/stock">
+              Buka Barang & stok
+            </a>
+          )}
+        </>
+      )}
+    </div>
   );
 }
