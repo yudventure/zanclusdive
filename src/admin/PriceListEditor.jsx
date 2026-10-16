@@ -8,7 +8,8 @@ import {
   rentalLabels,
 } from "../price-list.js";
 import { activityLabels } from "../activity-model.js";
-import { formatIDR } from "../i18n.js";
+import { dictionary, formatIDR } from "../i18n.js";
+import { fareSettings } from "../fare-model.js";
 
 function Field({ label, children }) {
   const id = useId();
@@ -37,10 +38,137 @@ const intro = (group) =>
       ? "Tidak tampil sendiri. Dipakai sebagai add-on di halaman aktivitas, misalnya dokumentasi, antar jemput mobil, atau catering."
       : "Tampil di bagian Dive Shop beranda, dan bisa ditawarkan sebagai add-on aktivitas.";
 
+// Standard, Comfort and Flexi for activity packages and gear rentals paid
+// online: the increase of each and the last days for a refund and for a
+// new date. Below, what guests read at checkout.
+function FaresCard({ fares, updateFares }) {
+  const f = fareSettings(fares);
+  const words = dictionary("id").fare;
+  const number = (value, fallback) =>
+    value === ""
+      ? ""
+      : Number.isFinite(Number(value))
+        ? Number(value)
+        : fallback;
+  return (
+    <section className="admin-card admin-fares">
+      <h2>Tarif Standard, Comfort, Flexi</h2>
+      <p className="admin-subtle">
+        Berlaku untuk paket Diving, Snorkeling, Trip laut, dan sewa alat yang
+        dipesan lewat website. Tamu memilih tarif saat checkout. Kenaikan
+        dihitung dari harga paket atau sewa, tidak dari add-on dan pembelian.
+        Tamu Comfort dan Flexi mengganti tanggal sendiri, tamu Flexi juga bisa
+        membatalkan dengan refund sebesar harga dasar.
+      </p>
+      <div className="admin-form-grid">
+        <label className="admin-dev-choice admin-agent-wide">
+          <input
+            type="checkbox"
+            checked={f.enabled}
+            onChange={(e) => updateFares("enabled", e.target.checked)}
+          />
+          <span>
+            <strong>Tawarkan pilihan tarif</strong>
+            <small>Matikan agar semua pesanan memakai tarif Standard.</small>
+          </span>
+        </label>
+        {[
+          ["comfort", "Comfort", "ganti tanggal sendiri"],
+          ["flexi", "Flexi", "ganti tanggal dan refund"],
+        ].map(([key, name, note]) => (
+          <div className="admin-fare-tier" key={key}>
+            <label className="admin-dev-choice">
+              <input
+                type="checkbox"
+                checked={f[key].enabled}
+                disabled={!f.enabled}
+                onChange={(e) =>
+                  updateFares(key, { ...f[key], enabled: e.target.checked })
+                }
+              />
+              <span>
+                <strong>{name}</strong>
+                <small>{note}</small>
+              </span>
+            </label>
+            <Field label={`Kenaikan ${name} (%)`}>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                disabled={!f.enabled || !f[key].enabled}
+                value={fares?.[key]?.percent ?? f[key].percent}
+                onChange={(e) =>
+                  updateFares(key, {
+                    ...f[key],
+                    percent: number(e.target.value, f[key].percent),
+                  })
+                }
+              />
+            </Field>
+          </div>
+        ))}
+        <Field label="Refund paling lambat (hari sebelum tanggal)">
+          <input
+            type="number"
+            min="1"
+            max="60"
+            disabled={!f.enabled}
+            value={fares?.refundDays ?? f.refundDays}
+            onChange={(e) =>
+              updateFares("refundDays", number(e.target.value, f.refundDays))
+            }
+          />
+        </Field>
+        <Field label="Ganti tanggal paling lambat (hari sebelum tanggal)">
+          <input
+            type="number"
+            min="0"
+            max="30"
+            disabled={!f.enabled}
+            value={fares?.rescheduleDays ?? f.rescheduleDays}
+            onChange={(e) =>
+              updateFares(
+                "rescheduleDays",
+                number(e.target.value, f.rescheduleDays),
+              )
+            }
+          />
+        </Field>
+      </div>
+      {f.enabled && (
+        <div className="admin-fare-preview">
+          <p className="admin-subtle">Yang dibaca tamu saat checkout.</p>
+          <ul>
+            {["standard", "comfort", "flexi"]
+              .filter((tier) => tier === "standard" || f[tier].enabled)
+              .map((tier) => (
+                <li key={tier}>
+                  <strong>
+                    {words.names[tier]}
+                    {tier !== "standard" && ` +${f[tier].percent}%`}
+                  </strong>
+                  <span>{words.rules[tier](f)}</span>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // Package prices beside the homepage cards, one list per activity, the
 // gear rental lists in the homepage Dive Shop section, and services offered
 // only as add-ons. Each activity picks its add-ons from the other lists.
-export default function PriceListEditor({ priceList, update, onSave, busy }) {
+export default function PriceListEditor({
+  priceList,
+  update,
+  fares,
+  updateFares,
+  onSave,
+  busy,
+}) {
   const [group, setGroup] = useState("diving");
   const items = priceList[group];
   const addOns = priceList.addOns ?? {};
@@ -94,6 +222,7 @@ export default function PriceListEditor({ priceList, update, onSave, busy }) {
   );
   return (
     <form onSubmit={onSave}>
+      {updateFares && <FaresCard fares={fares} updateFares={updateFares} />}
       <div
         className="admin-activity-tabs"
         role="group"

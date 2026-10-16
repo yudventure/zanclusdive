@@ -294,6 +294,78 @@ const id = {
     ecoMessage:
       "Halo Zanclus! Saya ingin ikut kegiatan peduli lingkungan. Kapan jadwal berikutnya?",
   },
+  // The guest's own booking page (/booking/<id>?t=…).
+  manage: {
+    kicker: "KELOLA PESANAN",
+    title: "Pesananmu di Zanclus",
+    reference: "Kode pesanan",
+    program: "Program",
+    items: "Rincian",
+    date: "Tanggal",
+    participants: "Peserta",
+    paid: "Dibayar",
+    fare: "Tarif",
+    rescheduleUntil: (date) => `Ganti tanggal paling lambat ${date}`,
+    refundUntil: (date, amount) =>
+      `Batalkan dengan refund ${amount} paling lambat ${date}`,
+    moveTitle: "Ganti tanggal",
+    moveIntro:
+      "Pilih tanggal baru. Angka di tiap tanggal adalah sisa tempat hari itu.",
+    moveSubmit: "Simpan tanggal baru",
+    moving: "Menyimpan…",
+    moved: (date) =>
+      `Tanggal sudah diganti ke ${date}. Konfirmasinya kami kirim ke emailmu.`,
+    chosen: (date) => `Tanggal baru ${date}`,
+    pickDate: "Pilih tanggal baru dulu.",
+    refundTitle: "Batalkan dan minta refund",
+    refundIntro: (amount) =>
+      `Pesanan dibatalkan dan ${amount} dikembalikan kepadamu. Kenaikan tarif Flexi tidak ikut dikembalikan.`,
+    refundAsk: "Batalkan pesanan",
+    refundConfirm: (amount) => `Ya, batalkan dan refund ${amount}`,
+    refundKeep: "Tidak jadi",
+    refunding: "Membatalkan…",
+    refundRequested: (amount) =>
+      `Pesanan sudah dibatalkan. Refund ${amount} sedang diproses dan tim kami menghubungimu lewat WhatsApp.`,
+    refundDone: (amount, date) =>
+      `Pesanan dibatalkan dan refund ${amount} sudah dikirim pada ${date}.`,
+    standardNote:
+      "Dengan tarif Standard, tanggal hanya diganti tim kami bila cuaca atau kondisi laut tidak memungkinkan. Kami akan menghubungimu bila itu terjadi.",
+    closedMove: (date) =>
+      `Batas ganti tanggal sendiri sudah lewat, yaitu ${date}. Hubungi tim kami bila ada kendala.`,
+    closedRefund: (date) => `Batas refund sudah lewat, yaitu ${date}.`,
+    unpaid: "Pesanan ini belum dibayar, jadi belum bisa diubah di sini.",
+    cancelled: "Pesanan ini sudah dibatalkan.",
+    past: "Tanggal kegiatan sudah lewat. Terima kasih sudah menyelam bersama Zanclus.",
+    history: "Riwayat ganti tanggal",
+    historyLine: (from, to) => `${from} menjadi ${to}`,
+    chat: "Chat tim kami",
+    chatText: (ref) =>
+      `Halo Zanclus, saya ingin bertanya tentang pesanan ${ref}.`,
+    home: "Ke website Zanclus",
+    failed: "Perubahan belum bisa disimpan. Coba lagi.",
+    manageLink: "Kelola pesanan",
+  },
+  // Fares for scheduled bookings (src/fare-model.js).
+  fare: {
+    title: "Pilih tarif",
+    intro: "Tarif menentukan apa yang bisa kamu lakukan bila rencana berubah.",
+    label: "Tarif",
+    base: "Harga dasar",
+    extra: (amount) => `+${amount}`,
+    names: { standard: "Standard", comfort: "Comfort", flexi: "Flexi" },
+    rules: {
+      standard: () =>
+        "Ganti tanggal hanya bila cuaca atau kondisi laut tidak memungkinkan, diputuskan tim kami. Tanpa refund.",
+      comfort: ({ rescheduleDays }) =>
+        `Ganti tanggal sendiri, paling lambat ${rescheduleDays} hari sebelum tanggal kegiatan. Tanpa refund.`,
+      flexi: ({ rescheduleDays, refundDays }) =>
+        `Ganti tanggal sendiri paling lambat ${rescheduleDays} hari sebelumnya, atau batalkan dan dapat refund paling lambat ${refundDays} hari sebelumnya. Refund sebesar harga dasar, tanpa kenaikan tarif.`,
+    },
+    line: (name, percent) =>
+      percent ? `Tarif ${name} (+${percent}%)` : `Tarif ${name}`,
+    message: (name, percent) =>
+      percent ? `Tarif ${name}, +${percent}%` : `Tarif ${name}`,
+  },
   payment: {
     packageCard: "Paket & biaya",
     choosePackage: "Pilih paket",
@@ -1450,6 +1522,77 @@ const en = {
     ecoJoin: "Join an ocean care day",
     ecoMessage:
       "Hi Zanclus! I'd like to join an ocean care activity. When is the next one?",
+  },
+  // The guest's own booking page (/booking/<id>?t=…).
+  manage: {
+    kicker: "MANAGE BOOKING",
+    title: "Your booking with Zanclus",
+    reference: "Booking code",
+    program: "Program",
+    items: "Details",
+    date: "Date",
+    participants: "Guests",
+    paid: "Paid",
+    fare: "Fare",
+    rescheduleUntil: (date) => `Change the date until ${date}`,
+    refundUntil: (date, amount) =>
+      `Cancel for a refund of ${amount} until ${date}`,
+    moveTitle: "Change the date",
+    moveIntro:
+      "Pick a new date. The number on each day is the places left that day.",
+    moveSubmit: "Save the new date",
+    moving: "Saving…",
+    moved: (date) =>
+      `Your date is now ${date}. We've sent the confirmation to your email.`,
+    chosen: (date) => `New date ${date}`,
+    pickDate: "Pick a new date first.",
+    refundTitle: "Cancel for a refund",
+    refundIntro: (amount) =>
+      `Your booking is cancelled and ${amount} comes back to you. The Flexi fare increase is not refunded.`,
+    refundAsk: "Cancel booking",
+    refundConfirm: (amount) => `Yes, cancel and refund ${amount}`,
+    refundKeep: "Keep my booking",
+    refunding: "Cancelling…",
+    refundRequested: (amount) =>
+      `Your booking is cancelled. The refund of ${amount} is being processed and our team will contact you on WhatsApp.`,
+    refundDone: (amount, date) =>
+      `Your booking is cancelled and the refund of ${amount} was sent on ${date}.`,
+    standardNote:
+      "With the Standard fare, our team only moves the date when weather or sea conditions rule the day out. We'll contact you if that happens.",
+    closedMove: (date) =>
+      `Changing the date yourself was possible until ${date}. Please contact our team if something came up.`,
+    closedRefund: (date) => `A refund was possible until ${date}.`,
+    unpaid: "This booking hasn't been paid yet, so it can't be changed here.",
+    cancelled: "This booking has been cancelled.",
+    past: "The activity date has passed. Thank you for diving with Zanclus.",
+    history: "Date changes",
+    historyLine: (from, to) => `${from} to ${to}`,
+    chat: "Chat with our team",
+    chatText: (ref) => `Hi Zanclus, I have a question about booking ${ref}.`,
+    home: "To the Zanclus website",
+    failed: "The change could not be saved. Please try again.",
+    manageLink: "Manage booking",
+  },
+  // Fares for scheduled bookings (src/fare-model.js).
+  fare: {
+    title: "Choose your fare",
+    intro: "Your fare decides what you can do if plans change.",
+    label: "Fare",
+    base: "Base price",
+    extra: (amount) => `+${amount}`,
+    names: { standard: "Standard", comfort: "Comfort", flexi: "Flexi" },
+    rules: {
+      standard: () =>
+        "The date only changes when weather or sea conditions rule the day out, as decided by our team. No refund.",
+      comfort: ({ rescheduleDays }) =>
+        `Change the date yourself, up to ${rescheduleDays} ${rescheduleDays === 1 ? "day" : "days"} before the activity. No refund.`,
+      flexi: ({ rescheduleDays, refundDays }) =>
+        `Change the date yourself up to ${rescheduleDays} ${rescheduleDays === 1 ? "day" : "days"} before, or cancel for a refund up to ${refundDays} days before. The refund is the base price, without the fare increase.`,
+    },
+    line: (name, percent) =>
+      percent ? `${name} fare (+${percent}%)` : `${name} fare`,
+    message: (name, percent) =>
+      percent ? `${name} fare, +${percent}%` : `${name} fare`,
   },
   payment: {
     packageCard: "Package & price",

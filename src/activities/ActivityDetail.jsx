@@ -17,6 +17,13 @@ import SiteNavLinks from "../components/SiteNavLinks.jsx";
 import { payableItems, quantityLimit } from "../payment-model.js";
 import CartIcon from "../components/CartIcon.jsx";
 import SlotCalendar, { SlotMonth, slotState } from "./SlotCalendar.jsx";
+import FareChoice from "../components/FareChoice.jsx";
+import {
+  fareChoices,
+  fareFor,
+  fareMarkup,
+  fareSettings,
+} from "../fare-model.js";
 
 // Per-person packages count one unit for each participant.
 const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
@@ -46,10 +53,12 @@ function Inquiry({
   calendarToday,
   lastDate,
   payments,
+  fares,
   locale,
 }) {
   const t = dictionary(locale).activity;
   const p = dictionary(locale).payment;
+  const f = dictionary(locale).fare;
   const label = dictionary(locale).activityLabels[activityKey];
   // Packages are chosen like a cart, from the price list or here; they are
   // paid online when Midtrans is switched on, otherwise they give the
@@ -58,6 +67,8 @@ function Inquiry({
   const [step, setStep] = useState("form");
   const [intent, setIntent] = useState(ready ? "pay" : "ask");
   const [paying, setPaying] = useState(false);
+  // Standard, Comfort or Flexi; the increase applies to the packages.
+  const [fare, setFare] = useState("standard");
   const [today, setToday] = useState("");
   const [fields, setFields] = useState({
     name: "",
@@ -99,10 +110,19 @@ function Inquiry({
     .filter((line) => line.item);
   const mainLines = lines.filter((line) => !line.item.addOn);
   const addOnLines = lines.filter((line) => line.item.addOn);
-  const total = lines.reduce(
+  const subtotal = lines.reduce(
     (sum, line) => sum + line.item.price * line.quantity,
     0,
   );
+  const packagesTotal = mainLines.reduce(
+    (sum, line) => sum + line.item.price * line.quantity,
+    0,
+  );
+  const offered = fareChoices(fares).length > 1 && packagesTotal > 0;
+  const fareChoice = fareFor(fares, offered ? fare : "standard");
+  const markup = fareMarkup(packagesTotal, fareChoice.percent);
+  const total = subtotal + markup;
+  const fareName = f.names[fareChoice.tier];
   const unitOf = (line) =>
     unitCount(priceText(line.item.unit, locale), line.quantity, locale);
   const lineText = (line) =>
@@ -117,6 +137,7 @@ function Inquiry({
           unit: unitOf(line),
         })),
         total,
+        ...(offered ? { fare: f.message(fareName, fareChoice.percent) } : {}),
       }
     : null;
   const chosen = (item) => cart.some((line) => line.key === item.key);
@@ -192,6 +213,7 @@ function Inquiry({
             itemName: priceText(line.item.name, "id"),
             quantity: line.quantity,
           })),
+          fare: fareChoice.tier,
           ...details,
         }),
       });
@@ -217,11 +239,17 @@ function Inquiry({
     : "";
   const steps = p.steps[ready ? "pay" : "ask"];
   const current = step === "form" ? 0 : 1;
-  const breakdown = lines.length === 1 && (
+  const breakdown = markup ? (
     <span className="plan-breakdown">
-      {formatIDR(lines[0].item.price, locale)} ×{" "}
-      {lineText(lines[0]).split(" × ")[1]}
+      {f.line(fareName, fareChoice.percent)} {formatIDR(markup, locale)}
     </span>
+  ) : (
+    lines.length === 1 && (
+      <span className="plan-breakdown">
+        {formatIDR(lines[0].item.price, locale)} ×{" "}
+        {lineText(lines[0]).split(" × ")[1]}
+      </span>
+    )
   );
 
   return (
@@ -352,6 +380,15 @@ function Inquiry({
                       })}
                     </ul>
                   </div>
+                )}
+                {offered && (
+                  <FareChoice
+                    fares={fares}
+                    base={packagesTotal}
+                    value={fareChoice.tier}
+                    onChange={setFare}
+                    locale={locale}
+                  />
                 )}
                 <p className="pay-total">
                   <span>
@@ -529,6 +566,14 @@ function Inquiry({
                 : []),
               ...(addOnLines.length
                 ? [[p.addOnsLabel, addOnLines.map(lineText).join("\n")]]
+                : []),
+              ...(offered
+                ? [
+                    [
+                      f.label,
+                      `${f.line(fareName, fareChoice.percent)}\n${f.rules[fareChoice.tier](fareSettings(fares))}`,
+                    ],
+                  ]
                 : []),
               [p.date, dateText],
               [p.participants, p.people(Number(details.participants))],
@@ -1167,6 +1212,7 @@ export default function ActivityDetail({
                 calendarToday={today}
                 lastDate={lastDate}
                 payments={payments}
+                fares={content.fares}
                 locale={locale}
               />
             </dialog>

@@ -74,7 +74,9 @@ export function checkoutMessage(cart, details, today, locale = "id") {
     ),
     "",
     ...(totals.hasRental ? [m.period(details.days, details.startDate)] : []),
-    `${m.total} ${rupiah(totals.total, locale)}`,
+    // The fare picked for the rentals, with its increase in the total.
+    ...(details.fare?.text ? [details.fare.text] : []),
+    `${m.total} ${rupiah(totals.total + (details.fare?.markup ?? 0), locale)}`,
     ...(totals.needsQuote ? [m.quote] : []),
     ...(notes ? [`${m.notes} ${notes}`] : []),
     "",

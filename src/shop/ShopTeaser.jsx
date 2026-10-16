@@ -7,6 +7,8 @@ import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
+import FareChoice from "../components/FareChoice.jsx";
+import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import CartIcon from "../components/CartIcon.jsx";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked, pageLocked } from "../developer.js";
@@ -148,11 +150,15 @@ export default function ShopTeaser({
   locale = "en",
   locks = noLocks,
   payments,
+  fares,
 }) {
   const t = dictionary(locale).shop;
   const s = t.teaser;
   const p = dictionary(locale).payment;
+  const f = dictionary(locale).fare;
   const [active, setActive] = useState("buy");
+  // Standard, Comfort or Flexi for the rentals.
+  const [fare, setFare] = useState("standard");
   const [cart, setCart] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -192,6 +198,13 @@ export default function ShopTeaser({
         visual: { category: visualFor(item.name.id), image: "" },
       }));
   const totals = cartTotals(cart, form.days || 1);
+  // The fare's increase applies to the rentals, not the purchases.
+  const offered = fareChoices(fares).length > 1 && totals.rental > 0;
+  const fareChoice = fareFor(fares, offered ? fare : "standard");
+  const markup = fareMarkup(totals.rental, fareChoice.percent);
+  const fareText = offered
+    ? f.message(f.names[fareChoice.tier], fareChoice.percent)
+    : "";
   // With online payment on, a cart priced in full is paid with Midtrans.
   const payable = Boolean(payments?.ready) && !totals.needsQuote;
   const order = () => ({
@@ -215,6 +228,7 @@ export default function ShopTeaser({
     }),
     days: Number(form.days) || 1,
     startDate: form.startDate,
+    fare: fareChoice.tier,
     name: form.name,
     whatsapp: form.whatsapp,
     email: form.email,
@@ -249,7 +263,14 @@ export default function ShopTeaser({
   function review(event) {
     event.preventDefault();
     try {
-      setMessage(checkoutMessage(cart, form, today(), locale));
+      setMessage(
+        checkoutMessage(
+          cart,
+          { ...form, fare: { text: fareText, markup } },
+          today(),
+          locale,
+        ),
+      );
       setError("");
     } catch (err) {
       setError(err.message);
@@ -474,17 +495,32 @@ export default function ShopTeaser({
               <dd>{rupiah(totals.rental, locale)}</dd>
             </div>
           )}
+          {markup > 0 && (
+            <div>
+              <dt>{f.line(f.names[fareChoice.tier], fareChoice.percent)}</dt>
+              <dd>{rupiah(markup, locale)}</dd>
+            </div>
+          )}
           <div>
             <dt>{payable ? p.total : s.estimate}</dt>
-            <dd>{rupiah(totals.total, locale)}</dd>
+            <dd>{rupiah(totals.total + markup, locale)}</dd>
           </div>
         </dl>
+        {offered && !message && (
+          <FareChoice
+            fares={fares}
+            base={totals.rental}
+            value={fareChoice.tier}
+            onChange={setFare}
+            locale={locale}
+          />
+        )}
         {totals.needsQuote && <p className="muted">{s.quoteNote}</p>}
         {message && payable ? (
           <div className="shop-checkout-done">
             <PayPanel
               order={order()}
-              total={totals.total}
+              total={totals.total + markup}
               message={message}
               whatsapp={whatsapp}
               sandbox={payments.sandbox}

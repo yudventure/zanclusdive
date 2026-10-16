@@ -12,6 +12,7 @@ import { defaultAbout, validateAbout } from "./about-model.js";
 import { defaultService, validateService } from "./service-model.js";
 import { defaultDeveloper, validateDeveloper } from "./developer.js";
 import { defaultPayments, validatePayments } from "./payment-model.js";
+import { defaultFares, validateFares } from "./fare-model.js";
 import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
 import {
   blankSocials,
@@ -97,6 +98,7 @@ export const defaultContent = {
   service: structuredClone(defaultService),
   developer: structuredClone(defaultDeveloper),
   payments: { ...defaultPayments },
+  fares: structuredClone(defaultFares),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -309,6 +311,7 @@ export function validateContent(input) {
     service: validateService(input.service),
     developer: validateDeveloper(input.developer),
     payments: validatePayments(input.payments),
+    fares: validateFares(input.fares),
     seo: validateSeo(input.seo),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };

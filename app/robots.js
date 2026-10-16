@@ -16,6 +16,7 @@ export default function robots() {
           "/api/admin/",
           "/partner/",
           "/payment/",
+          "/booking/",
           "/maintenance",
         ],
       },

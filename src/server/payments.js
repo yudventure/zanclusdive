@@ -30,6 +30,7 @@ import { demoStorageDirectory } from "./demo-store.js";
 import { withCourses, courseProfile } from "../course-model.js";
 import { withService } from "../service-model.js";
 import { dueAt, invoiceNumber } from "../booking-mail.js";
+import { fareNames } from "../fare-model.js";
 import { autoMail, later } from "./booking-mail.js";
 
 // Online payment is offered when the owner switched it on and the hosting
@@ -139,6 +140,7 @@ export async function startPayment(input, { origin, locale = "id" }) {
       lang: locale,
       notes: [
         `Bayar online: ${orderLabel(lines, "id")}`,
+        order.fare && `Tarif ${fareNames[order.fare.tier]}`,
         certification && `Lisensi: ${certification}`,
         ...profile.map(([label, value]) => `${label}: ${value}`),
         notes,
@@ -185,6 +187,10 @@ export async function startPayment(input, { origin, locale = "id" }) {
       createdAt,
       dueHours,
       dueAt: dueAt(createdAt, dueHours),
+      // The fare and its rules as they were when ordered, and the key to
+      // the guest's own page for moving the date or asking for a refund.
+      ...(order.fare ? { fare: order.fare } : {}),
+      manageToken: randomUUID(),
     },
   });
   try {

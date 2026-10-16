@@ -250,7 +250,23 @@ Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-ka
 
 **Jika tamu melihat "Pembayaran belum bisa dibuat"**, buka `/admin/payments`. Di sana tampil peringatan bila server key keliru (Client Key, atau key sandbox/production tidak sesuai mode), **penolakan terakhir dari Midtrans** beserta kodenya, dan tombol **Tes koneksi Midtrans** untuk mengecek server key langsung dari server website. Kode 401 berarti server key ditolak: pakai Server Key (bukan Client Key), key sandbox berawalan `SB-Mid-server-` tanpa `MIDTRANS_PRODUCTION`, key production berawalan `Mid-server-` dengan `MIDTRANS_PRODUCTION=true`, tanpa spasi atau tanda kutip, lalu deploy ulang. Tanda kutip atau spasi di awal/akhir key diabaikan otomatis. Teks lain yang ikut tertempel di kolom key (misalnya `=true)` dari `MIDTRANS_PRODUCTION=true`) disebut di halaman itu, begitu juga isi `MIDTRANS_PRODUCTION` selain `true`. Halaman itu juga menampilkan empat karakter terakhir key yang dibaca server, untuk memastikan perubahan di hPanel sudah sampai setelah deploy ulang.
 
-Uji tanpa menghubungi Midtrans: jalankan server demo dengan `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499`, lalu `BASE_URL=… node scripts/verify-payments.mjs`. Tes memakai Midtrans tiruan (`scripts/mock-midtrans.mjs`).
+Uji tanpa menghubungi Midtrans: jalankan server demo dengan `CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499`, lalu `BASE_URL=… node scripts/verify-payments.mjs`. Tes memakai Midtrans tiruan (`scripts/mock-midtrans.mjs`). Tarif Standard, Comfort, Flexi, halaman pesanan tamu, ganti tanggal, refund, dan Buku kas diuji dengan `node scripts/verify-fares.mjs` di server yang sama.
+
+## Tarif Standard, Comfort, Flexi
+
+Paket Diving, Snorkeling, Trip laut, dan sewa alat Dive Shop yang dipesan lewat website punya tiga tarif. Tamu memilih saat checkout, dan kenaikan dihitung dari harga paket atau sewa (tidak dari add-on dan pembelian alat).
+
+| Tarif | Harga | Yang boleh |
+| --- | --- | --- |
+| Standard | harga dasar | Tanggal hanya diganti tim bila cuaca atau kondisi laut tidak memungkinkan (lewat kolom tanggal di Reservasi). Tanpa refund. |
+| Comfort | +10% | Tamu mengganti tanggal sendiri paling lambat 2 hari sebelum tanggal kegiatan. Tanpa refund. |
+| Flexi | +20% | Ganti tanggal seperti Comfort, atau batalkan dan dapat refund paling lambat 7 hari sebelumnya. Refund sebesar harga dasar, kenaikan Flexi ditahan (aturan yang sama dengan DAMPIER). |
+
+- **Pengaturan** di **Situs web → Daftar harga → Tarif Standard, Comfort, Flexi**: tawarkan atau tidak, kenaikan Comfort dan Flexi (1–100%), batas refund (1–60 hari), dan batas ganti tanggal (0–30 hari). Di bawahnya tampil teks yang dibaca tamu. Dimatikan, semua pesanan memakai Standard.
+- **Server** menghitung tarif dari CMS (`src/fare-model.js`, `priceOrder`). Kenaikan menjadi baris tersendiri di Midtrans (`fare-comfort`, `fare-flexi`). Tarif dan aturannya dibekukan di pesanan (`payment.fare`), jadi perubahan pengaturan tidak mengubah pesanan lama.
+- **Halaman pesanan tamu** `/booking/<id>?t=<kunci>` dibuka dari tombol **Manage booking / Kelola pesanan** di halaman hasil pembayaran dan dari invoice email. Tamu Comfort dan Flexi memilih tanggal baru dari kalender sisa tempat. Tanggal baru diperiksa lagi di server, di dalam kunci yang sama dengan pesanan baru, tanpa menghitung pesanan itu sendiri. Tamu Flexi bisa membatalkan dan meminta refund. Kunci yang salah memberi halaman 404, dan permintaan dari situs lain ditolak.
+- **Email** ke tamu saat tanggal diganti dan saat refund diminta. Invoice memuat tarif, aturannya, dan tombol Kelola pesanan.
+- **Admin**: daftar Reservasi menandai tarif dan refund. Editor reservasi menampilkan tarif, batas waktunya, tanggal yang diganti tamu, dan permintaan refund dengan tombol **Tandai refund sudah dikirim** (catatan transfer opsional). Refund yang sudah dikirim masuk **Buku kas** sebagai pengeluaran otomatis kategori Refund tamu.
 
 ## Kalender bersama travel agent
 

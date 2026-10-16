@@ -5,6 +5,7 @@ import { requestLocale } from "../../../src/server/locale.js";
 import { bookingReference } from "../../../src/booking-model.js";
 import { paymentItemLabel } from "../../../src/payment-model.js";
 import { dictionary, formatIDR, localeHref } from "../../../src/i18n.js";
+import { fareNames } from "../../../src/fare-model.js";
 
 // Midtrans sends the guest back here with ?order_id=. The status is
 // checked with Midtrans right away, so a completed payment already shows
@@ -48,6 +49,18 @@ export default async function Page({ searchParams }) {
       locale={locale}
       whatsapp={whatsapp}
       whatsappText={p.whatsappAfter(reference)}
+      // A paid booking links to the guest's own page, where the fare's
+      // date change or refund is made.
+      links={
+        kind === "paid" && payment.manageToken
+          ? [
+              [
+                `/booking/${booking.id}?t=${payment.manageToken}&lang=${locale}`,
+                t.manage.manageLink,
+              ],
+            ]
+          : []
+      }
       backHref={localeHref(
         locale,
         booking.experience === "shop"
@@ -67,6 +80,14 @@ export default async function Page({ searchParams }) {
         ...(["shop", "service"].includes(booking.experience)
           ? []
           : [[p.participants, String(booking.participants)]]),
+        ...(payment.fare
+          ? [
+              [
+                t.fare.label,
+                t.fare.line(fareNames[payment.fare.tier], payment.fare.percent),
+              ],
+            ]
+          : []),
         [p.totalPaid, formatIDR(payment.amount, locale)],
       ]}
     />

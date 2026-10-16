@@ -9,6 +9,8 @@ import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
+import FareChoice from "../components/FareChoice.jsx";
+import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import { dictionary, intlLocale, localeHref } from "../i18n.js";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked } from "../developer.js";
@@ -24,10 +26,12 @@ export default function DiveShop({
   locale = "en",
   locks = noLocks,
   payments,
+  fares,
 }) {
   const dict = dictionary(locale);
   const t = dict.shop;
   const p = dict.payment;
+  const f = dict.fare;
   const shopCategories = dict.shopCategories;
   const href = (path) => localeHref(locale, path);
   const money = (amount) => rupiah(amount, locale);
@@ -47,6 +51,8 @@ export default function DiveShop({
   const [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
+  // Standard, Comfort or Flexi for the rentals.
+  const [fare, setFare] = useState("standard");
   const [menu, setMenu] = useState(false),
     [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -72,6 +78,16 @@ export default function DiveShop({
       quote = quoteOrder(shop.products, cart, details.days, locale);
   } catch {}
   const hasRental = cart.some((p) => p.mode === "rental");
+  // The fare's increase applies to the rentals, not the purchases.
+  const rentalBase = (quote?.lines ?? [])
+    .filter((line) => line.mode === "rental" && line.total !== null)
+    .reduce((sum, line) => sum + line.total, 0);
+  const offered = fareChoices(fares).length > 1 && rentalBase > 0;
+  const fareChoice = fareFor(fares, offered ? fare : "standard");
+  const markup = fareMarkup(rentalBase, fareChoice.percent);
+  const fareText = offered
+    ? f.message(f.names[fareChoice.tier], fareChoice.percent)
+    : "";
   // With online payment on, an order priced in full is paid with Midtrans.
   const payable =
     Boolean(payments?.ready) && Boolean(quote) && !quote.needsQuote;
@@ -103,7 +119,15 @@ export default function DiveShop({
     event.preventDefault();
     try {
       if (hasRental && details.startDate < today) throw new Error(t.pastDate);
-      setMessage(orderMessage(shop.products, cart, details, false, locale));
+      setMessage(
+        orderMessage(
+          shop.products,
+          cart,
+          { ...details, fare: { text: fareText, markup } },
+          false,
+          locale,
+        ),
+      );
       setError("");
     } catch (err) {
       setError(err.message);
@@ -541,10 +565,33 @@ export default function DiveShop({
                         onChange={(e) => changeDetails("notes", e.target.value)}
                       />
                     </FormField>
+                    {offered && (
+                      <FareChoice
+                        fares={fares}
+                        base={rentalBase}
+                        value={fareChoice.tier}
+                        onChange={(tier) => {
+                          setFare(tier);
+                          setMessage("");
+                        }}
+                        locale={locale}
+                      />
+                    )}
                     <div className="shop-total">
-                      <span>{t.estimate(quote?.needsQuote)}</span>
+                      <span>
+                        {t.estimate(quote?.needsQuote)}
+                        {markup > 0 && (
+                          <small className="shop-fare-note">
+                            {f.line(
+                              f.names[fareChoice.tier],
+                              fareChoice.percent,
+                            )}{" "}
+                            {money(markup)}
+                          </small>
+                        )}
+                      </span>
                       <strong>
-                        {quote ? money(quote.total) : t.checkDuration}
+                        {quote ? money(quote.total + markup) : t.checkDuration}
                       </strong>
                     </div>
                     {quote?.needsQuote && (
@@ -574,12 +621,13 @@ export default function DiveShop({
                           })),
                           days: Number(details.days) || 1,
                           startDate: details.startDate,
+                          fare: fareChoice.tier,
                           name: details.name,
                           whatsapp: details.whatsapp,
                           email: details.email,
                           notes: details.notes,
                         }}
-                        total={quote.total}
+                        total={quote.total + markup}
                         message={message}
                         whatsapp={contact.whatsapp}
                         sandbox={payments.sandbox}

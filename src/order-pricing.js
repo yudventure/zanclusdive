@@ -9,6 +9,7 @@ import {
 } from "./payment-model.js";
 import { addOnItems, priceText, rentalGroups } from "./price-list.js";
 import { itemLocked, pageLocked } from "./developer.js";
+import { fareNames, orderFare } from "./fare-model.js";
 
 export class PricingError extends Error {
   constructor(message, status = 409) {
@@ -98,6 +99,10 @@ function activityOrder(content, input, window, locks) {
     endDate: date,
     participants,
     lines,
+    // The fare's increase applies to the packages, not the add-ons.
+    fareBase: lines
+      .filter((line) => !line.addOn)
+      .reduce((sum, line) => sum + line.price * line.quantity, 0),
   };
 }
 
@@ -161,14 +166,20 @@ function shopOrder(content, input, window, locks) {
         : both(`Beli ${priceText(name, "id")}`, `Buy ${priceText(name, "en")}`),
       price: rent ? price * days : price,
       quantity,
+      rent,
     };
   });
+  const sum = (list) =>
+    list.reduce((total, line) => total + line.price * line.quantity, 0);
   return {
     program: "shop",
     startDate,
     endDate: rental ? addDays(startDate, days - 1) : startDate,
     participants: 1,
     lines: priced,
+    // Rentals are booked for dates and take a fare; purchases do not.
+    fareBase: sum(priced.filter((line) => line.rent)),
+    purchases: sum(priced.filter((line) => !line.rent)),
   };
 }
 
@@ -240,24 +251,56 @@ const kinds = {
   service: serviceOrder,
 };
 
-// { program, startDate, endDate, participants, lines, amount } for a pay
-// request; window is { today, last } in WIT and locks the developer locks.
+// { program, startDate, endDate, participants, lines, amount, fare } for a
+// pay request; window is { today, last } in WIT and locks the developer
+// locks. Activity packages and rentals take the fare asked for (Standard
+// when none): its increase is one more line, and its rules go with the
+// order.
 export function priceOrder(content, input, window, locks) {
   const price = kinds[input?.kind ?? "activity"];
   if (!price || locks?.site) fail("Data pembayaran tidak valid.", 400);
-  const order = price(content, input, window, locks);
-  const amount = order.lines.reduce(
-    (sum, line) => sum + line.price * line.quantity,
-    0,
-  );
+  const {
+    fareBase = 0,
+    purchases = 0,
+    ...order
+  } = price(content, input, window, locks);
+  const total = (lines) =>
+    lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+  let fare = null;
+  if (fareBase > 0) {
+    fare = orderFare(content.fares, input.fare, {
+      amount: total(order.lines),
+      base: fareBase,
+      purchases,
+    });
+    if (!fare)
+      fail("Tarif yang dipilih sudah tidak tersedia. Muat ulang halaman.");
+    if (fare.markup > 0)
+      order.lines.push({
+        id: `fare-${fare.tier}`,
+        name: both(
+          `Tarif ${fareNames[fare.tier]} (+${fare.percent}%)`,
+          `${fareNames[fare.tier]} fare (+${fare.percent}%)`,
+        ),
+        price: fare.markup,
+        quantity: 1,
+        fare: true,
+      });
+  }
+  const amount = total(order.lines);
   if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 1e9)
     fail("Data pembayaran tidak valid.", 400);
-  return { ...order, amount };
+  return { ...order, amount, fare };
 }
 
-// "Discovery Dive × 2" or "Beli Fins × 1, Sewa Wetsuit (2 hari) × 1".
+// "Discovery Dive × 2" or "Beli Fins × 1, Sewa Wetsuit (2 hari) × 1"; the
+// fare's increase is named without a count.
 export const orderLabel = (lines, locale) =>
   lines
-    .map((line) => `${priceText(line.name, locale)} × ${line.quantity}`)
+    .map((line) =>
+      line.fare
+        ? priceText(line.name, locale)
+        : `${priceText(line.name, locale)} × ${line.quantity}`,
+    )
     .join(", ")
     .slice(0, 300);

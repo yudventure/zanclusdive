@@ -28,9 +28,11 @@ export async function withBilling({
   const now = new Date().toISOString();
   const before = current?.payment ?? null;
   const settings = content.payments ?? {};
+  // The email log and the guest's own date changes stay with the booking.
   const booking = {
     ...payload,
     ...(current?.mails ? { mails: current.mails } : {}),
+    ...(current?.reschedules ? { reschedules: current.reschedules } : {}),
   };
   const amount = payload.amount;
   const hours = billing.dueHours ?? settings.dueHours ?? 24;

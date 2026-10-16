@@ -7,7 +7,7 @@ const indonesianPages =
   /^\/id(\/(diving|snorkeling|trip|course|about|service|dive-shop|calendar))?\/?$/;
 // Open even while the whole website is locked.
 const openPaths =
-  /^\/(admin|status|maintenance|payment|partner|sw\.js|robots\.txt|sitemap\.xml)(\/|$)/;
+  /^\/(admin|status|maintenance|payment|booking|partner|sw\.js|robots\.txt|sitemap\.xml)(\/|$)/;
 
 export function proxy(request) {
   const { pathname } = request.nextUrl;

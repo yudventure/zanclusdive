@@ -5,13 +5,23 @@
 import { bookingReference } from "./booking-model.js";
 import { localizeContent } from "./content-i18n.js";
 import { socialPlatforms } from "./contact-model.js";
+import { fareNames, fareSettings } from "./fare-model.js";
+import { dictionary } from "./i18n.js";
 
 export const mailKinds = ["order", "invoice", "expired"];
 export const mailKindLabels = {
   order: "Pesanan & batas bayar",
   invoice: "Invoice",
   expired: "Pesanan dibatalkan",
+  rescheduled: "Tanggal diganti tamu",
+  refund: "Dibatalkan tamu, refund",
 };
+
+// The guest's own page for a paid booking (fare, new date, refund).
+export const manageUrl = (base, booking) =>
+  booking.payment?.manageToken
+    ? `${base}/booking/${booking.id}?t=${booking.payment.manageToken}`
+    : "";
 
 const brand = {
   navy: "#062b3b",
@@ -264,6 +274,19 @@ const words = {
     footer:
       "Email ini dikirim otomatis untuk pesanan Anda di Zanclus Dive Center.",
     guests: (n) => `${n} peserta`,
+    fareTitle: "Tarif dan perubahan",
+    manage: "Kelola pesanan",
+    manageHint:
+      "Ganti tanggal atau batalkan sesuai tarif Anda lewat halaman pesanan ini.",
+    movedTag: "Tanggal diganti",
+    movedTitle: "Tanggal pesanan Anda sudah diganti",
+    movedIntro: (from, to) =>
+      `Tanggal pesanan Anda sudah diganti dari ${from} menjadi ${to}. Tempat Anda di tanggal baru sudah kami siapkan.`,
+    refundTag: "Dibatalkan",
+    refundTitle: "Pesanan dibatalkan, refund diproses",
+    refundIntro: (amount) =>
+      `Pesanan Anda sudah dibatalkan sesuai tarif Flexi. Refund ${amount} sedang kami proses, dan tim kami akan menghubungi Anda lewat WhatsApp untuk mengatur pengembaliannya.`,
+    refundAmount: "Jumlah refund",
   },
   en: {
     orderTag: "Awaiting payment",
@@ -328,6 +351,19 @@ const words = {
     footer:
       "This email was sent automatically about your booking with Zanclus Dive Center.",
     guests: (n) => `${n} ${n === 1 ? "guest" : "guests"}`,
+    fareTitle: "Your fare and changes",
+    manage: "Manage booking",
+    manageHint:
+      "Change the date or cancel as your fare allows on your booking page.",
+    movedTag: "Date changed",
+    movedTitle: "Your booking date has changed",
+    movedIntro: (from, to) =>
+      `Your booking has moved from ${from} to ${to}. Your place on the new date is ready.`,
+    refundTag: "Cancelled",
+    refundTitle: "Booking cancelled, refund in progress",
+    refundIntro: (amount) =>
+      `Your booking has been cancelled under the Flexi fare. We're processing the refund of ${amount}, and our team will contact you on WhatsApp to arrange it.`,
+    refundAmount: "Refund amount",
   },
 };
 
@@ -368,6 +404,7 @@ const tag = (text, kind) => {
     order: ["#fff3dc", "#93570b"],
     invoice: ["#e3f8d8", "#17695f"],
     expired: ["#fde8e5", "#a8352a"],
+    moved: ["#e3f1fb", "#1d5d8c"],
   }[kind];
   return `<span style="display:inline-block;padding:5px 12px;border-radius:999px;background:${colours[0]};color:${colours[1]};font-family:${font};font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;">${esc(text)}</span>`;
 };
@@ -497,6 +534,29 @@ export function bookingMail(
     [t.date, dates],
     [t.participants, people],
   ];
+  // The fare of a paid booking with what it allows, and the guest's page.
+  const fare = payment.fare;
+  const fareWords = dictionary(lang).fare;
+  const fareLine = fare
+    ? fareWords.line(fareNames[fare.tier], fare.percent)
+    : "";
+  const fareRules = fare ? fareWords.rules[fare.tier](fareSettings(fare)) : "";
+  const manage = manageUrl(base, booking);
+  const fareBlock = fare
+    ? `${heading(t.fareTitle)}
+${paragraph(`<strong>${esc(fareLine)}</strong><br>${esc(fareRules)}`)}
+${manage ? `<p style="margin:6px 0 8px;">${button(manage, t.manage, false)}</p>${paragraph(esc(t.manageHint), `font-size:13px;color:${brand.muted};`)}` : ""}`
+    : "";
+  const fareText = fare
+    ? [
+        t.fareTitle.toUpperCase(),
+        fareLine,
+        fareRules,
+        manage ? pair(t.manage, manage) : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
 
   if (kind === "order") {
     const due = payment.dueAt;
@@ -657,6 +717,7 @@ ${itemsTable(lines, t, lang, [
   [t.paid, money(amount, lang)],
   [t.balance, money(0, lang)],
 ])}
+${fareBlock}
 ${heading(t.nextTitle)}
 ${paragraph(esc(t.nextText))}
 ${note ? paragraph(esc(note).replace(/\n/g, "<br>"), `font-size:13px;color:${brand.muted};background:${brand.soft};border-radius:12px;padding:14px 16px;`) : ""}`;
@@ -683,6 +744,8 @@ ${note ? paragraph(esc(note).replace(/\n/g, "<br>"), `font-size:13px;color:${bra
       pair(t.total, total),
       pair(t.paid, money(amount, lang)),
       pair(t.balance, money(0, lang)),
+      "",
+      fareText,
       "",
       t.nextText,
       note,
@@ -744,6 +807,67 @@ ${table(rows(details), "margin:0 0 14px;")}`;
         title: subject,
         preheader: t.expiredTitle,
         badge: tag(t.expiredTag, "expired"),
+        reference,
+        body,
+        contact,
+        base,
+      }),
+      text,
+    };
+  }
+  // The guest moved the date or cancelled for a refund on their own page.
+  if (kind === "rescheduled" || kind === "refund") {
+    const moved = kind === "rescheduled";
+    const last = (booking.reschedules ?? []).at(-1);
+    const day = (date) => dayLabel(date, lang);
+    const refundMoney = money(payment.refund?.amount ?? 0, lang);
+    const subject = moved
+      ? lang === "en"
+        ? `Booking ${reference} moved to ${day(booking.startDate)}`
+        : `Pesanan ${reference} pindah ke ${day(booking.startDate)}`
+      : lang === "en"
+        ? `Booking ${reference} cancelled · refund ${refundMoney}`
+        : `Pesanan ${reference} dibatalkan · refund ${refundMoney}`;
+    const intro = moved
+      ? t.movedIntro(last ? day(last.from) : "-", day(booking.startDate))
+      : t.refundIntro(refundMoney);
+    const summary = moved
+      ? details
+      : [...details, [t.refundAmount, refundMoney]];
+    const body = `${title(moved ? t.movedTitle : t.refundTitle)}
+${paragraph(esc(t.hello(name)))}
+${paragraph(esc(intro))}
+${heading(t.summary)}
+${table(rows(summary), "margin:0 0 14px;")}
+${moved ? fareBlock : ""}`;
+    const text = [
+      t.hello(name),
+      "",
+      moved ? t.movedTitle : t.refundTitle,
+      intro,
+      "",
+      t.summary.toUpperCase(),
+      ...summary.filter(([, v]) => v).map(([l, v]) => pair(l, v)),
+      "",
+      moved ? fareText : "",
+      "",
+      `${t.questions} ${t.questionsText}`,
+      wa,
+      "",
+      "Zanclus Dive Center · " + base.replace(/^https?:\/\//, ""),
+    ]
+      .filter((line, i, all) => line !== "" || all[i - 1] !== "")
+      .join("\n");
+    return {
+      subject,
+      html: layout({
+        lang,
+        title: subject,
+        preheader: moved ? t.movedTitle : t.refundTitle,
+        badge: tag(
+          moved ? t.movedTag : t.refundTag,
+          moved ? "moved" : "expired",
+        ),
         reference,
         body,
         contact,

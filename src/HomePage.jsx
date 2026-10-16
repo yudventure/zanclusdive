@@ -480,6 +480,7 @@ export default function HomePage({
               locale={locale}
               locks={locks}
               payments={payments}
+              fares={content.fares}
             />
           )}
           {sectionLocked(locks, "travel") ? (

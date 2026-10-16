@@ -259,6 +259,37 @@ export async function updateBooking(id, change) {
     return state.bookings[index];
   });
 }
+// A guest changing their own paid booking (a new date, or a cancellation):
+// a new date is checked against the daily places without the booking
+// itself, inside the same lock as new bookings. change returns the new
+// booking or null, and may throw to refuse.
+export async function changeOwnBooking(id, change) {
+  return mutate((state) => {
+    const index = state.bookings.findIndex((booking) => booking.id === id);
+    if (index < 0) return null;
+    const current = state.bookings[index];
+    const next = change(structuredClone(current));
+    if (!next) return current;
+    if (
+      next.status !== "cancelled" &&
+      (next.startDate !== current.startDate || next.endDate !== current.endDate)
+    )
+      assertBookable(
+        state.content,
+        [
+          ...state.bookings.filter((booking) => booking.id !== id),
+          ...agentHolds(state.content, state.agents),
+        ],
+        next,
+      );
+    state.bookings[index] = {
+      ...next,
+      id,
+      updatedAt: new Date().toISOString(),
+    };
+    return state.bookings[index];
+  });
+}
 export async function listAgents() {
   return (await read()).agents ?? [];
 }

@@ -291,6 +291,71 @@ export async function updateBooking(id, change) {
     connection.release();
   }
 }
+// A guest changing their own paid booking (a new date, or a cancellation):
+// a new date is checked against the daily places without the booking
+// itself. The site row is locked first, as for new bookings, so two
+// changes at once cannot pass the limit. change returns the new booking or
+// null, and may throw to refuse.
+export async function changeOwnBooking(id, change) {
+  if (isDemo()) return demo.changeOwnBooking(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [contentRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id='site' FOR UPDATE",
+    );
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='booking' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { id, ...JSON.parse(rows[0].payload) };
+    const next = change(structuredClone(current));
+    if (!next) {
+      await connection.commit();
+      return current;
+    }
+    if (
+      next.status !== "cancelled" &&
+      (next.startDate !== current.startDate || next.endDate !== current.endDate)
+    ) {
+      const [bookingRows] = await connection.execute(
+        "SELECT id,payload FROM zanclus_records WHERE kind='booking' AND id<>?",
+        [id],
+      );
+      const [agentRows] = await connection.execute(
+        "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+      );
+      const siteContent = JSON.parse(contentRows[0].payload);
+      assertBookable(
+        siteContent,
+        [
+          ...bookingRows.map((r) => JSON.parse(r.payload)),
+          ...agentHolds(
+            siteContent,
+            agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+          ),
+        ],
+        next,
+      );
+    }
+    const { id: _id, updatedAt: _at, ...payload } = next;
+    await connection.execute(
+      "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+      [JSON.stringify(payload), id],
+    );
+    await connection.commit();
+    return { ...next, id };
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 // Travel agents whose calendars are linked with ours.
 export async function listAgents() {
   if (isDemo()) return demo.listAgents();

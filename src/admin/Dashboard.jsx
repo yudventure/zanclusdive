@@ -19,6 +19,8 @@ import {
 } from "./BookingBilling.jsx";
 import { overdue } from "../payment-model.js";
 import { mailKindLabels } from "../booking-mail.js";
+import { fareNames, fareSettings } from "../fare-model.js";
+import BookingFare from "./BookingFare.jsx";
 import AgentsEditor from "./AgentsEditor.jsx";
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
@@ -138,6 +140,7 @@ function BookingEditor({
   billingInfo,
   canSettings,
   onMailSent,
+  onRefunded,
 }) {
   function change(key, v) {
     setValue({
@@ -276,6 +279,7 @@ function BookingEditor({
           info={billingInfo}
           canSettings={canSettings}
         />
+        {editing && <BookingFare booking={value} onRefunded={onRefunded} />}
         {editing && <GuestMailLog booking={value} onSent={onMailSent} />}
         <div className="admin-actions">
           <button className="admin-button" disabled={busy}>
@@ -589,6 +593,23 @@ export default function Dashboard({ section, account, today }) {
                   {statuses[b.status]}
                 </span>
                 {b.payment && <PaymentBadge payment={b.payment} />}
+                {b.payment?.fare && b.payment.fare.tier !== "standard" && (
+                  <small className="admin-fare-tag">
+                    Tarif {fareNames[b.payment.fare.tier]}
+                  </small>
+                )}
+                {b.payment?.refund && (
+                  <small
+                    className={
+                      "admin-fare-tag " +
+                      (b.payment.refund.status === "done" ? "ok" : "warn")
+                    }
+                  >
+                    {b.payment.refund.status === "done"
+                      ? "Refund terkirim"
+                      : `Refund diminta ${money(b.payment.refund.amount)}`}
+                  </small>
+                )}
                 {overdue(b.payment) && (
                   <small className="admin-overdue">Lewat batas bayar</small>
                 )}
@@ -654,6 +675,11 @@ export default function Dashboard({ section, account, today }) {
         const fresh = next?.bookings.find((b) => b.id === editing);
         if (fresh)
           setBooking((current) => ({ ...current, mails: fresh.mails }));
+      }}
+      onRefunded={async (saved) => {
+        setBooking((current) => ({ ...current, payment: saved.payment }));
+        setNotice("Refund ditandai sudah dikirim dan masuk Buku kas.");
+        await refresh();
       }}
     />
   );
@@ -1369,6 +1395,18 @@ export default function Dashboard({ section, account, today }) {
                   update={(group, items) =>
                     mutateContent("priceList", group, items)
                   }
+                  fares={content.fares}
+                  updateFares={(key, value) => {
+                    setContent((current) => ({
+                      ...current,
+                      fares: {
+                        ...fareSettings(current.fares),
+                        ...current.fares,
+                        [key]: value,
+                      },
+                    }));
+                    setNotice("");
+                  }}
                   onSave={saveSettings}
                   busy={busy}
                 />

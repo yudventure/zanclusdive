@@ -282,6 +282,7 @@ export function activityInquiry(
                 `${line.item} × ${line.quantity}${line.unit ? " " + line.unit : ""}`,
             )
             .join(", ")}`,
+          ...(order.fare ? [order.fare] : []),
           `${t.estimate}: ${formatIDR(order.total, locale)}`,
         ]
       : []),

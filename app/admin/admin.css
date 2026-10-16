@@ -2558,3 +2558,109 @@ strong.admin-overdue {
 .admin-addons > .admin-button {
   margin-top: 18px;
 }
+
+/* Fares: the settings card on the price list page, and a booking's fare,
+   date changes and refund in the reservation editor. */
+.admin-fare-tier {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.admin-fare-preview {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f4f8fb;
+}
+.admin-fare-preview ul {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-fare-preview li {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #33525a;
+}
+.admin-fare-preview strong {
+  color: #062b3b;
+}
+.admin-fare-box {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 4px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #eef8f4;
+}
+.admin-fare-box h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f5d58;
+}
+.admin-fare-box .admin-subtle {
+  margin: 0;
+}
+.admin-fare-label {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.admin-fare-facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #254961;
+}
+.admin-refund {
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+}
+.admin-refund.is-open {
+  background: #fff4f1;
+}
+.admin-refund p {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #33525a;
+}
+.admin-refund strong {
+  font-size: 14px;
+  color: #062b3b;
+}
+.admin-refund .admin-field {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-refund .admin-button {
+  justify-self: start;
+}
+.admin-fare-tag {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f5d58;
+}
+.admin-fare-tag.warn {
+  color: #a73428;
+}

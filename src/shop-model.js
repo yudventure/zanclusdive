@@ -211,8 +211,13 @@ export function orderMessage(
     ...(quote.hasRental
       ? ["", t.rentalPeriod(details.startDate, details.days)]
       : []),
+    // The fare picked for the rentals, with its increase in the estimate.
+    ...(details.fare?.text ? [details.fare.text] : []),
     "",
-    t.estimate(quote.needsQuote, rupiah(quote.total, locale)),
+    t.estimate(
+      quote.needsQuote,
+      rupiah(quote.total + (details.fare?.markup ?? 0), locale),
+    ),
     ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
     t.closing,
   ].join("\n");

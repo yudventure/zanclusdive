@@ -27,6 +27,7 @@ export const expenseCategories = {
   pemasaran: "Pemasaran",
   konsumsi: "Konsumsi",
   pajak: "Pajak & retribusi",
+  refund: "Refund tamu",
   lainnya: "Lainnya",
 };
 export const paymentMethods = {
@@ -129,6 +130,30 @@ export function midtransIncome(bookings) {
         source: "midtrans",
         bookingId: b.id,
       }))
+      // A refund the team has sent for a cancelled Flexi booking goes out
+      // on the day it was marked sent.
+      .concat(
+        bookings
+          .filter(
+            (b) =>
+              b.payment?.provider !== "manual" &&
+              b.payment?.refund?.status === "done" &&
+              b.payment.refund.doneAt,
+          )
+          .map((b) => ({
+            id: "tx:rf:" + b.id,
+            date: b.payment.refund.doneAt.slice(0, 10),
+            kind: "out",
+            category: "refund",
+            amount: Number(b.payment.refund.amount) || 0,
+            description: `${b.guestName || "Tamu"} · refund tarif Flexi`,
+            method: "transfer",
+            reference: b.payment.orderId ?? "",
+            note: b.payment.refund.note ?? "",
+            source: "midtrans",
+            bookingId: b.id,
+          })),
+      )
   );
 }
 const inMonth = (tx, month) => tx.date.startsWith(month + "-");

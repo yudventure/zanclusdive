@@ -28,6 +28,7 @@ export default async function ShopPage({ searchParams }) {
     <DiveShop
       locks={locks}
       payments={paymentOptions(content)}
+      fares={content.fares}
       shop={content.shop}
       contact={content.contact}
       images={content.images}

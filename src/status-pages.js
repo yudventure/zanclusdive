@@ -277,6 +277,7 @@ export function statusMarkup({
   backHref = homeHref,
   details = [],
   whatsappText = "",
+  links = [],
   styles = true,
 }) {
   const page = statusPages[kind] ?? statusPages[500];
@@ -312,9 +313,14 @@ export function statusMarkup({
       ${message ? `<div class="zs-note"><small>${labels.note[lang]}</small><p>${escape(message)}</p></div>` : ""}
       ${when ? `<p class="zs-until">${labels.until[lang]}: <strong>${escape(when)}</strong></p>` : ""}
       ${details.length ? `<dl class="zs-details">${details.map(([label, value]) => `<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>` : ""}
-      <div class="zs-actions">${page.actions
+      <div class="zs-actions">${links
+        .map(
+          ([href, label], index) =>
+            `<a class="zs-btn${index === 0 ? " primary" : ""}" href="${escape(href)}">${escape(label)}</a>`,
+        )
+        .join("")}${page.actions
         .filter((name) => name !== "whatsapp" || number)
-        .map(action)
+        .map((name, index) => action(name, index + links.length))
         .join("")}</div>
       <p class="zs-foot">Zanclus Dive Center · ${labels.place[lang]}</p>
     </div>
