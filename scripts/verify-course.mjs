@@ -464,8 +464,9 @@ try {
       .evaluate((img) => ({
         loaded: img.complete && img.naturalWidth > 0,
         className: img.className,
-        width: img.getBoundingClientRect().width,
-        height: img.getBoundingClientRect().height,
+        // Rounded: the moving strip can leave a sub-pixel remainder.
+        width: Math.round(img.getBoundingClientRect().width),
+        height: Math.round(img.getBoundingClientRect().height),
         filter: getComputedStyle(img).filter,
       }));
   const emblem = await shownLogo("CMAS");
