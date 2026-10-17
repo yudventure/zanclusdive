@@ -1629,7 +1629,7 @@
   background: #f2f7f5;
 }
 .shop-detail-delivery h3,
-.shop-detail-more h3 {
+.shop-detail-more > section > h3 {
   margin: 0 0 8px;
   font-size: 11px;
   letter-spacing: 1.2px;
@@ -1646,21 +1646,34 @@
 .shop-detail-delivery span {
   color: #5d7680;
 }
+/* Under the photos: the story (from the Markdown description), the spec
+   table beside it on wide screens, and the videos under the story. */
 .shop-detail-more {
   display: grid;
-  gap: 24px;
-  margin-top: 28px;
+  gap: 28px;
+  margin-top: 34px;
 }
-.modal.shop-detail .shop-detail-more p,
-.modal.shop-detail .shop-detail-more li {
-  margin: 0 0 10px;
-  color: #36525c;
-  font-size: 14px;
-  line-height: 1.75;
+.shop-detail-more.has-side {
+  grid-template-columns: minmax(0, 1.75fr) minmax(250px, 1fr);
+  grid-template-areas:
+    "story side"
+    "watch side";
+  align-items: start;
+  column-gap: 34px;
 }
-.modal.shop-detail .shop-detail-more ul:not(.dive-videos) {
-  margin: 0 0 10px;
-  padding-left: 20px;
+.shop-detail-more.has-side > .shop-detail-story {
+  grid-area: story;
+}
+.shop-detail-more.has-side > .shop-detail-watch {
+  grid-area: watch;
+}
+.shop-detail-more.has-side > .shop-detail-side {
+  grid-area: side;
+  position: sticky;
+  top: 0;
+}
+.shop-detail-more.has-side:not(:has(.shop-detail-story)) > .shop-detail-watch {
+  grid-area: story;
 }
 .shop-detail-specs {
   display: grid;
@@ -1671,9 +1684,9 @@
 }
 .shop-detail-specs div {
   display: grid;
-  grid-template-columns: minmax(110px, 0.6fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(96px, 0.8fr) minmax(0, 1.2fr);
   gap: 12px;
-  padding: 10px 16px;
+  padding: 11px 16px;
 }
 .shop-detail-specs div:nth-child(even) {
   background: #e8f1ee;
@@ -1697,6 +1710,15 @@
 }
 .shop-detail-videos .dive-video:first-child {
   margin-left: 0;
+}
+@media (max-width: 860px) {
+  .shop-detail-more.has-side {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "story" "side" "watch";
+  }
+  .shop-detail-more.has-side > .shop-detail-side {
+    position: static;
+  }
 }
 @media (max-width: 760px) {
   .modal.shop-detail {
@@ -1732,4 +1754,187 @@
   background: #f7faf8;
   border: 1px solid #dce7e0;
   border-radius: 6px;
+}
+
+/* A product's full description, read from its Markdown: a tagline banner,
+   headings, readable paragraphs, lists, quotes, tables and feature cards.
+   Also the preview in the admin. */
+.product-story {
+  display: grid;
+  gap: 14px;
+  color: #36525c;
+}
+.product-story > * {
+  margin: 0;
+}
+.product-story .story-tagline {
+  padding: 22px 26px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 92% -20%, #c8f28a55, transparent 46%),
+    linear-gradient(120deg, #062b3b, #0d5f73);
+  color: #fff;
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.product-story .story-heading {
+  margin-top: 12px;
+  color: #062b3b;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-transform: none;
+}
+.product-story h4.story-heading {
+  margin-top: 6px;
+  font-size: 16.5px;
+}
+.product-story .story-text,
+.product-story .story-list li {
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #36525c;
+}
+.product-story strong {
+  color: #062b3b;
+  font-weight: 650;
+}
+.product-story code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #eef4f2;
+  font-size: 0.9em;
+}
+.product-story a {
+  color: #0d6f73;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.product-story .story-list {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+.product-story ul.story-list li {
+  position: relative;
+  padding-left: 22px;
+}
+.product-story ul.story-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.68em;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8fd65a;
+}
+.product-story ol.story-list {
+  padding-left: 22px;
+  list-style: decimal;
+}
+.product-story .story-quote {
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #eef7f3;
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.7;
+}
+.product-story .story-table {
+  overflow-x: auto;
+  border-radius: 16px;
+  background: #f2f7f5;
+}
+.product-story .story-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.product-story .story-table th,
+.product-story .story-table td {
+  padding: 11px 16px;
+  text-align: left;
+  vertical-align: top;
+}
+.product-story .story-table th {
+  background: #dcece6;
+  color: #062b3b;
+  font-weight: 650;
+}
+.product-story .story-table tbody tr:nth-child(even) {
+  background: #e8f1ee;
+}
+.product-story .story-table td:first-child {
+  color: #5d7680;
+}
+/* Feature cards: two to a row, a lone last card across the row. */
+.product-story .story-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.product-story .story-features li {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-content: start;
+  gap: 4px 14px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, #c8f28a2e, transparent 55%),
+    linear-gradient(140deg, #073246, #0c5a6c);
+  color: #fff;
+}
+.product-story .story-features li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.product-story .story-feature-icon {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #c8f28a;
+  color: #062b3b;
+}
+.product-story .story-feature-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.product-story .story-features strong {
+  align-self: center;
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.product-story .story-features p {
+  margin: 0;
+  color: #cfe6ec;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.product-story .story-features p strong {
+  font-size: inherit;
+}
+@media (max-width: 600px) {
+  .product-story .story-features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .product-story .story-tagline {
+    padding: 18px 20px;
+  }
+  .product-story .story-text,
+  .product-story .story-list li {
+    font-size: 14.5px;
+  }
 }

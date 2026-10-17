@@ -424,6 +424,33 @@ export default function Dashboard({ section, account, today }) {
     });
     setNotice("");
   }
+  // A product file filled in from the admin: its texts per language
+  // ({ id, en }, each a set of product fields) and the fields both share.
+  function importProduct(id, texts, shared = {}) {
+    setContent((current) => {
+      const patch = (list, fields) =>
+        list.map((p) => (p.id === id ? { ...p, ...fields } : p));
+      let next = {
+        ...current,
+        shop: {
+          ...current.shop,
+          products: patch(current.shop.products, {
+            ...shared,
+            ...texts.id,
+          }),
+        },
+      };
+      if (texts.en)
+        next = applyEnglishEdit(
+          next,
+          "shop",
+          "products",
+          patch(localizeContent(next, "en").shop.products, texts.en),
+        );
+      return next;
+    });
+    setNotice("");
+  }
   async function saveSettings(
     event,
     message = "Perubahan sudah tersimpan dan tampil di website.",
@@ -1449,6 +1476,8 @@ export default function Dashboard({ section, account, today }) {
                 <ShopEditor
                   shop={view.shop}
                   update={(key, value) => mutateContent("shop", key, value)}
+                  locale={editLocale}
+                  onImport={importProduct}
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}

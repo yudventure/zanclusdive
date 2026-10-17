@@ -369,6 +369,156 @@ try {
   shots &&
     (await checkout.screenshot({ path: `${shots}/80-checkout-antar.png` }));
 
+  // A product file from the maker's page: the admin uploads the .md, the
+  // spec table fills the spec rows, the rest becomes the description, and
+  // the window shows a tagline banner and feature cards.
+  const makerPage = `# SCUBAPRO Crystal Vu Plus Dive Mask
+
+**Panoramic Vision. Exceptional Clarity. Premium Diving Comfort.**
+
+### Experience the Ocean Without Limits
+
+Discover a new perspective beneath the surface with the **SCUBAPRO Crystal Vu Plus**.
+
+## Key Features
+
+**Panoramic Three-Window Design**
+A large front lens and two seamless side windows.
+
+**Ultra-Clear, No-Tint Glass**
+High-quality, no-tint glass.
+
+**Adjustable Swivel Buckles**
+Quick, precise strap adjustments.
+
+## Specifications
+
+| Feature | Details |
+|---|---|
+| Mask Construction | Framed |
+| Product Weight | Approximately 250–270 g |
+`;
+  await a.goto(base + "/admin/shop", { waitUntil: "networkidle" });
+  await a.locator(".admin-shop-item", { hasText: "Wetsuit 3 mm" }).click();
+  await a.locator(".admin-story-file input").setInputFiles({
+    name: "crystal-vu.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(makerPage),
+  });
+  await a
+    .getByText(
+      "Terisi dari berkas untuk Indonesia, 2 baris spesifikasi. Judul di berkas SCUBAPRO Crystal Vu Plus Dive Mask.",
+    )
+    .waitFor();
+  assert.equal(
+    await a.getByLabel("Isi 2", { exact: true }).inputValue(),
+    "Approximately 250–270 g",
+  );
+  assert.match(
+    await a.getByLabel("Deskripsi lengkap").inputValue(),
+    /^# SCUBAPRO Crystal Vu Plus Dive Mask[\s\S]*## Key Features/,
+  );
+  // The preview shows what guests read.
+  const preview = a.locator(".admin-story-preview");
+  assert.equal(await preview.locator(".story-features li").count(), 3);
+  shots &&
+    (await a
+      .locator(".admin-shop-story")
+      .screenshot({ path: `${shots}/87-isi-dari-md.png` }));
+  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
+  await a
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  const suit = (await state()).content.shop.products.find(
+    (p) => p.id === "demo-suit",
+  );
+  assert.equal(suit.name, "Wetsuit 3 mm", "the name stays unless asked");
+  assert.equal(suit.specs.length, 2);
+  // Both languages from one file: the example file.
+  await a.locator(".admin-shop-item", { hasText: "BCD jacket" }).click();
+  const exampleText = await a.evaluate(async () => {
+    const link = document.querySelector('a[download="contoh-produk.md"]');
+    return (await fetch(link.href)).text();
+  });
+  assert.match(exampleText, /^---\nbahasa: id/);
+  await a.locator(".admin-story-file input").setInputFiles({
+    name: "contoh-produk.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from(exampleText),
+  });
+  await a
+    .getByText(
+      "Terisi dari berkas untuk Indonesia dan English, 3 baris spesifikasi.",
+    )
+    .waitFor();
+  assert.equal(
+    await a.getByLabel("Nama produk").inputValue(),
+    "SCUBAPRO Crystal Vu Plus",
+  );
+  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
+  await a
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  const english = (await state()).content.en.shop.products["demo-bcd"];
+  assert.match(english.details, /Panoramic vision/);
+  assert.equal(english.specs[0].label, "Lens");
+
+  // The window: tagline banner, story, feature cards, the spec table
+  // beside it.
+  await page.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Lihat detail Wetsuit 3 mm" })
+    .first()
+    .click();
+  const story = page.locator("dialog.shop-detail .product-story");
+  await story.waitFor();
+  assert.equal(
+    await story.locator(".story-tagline").textContent(),
+    "Panoramic Vision. Exceptional Clarity. Premium Diving Comfort.",
+  );
+  assert.deepEqual(
+    await story.locator(".story-features strong").allTextContents(),
+    [
+      "Panoramic Three-Window Design",
+      "Ultra-Clear, No-Tint Glass",
+      "Adjustable Swivel Buckles",
+    ],
+  );
+  assert.doesNotMatch(await story.textContent(), /#|\*\*|\|/);
+  const side = page.locator("dialog.shop-detail .shop-detail-side");
+  assert.match(
+    await side.textContent(),
+    /Mask Construction[\s\S]*Framed[\s\S]*Product Weight/,
+  );
+  // Story and specs side by side on a wide screen.
+  const [storyBox, sideBox] = await Promise.all([
+    page.locator("dialog.shop-detail .shop-detail-story").boundingBox(),
+    side.boundingBox(),
+  ]);
+  assert.ok(sideBox.x > storyBox.x + storyBox.width - 1, "specs beside");
+  await page
+    .locator("dialog.shop-detail .shop-detail-more")
+    .scrollIntoViewIfNeeded();
+  shots &&
+    (await page
+      .locator("dialog.shop-detail .shop-detail-more")
+      .screenshot({ path: `${shots}/88-deskripsi-rapi.png` }));
+  await page.getByRole("button", { name: "Tutup detail" }).click();
+  // The English site reads the English half of the file.
+  await page.goto(base + "/dive-shop", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: /details .*SCUBAPRO Crystal Vu Plus/i })
+    .first()
+    .click();
+  await story.waitFor();
+  assert.match(
+    await story.locator(".story-tagline").textContent(),
+    /^Panoramic vision/,
+  );
+  await page.keyboard.press("Escape");
+
   // Phones: the window stacks and fits.
   const phone = await browser.newContext({
     viewport: { width: 390, height: 844 },

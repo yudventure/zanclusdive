@@ -1,13 +1,9 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
-import {
-  rupiah,
-  unitsLeft,
-  stockBadge,
-  productImages,
-  detailBlocks,
-} from "../shop-model.js";
+import { rupiah, unitsLeft, stockBadge, productImages } from "../shop-model.js";
+import { storyBlocks } from "../product-story.js";
+import ProductStory from "./ProductStory.jsx";
 import { dictionary } from "../i18n.js";
 import { videoSource } from "../gallery.js";
 import { Video } from "../components/DiveVideos.jsx";
@@ -48,7 +44,8 @@ export default function ProductDetail({
   const videos = (product.videos ?? [])
     .map((url) => videoSource(url))
     .filter((source) => source && !source.short);
-  const blocks = detailBlocks(product.details);
+  // The full description, from its Markdown.
+  const blocks = storyBlocks(product.details);
   const specs = [
     ...(product.specification
       ? [{ label: t.summary, value: product.specification }]
@@ -283,32 +280,24 @@ export default function ProductDetail({
         </div>
       </div>
       {(blocks.length > 0 || specs.length > 0 || videos.length > 0) && (
-        <div className="shop-detail-more">
+        // The story on the left and the spec table beside it on wide
+        // screens; the videos under the story.
+        <div
+          className={
+            "shop-detail-more" +
+            (specs.length && (blocks.length || videos.length)
+              ? " has-side"
+              : "")
+          }
+        >
           {blocks.length > 0 && (
-            <section>
+            <section className="shop-detail-story">
               <h3>{t.description}</h3>
-              {blocks.map((block, index) =>
-                block.type === "list" ? (
-                  <ul key={index}>
-                    {block.items.map((item, n) => (
-                      <li key={n}>{item}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p key={index}>
-                    {block.lines.map((line, n) => (
-                      <span key={n}>
-                        {n > 0 && <br />}
-                        {line}
-                      </span>
-                    ))}
-                  </p>
-                ),
-              )}
+              <ProductStory blocks={blocks} />
             </section>
           )}
           {specs.length > 0 && (
-            <section>
+            <section className="shop-detail-side">
               <h3>{t.specs}</h3>
               <dl className="shop-detail-specs">
                 {specs.map((row, index) => (
@@ -321,7 +310,7 @@ export default function ProductDetail({
             </section>
           )}
           {videos.length > 0 && (
-            <section>
+            <section className="shop-detail-watch">
               <h3>{t.videos}</h3>
               <ul className="dive-videos shop-detail-videos">
                 {videos.map((source, index) => (

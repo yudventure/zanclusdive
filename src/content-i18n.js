@@ -6,6 +6,7 @@ import {
   defaultActivities,
   legacyActivityDefaults,
 } from "./activity-model.js";
+import { productLimits } from "./shop-model.js";
 
 export const translatableFields = {
   experiences: ["title", "description", "cardDescription", "duration", "items"],
@@ -695,7 +696,11 @@ export function validateTranslations(input, products = []) {
                 "Spesifikasi produk",
                 300,
               ),
-              details: optional(t.details, "Deskripsi lengkap", 3000),
+              details: optional(
+                t.details,
+                "Deskripsi lengkap",
+                productLimits.details,
+              ),
               specs: specList(t.specs),
             },
           ];

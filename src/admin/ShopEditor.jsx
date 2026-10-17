@@ -15,6 +15,12 @@ import {
   deliveryZoneLimit,
 } from "../shop-model.js";
 import { videoPlatforms, videoSource } from "../gallery.js";
+import {
+  productMdExample,
+  readProductMd,
+  storyBlocks,
+} from "../product-story.js";
+import ProductStory from "../shop/ProductStory.jsx";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 
 function Field({ label, hint, children }) {
@@ -36,6 +42,8 @@ export default function ShopEditor({
   placePhoto,
   request,
   canStock = false,
+  locale = "id",
+  onImport,
 }) {
   const [selectedID, setSelectedID] = useState(shop.products[0]?.id);
   // The product list, searched by name and shown by way.
@@ -285,17 +293,14 @@ export default function ShopEditor({
                 />
               </Field>
             </div>
-            <Field
-              label="Deskripsi lengkap"
-              hint="Tampil di jendela detail produk, seperti halaman barang di marketplace. Pisahkan paragraf dengan baris kosong, dan awali baris dengan tanda - untuk daftar."
-            >
-              <textarea
-                rows={8}
-                maxLength={productLimits.details}
-                value={product.details ?? ""}
-                onChange={(e) => edit("details", e.target.value)}
-              />
-            </Field>
+            <ProductStoryField
+              product={product}
+              locale={locale}
+              edit={edit}
+              onImport={(texts, shared) =>
+                onImport?.(product.id, texts, shared)
+              }
+            />
             <SpecRows
               rows={product.specs ?? []}
               onChange={(rows) => edit("specs", rows)}
@@ -812,6 +817,170 @@ function ProductPhotos({
           </button>
         </div>
       </details>
+    </section>
+  );
+}
+
+// The full description in Markdown, typed here or filled in from a .md
+// file: the maker's page copied as it is, with its specifications. A file
+// may hold both languages, each section with "bahasa: id" or "bahasa: en"
+// in its front matter; without it, the file is the language being edited.
+// The preview shows what guests read in the product window.
+function ProductStoryField({ product, locale, edit, onImport }) {
+  const [note, setNote] = useState(null);
+  const [preview, setPreview] = useState(false);
+  const [example, setExample] = useState("");
+  useEffect(() => {
+    const url = URL.createObjectURL(
+      new Blob([productMdExample], { type: "text/markdown" }),
+    );
+    setExample(url);
+    return () => URL.revokeObjectURL(url);
+  }, []);
+  const words = { id: "Indonesia", en: "English" };
+  async function read(file) {
+    setNote(null);
+    if (!file) return;
+    if (file.size > 300_000) {
+      setNote({ error: "Berkas .md terlalu besar, maksimal 300 KB." });
+      return;
+    }
+    let found;
+    try {
+      found = readProductMd(await file.text());
+    } catch (error) {
+      setNote({ error: error.message });
+      return;
+    }
+    // Sections marked with a language fill that language; a file without
+    // marks fills the language being edited.
+    const marked = found.filter((s) => s.lang === "id" || s.lang === "en");
+    const chosen = marked.length
+      ? marked
+      : [{ ...found[0], lang: locale === "en" ? "en" : "id" }];
+    const texts = {};
+    for (const section of chosen)
+      texts[section.lang] = {
+        details: section.details,
+        ...(section.specs.length ? { specs: section.specs } : {}),
+        ...(section.name ? { name: section.name } : {}),
+        ...(section.description ? { description: section.description } : {}),
+        ...(section.specification
+          ? { specification: section.specification }
+          : {}),
+      };
+    const videos = [
+      ...new Set([
+        ...(product.videos ?? []),
+        ...chosen
+          .flatMap((section) => section.videos)
+          .filter((url) => {
+            const source = videoSource(url);
+            return source && !source.short;
+          }),
+      ]),
+    ].slice(0, productLimits.videos);
+    onImport(texts, videos.length ? { videos } : {});
+    const first = chosen[0];
+    setNote({
+      langs: chosen.map((s) => words[s.lang]).join(" dan "),
+      specs: Math.max(...chosen.map((s) => s.specs.length)),
+      title: !first.name && first.title !== product.name ? first.title : "",
+    });
+    setPreview(true);
+  }
+  const blocks = storyBlocks(product.details);
+  return (
+    <section className="admin-shop-story">
+      <div className="admin-field">
+        <label htmlFor={`story-${product.id}`}>Deskripsi lengkap</label>
+        <textarea
+          id={`story-${product.id}`}
+          rows={10}
+          maxLength={productLimits.details}
+          value={product.details ?? ""}
+          onChange={(e) => edit("details", e.target.value)}
+        />
+        <small className="admin-subtle">
+          Ditulis dengan Markdown, sampai{" "}
+          {productLimits.details.toLocaleString("id-ID")} karakter. # untuk
+          judul, **teks** untuk tebal, - untuk daftar, dan | untuk tabel. Baris
+          tebal yang diikuti paragraf menjadi kartu fitur, dan baris tebal
+          sendirian menjadi slogan.
+        </small>
+      </div>
+      <div className="admin-story-actions">
+        <label className="admin-button secondary admin-story-file">
+          Isi dari berkas .md
+          <input
+            type="file"
+            accept=".md,.markdown,.txt,text/markdown,text/plain"
+            onChange={(e) => {
+              read(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {example && (
+          <a
+            className="admin-inline"
+            href={example}
+            download="contoh-produk.md"
+          >
+            Unduh contoh berkas .md
+          </a>
+        )}
+        <button
+          type="button"
+          className="admin-inline"
+          aria-pressed={preview}
+          onClick={() => setPreview((on) => !on)}
+        >
+          {preview ? "Tutup pratinjau" : "Lihat pratinjau"}
+        </button>
+      </div>
+      <p className="admin-subtle">
+        Salin halaman produk dari situs resmi pembuatnya ke berkas .md, lalu
+        unggah di sini. Tabel spesifikasi masuk ke Tabel spesifikasi di bawah,
+        sisanya menjadi deskripsi lengkap. Bagian depan berkas bisa berisi nama,
+        deskripsi, ringkasan, video, dan bahasa. Satu berkas bisa memuat
+        Indonesia dan English. Tekan Simpan katalog setelahnya.
+      </p>
+      {note?.error && (
+        <p className="admin-error" role="alert">
+          {note.error}
+        </p>
+      )}
+      {note && !note.error && (
+        <div className="admin-success admin-story-note" role="status">
+          <span>
+            Terisi dari berkas untuk {note.langs}
+            {note.specs > 0 ? `, ${note.specs} baris spesifikasi` : ""}.
+            {note.title && ` Judul di berkas ${note.title}.`}
+          </span>
+          {note.title && (
+            <button
+              type="button"
+              className="admin-inline"
+              onClick={() => {
+                edit("name", note.title.slice(0, 100));
+                setNote({ ...note, title: "" });
+              }}
+            >
+              Pakai sebagai nama produk
+            </button>
+          )}
+        </div>
+      )}
+      {preview && (
+        <div className="admin-story-preview">
+          {blocks.length ? (
+            <ProductStory blocks={blocks} />
+          ) : (
+            <p className="admin-subtle">Deskripsi lengkap masih kosong.</p>
+          )}
+        </div>
+      )}
     </section>
   );
 }

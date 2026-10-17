@@ -2,7 +2,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   demoShop,
-  detailBlocks,
   deliveryChoice,
   deliveryLines,
   defaultDelivery,
@@ -115,20 +114,6 @@ test("gear for sale and gear for rent keep their own photos", () => {
       ),
     { message: "Foto barang sewa maksimal 8." },
   );
-});
-
-test("the full description reads as paragraphs and lists", () => {
-  assert.deepEqual(
-    detailBlocks(
-      "Mask premium.\nNyaman.\n\nKelebihan\n- Lensa\n• Silikon\r\n\n",
-    ),
-    [
-      { type: "text", lines: ["Mask premium.", "Nyaman."] },
-      { type: "text", lines: ["Kelebihan"] },
-      { type: "list", items: ["Lensa", "Silikon"] },
-    ],
-  );
-  assert.deepEqual(detailBlocks(""), []);
 });
 
 test("delivery settings: pick-up, zones with fees, and their checks", () => {

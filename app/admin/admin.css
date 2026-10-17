@@ -3139,3 +3139,46 @@ strong.admin-overdue {
     grid-column: 1 / -1;
   }
 }
+/* Dive Shop product: the full description, a .md file, and a preview. */
+.admin-shop-story {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.admin-shop-story .admin-field {
+  margin: 0;
+}
+.admin-shop-story > p {
+  margin: 0;
+}
+.admin-story-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.admin-story-file {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.admin-story-file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.admin-story-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.admin-story-preview {
+  max-height: 560px;
+  overflow: auto;
+  padding: 20px;
+  border: 1px solid #d6e3ec;
+  border-radius: 16px;
+  background: #fff;
+}

@@ -75,11 +75,12 @@ export function cleanSizes(input) {
 const hasSizes = (product) => Boolean(product?.sizes?.length);
 
 // A product page like a marketplace: several photos (the first is the
-// cover on cards), video links, a full description and spec rows.
+// cover on cards), video links, a full description in Markdown (often the
+// maker's own, so it is long) and spec rows.
 export const productLimits = {
   images: 8,
   videos: 4,
-  details: 3000,
+  details: 20000,
   specs: 16,
 };
 // Gear for sale and gear for rent are different units, so each way has its
@@ -101,34 +102,6 @@ export const productAs = (product, mode) => ({
   ...product,
   image: productImages(product, mode)[0] ?? "",
 });
-
-// The full description as blocks for the product window: paragraphs, and
-// lists from lines that start with "-" or "•".
-export function detailBlocks(text) {
-  return String(text ?? "")
-    .replace(/\r\n?/g, "\n")
-    .split(/\n\s*\n/)
-    .map((block) =>
-      block
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
-    )
-    .filter((lines) => lines.length)
-    .flatMap((lines) => {
-      const out = [];
-      for (const line of lines) {
-        const item = /^[-•*]\s*(.+)$/.exec(line);
-        const last = out[out.length - 1];
-        if (item) {
-          if (last?.type === "list") last.items.push(item[1]);
-          else out.push({ type: "list", items: [item[1]] });
-        } else if (last?.type === "text") last.lines.push(line);
-        else out.push({ type: "text", lines: [line] });
-      }
-      return out;
-    });
-}
 
 // How a Dive Shop order reaches the guest: picked up at the dive center,
 // or delivered to an address in one of the zones, each with its fee.
