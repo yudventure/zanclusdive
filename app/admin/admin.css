@@ -2925,3 +2925,214 @@ strong.admin-overdue {
 .admin-shop-mode .admin-stock-rows p {
   margin: 0;
 }
+/* Reservation calendar, Sewa alat view: rental gear out on each day
+   against its rental stock. */
+.admin-month-views {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: #eef4f8;
+}
+.admin-month-views button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #3e5b70;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-month-views button[aria-pressed="true"] {
+  background: white;
+  color: var(--admin-ink);
+  box-shadow: 0 1px 4px #24496122;
+}
+.admin-month-note {
+  margin: -6px 0 14px;
+}
+.calendar-gear {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 7px;
+  background: #e4f5f2;
+  color: #135f58;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+}
+.calendar-gear > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.calendar-gear b {
+  font-weight: 700;
+}
+.calendar-gear.is-full {
+  background: #fff1dc;
+  color: #8a5a12;
+}
+.calendar-gear.is-over {
+  background: #fde6e4;
+  color: #a1302a;
+}
+.calendar-gear.is-free {
+  background: #eef1f3;
+  color: #4f6272;
+}
+.admin-month-day.has-full {
+  background: #fff9f0;
+}
+.admin-legend .dot.gear-ok {
+  background: #1f9e94;
+}
+.admin-legend .dot.gear-full {
+  background: #e3a230;
+}
+.admin-legend .dot.gear-over {
+  background: #d4483f;
+}
+.admin-legend .dot.gear-free {
+  background: #8a9aa7;
+}
+.admin-gear-list,
+.admin-gear-left {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-gear-list li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f1f8f6;
+}
+.admin-gear-list li.is-full {
+  background: #fff6e8;
+}
+.admin-gear-list li.is-over {
+  background: #fdeceb;
+}
+.admin-gear-list li.is-free {
+  background: #f3f5f7;
+}
+.admin-gear-list span {
+  color: #3e5b70;
+  font-size: 13px;
+}
+.admin-gear-list div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.admin-gear-day .admin-more {
+  margin-top: 16px;
+}
+.admin-gear-left {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.admin-gear-left li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f4f8fa;
+  font-size: 13px;
+}
+.admin-gear-left li.is-full b {
+  color: #a1302a;
+}
+/* The booking form's rental gear. */
+.admin-booking-gear {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f4f9f9;
+}
+.admin-booking-gear h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.admin-booking-gear p {
+  margin: 0;
+}
+.admin-gear-line {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(90px, 120px) minmax(0, 1.4fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.admin-gear-line .admin-field {
+  margin: 0;
+}
+.admin-gear-line small {
+  padding-bottom: 12px;
+  color: #3e6b62;
+  font-size: 12px;
+}
+.admin-gear-line small.is-warn {
+  color: #a1302a;
+  font-weight: 600;
+}
+.admin-gear-line .admin-inline {
+  padding-bottom: 12px;
+}
+.admin-gear-online {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.admin-gear-online small {
+  margin-left: 8px;
+  color: #5f7480;
+}
+@media (max-width: 760px) {
+  .admin-gear-line {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+  .admin-gear-line small {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+  .calendar-gear {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+  .admin-month-views {
+    width: 100%;
+  }
+  .admin-month-views button {
+    flex: 1;
+  }
+}
+/* Dive Shop editor: finding a product in a long catalog. */
+.admin-shop-find {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.admin-shop-find select {
+  width: auto;
+}
+@media (max-width: 1100px) {
+  .admin-shop-find {
+    grid-column: 1 / -1;
+  }
+}

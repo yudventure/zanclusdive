@@ -9,10 +9,16 @@ import {
 } from "./store.js";
 import { newId } from "./records.js";
 import { BookingError, bookingDates } from "../booking-model.js";
+import { stockOf } from "../inventory-model.js";
 import { shiftDate } from "../fare-model.js";
 import {
   modesOf,
   countMovements,
+  gearLines,
+  linkedItems,
+  sizedName,
+  sizesOf,
+  variantKey,
   planShopItems,
   publicStock,
   recordedBookings,
@@ -160,17 +166,18 @@ export async function reserveShopStock(order, create, now = new Date()) {
 
 export const fullOnDate =
   "Alat sewa pesanan ini sudah penuh dipesan pada tanggal itu. Pilih tanggal lain.";
-// A guest moving a Dive Shop rental: the gear must be free on the new
+// A guest moving a booking with rental gear (a Dive Shop rental, or an
+// activity with gear as an add-on): the gear must be free on the new
 // dates, counting every other order. "move" saves the new date inside the
 // lock.
 export async function guardShopMove(id, startDate, move, now = new Date()) {
   return withStockLock(async () => {
     const data = await loadStock();
     const booking = data.bookings.find((b) => b.id === id);
-    const lines = (booking?.payment?.lines ?? []).filter(
+    const lines = (booking ? gearLines(booking) : []).filter(
       (line) => line.product && line.mode === "rental",
     );
-    if (booking?.experience === "shop" && lines.length) {
+    if (lines.length) {
       const days = Math.round(
         (Date.parse(booking.endDate) - Date.parse(booking.startDate)) /
           86400000,
@@ -218,4 +225,30 @@ export async function shopStockUse(now = new Date()) {
       modes: modesOf(p),
     })),
   };
+}
+
+// The rental gear for the reservation calendar and the booking form: each
+// product for rent and size, with its rental stock and whether the website
+// follows it. Bookings are not read here; the calendar has them.
+export async function rentalGear() {
+  const { products, items, movements } = await loadStock();
+  const linked = linkedItems(items, products);
+  return products
+    .filter((p) => p.rentalEnabled)
+    .flatMap((p) =>
+      sizesOf(p).map((size) => {
+        const key = variantKey(p.id, "rental", size);
+        const item = linked.get(key);
+        return {
+          key,
+          productId: p.id,
+          size,
+          name: sizedName(p, size),
+          unit: item?.unit ?? "",
+          stock:
+            item && item.active !== false ? stockOf(movements, item.id) : 0,
+          follows: p.availability === "stock",
+        };
+      }),
+    );
 }

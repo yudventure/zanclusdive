@@ -294,6 +294,7 @@ export default function HomePage({
                         {prices && (
                           <PricePanel
                             priceList={content.priceList}
+                            products={content.shop?.products ?? []}
                             group={key}
                             locale={locale}
                             hidden={!open}
@@ -464,7 +465,6 @@ export default function HomePage({
           ) : (
             <ShopTeaser
               shop={content.shop}
-              priceList={content.priceList}
               service={withService(content).service}
               whatsapp={content.contact.whatsapp}
               locale={locale}

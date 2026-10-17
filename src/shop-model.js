@@ -9,7 +9,44 @@ export const shopCategories = {
   cylinder: "Tabung",
   computer: "Dive computer",
   light: "Lampu & aksesori",
+  weight: "Pemberat",
+  vest: "Pelampung",
+  camera: "Kamera",
 };
+// Products in the catalog, rental gear included.
+export const shopProductLimit = 60;
+// The homepage shows rental gear in tabs by kind.
+export const rentalTabs = [
+  "rentalBasics",
+  "rentalScuba",
+  "rentalTank",
+  "rentalTools",
+  "rentalCamera",
+];
+export const rentalTabOf = {
+  mask: "rentalBasics",
+  fins: "rentalBasics",
+  suit: "rentalScuba",
+  bcd: "rentalScuba",
+  regulator: "rentalScuba",
+  weight: "rentalScuba",
+  cylinder: "rentalTank",
+  computer: "rentalTools",
+  light: "rentalTools",
+  vest: "rentalTools",
+  camera: "rentalCamera",
+};
+// Rental gear an activity page can offer beside its packages: rented for
+// the activity's day, without a size to pick.
+export const rentalAddOn = (p) =>
+  Boolean(
+    p?.enabled &&
+    p.rentalEnabled &&
+    p.availability !== "unavailable" &&
+    Number.isSafeInteger(p.rentalPrice) &&
+    p.rentalPrice > 0 &&
+    !p.sizes?.length,
+  );
 export const availabilityLabels = {
   stock: "Ikuti stok gudang",
   request: "Konfirmasi ketersediaan",

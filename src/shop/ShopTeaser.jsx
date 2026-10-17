@@ -6,9 +6,15 @@ import DeliveryChoice, {
   firstDelivery,
   deliveryFee,
 } from "../components/DeliveryChoice.jsx";
-import { rupiah, unitsLeft, deliveryChoice, productAs } from "../shop-model.js";
+import {
+  rupiah,
+  unitsLeft,
+  deliveryChoice,
+  productAs,
+  rentalTabs,
+  rentalTabOf,
+} from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
-import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
@@ -18,22 +24,9 @@ import CartIcon from "../components/CartIcon.jsx";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
-const tabs = ["buy", ...rentalGroups];
-
-// Illustration for a rental item, picked from its Indonesian name.
-const visualRules = [
-  [/masker|mask|snorkel/i, "mask"],
-  [/fin|booties/i, "fins"],
-  [/wetsuit/i, "suit"],
-  [/bcd|pelampung|weight/i, "bcd"],
-  [/regulator/i, "regulator"],
-  [/tabung|isi ulang|tank|refill/i, "cylinder"],
-  [/computer/i, "computer"],
-  [/senter|torch/i, "light"],
-  [/kamera|camera|gopro/i, "camera"],
-];
-const visualFor = (name) =>
-  visualRules.find(([rule]) => rule.test(name))?.[1] ?? "mask";
+// The cart key of a product in one way and size.
+const keyOf = (mode, productId, size = "") =>
+  (mode === "sale" ? "buy:" : "rent:") + productId + (size ? ":" + size : "");
 
 // Small line icons for the service list.
 function TabIcon({ name }) {
@@ -149,7 +142,6 @@ function ServiceBanner({ service, locale, locks }) {
 // cart is checked out into a WhatsApp order.
 export default function ShopTeaser({
   shop,
-  priceList,
   service,
   whatsapp,
   locale = "en",
@@ -186,36 +178,35 @@ export default function ShopTeaser({
   const id = useId();
   const tabRefs = useRef({});
   const dialog = useRef(null);
+  // Dive Shop gear to buy, then the rental gear in tabs by kind, each tab
+  // shown when it has gear.
+  const renting = (p, tab) =>
+    p.enabled && p.rentalEnabled && rentalTabOf[p.category] === tab;
+  const tabs = [
+    "buy",
+    ...rentalTabs.filter((tab) => shop.products.some((p) => renting(p, tab))),
+  ];
   const [title, text] = s.groups[active];
   const buying = active === "buy";
-  const items = buying
-    ? shop.products
-        .filter((p) => p.enabled && p.saleEnabled)
-        .map((p) => ({
-          key: "buy:" + p.id,
-          name: p.name,
-          info: p.specification,
-          price: p.salePrice,
-          unit: "",
-          mode: "sale",
-          visual: productAs(p, "sale"),
-          product: p,
-          productId: p.id,
-          size: "",
-          locked: itemLocked(locks, "product", p.id),
-          // Gear that follows the warehouse stops at the units left.
-          left: unitsLeft(p, stock, "sale") ?? 10,
-        }))
-    : priceList[active].map((item, index) => ({
-        key: `${active}:${index}`,
-        name: priceText(item.name, locale),
-        info: priceText(item.info, locale),
-        price: item.price,
-        unit: priceText(item.unit, locale),
-        mode: "rental",
-        visual: { category: visualFor(item.name.id), image: "" },
-        left: 10,
-      }));
+  const mode = buying ? "sale" : "rental";
+  const items = shop.products
+    .filter((p) => (buying ? p.enabled && p.saleEnabled : renting(p, active)))
+    .map((p) => ({
+      key: keyOf(mode, p.id),
+      name: p.name,
+      info: p.specification,
+      price: buying ? p.salePrice : p.rentalPrice,
+      unit: buying ? "" : s.message.perDay,
+      mode,
+      // The photos of the units for sale, or of the units for rent.
+      visual: productAs(p, mode),
+      product: p,
+      productId: p.id,
+      size: "",
+      locked: itemLocked(locks, "product", p.id),
+      // Gear that follows the warehouse stops at the units left.
+      left: unitsLeft(p, stock, mode) ?? 10,
+    }));
   const totals = cartTotals(cart, form.days || 1);
   // The fare's increase applies to the rentals, not the purchases.
   const offered = fareChoices(fares).length > 1 && totals.rental > 0;
@@ -228,24 +219,13 @@ export default function ShopTeaser({
   const payable = Boolean(payments?.ready) && !totals.needsQuote;
   const order = () => ({
     kind: "shop",
-    lines: cart.map((line) => {
-      const [group, index] = line.key.split(":");
-      return line.productId
-        ? {
-            source: "product",
-            id: line.productId,
-            mode: "sale",
-            quantity: line.quantity,
-            size: line.size ?? "",
-          }
-        : {
-            source: "price",
-            group,
-            index: Number(index),
-            name: priceText(priceList[group][Number(index)].name, "id"),
-            quantity: line.quantity,
-          };
-    }),
+    lines: cart.map((line) => ({
+      source: "product",
+      id: line.productId,
+      mode: line.mode,
+      quantity: line.quantity,
+      size: line.size ?? "",
+    })),
     days: Number(form.days) || 1,
     startDate: form.startDate,
     fare: fareChoice.tier,
@@ -257,17 +237,19 @@ export default function ShopTeaser({
   });
   const quantity = (key) =>
     cart.find((line) => line.key === key)?.quantity ?? 0;
-  // Every size of a product in the cart, for its card.
-  const inCart = (productId) =>
+  // Every size of a product in the cart in one way, for its card.
+  const inCart = (productId, mode) =>
     cart
-      .filter((line) => line.productId === productId)
+      .filter((line) => line.productId === productId && line.mode === mode)
       .reduce((total, line) => total + line.quantity, 0);
   const productOf = (line) =>
     shop.products.find((p) => p.id === line.productId);
   // What one more of a cart line may take: the units left of its size.
   const lineLeft = (line) => {
     const product = productOf(line);
-    return product ? (unitsLeft(product, stock, "sale", line.size) ?? 10) : 10;
+    return product
+      ? (unitsLeft(product, stock, line.mode, line.size) ?? 10)
+      : 10;
   };
   const change = (item, delta) => {
     const { key, name, price, mode, productId, size } = item;
@@ -276,18 +258,18 @@ export default function ShopTeaser({
     );
     setMessage("");
   };
-  // From the product window: the size and quantity picked.
-  function addSized(product, size, count) {
-    const key = "buy:" + product.id + (size ? ":" + size : "");
-    const left = unitsLeft(product, stock, "sale", size) ?? 10;
+  // From the product window: the size and quantity picked, to buy or rent.
+  function addSized(product, mode, size, count) {
+    const key = keyOf(mode, product.id, size);
+    const left = unitsLeft(product, stock, mode, size) ?? 10;
     const room = Math.max(0, Math.min(left, 10) - quantity(key));
     if (!room) return;
     change(
       {
         key,
         name: product.name,
-        price: product.salePrice,
-        mode: "sale",
+        price: product[mode === "sale" ? "salePrice" : "rentalPrice"],
+        mode,
         productId: product.id,
         size,
       },
@@ -296,7 +278,7 @@ export default function ShopTeaser({
   }
   // A cart line moved to another size joins a line already in that size.
   function changeSize(line, size) {
-    const key = "buy:" + line.productId + ":" + size;
+    const key = keyOf(line.mode, line.productId, size);
     setCart((current) => {
       const same = current.find((l) => l.key === key);
       return same
@@ -430,6 +412,7 @@ export default function ShopTeaser({
                           ? () =>
                               setDetail({
                                 product: item.product,
+                                mode: item.mode,
                                 add: !item.locked,
                               })
                           : undefined
@@ -450,6 +433,7 @@ export default function ShopTeaser({
                             onClick={() =>
                               setDetail({
                                 product: item.product,
+                                mode: item.mode,
                                 add: !item.locked,
                               })
                             }
@@ -477,14 +461,20 @@ export default function ShopTeaser({
                             className="shop-item-add"
                             disabled={item.left <= 0}
                             onClick={() =>
-                              setDetail({ product: item.product, add: true })
+                              setDetail({
+                                product: item.product,
+                                mode: item.mode,
+                                add: true,
+                              })
                             }
                           >
                             {item.left <= 0 ? s.out : t.detail.pickSize}
                           </button>
-                          {inCart(item.productId) > 0 && (
+                          {inCart(item.productId, item.mode) > 0 && (
                             <small className="shop-item-in-cart">
-                              {t.detail.inCart(inCart(item.productId))}
+                              {t.detail.inCart(
+                                inCart(item.productId, item.mode),
+                              )}
                             </small>
                           )}
                         </>
@@ -585,7 +575,9 @@ export default function ShopTeaser({
                       type="button"
                       className="shop-product-open"
                       aria-label={t.detail.open(line.name)}
-                      onClick={() => setDetail({ product, add: false })}
+                      onClick={() =>
+                        setDetail({ product, mode: line.mode, add: false })
+                      }
                     >
                       {line.name}
                     </button>
@@ -607,7 +599,12 @@ export default function ShopTeaser({
                         onChange={(e) => changeSize(line, e.target.value)}
                       >
                         {product.sizes.map((size) => {
-                          const left = unitsLeft(product, stock, "sale", size);
+                          const left = unitsLeft(
+                            product,
+                            stock,
+                            line.mode,
+                            size,
+                          );
                           return (
                             <option
                               key={size}
@@ -846,16 +843,17 @@ export default function ShopTeaser({
       </dialog>
       {detail && (
         <ProductDetail
-          key={detail.product.id}
+          key={detail.product.id + detail.mode}
           product={detail.product}
-          mode="sale"
+          mode={detail.mode}
           stock={stock}
           locale={locale}
           category={dictionary(locale).shopCategories[detail.product.category]}
           delivery={shop.delivery}
           onAdd={
             detail.add
-              ? (size, count) => addSized(detail.product, size, count)
+              ? (size, count) =>
+                  addSized(detail.product, detail.mode, size, count)
               : null
           }
           onClose={() => setDetail(null)}

@@ -7,7 +7,7 @@ import {
   paymentActivities,
   quantityLimit,
 } from "./payment-model.js";
-import { addOnItems, priceText, rentalGroups } from "./price-list.js";
+import { addOnItems, priceText } from "./price-list.js";
 import { itemLocked, pageLocked } from "./developer.js";
 import { fareNames, orderFare } from "./fare-model.js";
 import { deliveryChoice } from "./shop-model.js";
@@ -27,6 +27,12 @@ const addDays = (date, n) =>
     .toISOString()
     .slice(0, 10);
 const both = (id, en = id) => ({ id, en });
+// A Dive Shop product's name in both languages.
+const productName = (content, product) =>
+  both(
+    product.name,
+    content.en?.shop?.products?.[product.id]?.name || undefined,
+  );
 const whole = (value, min, max) => {
   const n = Number(value);
   return Number.isInteger(n) && n >= min && n <= max ? n : null;
@@ -44,8 +50,9 @@ function checkDate(date, { today, last }) {
 
 // Packages from the activity's price list, chosen like a cart: one or more
 // lines { item, itemName, quantity } (or the single item of earlier pages),
-// with add-ons from the other lists as { addOn, itemName, quantity }. An
-// add-on comes with at least one package.
+// with add-ons from the other lists or Dive Shop rental gear as
+// { addOn, itemName, quantity }. An add-on comes with at least one package.
+// Rental gear is rented for the activity's day and held in its stock.
 function activityOrder(content, input, window, locks) {
   const activity = input.activity;
   if (
@@ -64,7 +71,11 @@ function activityOrder(content, input, window, locks) {
         },
       ];
   const packages = payableItems(content.priceList, activity);
-  const addOns = addOnItems(content.priceList, activity);
+  const addOns = addOnItems(
+    content.priceList,
+    activity,
+    content.shop?.products ?? [],
+  );
   if (!chosen.length || chosen.length > packages.length + addOns.length)
     fail("Pilih minimal satu paket dari daftar harga.", 400);
   const participants = whole(input.participants, 1, quantityLimit);
@@ -75,20 +86,30 @@ function activityOrder(content, input, window, locks) {
     const item = addOn
       ? addOns.find((entry) => entry.id === line.addOn)
       : packages.find((entry) => entry.index === Number(line?.item));
-    if (!item || priceText(item.name, "id") !== line.itemName)
+    // Rental gear is known by its id; the page shows its name in the
+    // guest's language.
+    if (
+      !item ||
+      (!item.product && priceText(item.name, "id") !== line.itemName)
+    )
       fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
-    const id = addOn ? `addon-${item.id}` : `${activity}-${item.index}`;
+    if (item.product && itemLocked(locks, "product", item.product.id))
+      fail("Ada alat yang belum tersedia. Muat ulang halaman.");
+    const id = addOn
+      ? `addon-${item.id.replace(":", "-")}`
+      : `${activity}-${item.index}`;
     if (seen.has(id)) fail("Pilih minimal satu paket dari daftar harga.", 400);
     seen.add(id);
     const quantity = whole(line.quantity, 1, quantityLimit);
     if (!quantity) fail("Jumlah paket dan peserta harus 1–30.", 400);
     return {
       id,
-      name: item.name,
+      name: item.product ? productName(content, item.product) : item.name,
       unit: item.unit,
       price: item.price,
       quantity,
       addOn,
+      ...(item.product ? { product: item.product.id, mode: "rental" } : {}),
     };
   });
   if (lines.every((line) => line.addOn))
@@ -107,15 +128,16 @@ function activityOrder(content, input, window, locks) {
   };
 }
 
-// Homepage cart lines are a product to buy or a rental from the price list;
-// the Dive Shop page sells and rents its products.
+// The homepage cart and the Dive Shop page sell and rent Dive Shop
+// products. Rentals from the old price list (a page opened before rental
+// gear moved to the Dive Shop) ask for a reload.
 function shopOrder(content, input, window, locks) {
   const lines = input.lines;
   if (!Array.isArray(lines) || !lines.length || lines.length > 40)
     fail("Pilih alat terlebih dahulu.", 400);
-  const rental = lines.some(
-    (line) => line?.source === "price" || line?.mode === "rental",
-  );
+  if (lines.some((line) => line?.source === "price"))
+    fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
+  const rental = lines.some((line) => line?.mode === "rental");
   const days = rental ? whole(input.days, 1, 30) : 1;
   if (!days) fail("Lama sewa harus 1–30 hari.", 400);
   const startDate = rental ? checkDate(input.startDate, window) : window.today;
@@ -139,19 +161,9 @@ function shopOrder(content, input, window, locks) {
       size = typeof line.size === "string" ? line.size : "";
       if (product.sizes?.length ? !product.sizes.includes(size) : size)
         fail("Pilih ukuran untuk setiap alat sebelum membayar.", 400);
-      name = both(product.name);
+      name = productName(content, product);
       price = product[rent ? "rentalPrice" : "salePrice"];
       key = `product-${product.id}-${line.mode}${size ? "-" + size : ""}`;
-    } else if (line.source === "price") {
-      const item = rentalGroups.includes(line.group)
-        ? content.priceList?.[line.group]?.[Number(line.index)]
-        : null;
-      if (!item || priceText(item.name, "id") !== line.name)
-        fail("Daftar harga baru saja diperbarui. Muat ulang halaman.");
-      rent = true;
-      name = item.name;
-      price = item.price;
-      key = `rent-${line.group}-${Number(line.index)}`;
     } else fail("Pilih alat terlebih dahulu.", 400);
     if (seen.has(key)) fail("Pilih alat terlebih dahulu.", 400);
     seen.add(key);
@@ -173,10 +185,10 @@ function shopOrder(content, input, window, locks) {
       price: rent ? price * days : price,
       quantity,
       rent,
-      // Dive Shop products are counted against the warehouse.
-      ...(product
-        ? { product: product.id, mode: line.mode, ...(size ? { size } : {}) }
-        : {}),
+      // Counted against the warehouse.
+      product: product.id,
+      mode: line.mode,
+      ...(size ? { size } : {}),
     };
   });
   const sum = (list) =>

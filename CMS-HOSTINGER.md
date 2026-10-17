@@ -215,7 +215,7 @@ Daftar harga diatur di **Situs web → Daftar harga**. Setiap aktivitas (Diving,
 
 Alat dan layanan lain ditawarkan sebagai **add-on**, diambil dari daftar yang sudah ada, jadi nama dan harganya cukup diubah di satu tempat.
 
-- Daftar sewa Dive Shop (masker, scuba, tabung, dive computer, kamera) tetap tampil di Dive Shop beranda dan bisa dipakai sebagai add-on.
+- Alat sewa Dive Shop (masker, scuba, tabung, dive computer, kamera) ada di kelompok **Sewa alat dari Dive Shop**. Alat ini disewa untuk tanggal aktivitasnya dan memakai stok sewanya. Produk yang punya ukuran tidak bisa jadi add-on.
 - Daftar baru **Layanan tambahan** untuk layanan yang bukan alat, misalnya dokumentasi, antar jemput mobil, atau catering. Daftar ini hanya tampil sebagai add-on.
 - Di tab setiap aktivitas ada kartu **Add-on**. Centang item dari daftar lain (maksimal 16), lalu tekan **Simpan add-on**.
 - Item yang dihapus dari daftarnya otomatis hilang dari add-on.
@@ -223,6 +223,22 @@ Alat dan layanan lain ditawarkan sebagai **add-on**, diambil dari daftar yang su
 Di halaman aktivitas, add-on tampil di bawah paket utama dengan nama daftar asalnya, dan di jendela checkout di bagian **Mau tambah sesuatu?**. Add-on dibayar bersama minimal satu paket utama. Harga dihitung ulang di server dari CMS.
 
 Saat pembaruan ini dipasang, daftar diving yang tersimpan dipindahkan sekali secara otomatis. Perlengkapan scuba masuk ke daftar sewa BCD, regulator & wetsuit. Dokumentasi masuk ke Layanan tambahan dengan harga yang tersimpan. Tabung dan dive computer memakai item yang sudah ada di daftar sewa. Semuanya, ditambah tiga kamera sewa, menjadi add-on diving. Snorkeling dan trip tidak diubah dan belum punya add-on.
+
+### Sewa alat pindah ke Dive Shop
+
+Daftar sewa (Sewa masker, snorkel & fin, Sewa BCD, regulator & wetsuit, Tabung & isi ulang, Dive computer, senter & pelampung, Sewa kamera bawah air) tidak lagi diatur di **Daftar harga**. Saat pembaruan ini dipasang, setiap itemnya otomatis menjadi produk Dive Shop untuk disewa saja, dengan nama, keterangan, dan harga per hari yang sama. Setelah itu, atur di **Dive Shop**, bagian **Untuk disewa**:
+
+- **Stok sewa.** Isi berapa unit yang dimiliki. Ketersediaan langsung mengikuti stok gudang, dan website menolak sewa yang melebihi sisa pada tanggalnya. Selama stok belum diisi, alat tetap bisa dipesan seperti sebelumnya.
+- **Foto barang sewa.** Unggah foto alatnya. Tanpa foto, website menampilkan ilustrasi.
+- **Ukuran.** Tambahkan kalau tamu perlu memilih, misalnya wetsuit atau fin.
+
+Produk sewa lama dan produk Dive Shop yang sudah ada bisa mirip, misalnya Masker dan Mask & snorkel set. Matikan atau hapus yang tidak dipakai.
+
+### Kalender sewa alat
+
+Di **Kalender reservasi**, tombol **Sewa alat** menampilkan alat yang disewa setiap hari dibanding stok sewanya (misalnya "Masker 2/3"). Hari dengan alat penuh diberi warna oranye. Klik tanggalnya untuk melihat setiap alat, siapa yang menyewanya, dan sisa semua alat pada hari itu. Tombol **Catat sewa tanggal ini** membuka formulir reservasi Dive Shop pada tanggal itu.
+
+Sewa dari WhatsApp atau tamu yang datang langsung dicatat di formulir reservasi, bagian **Alat sewa**: pilih alatnya dan jumlahnya. Di sampingnya tampil sisa alat itu pada tanggal reservasi. Alat baru ditahan setelah status reservasinya **Dikonfirmasi**, lalu ikut dihitung di kalender dan di website.
 
 Antar jemput mobil dan catering belum ada di daftar harga mana pun. Tambahkan di **Layanan tambahan** dengan harganya, lalu centang di kartu Add-on aktivitas yang menawarkannya.
 

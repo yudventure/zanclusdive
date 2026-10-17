@@ -151,6 +151,14 @@ export function planShopItems(products, items, movements, now) {
 export const recordedBookings = (movements) =>
   new Set(movements.filter((m) => m.bookingId).map((m) => m.bookingId));
 
+// The gear lines of a booking: what was ordered online (the Dive Shop, or
+// rental gear as an activity's add-on), and the rental gear the team added
+// by hand.
+export const gearLines = (booking) => [
+  ...(booking.payment?.lines ?? []),
+  ...(booking.gear ?? []).map((line) => ({ ...line, mode: "rental" })),
+];
+
 // Units each product, way and size's orders hold: purchases waiting for
 // payment (or for their movement) on the sale stock, and rentals by date
 // on the rental stock. Orders hold as long as their booking holds its
@@ -159,7 +167,7 @@ export function shopReservations(bookings, recorded = new Set()) {
   const held = {};
   for (const booking of bookings) {
     if (!holdsPlaces(booking)) continue;
-    for (const line of booking.payment?.lines ?? []) {
+    for (const line of gearLines(booking)) {
       if (!line.product) continue;
       const mode = line.mode === "rental" ? "rental" : "sale";
       const entry = (held[variantKey(line.product, mode, line.size)] ??= {
@@ -180,6 +188,50 @@ export function shopReservations(bookings, recorded = new Set()) {
   }
   return held;
 }
+
+// The reservation calendar's rental gear: for each day from..to, every
+// product and size out on rental that day, with the units out, the rental
+// stock ("gear", from the warehouse: { key, productId, size, name, stock,
+// follows }) and the bookings that hold them. A product that does not
+// follow the warehouse has no limit.
+export function rentalCalendar(bookings, gear, from, to) {
+  const held = shopReservations(bookings);
+  const known = new Map(gear.map((g) => [g.key, g]));
+  const days = {};
+  for (let day = from; day <= to; day = nextDay(day)) {
+    const out = [];
+    for (const [key, entry] of Object.entries(held)) {
+      const used = rentedOn(entry, day);
+      if (!used) continue;
+      const [productId, , size = ""] = key.split("::");
+      const info = known.get(key);
+      out.push({
+        key,
+        productId,
+        size,
+        name: info?.name ?? productId,
+        used,
+        stock: info?.stock ?? 0,
+        follows: Boolean(info?.follows),
+        bookingIds: [
+          ...new Set(
+            entry.rentals
+              .filter((r) => r.from <= day && r.to >= day)
+              .map((r) => r.bookingId),
+          ),
+        ],
+      });
+    }
+    if (out.length)
+      days[day] = out.sort((a, b) => a.name.localeCompare(b.name, "id"));
+  }
+  return days;
+}
+const nextDay = (day) =>
+  new Date(Date.parse(day + "T00:00:00Z") + 864e5).toISOString().slice(0, 10);
+// What is left of one rental gear on a day; null without a limit.
+export const gearLeft = (entry) =>
+  entry.follows ? entry.stock - entry.used : null;
 
 // Units on rental on one day.
 export const rentedOn = (held, day) =>

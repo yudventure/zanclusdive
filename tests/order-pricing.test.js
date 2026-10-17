@@ -33,18 +33,12 @@ test("a Dive Shop cart is priced from the CMS", () => {
         quantity: 1,
         size: "M",
       },
-      {
-        source: "price",
-        group: "rentalBasics",
-        index: 0,
-        name: content.priceList.rentalBasics[0].name.id,
-        quantity: 1,
-      },
+      { source: "product", id: "demo-mask", mode: "rental", quantity: 1 },
     ],
     days: 3,
     startDate: "2030-02-10",
   });
-  const basic = content.priceList.rentalBasics[0];
+  const basic = content.shop.products.find((p) => p.id === "demo-mask");
   assert.equal(order.program, "shop");
   assert.deepEqual(
     [order.startDate, order.endDate],
@@ -55,10 +49,10 @@ test("a Dive Shop cart is priced from the CMS", () => {
     [
       ["product-demo-fins-sale-L", 1250000, 2],
       ["product-demo-suit-rental-M", 100000 * 3, 1],
-      ["rent-rentalBasics-0", basic.price * 3, 1],
+      ["product-demo-mask-rental", basic.rentalPrice * 3, 1],
     ],
   );
-  assert.equal(order.amount, 2500000 + 300000 + basic.price * 3);
+  assert.equal(order.amount, 2500000 + 300000 + basic.rentalPrice * 3);
   assert.equal(order.lines[1].name.id, "Sewa Wetsuit 3 mm ukuran M (3 hari)");
   assert.equal(order.lines[1].name.en, "Rent Wetsuit 3 mm size M (3 days)");
   assert.match(
@@ -71,7 +65,7 @@ test("a Dive Shop cart is priced from the CMS", () => {
     [
       ["demo-fins", "sale", "L"],
       ["demo-suit", "rental", "M"],
-      [undefined, undefined, undefined],
+      ["demo-mask", "rental", undefined],
     ],
   );
   // Gear with sizes needs one of them; gear without sizes takes none.
@@ -175,6 +169,7 @@ test("shop carts that cannot be paid online are refused", () => {
     },
     /tanggal/,
   );
+  // A page opened before rental gear moved to the Dive Shop.
   refused(
     {
       lines: [
@@ -182,7 +177,7 @@ test("shop carts that cannot be paid online are refused", () => {
           source: "price",
           group: "rentalBasics",
           index: 0,
-          name: "Nama lama",
+          name: "Masker",
           quantity: 1,
         },
       ],

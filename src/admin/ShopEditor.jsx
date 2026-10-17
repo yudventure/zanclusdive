@@ -10,6 +10,7 @@ import {
   productImages,
   productAs,
   productLimits,
+  shopProductLimit,
   deliveryOf,
   deliveryZoneLimit,
 } from "../shop-model.js";
@@ -37,6 +38,15 @@ export default function ShopEditor({
   canStock = false,
 }) {
   const [selectedID, setSelectedID] = useState(shop.products[0]?.id);
+  // The product list, searched by name and shown by way.
+  const [find, setFind] = useState("");
+  const [kind, setKind] = useState("all");
+  const listed = shop.products.filter(
+    (p) =>
+      (kind === "all" ||
+        p[kind === "sale" ? "saleEnabled" : "rentalEnabled"]) &&
+      p.name.toLowerCase().includes(find.trim().toLowerCase()),
+  );
   // The warehouse items, with their stock and the product each one serves.
   const [stock, setStock] = useState(null);
   const [stockError, setStockError] = useState("");
@@ -110,8 +120,9 @@ export default function ShopEditor({
           <div>
             <h2>Jual & rental perlengkapan</h2>
             <p className="admin-subtle">
-              Kelola hingga 20 produk. Pengunjung menyusun pesanan dan
-              menghubungi WhatsApp yang diatur pada menu Kontak.
+              Kelola hingga {shopProductLimit} produk, termasuk alat sewa.
+              Pengunjung menyusun pesanan, membayar online, atau menghubungi
+              WhatsApp yang diatur pada menu Kontak.
             </p>
           </div>
           <a
@@ -154,13 +165,33 @@ export default function ShopEditor({
             <button
               className="admin-button secondary"
               type="button"
-              disabled={busy || shop.products.length >= 20}
+              disabled={busy || shop.products.length >= shopProductLimit}
               onClick={add}
             >
               + Tambah produk
             </button>
           </div>
-          {shop.products.map((p) => (
+          {shop.products.length > 6 && (
+            <div className="admin-shop-find">
+              <input
+                type="search"
+                aria-label="Cari produk"
+                placeholder="Cari produk…"
+                value={find}
+                onChange={(e) => setFind(e.target.value)}
+              />
+              <select
+                aria-label="Saring produk"
+                value={kind}
+                onChange={(e) => setKind(e.target.value)}
+              >
+                <option value="all">Semua</option>
+                <option value="sale">Dijual</option>
+                <option value="rental">Disewakan</option>
+              </select>
+            </div>
+          )}
+          {listed.map((p) => (
             <button
               type="button"
               className={
@@ -186,10 +217,14 @@ export default function ShopEditor({
               </span>
             </button>
           ))}
-          {!shop.products.length && (
+          {!shop.products.length ? (
             <p className="admin-subtle">
               Belum ada produk. Tambahkan perlengkapan pertama.
             </p>
+          ) : (
+            !listed.length && (
+              <p className="admin-subtle">Tidak ada produk yang cocok.</p>
+            )
           )}
         </section>
         {product && (
@@ -571,7 +606,9 @@ function ModeStock({ mode, product, items, error, editMany }) {
         [mode]: { ...product.stockCounts?.[mode], [size]: value },
       },
       // Typing the stock means the website should follow it.
-      ...(product.availability === "request" ? { availability: "stock" } : {}),
+      ...(["request", "available"].includes(product.availability)
+        ? { availability: "stock" }
+        : {}),
     });
   }
   if (error)

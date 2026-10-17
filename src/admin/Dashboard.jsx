@@ -40,6 +40,7 @@ import StockEditor from "./inventory/StockEditor.jsx";
 import MovementsEditor from "./inventory/MovementsEditor.jsx";
 import SocialEditor from "./social/SocialEditor.jsx";
 import MonthCalendar from "./MonthCalendar.jsx";
+import BookingGear from "./BookingGear.jsx";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
 import PayrollEditor from "./hr/PayrollEditor.jsx";
@@ -84,8 +85,8 @@ function dateLabel(value) {
     year: "numeric",
   });
 }
-const blankBooking = (today) => ({
-  experience: "beginner",
+const blankBooking = (today, experience = "beginner") => ({
+  experience,
   status: "pending",
   source: "whatsapp",
   startDate: today,
@@ -97,6 +98,7 @@ const blankBooking = (today) => ({
   notes: "",
   email: "",
   lang: "id",
+  gear: [],
   billing: billingFrom(null, today),
 });
 async function request(url, method = "GET", body) {
@@ -137,6 +139,8 @@ function BookingEditor({
   busy,
   editing,
   content,
+  gear,
+  bookings,
   billingInfo,
   canSettings,
   onMailSent,
@@ -273,6 +277,14 @@ function BookingEditor({
             onChange={(e) => change("notes", e.target.value)}
           />
         </Field>
+        {value.status !== "closed" && (
+          <BookingGear
+            value={value}
+            setValue={setValue}
+            gear={gear}
+            bookings={bookings}
+          />
+        )}
         <BookingBilling
           value={value}
           setBilling={(billing) => setValue({ ...value, billing })}
@@ -324,7 +336,16 @@ export default function Dashboard({ section, account, today }) {
     [editing, setEditing] = useState(null),
     [editLocale, setEditLocale] = useState("id"),
     [openGroups, setOpenGroups] = useState(() => new Set([groupOf(section)])),
-    [autoSave, setAutoSave] = useState(0);
+    [autoSave, setAutoSave] = useState(0),
+    // The rental gear and its stock, for the calendar and the booking form.
+    [gear, setGear] = useState(null);
+  useEffect(() => {
+    if (!can("bookings") || !["calendar", "reservations"].includes(section))
+      return;
+    request("/api/admin/rental-gear")
+      .then((result) => setGear(result.gear))
+      .catch(() => setGear([]));
+  }, [section]);
   // Copy sections can be edited per language; prices, photos and visibility
   // are shared by both versions of the website.
   const bilingual = [
@@ -671,6 +692,8 @@ export default function Dashboard({ section, account, today }) {
       busy={busy}
       editing={editing}
       content={content}
+      gear={gear}
+      bookings={data?.bookings ?? []}
       billingInfo={{
         ...data?.billing,
         accounts: (content.payments?.accounts ?? []).filter(
@@ -970,11 +993,12 @@ export default function Dashboard({ section, account, today }) {
                     bookings={bookings}
                     agents={data.agents ?? []}
                     content={content}
+                    gear={gear}
                     onMove={moveMonth}
                     onToday={() => setMonth(today.slice(0, 7))}
-                    onPick={(date) => {
+                    onPick={(date, experience) => {
                       setEditing(null);
-                      setBooking(blankBooking(date));
+                      setBooking(blankBooking(date, experience));
                       document
                         .getElementById("booking-editor")
                         ?.scrollIntoView({ behavior: "smooth" });
@@ -1401,6 +1425,7 @@ export default function Dashboard({ section, account, today }) {
               {section === "prices" && (
                 <PriceListEditor
                   priceList={content.priceList}
+                  products={content.shop?.products ?? []}
                   update={(group, items) =>
                     mutateContent("priceList", group, items)
                   }

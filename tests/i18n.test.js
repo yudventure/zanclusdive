@@ -174,7 +174,8 @@ test("MET Norway forecasts become live hero weather readings", async () => {
 test("package price list validates, migrates and keeps both languages", async () => {
   const { defaultPriceList, validatePriceList, withPriceList, priceText } =
     await import("../src/price-list.js");
-  assert.deepEqual(validatePriceList(defaultPriceList), defaultPriceList);
+  const gear = defaultContent.shop.products;
+  assert.deepEqual(validatePriceList(defaultPriceList, gear), defaultPriceList);
   assert.equal(defaultPriceList.diving[0].price, 1200000);
   const legacy = structuredClone(defaultContent);
   delete legacy.priceList;
@@ -190,10 +191,15 @@ test("package price list validates, migrates and keeps both languages", async ()
   assert.throws(() => validatePriceList(broken));
   const older = structuredClone(defaultContent);
   older.priceList = { diving: [], snorkeling: [], trip: [] };
-  const migrated = withPriceList(older).priceList;
+  const moved = withPriceList(older);
+  const migrated = moved.priceList;
   assert.deepEqual(migrated.diving, []);
-  assert.deepEqual(migrated.rentalBasics, defaultPriceList.rentalBasics);
-  assert.equal(defaultPriceList.rentalBasics[0].price, 50000);
+  // Its rental lists were the defaults, already Dive Shop products: none
+  // is copied.
+  assert.equal(migrated.rentalBasics, undefined);
+  assert.equal(moved.shop.products.length, gear.length);
+  assert.equal(gear.find((p) => p.id === "sewa-masker").rentalPrice, 50000);
+  assert.equal(defaultContent.en.shop.products["sewa-masker"].name, "Mask");
   assert.equal(defaultPriceList.rentalSets, undefined);
   assert.equal(withPriceList({ priceList: migrated }).priceList, migrated);
   assert.equal(priceText({ id: "Pelampung", en: "" }, "en"), "Pelampung");
@@ -207,7 +213,7 @@ test("homepage Dive Shop cart totals and WhatsApp checkout", async () => {
   const { addLine, cartTotals, checkoutMessage } =
     await import("../src/shop/cart.js");
   const mask = {
-    key: "rentalBasics:0",
+    key: "rent:sewa-masker",
     name: "Masker",
     price: 50000,
     mode: "rental",

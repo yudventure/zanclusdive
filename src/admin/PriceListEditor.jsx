@@ -5,8 +5,9 @@ import {
   allPriceGroups,
   extraLabels,
   priceGroups,
-  rentalLabels,
+  shopAddOn,
 } from "../price-list.js";
+import { rentalAddOn } from "../shop-model.js";
 import { activityLabels } from "../activity-model.js";
 import { dictionary, formatIDR } from "../i18n.js";
 import { fareSettings } from "../fare-model.js";
@@ -30,13 +31,20 @@ const blank = (group) => ({
   unit: { id: "/ hari", en: "/ day" },
 });
 
-const labels = { ...activityLabels, ...rentalLabels, ...extraLabels };
+const labels = { ...activityLabels, ...extraLabels };
 const intro = (group) =>
   activityLabels[group]
     ? `Layanan utama ${activityLabels[group]}. Tampil sebagai paket di halaman ${activityLabels[group]} dan di samping kartu ${activityLabels[group]} di beranda.`
-    : extraLabels[group]
-      ? "Tidak tampil sendiri. Dipakai sebagai add-on di halaman aktivitas, misalnya dokumentasi, antar jemput mobil, atau catering."
-      : "Tampil di bagian Dive Shop beranda, dan bisa ditawarkan sebagai add-on aktivitas.";
+    : "Tidak tampil sendiri. Dipakai sebagai add-on di halaman aktivitas, misalnya dokumentasi, antar jemput mobil, atau catering.";
+// Why a rental product cannot be an add-on yet.
+const gearNote = (p) =>
+  !p.enabled
+    ? "Belum tampil di website"
+    : p.sizes?.length
+      ? "Punya ukuran, disewa lewat Dive Shop"
+      : p.availability === "unavailable"
+        ? "Tidak tersedia"
+        : "Isi harga sewanya dulu";
 
 // Standard, Comfort and Flexi for activity packages and gear rentals paid
 // online: the increase of each and the last days for a refund and for a
@@ -158,11 +166,13 @@ function FaresCard({ fares, updateFares }) {
   );
 }
 
-// Package prices beside the homepage cards, one list per activity, the
-// gear rental lists in the homepage Dive Shop section, and services offered
-// only as add-ons. Each activity picks its add-ons from the other lists.
+// Package prices beside the homepage cards, one list per activity, and
+// services offered only as add-ons. Each activity picks its add-ons from
+// the other lists and from the Dive Shop rental gear ("products"), which
+// has its own price, photos and stock in Dive Shop.
 export default function PriceListEditor({
   priceList,
+  products = [],
   update,
   fares,
   updateFares,
@@ -174,20 +184,22 @@ export default function PriceListEditor({
   const addOns = priceList.addOns ?? {};
   const chosen = addOns[group] ?? [];
   const sources = allPriceGroups.filter((key) => key !== group);
-  const known = new Set(
-    sources.flatMap((key) => priceList[key].map((item) => item.id)),
-  );
+  const gear = products.filter((p) => p.rentalEnabled);
+  // Every add-on that can be ticked, in the order they are offered: the
+  // rental gear in the catalog's order, then the other lists.
+  const order = [
+    ...gear.map((p) => shopAddOn + p.id),
+    ...sources.flatMap((key) => priceList[key].map((item) => item.id)),
+  ];
+  const known = new Set(order);
   const chosenCount = chosen.filter((id) => known.has(id)).length;
-  // Ticked add-ons keep the order of the lists they come from.
   function toggleAddOn(id, on) {
     const next = new Set(chosen.filter((key) => known.has(key)));
     if (on) next.add(id);
     else next.delete(id);
     update("addOns", {
       ...addOns,
-      [group]: sources.flatMap((key) =>
-        priceList[key].map((item) => item.id).filter((key) => next.has(key)),
-      ),
+      [group]: order.filter((key) => next.has(key)),
     });
   }
   function change(index, field, value, lang) {
@@ -245,6 +257,11 @@ export default function PriceListEditor({
           {intro(group)} Isi nama dan keterangan dalam dua bahasa. Kolom English
           yang kosong memakai teks Indonesia. Maksimal 8 item, harga dalam
           rupiah.
+        </p>
+        <p className="admin-subtle">
+          Sewa alat tidak lagi di sini. Setiap alat sewa adalah produk Dive Shop
+          dengan harga, foto, dan stok sewanya sendiri, dan pemakaiannya tampil
+          di Kalender reservasi.
         </p>
         {items.map((item, index) => (
           <fieldset className="admin-price-item" key={index}>
@@ -334,11 +351,40 @@ export default function PriceListEditor({
         <section className="admin-card admin-addons">
           <h2>Add-on {labels[group]}</h2>
           <p className="admin-subtle">
-            Centang alat dan layanan dari daftar lain yang ditawarkan sebagai
-            tambahan di halaman {labels[group]}. Tamu menambahkannya bersama
-            paket utama. Nama dan harganya diubah di daftar asalnya. Maksimal{" "}
-            {addOnLimit} add-on, {chosenCount} dipilih.
+            Centang alat sewa dan layanan yang ditawarkan sebagai tambahan di
+            halaman {labels[group]}. Tamu menambahkannya bersama paket utama.
+            Nama dan harganya diubah di asalnya. Alat sewa diatur di Dive Shop,
+            disewa untuk tanggal aktivitasnya, dan memakai stok sewanya.
+            Maksimal {addOnLimit} add-on, {chosenCount} dipilih.
           </p>
+          {gear.length > 0 && (
+            <fieldset className="admin-addon-group">
+              <legend>Sewa alat dari Dive Shop</legend>
+              {gear.map((p) => {
+                const id = shopAddOn + p.id;
+                const on = chosen.includes(id);
+                const ready = rentalAddOn(p);
+                return (
+                  <label className="admin-check" key={p.id}>
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      disabled={!on && (!ready || chosenCount >= addOnLimit)}
+                      onChange={(e) => toggleAddOn(id, e.target.checked)}
+                    />
+                    <span>
+                      {p.name}
+                      <small>
+                        {ready
+                          ? `${formatIDR(p.rentalPrice, "id")} / hari`
+                          : gearNote(p)}
+                      </small>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          )}
           {sources.map((key) =>
             priceList[key].length ? (
               <fieldset className="admin-addon-group" key={key}>

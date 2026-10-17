@@ -765,9 +765,13 @@ export default function ActivityDetail({
   // participants unless their quantity was changed by hand.
   const p = dict.payment;
   const packages = payableItems(content.priceList, activityKey);
-  // Add-ons are items of the other price lists (gear rental, cameras,
-  // Zanclus services) offered beside the main packages.
-  const addOns = addOnItems(content.priceList, activityKey);
+  // Add-ons are Dive Shop rental gear (rented for the activity's day) and
+  // items of the other price lists, offered beside the main packages.
+  const addOns = addOnItems(
+    content.priceList,
+    activityKey,
+    content.shop?.products ?? [],
+  );
   const offers = [
     ...packages.map((item) => ({ ...item, key: "p" + item.index })),
     ...addOns.map((item) => ({ ...item, key: "a:" + item.id, addOn: true })),

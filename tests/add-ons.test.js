@@ -5,6 +5,8 @@ import {
   addOnLimit,
   allPriceGroups,
   defaultPriceList,
+  legacyPriceList,
+  legacyRentalGroups,
   validatePriceList,
   withPriceList,
 } from "../src/price-list.js";
@@ -15,6 +17,7 @@ import { visitorLocks } from "../src/developer.js";
 const names = (items) => items.map((item) => item.name.id);
 const plain = (items) => structuredClone(items).map(({ id, ...item }) => item);
 const day = { id: "/ hari", en: "/ day" };
+const gear = defaultContent.shop.products;
 
 test("diving lists the dives; gear, cameras and documentation are add-ons", () => {
   assert.deepEqual(names(defaultPriceList.diving), [
@@ -22,8 +25,14 @@ test("diving lists the dives; gear, cameras and documentation are add-ons", () =
     "Pemandu selam",
   ]);
   assert.deepEqual(names(defaultPriceList.extras), ["Dokumentasi"]);
-  assert.equal(defaultPriceList.rentalScuba[0].name.id, "Perlengkapan scuba");
-  const addOns = addOnItems(defaultPriceList, "diving");
+  // The rental gear is in the Dive Shop, not in the price list.
+  for (const group of legacyRentalGroups)
+    assert.equal(defaultPriceList[group], undefined);
+  assert.equal(
+    gear.find((p) => p.id === "sewa-perlengkapan-scuba").name,
+    "Perlengkapan scuba",
+  );
+  const addOns = addOnItems(defaultPriceList, "diving", gear);
   assert.deepEqual(
     addOns.map((item) => [item.group, item.name.id, item.price]),
     [
@@ -36,23 +45,37 @@ test("diving lists the dives; gear, cameras and documentation are add-ons", () =
       ["extras", "Dokumentasi", 500000],
     ],
   );
-  assert.deepEqual(addOnItems(defaultPriceList, "snorkeling"), []);
+  assert.deepEqual(addOnItems(defaultPriceList, "snorkeling", gear), []);
+  // Without the catalog only the services are left.
+  assert.deepEqual(names(addOnItems(defaultPriceList, "diving")), [
+    "Dokumentasi",
+  ]);
   // Every item has its own id.
   const ids = allPriceGroups.flatMap((group) =>
     defaultPriceList[group].map((item) => item.id),
   );
   assert.equal(new Set(ids).size, ids.length);
   assert.ok(ids.every((id) => /^[a-z0-9][a-z0-9-]*$/.test(id)));
-  assert.deepEqual(validatePriceList(defaultPriceList), defaultPriceList);
+  assert.deepEqual(validatePriceList(defaultPriceList, gear), defaultPriceList);
+  // Rental gear that left the catalog drops out of the add-ons.
+  assert.deepEqual(validatePriceList(defaultPriceList).addOns.diving, [
+    "extras-dokumentasi",
+  ]);
 });
 
-test("a diving list saved before add-ons moves its gear and documentation", () => {
-  // The live site: six diving items, rental lists without ids, no extras.
-  const saved = Object.fromEntries(
-    allPriceGroups
+// The live site before add-ons: six diving items, rental lists without
+// ids, no extras.
+const before = () =>
+  Object.fromEntries(
+    [...allPriceGroups, ...legacyRentalGroups]
       .filter((group) => group !== "extras")
-      .map((group) => [group, plain(defaultPriceList[group])]),
+      .map((group) => [group, plain(legacyPriceList[group])]),
   );
+const productNamed = (content, name) =>
+  content.shop.products.filter((p) => p.name === name);
+
+test("a diving list saved before add-ons moves its gear and documentation", () => {
+  const saved = before();
   saved.rentalScuba = saved.rentalScuba.slice(1);
   saved.diving.push(
     {
@@ -88,25 +111,21 @@ test("a diving list saved before add-ons moves its gear and documentation", () =
     list.extras.map((item) => [item.id, item.price]),
     [["extras-dokumentasi", 550000]],
   );
-  assert.equal(list.rentalScuba.at(-1).name.id, "Perlengkapan scuba");
-  // Tank and dive computer were already in their rental lists.
-  assert.equal(
-    list.rentalTank.filter((item) => item.name.id === "Tabung + isi ulang")
-      .length,
-    1,
-  );
+  // The gear became Dive Shop rental products, each once.
+  assert.equal(productNamed(content, "Perlengkapan scuba").length, 1);
+  assert.equal(productNamed(content, "Tabung + isi ulang").length, 1);
+  assert.equal(content.shop.products.length, 18);
   assert.deepEqual(list.addOns, defaultPriceList.addOns);
   // Read again, nothing changes.
   assert.equal(withPriceList(content), content);
-  assert.deepEqual(validatePriceList(list).addOns, list.addOns);
+  assert.deepEqual(
+    validatePriceList(list, content.shop.products).addOns,
+    list.addOns,
+  );
 });
 
 test("items the owner removed are not brought back as add-ons", () => {
-  const saved = Object.fromEntries(
-    allPriceGroups
-      .filter((group) => group !== "extras")
-      .map((group) => [group, plain(defaultPriceList[group])]),
-  );
+  const saved = before();
   saved.rentalCamera = saved.rentalCamera.filter(
     (item) => item.name.id !== "GoPro Hero 11 + housing",
   );
@@ -117,26 +136,27 @@ test("items the owner removed are not brought back as add-ons", () => {
     price: 90000,
     unit: { id: "/ tabung", en: "" },
   });
-  const list = withPriceList({ priceList: saved }).priceList;
+  const content = withPriceList({ priceList: saved });
+  const list = content.priceList;
   // No documentation in diving, so none in the extras either.
   assert.deepEqual(list.extras, []);
-  // The tank goes to the empty tank list with its own price.
+  // The tank becomes rental gear with its own price.
   assert.deepEqual(
-    list.rentalTank.map((item) => [item.name.id, item.price]),
-    [["Tabung + isi ulang", 90000]],
+    productNamed(content, "Tabung + isi ulang").map((p) => p.rentalPrice),
+    [90000],
   );
-  assert.deepEqual(names(addOnItems(list, "diving")), [
+  assert.equal(productNamed(content, "GoPro Hero 11 + housing").length, 0);
+  assert.deepEqual(names(addOnItems(list, "diving", content.shop.products)), [
     "Perlengkapan scuba",
     "Tabung + isi ulang",
     "Dive computer D4i",
     "Kamera bawah air TG-5",
     "Kamera TG-5 + perlengkapan",
   ]);
-  // Content without any price list gets the defaults.
-  assert.deepEqual(
-    withPriceList({}).priceList,
-    structuredClone(defaultPriceList),
-  );
+  // Content without any price list gets the defaults and their gear.
+  const blank = withPriceList({});
+  assert.deepEqual(blank.priceList, structuredClone(defaultPriceList));
+  assert.deepEqual(blank.shop.products, gear);
 });
 
 test("add-ons are checked against the other lists when saved", () => {
@@ -199,22 +219,51 @@ test("add-ons are paid with a main package, priced from the CMS", () => {
     );
   const paid = order([
     { item: 0, itemName: "Discovery Dive", quantity: 2 },
+    // Rental gear is known by its id, whatever language the page is in.
     {
-      addOn: "rentalcamera-kamera-bawah-air-tg-5",
-      itemName: "Kamera bawah air TG-5",
+      addOn: "shop:sewa-kamera-bawah-air-tg-5",
+      itemName: "Underwater camera TG-5",
       quantity: 1,
     },
     { addOn: "extras-dokumentasi", itemName: "Dokumentasi", quantity: 1 },
   ]);
   assert.equal(paid.amount, 2 * 1200000 + 650000 + 500000);
   assert.deepEqual(
-    paid.lines.map((line) => [line.id, line.addOn]),
+    paid.lines.map((line) => [line.id, line.addOn, line.product, line.mode]),
     [
-      ["diving-0", false],
-      ["addon-rentalcamera-kamera-bawah-air-tg-5", true],
-      ["addon-extras-dokumentasi", true],
+      ["diving-0", false, undefined, undefined],
+      [
+        "addon-shop-sewa-kamera-bawah-air-tg-5",
+        true,
+        "sewa-kamera-bawah-air-tg-5",
+        "rental",
+      ],
+      ["addon-extras-dokumentasi", true, undefined, undefined],
     ],
   );
+  // The camera is rented on the dive's day, and named in both languages.
+  assert.deepEqual(
+    [paid.startDate, paid.endDate],
+    ["2030-01-05", "2030-01-05"],
+  );
+  assert.deepEqual(paid.lines[1].name, {
+    id: "Kamera bawah air TG-5",
+    en: "Underwater camera TG-5",
+  });
+  // Gear taken off the website is no longer an add-on.
+  const camera = content.shop.products.find(
+    (p) => p.id === "sewa-kamera-bawah-air-tg-5",
+  );
+  camera.enabled = false;
+  assert.throws(
+    () =>
+      order([
+        { item: 0, itemName: "Discovery Dive", quantity: 1 },
+        { addOn: "shop:sewa-kamera-bawah-air-tg-5", itemName: "", quantity: 1 },
+      ]),
+    /Daftar harga baru saja diperbarui/,
+  );
+  camera.enabled = true;
   assert.throws(
     () =>
       order([

@@ -160,12 +160,13 @@ try {
   await page.goto(base + "/admin/stock", { waitUntil: "networkidle" });
   await page
     .getByText(
-      "33 barang Dive Shop masuk ke gudang dengan stok 0. Isi stok jual dan stok sewanya di Dive Shop, atau lewat tombol Masuk.",
+      "51 barang Dive Shop masuk ke gudang dengan stok 0. Isi stok jual dan stok sewanya di Dive Shop, atau lewat tombol Masuk.",
     )
     .waitFor();
-  // Eight products, each for sale and for rent apart (the cylinder is only
-  // rented), and the fins, wetsuit and BCD in four sizes each.
-  assert.equal(await page.locator(".admin-stock-shop").count(), 33);
+  // Eight demo products, each for sale and for rent apart (the cylinder is
+  // only rented), the fins, wetsuit and BCD in four sizes each, and the 18
+  // rental gear of the 2025 price list.
+  assert.equal(await page.locator(".admin-stock-shop").count(), 51);
   await page.getByLabel("Nama barang").fill("BCD ukuran M");
   await page.getByLabel("Kode barang (opsional)").fill("bcd-m");
   await page.getByLabel("Kategori").selectOption("alat");

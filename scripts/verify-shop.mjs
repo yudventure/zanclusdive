@@ -57,10 +57,14 @@ try {
       exact: true,
     })
     .click();
+  // The demo gear and the rental gear of the 2025 price list.
   await page.getByRole("button", { name: "Rental alat", exact: true }).click();
-  assert.equal(await page.locator(".shop-product-card").count(), 8);
+  assert.equal(await page.locator(".shop-product-card").count(), 26);
   await page.getByLabel("Kategori perlengkapan").selectOption("fins");
-  assert.equal(await page.locator(".shop-product-card").count(), 1);
+  assert.deepEqual(
+    await page.locator(".shop-product-card h3").allTextContents(),
+    ["Open heel fins", "Fin full foot", "Fin open heel", "Booties"],
+  );
   // Fins come in sizes: the size is picked in the product window.
   await page
     .getByRole("button", { name: "Pilih ukuran Open heel fins", exact: true })
@@ -151,7 +155,7 @@ try {
   );
   const initial = await state();
   originals = initial.content;
-  assert.equal(initial.content.shop.products.length, 8);
+  assert.equal(initial.content.shop.products.length, 26);
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Dive Shop", exact: true }).waitFor();
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("720000");

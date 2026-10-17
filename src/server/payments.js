@@ -208,10 +208,9 @@ export async function startPayment(input, { origin, locale = "id" }) {
         manageToken: randomUUID(),
       },
     });
-  const booking =
-    order.program === "shop"
-      ? await reserveShopStock(order, create)
-      : await create();
+  // Dive Shop gear, bought or rented (also as an activity's add-on), must
+  // still be in stock.
+  const booking = await reserveShopStock(order, create);
   try {
     const snap = await createTransaction({
       transaction_details: { order_id: orderId, gross_amount: amount },

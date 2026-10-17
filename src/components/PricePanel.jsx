@@ -4,12 +4,18 @@ import { addOnItems, priceText } from "../price-list.js";
 // Package prices for one activity. Collapsed panels stay in the layout for
 // the width animation but are inert, so they are skipped by keyboard and
 // screen readers.
-export default function PricePanel({ priceList, group, locale, hidden }) {
+export default function PricePanel({
+  priceList,
+  products = [],
+  group,
+  locale,
+  hidden,
+}) {
   const t = dictionary(locale);
   const p = t.prices;
   const label = t.activityLabels[group];
   // Gear and services offered beside the packages, in short.
-  const addOns = addOnItems(priceList, group);
+  const addOns = addOnItems(priceList, group, products);
   return (
     <div className="price-card" inert={hidden} aria-hidden={hidden}>
       <div className="price-inner">

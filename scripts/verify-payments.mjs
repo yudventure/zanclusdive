@@ -368,10 +368,14 @@ try {
     .locator(".shop-item", { hasText: "Dive computer" })
     .locator(".shop-item-add")
     .click();
+  // Rental gear is Dive Shop gear for rent, in tabs by kind.
   await page.getByRole("tab").nth(1).click();
-  const rental = page.locator(".shop-item").first();
-  const rentalName = await rental.locator("h4").textContent();
-  await rental.locator("button").first().click();
+  const rental = page.locator(".shop-item", {
+    has: page.locator("h4", { hasText: /^Masker$/ }),
+  });
+  const rentalName = (await rental.locator("h4").textContent()).trim();
+  assert.equal(rentalName, "Masker");
+  await rental.locator(".shop-item-add").click();
   await page.locator(".shop-cart-bar .button").click();
   const checkout = page.locator(".shop-checkout");
   await checkout.waitFor({ state: "visible" });

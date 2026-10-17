@@ -54,7 +54,7 @@ export const sections = {
     title: "Kalender reservasi",
     area: "bookings",
     intro:
-      "Reservasi, tanggal tutup, dan kalender agen dalam satu bulan. Klik tanggalnya untuk melihat rinciannya.",
+      "Reservasi, tanggal tutup, kalender agen, dan alat sewa dalam satu bulan. Klik tanggalnya untuk melihat rinciannya, atau buka Sewa alat untuk melihat sisa alat per hari.",
   },
   reservations: {
     title: "Reservasi",

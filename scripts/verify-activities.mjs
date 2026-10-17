@@ -118,7 +118,11 @@ try {
     );
     // Gear, cameras and services from the other lists are add-ons, after
     // the main packages. Diving offers them by default.
-    const addOns = addOnItems(originals.content.priceList, key);
+    const addOns = addOnItems(
+      originals.content.priceList,
+      key,
+      originals.content.shop.products,
+    );
     assert.equal(addOns.length, key === "diving" ? 7 : 0);
     assert.equal(
       await page.locator(".activity-addon-list li").count(),
@@ -524,8 +528,9 @@ try {
   );
   assert.match(car.id, /^extras-/);
   assert.equal(priced.addOns.diving.at(-1), car.id);
+  // The camera is Dive Shop rental gear.
   assert.deepEqual(priced.addOns.snorkeling, [
-    "rentalcamera-kamera-bawah-air-tg-5",
+    "shop:sewa-kamera-bawah-air-tg-5",
   ]);
   await page.setViewportSize({ width: 390, height: 900 });
   await noOverflow("admin add-ons at 390");

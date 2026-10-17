@@ -21,6 +21,7 @@ import {
   productLimits,
   defaultDelivery,
   deliveryZoneLimit,
+  shopProductLimit,
 } from "./shop-model.js";
 import {
   blankSocials,
@@ -29,9 +30,10 @@ import {
 } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import {
-  defaultPriceList,
+  legacyPriceList,
   validatePriceList,
   withPriceList,
+  withRentalProducts,
 } from "./price-list.js";
 import {
   englishDefaults,
@@ -67,7 +69,9 @@ export const programTitle = (content, key) =>
   activityPrograms[key] ??
   orderPrograms[key] ??
   key;
-export const defaultContent = {
+// New sites start with the 2025 price list, its rental gear as Dive Shop
+// products.
+export const defaultContent = withRentalProducts({
   photographyVersion,
   en: structuredClone(englishDefaults),
   activities: structuredClone(defaultActivities),
@@ -98,7 +102,7 @@ export const defaultContent = {
   },
   images: { ...defaultSiteImages },
   seo: { ...defaultSeo },
-  priceList: structuredClone(defaultPriceList),
+  priceList: structuredClone(legacyPriceList),
   gallery: structuredClone(defaultGallery),
   calendar: structuredClone(defaultCalendar),
   courses: structuredClone(defaultCourses),
@@ -124,7 +128,7 @@ export const defaultContent = {
       },
     ]),
   ),
-};
+});
 export const textFields = [
   ["heroEyebrow", "Label di atas hero"],
   ["heroTitle1", "Judul hero — baris 1"],
@@ -218,9 +222,11 @@ export function validateVideos(input) {
   });
 }
 
-export function validateContent(input) {
-  if (!input || typeof input !== "object")
-    throw new Error("Konten tidak valid.");
+export function validateContent(sent) {
+  if (!sent || typeof sent !== "object") throw new Error("Konten tidak valid.");
+  // An admin page opened before rental gear moved to the Dive Shop sends
+  // the rental lists; they become products here too.
+  const input = withPriceList(sent);
   const text = Object.fromEntries(
     textFields.map(([key, label]) => [
       key,
@@ -308,7 +314,7 @@ export function validateContent(input) {
     text,
     contact,
     images,
-    priceList: validatePriceList(withPriceList(input).priceList),
+    priceList: validatePriceList(input.priceList, shop.products),
     experiences: catalog,
     shop,
     activities: validateActivities(input.activities),
@@ -402,9 +408,13 @@ export function validateActivities(input) {
   );
 }
 export function validateShop(shop) {
-  if (!shop || !Array.isArray(shop.products) || shop.products.length > 20)
+  if (
+    !shop ||
+    !Array.isArray(shop.products) ||
+    shop.products.length > shopProductLimit
+  )
     throw new Error(
-      "Katalog harus berisi maksimal 20 produk. Muat ulang CMS jika katalog belum tersedia.",
+      `Katalog harus berisi maksimal ${shopProductLimit} produk. Muat ulang CMS jika katalog belum tersedia.`,
     );
   const ids = new Set();
   return {
@@ -573,6 +583,35 @@ function validDate(s) {
   const d = new Date(s + "T12:00:00Z");
   return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === s;
 }
+// Rental gear the team books by hand, for a walk-in guest or an order made
+// on WhatsApp: Dive Shop products and sizes, held on the booking's dates
+// like gear rented online.
+export const bookingGearLimit = 20;
+function bookingGear(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > bookingGearLimit)
+    throw new Error(`Alat sewa maksimal ${bookingGearLimit} baris.`);
+  const out = [];
+  for (const line of input) {
+    const product = line?.product;
+    const size = typeof line?.size === "string" ? line.size : "";
+    const quantity = Number(line?.quantity);
+    if (
+      typeof product !== "string" ||
+      !/^[a-z0-9-]{1,50}$/.test(product) ||
+      size.length > 16 ||
+      size.includes("::") ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100
+    )
+      throw new Error("Pilih alat sewa dan jumlahnya, 1–100 unit.");
+    const same = out.find((l) => l.product === product && l.size === size);
+    if (same) same.quantity = Math.min(100, same.quantity + quantity);
+    else out.push({ product, size, quantity });
+  }
+  return out.map(({ size, ...line }) => (size ? { ...line, size } : line));
+}
 export function validateBooking(input) {
   if (
     !input ||
@@ -605,6 +644,7 @@ export function validateBooking(input) {
   const email = plain(input.email || "", "Email", 200, false).trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     throw new Error("Email tamu tidak valid.");
+  const gear = bookingGear(input.gear);
   return {
     experience: input.experience,
     status: input.status,
@@ -624,5 +664,6 @@ export function validateBooking(input) {
     ...(email ? { email } : {}),
     // The language of the emails to the guest.
     ...(input.lang === "en" || input.lang === "id" ? { lang: input.lang } : {}),
+    ...(gear.length ? { gear } : {}),
   };
 }

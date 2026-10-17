@@ -58,6 +58,9 @@ const id = {
     cylinder: "Tabung",
     computer: "Dive computer",
     light: "Lampu & aksesori",
+    weight: "Pemberat",
+    vest: "Pelampung",
+    camera: "Kamera",
   },
   availability: {
     request: "Konfirmasi ketersediaan",
@@ -1251,7 +1254,7 @@ const id = {
         closing:
           "Mohon konfirmasi ketersediaan dan cara pembayarannya. Terima kasih!",
       },
-      note: "Harga sewa per item sesuai daftar harga Zanclus 2025, dalam rupiah dan dapat berubah. Ukuran dan ketersediaan dikonfirmasi tim lewat WhatsApp sebelum pembayaran.",
+      note: "Harga sewa per alat per hari, dalam rupiah dan dapat berubah. Sisa alat sewa diperiksa untuk tanggal sewamu saat membayar online.",
       groups: {
         buy: [
           "Beli alat selam & aksesori",
@@ -1337,6 +1340,9 @@ const en = {
     cylinder: "Cylinder",
     computer: "Dive computer",
     light: "Lights & accessories",
+    weight: "Weights",
+    vest: "Life jackets",
+    camera: "Cameras",
   },
   availability: {
     request: "Ask for availability",
@@ -2524,7 +2530,7 @@ const en = {
         notes: "Notes",
         closing: "Please confirm availability and how to pay. Thank you!",
       },
-      note: "Rental prices are per item from the Zanclus 2025 price list, in rupiah and subject to change. Sizes and availability are confirmed by our team on WhatsApp before you pay.",
+      note: "Rental prices are per item per day, in rupiah and subject to change. The gear left for your dates is checked when you pay online.",
       groups: {
         buy: [
           "Buy dive gear & accessories",
