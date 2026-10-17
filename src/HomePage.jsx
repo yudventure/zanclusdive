@@ -83,6 +83,76 @@ function ExperienceCard({
     </Card>
   );
 }
+// The experience items stacked on phones and small tablets: each sticks
+// once it is read to its end (or under the header when it fits on the
+// screen), and the next one rises over it while it folds back, shrinks a
+// little and dims. Only CSS variables change while scrolling (--stick, the
+// sticky top, and --fold, 0 to 1), so nothing on the page moves or jumps.
+// Returns whether the items are stacked.
+function useFoldingStack(row, count) {
+  const [stacked, setStacked] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 860px)");
+    const sync = () => setStacked(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  useEffect(() => {
+    const list = row.current;
+    if (!stacked || !list) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const items = () => [...list.children];
+    let frame = 0;
+    function update() {
+      frame = 0;
+      const header =
+        document.querySelector(".site-header")?.getBoundingClientRect()
+          .bottom ?? 0;
+      const top = Math.max(0, header) + 12;
+      const all = items();
+      all.forEach((item, index) => {
+        const height = item.offsetHeight;
+        item.style.setProperty(
+          "--stick",
+          `${Math.round(Math.min(top, innerHeight - height - 16))}px`,
+        );
+        const next = all[index + 1];
+        let fold = 0;
+        if (next && !still.matches) {
+          const box = item.getBoundingClientRect();
+          const bottom = Math.min(box.bottom, innerHeight);
+          const seen = Math.max(1, bottom - Math.max(box.top, top));
+          fold = (bottom - next.getBoundingClientRect().top) / seen;
+        }
+        item.style.setProperty(
+          "--fold",
+          Math.min(1, Math.max(0, fold)).toFixed(3),
+        );
+      });
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    const sizes = new ResizeObserver(schedule);
+    for (const item of items()) sizes.observe(item);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      sizes.disconnect();
+      for (const item of items()) {
+        item.style.removeProperty("--stick");
+        item.style.removeProperty("--fold");
+      }
+    };
+  }, [stacked, count, row]);
+  return stacked;
+}
+
 export default function HomePage({
   content,
   locale = "en",
@@ -98,10 +168,13 @@ export default function HomePage({
     (key) => content.activities[key].enabled,
   );
   const [openActivity, setOpenActivity] = useState(null);
-  // Hover opens items only in the side-by-side layout; stacked layouts and
-  // touch screens use the "see prices" buttons, avoiding layout jumps.
+  // Hover opens items only in the side-by-side layout.
   const hoverLayout = () =>
     window.matchMedia("(hover: hover) and (min-width: 861px)").matches;
+  // Stacked on phones and small tablets, every item shows its prices and
+  // the items fold over one another while scrolling (useFoldingStack).
+  const experienceRow = useRef(null);
+  const stacked = useFoldingStack(experienceRow, visibleActivities.length);
   const kickers = {
     diving: h.divingKicker,
     snorkeling: h.snorkelingKicker,
@@ -251,13 +324,15 @@ export default function HomePage({
                 {/* Accordion: the item under the pointer (or keyboard focus)
                 widens and shows its prices; diving is open by default. */}
                 <div
-                  className="experience-row"
+                  ref={experienceRow}
+                  className={"experience-row" + (stacked ? " is-stacking" : "")}
                   id="prices"
                   data-visible-activities={visibleActivities.length}
                   onMouseLeave={() => hoverLayout() && setOpenActivity(null)}
                 >
                   {visibleActivities.map((key, index) => {
-                    const open = key === (openActivity || visibleActivities[0]);
+                    const open =
+                      stacked || key === (openActivity || visibleActivities[0]);
                     const locked = pageLocked(locks, key);
                     const prices =
                       !locked && content.priceList?.[key]?.length > 0;
@@ -271,7 +346,10 @@ export default function HomePage({
                         }
                         onFocus={() => setOpenActivity(key)}
                         data-reveal
-                        style={{ "--reveal-delay": `${index * 80}ms` }}
+                        style={{
+                          "--reveal-delay": `${index * 80}ms`,
+                          zIndex: index + 1,
+                        }}
                       >
                         <ExperienceCard
                           activityKey={key}

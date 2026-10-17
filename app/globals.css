@@ -1473,4 +1473,27 @@ nav.open a::after {
     font-size: 13px;
     font-weight: 600;
   }
+  /* Folding stack: every item shows its prices and sticks once read; the
+     next one rises over it while it folds back, shrinks and dims. Only
+     --stick and --fold change while scrolling (set in HomePage.jsx). */
+  .experience-row.is-stacking {
+    gap: 18px;
+  }
+  .experience-row.is-stacking > .experience-item {
+    position: sticky;
+    top: var(--stick, calc(var(--header-h) + 12px));
+    transform-origin: 50% 0;
+    transform: perspective(1400px) rotateX(calc(var(--fold, 0) * -9deg))
+      scale(calc(1 - var(--fold, 0) * 0.08));
+    filter: brightness(calc(1 - var(--fold, 0) * 0.38));
+    box-shadow: 0 -14px 36px #062b3b26;
+    transition:
+      opacity 700ms cubic-bezier(0.33, 1, 0.68, 1) var(--reveal-delay, 0ms),
+      translate 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+      box-shadow 0.4s ease;
+    will-change: transform, filter;
+  }
+  .experience-row.is-stacking .price-card {
+    transition: none;
+  }
 }

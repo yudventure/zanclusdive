@@ -182,6 +182,59 @@ assert.equal(
   false,
   "Mobile overflow",
 );
+// On a phone the experience items stack with their prices open, and each
+// one folds back as the next rises over it while scrolling.
+{
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const tab = await phone.newPage();
+  tab.on("pageerror", (e) => errors.push(e.message));
+  await tab.goto(site, { waitUntil: "networkidle" });
+  assert.equal(await tab.locator(".experience-row.is-stacking").count(), 1);
+  assert.equal(
+    await tab.locator(".experience-item.is-open").count(),
+    await tab.locator(".experience-item").count(),
+  );
+  assert.equal(await tab.locator(".experience-toggle").count(), 0);
+  const folds = async (y) => {
+    await tab.evaluate((y) => window.scrollTo(0, y), y);
+    await tab.waitForTimeout(400);
+    return tab.evaluate(() =>
+      [...document.querySelectorAll(".experience-item")].map((item) => [
+        getComputedStyle(item).position,
+        Number(item.style.getPropertyValue("--fold")),
+        Math.round(item.getBoundingClientRect().top),
+      ]),
+    );
+  };
+  const rowTop = await tab.evaluate(
+    () =>
+      document.querySelector(".experience-row").getBoundingClientRect().top +
+      scrollY,
+  );
+  const before = await folds(rowTop - 200);
+  assert.ok(before.every(([position, fold]) => position === "sticky" && !fold));
+  const firstHeight = await tab.evaluate(
+    () => document.querySelector(".experience-item").offsetHeight,
+  );
+  const during = await folds(rowTop + firstHeight - 300);
+  assert.ok(
+    during[0][1] > 0 && during[0][1] < 1,
+    "the first item is folding " + JSON.stringify(during),
+  );
+  assert.ok(during[0][2] <= 0, "the first item stays stuck");
+  assert.ok(during[1][2] < 844, "the next item rises over it");
+  await tab.screenshot({ path: "artifacts/mobile-fold.png" });
+  assert.equal(
+    await tab.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+    false,
+    "Mobile overflow while folding",
+  );
+  await phone.close();
+}
 await page.locator(".menu-toggle").click();
 assert.equal(await page.locator("#navigation").isVisible(), true);
 await page.locator('#navigation a[href="#experiences"]').click();
