@@ -7,6 +7,7 @@ import {
   deliveryLines,
   defaultDelivery,
   orderMessage,
+  productAs,
   productImages,
   withShop,
 } from "../src/shop-model.js";
@@ -71,7 +72,7 @@ test("products keep several photos, videos, a full description and spec rows", (
       validateShop(
         shopWith({ images: Array.from({ length: 9 }, (_, i) => media(i)) }),
       ),
-    { message: "Foto produk maksimal 8." },
+    { message: "Foto barang jual maksimal 8." },
   );
   assert.throws(
     () => validateShop(shopWith({ videos: ["https://example.com/clip"] })),
@@ -84,6 +85,35 @@ test("products keep several photos, videos, a full description and spec rows", (
   assert.throws(
     () => validateShop(shopWith({ specs: [{ label: "Merek", value: "" }] })),
     { message: "Isi nama dan isi setiap baris spesifikasi." },
+  );
+});
+
+test("gear for sale and gear for rent keep their own photos", () => {
+  const mask = validateShop(
+    shopWith({
+      images: [media(1), media(2)],
+      rentalImages: [media(7), media(7), media(8)],
+    }),
+  ).products[0];
+  assert.deepEqual(mask.images, [media(1), media(2)]);
+  assert.deepEqual(mask.rentalImages, [media(7), media(8)]);
+  assert.deepEqual(productImages(mask, "rental"), [media(7), media(8)]);
+  assert.equal(productAs(mask, "rental").image, media(7));
+  assert.equal(productAs(mask, "sale").image, media(1));
+  // A way without photos shows the drawing, not the other way's photos.
+  const sold = validateShop(shopWith({ images: [media(1)] })).products[0];
+  assert.deepEqual(sold.rentalImages, []);
+  assert.deepEqual(productImages(sold, "rental"), []);
+  assert.equal(productAs(sold, "rental").image, "");
+  assert.deepEqual(productImages({ image: media(4) }, "rental"), []);
+  assert.throws(
+    () =>
+      validateShop(
+        shopWith({
+          rentalImages: Array.from({ length: 9 }, (_, i) => media(i)),
+        }),
+      ),
+    { message: "Foto barang sewa maksimal 8." },
   );
 });
 

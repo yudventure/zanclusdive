@@ -43,7 +43,8 @@ export default function ProductDetail({
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
   const sizes = product.sizes ?? [];
-  const images = productImages(product);
+  // The photos of the units for sale, or of the units for rent.
+  const images = productImages(product, mode);
   const videos = (product.videos ?? [])
     .map((url) => videoSource(url))
     .filter((source) => source && !source.short);
@@ -127,7 +128,10 @@ export default function ProductDetail({
                 draggable={false}
               />
             ) : (
-              <ProductVisual product={product} locale={locale} />
+              <ProductVisual
+                product={{ ...product, image: "" }}
+                locale={locale}
+              />
             )}
             {images.length > 1 && (
               <>

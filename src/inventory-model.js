@@ -51,16 +51,22 @@ export function validateItem(input, current = null, { products } = {}) {
     typeof pick("productId") === "string" ? pick("productId") : "";
   const size =
     productId && typeof pick("size") === "string" ? pick("size") : "";
+  // Stock for sale and stock for rent are separate items.
+  const mode = productId ? (pick("mode") ?? "sale") : "";
   const product = products?.find((p) => p.id === productId);
   if (
     productId &&
     (!/^[a-z0-9-]{1,50}$/.test(productId) ||
+      !["sale", "rental"].includes(mode) ||
       (products &&
         (!product ||
+          !product[mode === "sale" ? "saleEnabled" : "rentalEnabled"] ||
           (product.sizes?.length ? !product.sizes.includes(size) : size))))
   )
-    throw new Error("Produk atau ukuran Dive Shop tidak ditemukan.");
-  const before = `${current?.productId ?? ""}::${current?.size ?? ""}`;
+    throw new Error(
+      "Produk, jual atau sewa, atau ukuran Dive Shop tidak ditemukan.",
+    );
+  const before = [current?.productId, current?.mode, current?.size].join("::");
   return {
     name,
     sku,
@@ -72,9 +78,11 @@ export function validateItem(input, current = null, { products } = {}) {
     note: cleanText(pick("note"), inventoryLimits.note, "Catatan"),
     active,
     productId,
+    mode,
     size,
-    // The latest link wins when two items name the same product and size.
-    ...(productId && `${productId}::${size}` !== before
+    // The latest link wins when two items name the same product, way and
+    // size.
+    ...(productId && [productId, mode, size].join("::") !== before
       ? { linkedAt: new Date().toISOString() }
       : {}),
   };

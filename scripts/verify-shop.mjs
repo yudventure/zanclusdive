@@ -155,7 +155,7 @@ try {
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Dive Shop", exact: true }).waitFor();
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("720000");
-  await page.getByLabel("Harga rental per hari (Rp)").fill("55000");
+  await page.getByLabel("Harga sewa per hari (Rp)").fill("55000");
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();
@@ -184,7 +184,7 @@ try {
     .getByLabel("Deskripsi singkat", { exact: true })
     .fill("Perlengkapan untuk pengujian katalog.");
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("800000");
-  await page.getByLabel("Harga rental per hari (Rp)").fill("60000");
+  await page.getByLabel("Harga sewa per hari (Rp)").fill("60000");
   await page.getByLabel("Tampilkan produk di website", { exact: true }).check();
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
@@ -248,12 +248,13 @@ try {
   const picture = await upload.json();
   await page.reload({ waitUntil: "networkidle" });
   // Other photos sit behind "Pilih foto lain atau tempel URL".
-  await page
-    .locator(".admin-shop-photos summary", {
-      hasText: "Pilih foto lain atau tempel URL",
-    })
+  const salePhotos = page.locator(
+    ".admin-shop-mode.is-sale .admin-shop-photos",
+  );
+  await salePhotos
+    .locator("summary", { hasText: "Pilih foto lain atau tempel URL" })
     .click();
-  await page.getByLabel("Tambah dari koleksi").selectOption(picture.url);
+  await salePhotos.getByLabel("Tambah dari koleksi").selectOption(picture.url);
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();

@@ -34,6 +34,7 @@ export async function GET(request) {
           active: item.active !== false,
           productId: shop.use[item.id]?.productId ?? "",
           size: shop.use[item.id]?.size ?? "",
+          mode: shop.use[item.id]?.mode ?? "",
           shop: shop.use[item.id] ?? null,
         })),
       },

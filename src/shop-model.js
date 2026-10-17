@@ -45,12 +45,25 @@ export const productLimits = {
   details: 3000,
   specs: 16,
 };
-export const productImages = (product) =>
-  Array.isArray(product?.images) && product.images.length
-    ? product.images
-    : product?.image
-      ? [product.image]
-      : [];
+// Gear for sale and gear for rent are different units, so each way has its
+// own photos: "images" for sale (with "image", its cover, from before the
+// gallery) and "rentalImages" for rent. A way without photos shows the
+// drawing of the gear, not the other way's photos.
+export const productImages = (product, mode = "sale") =>
+  mode === "rental"
+    ? Array.isArray(product?.rentalImages)
+      ? product.rentalImages
+      : []
+    : Array.isArray(product?.images) && product.images.length
+      ? product.images
+      : product?.image
+        ? [product.image]
+        : [];
+// The product as its card shows it in one way: that way's cover photo.
+export const productAs = (product, mode) => ({
+  ...product,
+  image: productImages(product, mode)[0] ?? "",
+});
 
 // The full description as blocks for the product window: paragraphs, and
 // lists from lines that start with "-" or "•".
@@ -235,6 +248,7 @@ export function demoShop() {
           ? ["S", "M", "L", "XL"]
           : [],
         images: [],
+        rentalImages: [],
         videos: [],
         details: "",
         specs: [],

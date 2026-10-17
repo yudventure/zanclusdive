@@ -65,18 +65,6 @@
 .admin-shop-thumbnail .shop-illustration svg {
   padding: 0;
 }
-.admin-shop-pricing {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  background: #f6f9fb;
-  border-radius: 12px;
-  padding: 18px;
-  margin-top: 20px;
-}
-.admin-shop-pricing .admin-toggle {
-  margin-bottom: 14px;
-}
 .admin-shop-preview {
   height: 160px;
   width: 100%;
@@ -126,9 +114,6 @@
 @media (max-width: 600px) {
   .admin-shop-layout .admin-card {
     padding: 18px;
-  }
-  .admin-shop-pricing {
-    grid-template-columns: 1fr;
   }
   .admin-shop-list {
     display: block;
@@ -2897,4 +2882,46 @@ strong.admin-overdue {
   .admin-zone-row .admin-field:first-child {
     grid-column: 1 / -1;
   }
+}
+/* Dive Shop product: the gear for sale and the gear for rent, each with
+   its own switch, price, stock and photos. */
+.admin-shop-mode {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 16px;
+  background: #f1f6fc;
+}
+.admin-shop-mode.is-rental {
+  background: #eef8f3;
+}
+.admin-shop-mode-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.admin-shop-mode-head h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.admin-shop-mode > p {
+  margin: 0;
+}
+.admin-shop-mode .admin-field {
+  margin: 0;
+}
+.admin-shop-mode .admin-shop-photos {
+  margin: 0;
+  background: #fff;
+}
+.admin-shop-mode .admin-stock-rows {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+}
+.admin-shop-mode .admin-stock-rows p {
+  margin: 0;
 }

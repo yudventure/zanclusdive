@@ -11,6 +11,7 @@ import { newId } from "./records.js";
 import { BookingError, bookingDates } from "../booking-model.js";
 import { shiftDate } from "../fare-model.js";
 import {
+  modesOf,
   countMovements,
   planShopItems,
   publicStock,
@@ -214,6 +215,7 @@ export async function shopStockUse(now = new Date()) {
       id: p.id,
       name: p.name,
       sizes: p.sizes ?? [],
+      modes: modesOf(p),
     })),
   };
 }

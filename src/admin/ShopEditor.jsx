@@ -8,6 +8,7 @@ import {
   rupiah,
   sizeLimit,
   productImages,
+  productAs,
   productLimits,
   deliveryOf,
   deliveryZoneLimit,
@@ -83,6 +84,7 @@ export default function ShopEditor({
         availability: "stock",
         sizes: [],
         images: [],
+        rentalImages: [],
         videos: [],
         details: "",
         specs: [],
@@ -169,14 +171,16 @@ export default function ShopEditor({
               aria-pressed={product?.id === p.id}
             >
               <div className="admin-shop-thumbnail">
-                <ProductVisual product={p} />
+                <ProductVisual
+                  product={productAs(p, p.saleEnabled ? "sale" : "rental")}
+                />
               </div>
               <span>
                 <strong>{p.name}</strong>
                 <small>
-                  {p.saleEnabled ? "Beli" : ""}
+                  {p.saleEnabled ? "Jual" : ""}
                   {p.saleEnabled && p.rentalEnabled ? " + " : ""}
-                  {p.rentalEnabled ? "Rental" : ""} ·{" "}
+                  {p.rentalEnabled ? "Sewa" : ""} ·{" "}
                   {p.enabled ? "Tampil" : "Draft"}
                 </small>
               </span>
@@ -261,102 +265,54 @@ export default function ShopEditor({
               rows={product.specs ?? []}
               onChange={(rows) => edit("specs", rows)}
             />
-            <div className="admin-shop-pricing">
-              <div>
-                <label className="admin-toggle">
-                  <input
-                    type="checkbox"
-                    checked={product.saleEnabled}
-                    onChange={(e) => edit("saleEnabled", e.target.checked)}
-                  />
-                  Dijual
-                </label>
-                <Field label="Harga jual (Rp)">
-                  <input
-                    type="number"
-                    min={1}
-                    max={1e9}
-                    step={1}
-                    disabled={!product.saleEnabled}
-                    placeholder="Kosong = minta penawaran"
-                    value={product.salePrice ?? ""}
-                    onChange={(e) =>
-                      edit(
-                        "salePrice",
-                        e.target.value === "" ? null : Number(e.target.value),
-                      )
-                    }
-                  />
-                </Field>
-              </div>
-              <div>
-                <label className="admin-toggle">
-                  <input
-                    type="checkbox"
-                    checked={product.rentalEnabled}
-                    onChange={(e) => edit("rentalEnabled", e.target.checked)}
-                  />
-                  Disewakan
-                </label>
-                <Field label="Harga rental per hari (Rp)">
-                  <input
-                    type="number"
-                    min={1}
-                    max={1e9}
-                    step={1}
-                    disabled={!product.rentalEnabled}
-                    placeholder="Kosong = minta penawaran"
-                    value={product.rentalPrice ?? ""}
-                    onChange={(e) =>
-                      edit(
-                        "rentalPrice",
-                        e.target.value === "" ? null : Number(e.target.value),
-                      )
-                    }
-                  />
-                </Field>
-              </div>
-            </div>
-            <p className="admin-subtle">
-              Aktifkan minimal satu layanan. Harga kosong ditampilkan sebagai
-              permintaan penawaran. Rental dihitung per unit per hari.
-            </p>
-            <SizesAndStock
-              product={product}
-              items={stock}
-              error={stockError}
-              canStock={canStock}
-              edit={edit}
-              editMany={editMany}
-            />
-            <ProductPhotos
-              product={product}
-              media={media}
-              // Uploads land one after another, so each adds to the list
-              // as it is now, not as it was when the upload started.
-              onAdd={(file) =>
-                placePhoto(file, (url) =>
-                  update("products", (products) =>
-                    products.map((p) =>
-                      p.id === product.id
-                        ? withImages(p, [...productImages(p), url])
-                        : p,
-                    ),
-                  ),
-                )
-              }
-              onChange={(images) => editMany(withImages(product, images))}
-            />
             <ProductVideos
               videos={product.videos ?? []}
               onChange={(videos) => edit("videos", videos)}
             />
+            <SizesAndAvailability
+              product={product}
+              canStock={canStock}
+              edit={edit}
+            />
+            {["sale", "rental"].map((mode) => (
+              <ModeSection
+                key={mode}
+                mode={mode}
+                product={product}
+                items={stock}
+                error={stockError}
+                media={media}
+                edit={edit}
+                editMany={editMany}
+                // Uploads land one after another, so each adds to the list
+                // as it is now, not as it was when the upload started.
+                onAddPhoto={(file) =>
+                  placePhoto(file, (url) =>
+                    update("products", (products) =>
+                      products.map((p) =>
+                        p.id === product.id
+                          ? withPhotos(p, mode, [
+                              ...productImages(p, mode),
+                              url,
+                            ])
+                          : p,
+                      ),
+                    ),
+                  )
+                }
+              />
+            ))}
+            <p className="admin-subtle">
+              Aktifkan minimal satu, dijual atau disewakan. Harga kosong
+              ditampilkan sebagai permintaan penawaran. Sewa dihitung per unit
+              per hari.
+            </p>
             <p className="admin-shop-price-preview">
               {product.saleEnabled &&
                 `Jual ${product.salePrice === null ? "dengan penawaran" : rupiah(product.salePrice)}`}
               {product.saleEnabled && product.rentalEnabled && " · "}
               {product.rentalEnabled &&
-                `Rental ${product.rentalPrice === null ? "dengan penawaran" : rupiah(product.rentalPrice) + " per hari"}`}
+                `Sewa ${product.rentalPrice === null ? "dengan penawaran" : rupiah(product.rentalPrice) + " per hari"}`}
             </p>
             <button
               type="button"
@@ -379,23 +335,11 @@ export default function ShopEditor({
   );
 }
 
-// Sizes, stock and availability of one product, in one place. Each size
-// (or the product, without sizes) is an item in Gudang. A count typed here
-// is saved with the catalog as a stock opname in the warehouse.
-function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
+// The sizes and how the website follows the stock, shared by the gear for
+// sale and the gear for rent. Each way keeps its own stock per size below.
+function SizesAndAvailability({ product, canStock, edit }) {
   const [draft, setDraft] = useState("");
   const sizes = product.sizes ?? [];
-  const byVariant = new Map(
-    (items ?? [])
-      .filter((item) => item.productId)
-      .map((item) => [variantKey(item.productId, item.size), item]),
-  );
-  const unit = (size) =>
-    byVariant.get(variantKey(product.id, size))?.unit ??
-    unitForProduct(product);
-  // An item without a size that this product leaves behind when it gets
-  // sizes, so its stock is not lost from sight.
-  const before = sizes.length ? byVariant.get(product.id) : null;
   function addSizes() {
     const next = [...sizes];
     for (const raw of draft.split(",")) {
@@ -411,16 +355,9 @@ function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
     edit("sizes", next);
     setDraft("");
   }
-  function setCount(size, value) {
-    editMany({
-      stockCounts: { ...product.stockCounts, [size]: value },
-      // Typing the stock means the website should follow it.
-      ...(product.availability === "request" ? { availability: "stock" } : {}),
-    });
-  }
   return (
-    <section className="admin-shop-stock" aria-label="Ukuran dan stok">
-      <h3>Ukuran & stok</h3>
+    <section className="admin-shop-stock" aria-label="Ukuran dan ketersediaan">
+      <h3>Ukuran & ketersediaan</h3>
       <div className="admin-size-row">
         <Field label="Ukuran">
           <input
@@ -471,55 +408,10 @@ function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
           wetsuit, fin, atau BCD.
         </p>
       )}
-      {error ? (
-        <p className="admin-error" role="alert">
-          {error}
-        </p>
-      ) : !items ? (
-        <p className="admin-subtle">Memuat stok…</p>
-      ) : (
-        <div className="admin-stock-rows">
-          {sizesOf(product).map((size) => {
-            const item = byVariant.get(variantKey(product.id, size));
-            const held = item?.shop;
-            const typed = product.stockCounts?.[size];
-            const notes = [
-              held?.rentedToday && `${held.rentedToday} disewa hari ini`,
-              held?.bookedLater && `${held.bookedLater} dipesan untuk nanti`,
-              held?.waiting && `${held.waiting} menunggu pembayaran`,
-            ].filter(Boolean);
-            return (
-              <div className="admin-stock-row" key={size || "all"}>
-                <Field label={size ? `Stok ukuran ${size}` : "Stok"}>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100000}
-                    step={1}
-                    placeholder="0"
-                    value={typed ?? item?.stock ?? ""}
-                    onChange={(e) => setCount(size, e.target.value)}
-                  />
-                </Field>
-                <span className="admin-stock-unit">{unit(size)}</span>
-                <small>
-                  {notes.length
-                    ? notes.join(", ")
-                    : item
-                      ? "Belum ada pesanan"
-                      : "Baru, tersimpan saat katalog disimpan"}
-                </small>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {before && before.stock > 0 && (
-        <p className="admin-subtle is-warn">
-          Stok lama tanpa ukuran ({before.stock} {before.unit}) tetap di Gudang
-          sebagai barang biasa. Isi stok tiap ukuran di atas.
-        </p>
-      )}
+      <p className="admin-subtle">
+        Ukuran berlaku untuk barang jual dan barang sewa. Stoknya diisi terpisah
+        di bagian Untuk dijual dan Untuk disewa.
+      </p>
       <Field label="Ketersediaan di website">
         <select
           value={product.availability}
@@ -534,7 +426,7 @@ function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
       </Field>
       <p className="admin-subtle">
         {product.availability === "stock"
-          ? "Website menampilkan sisa stok, dan pesanan online tidak bisa melebihinya. Penjualan online mengurangi stok sendiri, sewa online memakai unit pada tanggal sewanya."
+          ? "Website menampilkan sisa stok, dan pesanan online tidak bisa melebihinya. Penjualan online mengurangi stok jual. Sewa online memakai unit stok sewa pada tanggal sewanya, lalu unitnya kembali."
           : "Stok tetap tercatat di Gudang, tapi website tidak memeriksanya. Pilih Ikuti stok gudang supaya website menampilkan sisa stok."}
       </p>
       {canStock && (
@@ -546,17 +438,217 @@ function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
   );
 }
 
-// The first photo is the cover on cards; "image" follows it for the parts
-// of the site that show one photo.
-const withImages = (product, images) => {
-  const list = [...new Set(images)].slice(0, productLimits.images);
-  return { ...product, images: list, image: list[0] ?? "" };
+// Selling a unit and renting one out are two different things, so each way
+// has its own switch, price, photos and stock.
+const modeText = {
+  sale: {
+    title: "Untuk dijual",
+    toggle: "Dijual",
+    enabled: "saleEnabled",
+    price: "salePrice",
+    priceLabel: "Harga jual (Rp)",
+    photos: "Foto barang jual",
+    stock: "Stok jual",
+    intro:
+      "Barang yang dibeli tamu dan tidak kembali. Stok jual berkurang sendiri saat pesanan online dibayar.",
+    off: "Produk ini tidak dijual. Centang Dijual untuk mengisi harga, foto, dan stok jualnya.",
+  },
+  rental: {
+    title: "Untuk disewa",
+    toggle: "Disewakan",
+    enabled: "rentalEnabled",
+    price: "rentalPrice",
+    priceLabel: "Harga sewa per hari (Rp)",
+    photos: "Foto barang sewa",
+    stock: "Stok sewa",
+    intro:
+      "Unit milik dive center yang dipinjamkan lalu kembali. Stok sewa tidak berkurang, tiap sewa memakai unitnya pada tanggal sewa.",
+    off: "Produk ini tidak disewakan. Centang Disewakan untuk mengisi harga, foto, dan stok sewanya.",
+  },
 };
 
-// A product's photos like a marketplace listing: several at once from a
+function ModeSection({
+  mode,
+  product,
+  items,
+  error,
+  media,
+  edit,
+  editMany,
+  onAddPhoto,
+}) {
+  const t = modeText[mode];
+  const on = product[t.enabled];
+  const images = productImages(product, mode);
+  const saleImages = productImages(product, "sale");
+  return (
+    <section
+      className={"admin-shop-mode is-" + mode}
+      aria-label={t.title}
+      data-mode={mode}
+    >
+      <div className="admin-shop-mode-head">
+        <h3>{t.title}</h3>
+        <label className="admin-toggle">
+          <input
+            type="checkbox"
+            checked={on}
+            onChange={(e) => edit(t.enabled, e.target.checked)}
+          />
+          {t.toggle}
+        </label>
+      </div>
+      {!on ? (
+        <p className="admin-subtle">{t.off}</p>
+      ) : (
+        <>
+          <p className="admin-subtle">{t.intro}</p>
+          <Field label={t.priceLabel}>
+            <input
+              type="number"
+              min={1}
+              max={1e9}
+              step={1}
+              placeholder="Kosong = minta penawaran"
+              value={product[t.price] ?? ""}
+              onChange={(e) =>
+                edit(
+                  t.price,
+                  e.target.value === "" ? null : Number(e.target.value),
+                )
+              }
+            />
+          </Field>
+          <ModeStock
+            mode={mode}
+            product={product}
+            items={items}
+            error={error}
+            editMany={editMany}
+          />
+          <ProductPhotos
+            label={t.photos}
+            product={productAs(product, mode)}
+            images={images}
+            media={media}
+            onAdd={onAddPhoto}
+            onChange={(next) => editMany(withPhotos(product, mode, next))}
+            copy={
+              mode === "rental" && !images.length && saleImages.length
+                ? () => editMany(withPhotos(product, mode, saleImages))
+                : null
+            }
+          />
+        </>
+      )}
+    </section>
+  );
+}
+
+// The stock of one way, per size. Each size (or the product, without
+// sizes) is an item in Gudang. A count typed here is saved with the
+// catalog as a stock opname in the warehouse.
+function ModeStock({ mode, product, items, error, editMany }) {
+  const t = modeText[mode];
+  const sizes = product.sizes ?? [];
+  const byVariant = new Map(
+    (items ?? [])
+      .filter((item) => item.productId)
+      .map((item) => [variantKey(item.productId, item.mode, item.size), item]),
+  );
+  const unit = (size) =>
+    byVariant.get(variantKey(product.id, mode, size))?.unit ??
+    unitForProduct(product);
+  // An item without a size that this product leaves behind when it gets
+  // sizes, so its stock is not lost from sight.
+  const before = sizes.length
+    ? byVariant.get(variantKey(product.id, mode))
+    : null;
+  function setCount(size, value) {
+    editMany({
+      stockCounts: {
+        ...product.stockCounts,
+        [mode]: { ...product.stockCounts?.[mode], [size]: value },
+      },
+      // Typing the stock means the website should follow it.
+      ...(product.availability === "request" ? { availability: "stock" } : {}),
+    });
+  }
+  if (error)
+    return (
+      <p className="admin-error" role="alert">
+        {error}
+      </p>
+    );
+  if (!items) return <p className="admin-subtle">Memuat stok…</p>;
+  return (
+    <div className="admin-stock-rows">
+      {sizesOf(product).map((size) => {
+        const item = byVariant.get(variantKey(product.id, mode, size));
+        const held = item?.shop;
+        const typed = product.stockCounts?.[mode]?.[size];
+        const notes = (
+          mode === "rental"
+            ? [
+                held?.rentedToday && `${held.rentedToday} disewa hari ini`,
+                held?.bookedLater && `${held.bookedLater} dipesan untuk nanti`,
+              ]
+            : [held?.waiting && `${held.waiting} menunggu pembayaran`]
+        ).filter(Boolean);
+        return (
+          <div className="admin-stock-row" key={size || "all"}>
+            <Field label={size ? `${t.stock} ukuran ${size}` : t.stock}>
+              <input
+                type="number"
+                min={0}
+                max={100000}
+                step={1}
+                placeholder="0"
+                value={typed ?? item?.stock ?? ""}
+                onChange={(e) => setCount(size, e.target.value)}
+              />
+            </Field>
+            <span className="admin-stock-unit">{unit(size)}</span>
+            <small>
+              {notes.length
+                ? notes.join(", ")
+                : item
+                  ? "Belum ada pesanan"
+                  : "Baru, tersimpan saat katalog disimpan"}
+            </small>
+          </div>
+        );
+      })}
+      {before && before.stock > 0 && (
+        <p className="admin-subtle is-warn">
+          {t.stock} lama tanpa ukuran ({before.stock} {before.unit}) tetap di
+          Gudang sebagai barang biasa. Isi stok tiap ukuran di atas.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// The first photo is the cover on cards. For sale, "image" follows it for
+// the parts of the site that show one photo.
+const withPhotos = (product, mode, images) => {
+  const list = [...new Set(images)].slice(0, productLimits.images);
+  return mode === "rental"
+    ? { ...product, rentalImages: list }
+    : { ...product, images: list, image: list[0] ?? "" };
+};
+
+// Photos of one way like a marketplace listing: several at once from a
 // computer or phone, in order, the first one as the cover.
-function ProductPhotos({ product, media, onAdd, onChange }) {
-  const images = productImages(product);
+function ProductPhotos({
+  label,
+  product,
+  images,
+  media,
+  onAdd,
+  onChange,
+  copy,
+}) {
   const [url, setUrl] = useState("");
   const move = (index, delta) => {
     const next = [...images];
@@ -566,9 +658,9 @@ function ProductPhotos({ product, media, onAdd, onChange }) {
   };
   const full = images.length >= productLimits.images;
   return (
-    <section className="admin-shop-photos" aria-label="Foto produk">
+    <section className="admin-shop-photos" aria-label={label}>
       <h3>
-        Foto produk{" "}
+        {label}{" "}
         <small>
           {images.length} dari {productLimits.images}
         </small>
@@ -628,10 +720,15 @@ function ProductPhotos({ product, media, onAdd, onChange }) {
         <ImageUpload
           multiple
           guide="product"
-          label="Tambah foto produk"
+          label={`Tambah ${label.toLowerCase()}`}
           hint={`Bisa pilih beberapa foto sekaligus, maksimal ${productLimits.images}. Langsung terpasang.`}
           onFile={onAdd}
         />
+      )}
+      {copy && (
+        <button type="button" className="admin-button secondary" onClick={copy}>
+          Pakai foto barang jual
+        </button>
       )}
       <p className="admin-subtle">
         Foto pertama tampil di kartu. Tambahkan foto dari depan, samping,

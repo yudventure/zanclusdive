@@ -105,14 +105,14 @@ try {
 
   // Several photos at once for one product, saved straight away.
   await a.goto(base + "/admin/shop", { waitUntil: "networkidle" });
-  const photos = a.locator(".admin-shop-photos");
+  const photos = a.locator(".admin-shop-mode.is-sale .admin-shop-photos");
   assert.equal(
     await photos.locator(".admin-photo-guide").textContent(),
     "Terbaik 1200 × 1200 px, rasio 1:1, latar polos, alat terlihat utuh",
   );
   const pngs = await a.evaluate(async () => {
     const out = [];
-    for (const color of ["#1b6f8a", "#e07a2f", "#3c9d5d"]) {
+    for (const color of ["#1b6f8a", "#e07a2f", "#3c9d5d", "#8a4fb0"]) {
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
       canvas.height = 1200;
@@ -125,7 +125,7 @@ try {
     return out;
   });
   await photos.locator('input[type="file"]').setInputFiles(
-    pngs.map((bytes, i) => ({
+    pngs.slice(0, 3).map((bytes, i) => ({
       name: `mask-${i + 1}.png`,
       mimeType: "image/png",
       buffer: Buffer.from(bytes),
@@ -144,6 +144,30 @@ try {
   await photos
     .getByRole("button", { name: "Jadikan foto 3 foto utama" })
     .click();
+  // The units for rent have photos of their own, not the ones for sale.
+  const rentPhotos = a.locator(".admin-shop-mode.is-rental .admin-shop-photos");
+  assert.equal(await rentPhotos.locator("li").count(), 0);
+  assert.equal(
+    await rentPhotos
+      .getByRole("button", { name: "Pakai foto barang jual" })
+      .count(),
+    1,
+  );
+  await rentPhotos.locator('input[type="file"]').setInputFiles([
+    {
+      name: "mask-sewa.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(pngs[3]),
+    },
+  ]);
+  for (let tries = 0; tries < 120; tries++) {
+    saved = await mask();
+    if (saved.rentalImages?.length === 1) break;
+    await a.waitForTimeout(500);
+  }
+  assert.equal(saved.rentalImages.length, 1, "the rental photo was saved");
+  assert.ok(!saved.images.includes(saved.rentalImages[0]));
+  assert.equal(await rentPhotos.locator("li").count(), 1);
   // A video, the full description and two spec rows.
   await a.getByLabel("Link video").fill("https://youtu.be/dQw4w9WgXcQ");
   await a.getByRole("button", { name: "Tambah video" }).click();
@@ -186,6 +210,7 @@ try {
   saved = await mask();
   assert.equal(saved.image, saved.images[0]);
   assert.equal(saved.images.length, 3);
+  assert.equal(saved.rentalImages.length, 1);
   assert.deepEqual(saved.videos, ["https://youtu.be/dQw4w9WgXcQ"]);
   assert.deepEqual(saved.specs, [
     { label: "Merek", value: "Scubapro Crystalvu" },
@@ -238,6 +263,33 @@ try {
   );
   shots && (await page.screenshot({ path: `${shots}/79-detail-besar.png` }));
   await detail.getByRole("button", { name: "Tutup detail" }).click();
+
+  // For rent, the card and the window show the photo of the units for rent.
+  await page.goto(base + "/id/dive-shop?mode=rental", {
+    waitUntil: "networkidle",
+  });
+  assert.equal(
+    await page
+      .locator('[data-product="demo-mask"] .shop-product-photo')
+      .getAttribute("src"),
+    saved.rentalImages[0],
+  );
+  await page
+    .getByRole("button", { name: "Lihat detail Mask & snorkel set" })
+    .first()
+    .click();
+  await detail.waitFor();
+  assert.equal(
+    await detail.locator(".shop-detail-visual img").getAttribute("src"),
+    saved.rentalImages[0],
+  );
+  assert.equal(await detail.locator(".shop-detail-thumbs").count(), 0);
+  assert.match(
+    await detail.locator(".shop-detail-price").textContent(),
+    /Harga sewa/,
+  );
+  await detail.getByRole("button", { name: "Tutup detail" }).click();
+  await page.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });
 
   // Delivery at checkout: the zone's fee joins the total and Midtrans.
   await page

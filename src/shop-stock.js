@@ -1,13 +1,15 @@
 import { holdsPlaces, bookingReference } from "./booking-model.js";
 import { stockOf } from "./inventory-model.js";
 
-// Dive Shop and Gudang together. Every Dive Shop product has one item in
-// the warehouse per size (item.productId and item.size; a product without
-// sizes has one item). Its stock is what the shop can sell or rent out, and
-// the team sets it in the Dive Shop editor or with Masuk and Keluar. A paid
-// purchase becomes a "Penjualan" movement, and a rental holds units on its
-// dates for as long as its booking holds its places, without movements, so
-// a new date or a cancellation frees them by itself.
+// Dive Shop and Gudang together. Gear for sale and gear for rent are kept
+// apart: every Dive Shop product has one item in the warehouse for each
+// way it is offered and each size (item.productId, item.mode "sale" or
+// "rental", and item.size; a product without sizes has one item per way).
+// Its stock is what the shop can sell, or rent out, and the team sets it
+// in the Dive Shop editor or with Masuk and Keluar. A paid purchase becomes
+// a "Penjualan" movement on the sale item, and a rental holds units of the
+// rental item on its dates for as long as its booking holds its places,
+// without movements, so a new date or a cancellation frees them by itself.
 
 // The unit a new warehouse item gets for a product of this shop category.
 export const shopUnits = { mask: "set", fins: "pasang", regulator: "set" };
@@ -16,11 +18,30 @@ export const unitForProduct = (product) => shopUnits[product.category] ?? "pcs";
 // A product's sizes, or one variant without a size.
 export const sizesOf = (product) =>
   Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : [""];
-export const variantKey = (productId, size = "") =>
-  size ? `${productId}::${size}` : productId;
-const itemKey = (item) => variantKey(item.productId, item.size ?? "");
-export const variantName = (product, size) =>
-  String(size ? `${product.name} · ${size}` : product.name).slice(0, 80);
+// The ways a product is offered: for sale, for rent, or both.
+export const modesOf = (product) =>
+  [product?.saleEnabled && "sale", product?.rentalEnabled && "rental"].filter(
+    Boolean,
+  );
+export const modeNames = { sale: "Jual", rental: "Sewa" };
+export const variantKey = (productId, mode, size = "") =>
+  `${productId}::${mode}` + (size ? `::${size}` : "");
+// Items linked before sale and rental were kept apart have no mode: they
+// count for the sale stock, or the rental stock of gear only rented out.
+const legacyMode = (product) => (product?.saleEnabled ? "sale" : "rental");
+const modeOfItem = (item, products) =>
+  item.mode ?? legacyMode(products.find((p) => p.id === item.productId));
+const itemKey = (item, products) =>
+  variantKey(item.productId, modeOfItem(item, products), item.size ?? "");
+export const variantName = (product, mode, size) =>
+  String(
+    `${product.name} · ${modeNames[mode]}` + (size ? ` · ${size}` : ""),
+  ).slice(0, 80);
+// Every product, way and size that needs a warehouse item.
+const variantsOf = (product) =>
+  modesOf(product).flatMap((mode) =>
+    sizesOf(product).map((size) => ({ mode, size })),
+  );
 
 const nameKey = (name) =>
   String(name ?? "")
@@ -29,16 +50,18 @@ const nameKey = (name) =>
     .toLocaleLowerCase("id");
 const linkTime = (item) => item.linkedAt || item.createdAt || "";
 
-// The warehouse item of each product and size: the one linked last, when
-// the team moved the link from one item to another.
+// The warehouse item of each product, way and size: the one linked last,
+// when the team moved the link from one item to another.
 export function linkedItems(items, products) {
   const valid = new Set(
-    products.flatMap((p) => sizesOf(p).map((size) => variantKey(p.id, size))),
+    products.flatMap((p) =>
+      variantsOf(p).map(({ mode, size }) => variantKey(p.id, mode, size)),
+    ),
   );
   const map = new Map();
   for (const item of items) {
     if (!item.productId) continue;
-    const key = itemKey(item);
+    const key = itemKey(item, products);
     if (!valid.has(key)) continue;
     const current = map.get(key);
     if (!current || linkTime(item) > linkTime(current)) map.set(key, item);
@@ -46,11 +69,12 @@ export function linkedItems(items, products) {
   return map;
 }
 
-// What to change so that every product and size has exactly one warehouse
-// item. A missing one takes an unlinked item of the same name, or a new
-// one. An item whose product or size is gone, or a second item on one
-// size, is unlinked, or removed when the warehouse made it and nothing was
-// ever recorded on it.
+// What to change so that every product, way and size has exactly one
+// warehouse item. A missing one takes an unlinked item of the same name,
+// or a new one. An item whose product, way or size is gone, or a second
+// item on one of them, is unlinked, or removed when the warehouse made it
+// and nothing was ever recorded on it. Items from before sale and rental
+// were apart get their way written down.
 export function planShopItems(products, items, movements, now) {
   const changes = new Map();
   const change = (item, patch) =>
@@ -60,18 +84,23 @@ export function planShopItems(products, items, movements, now) {
   const used = new Set(movements.map((m) => m.itemId));
   const remove = [];
   for (const item of list) {
-    if (!item.productId || linked.get(itemKey(item)) === item) continue;
+    if (!item.productId) continue;
+    if (linked.get(itemKey(item, products)) === item) {
+      if (!item.mode) change(item, { mode: modeOfItem(item, products) });
+      continue;
+    }
     item.productId = "";
     item.size = "";
+    item.mode = "";
     if (item.auto && !used.has(item.id)) remove.push(item.id);
-    else change(item, { productId: "", size: "" });
+    else change(item, { productId: "", size: "", mode: "" });
   }
   list = list.filter((item) => !remove.includes(item.id));
   const create = [];
   for (const product of products)
-    for (const size of sizesOf(product)) {
-      const name = variantName(product, size);
-      const item = linked.get(variantKey(product.id, size));
+    for (const { mode, size } of variantsOf(product)) {
+      const name = variantName(product, mode, size);
+      const item = linked.get(variantKey(product.id, mode, size));
       // An item the warehouse made keeps the product's name until the
       // team gives it its own.
       if (item) {
@@ -87,8 +116,9 @@ export function planShopItems(products, items, movements, now) {
       );
       if (same) {
         same.productId = product.id;
+        same.mode = mode;
         same.size = size;
-        change(same, { productId: product.id, size, linkedAt: now });
+        change(same, { productId: product.id, mode, size, linkedAt: now });
         continue;
       }
       create.push({
@@ -102,6 +132,7 @@ export function planShopItems(products, items, movements, now) {
         note: "",
         active: true,
         productId: product.id,
+        mode,
         size,
         linkedAt: now,
         auto: true,
@@ -120,22 +151,23 @@ export function planShopItems(products, items, movements, now) {
 export const recordedBookings = (movements) =>
   new Set(movements.filter((m) => m.bookingId).map((m) => m.bookingId));
 
-// Units each product and size's orders hold: purchases waiting for payment
-// (or for their movement), and rentals by date. Orders hold as long as
-// their booking holds its places: confirmed, or with an online payment
-// open.
+// Units each product, way and size's orders hold: purchases waiting for
+// payment (or for their movement) on the sale stock, and rentals by date
+// on the rental stock. Orders hold as long as their booking holds its
+// places: confirmed, or with an online payment open.
 export function shopReservations(bookings, recorded = new Set()) {
   const held = {};
   for (const booking of bookings) {
     if (!holdsPlaces(booking)) continue;
     for (const line of booking.payment?.lines ?? []) {
       if (!line.product) continue;
-      const entry = (held[variantKey(line.product, line.size)] ??= {
+      const mode = line.mode === "rental" ? "rental" : "sale";
+      const entry = (held[variantKey(line.product, mode, line.size)] ??= {
         sale: 0,
         rentals: [],
       });
       const qty = Number(line.quantity) || 0;
-      if (line.mode === "rental")
+      if (mode === "rental")
         entry.rentals.push({
           from: booking.startDate,
           to: booking.endDate || booking.startDate,
@@ -181,28 +213,31 @@ export function stockState({ products, items, movements, bookings }) {
 }
 
 // What the public shop knows of products that follow the warehouse: the
-// units a guest can buy now, and the units that can be rented (the dates
-// are checked when paying), per size and for the product. No bookings or
-// names leave the server.
+// units of the sale stock a guest can buy now, and the units of the rental
+// stock (the dates are checked when paying), per size and for the product.
+// No bookings or names leave the server.
 export function publicStock(data, today) {
   const { linked, held } = stockState(data);
   const out = {};
+  const units = (product, mode, size) => {
+    const item = linked.get(variantKey(product.id, mode, size));
+    if (!item || item.active === false) return 0;
+    const stock = stockOf(data.movements, item.id);
+    return Math.max(
+      0,
+      mode === "sale"
+        ? freeUnits(stock, held[variantKey(product.id, mode, size)], today)
+        : stock,
+    );
+  };
   for (const product of data.products) {
     if (product.availability !== "stock") continue;
     const sizes = {};
-    for (const size of sizesOf(product)) {
-      const key = variantKey(product.id, size);
-      const item = linked.get(key);
-      if (!item || item.active === false) {
-        sizes[size] = { sale: 0, rental: 0 };
-        continue;
-      }
-      const stock = stockOf(data.movements, item.id);
+    for (const size of sizesOf(product))
       sizes[size] = {
-        sale: Math.max(0, freeUnits(stock, held[key], today)),
-        rental: Math.max(0, stock - (held[key]?.sale ?? 0)),
+        sale: units(product, "sale", size),
+        rental: units(product, "rental", size),
       };
-    }
     const all = Object.values(sizes);
     const sum = (mode) => all.reduce((total, s) => total + s[mode], 0);
     out[product.id] = {
@@ -215,19 +250,20 @@ export function publicStock(data, today) {
 }
 
 // For the warehouse list and the Dive Shop editor: per linked item, the
-// product and size, the units out on rental today, booked for later dates,
-// and purchases waiting for payment.
+// product, way and size, the units out on rental today, booked for later
+// dates, and purchases waiting for payment.
 export function shopUse(data, today) {
   const { linked, held } = stockState(data);
   const use = {};
   for (const product of data.products)
-    for (const size of sizesOf(product)) {
-      const key = variantKey(product.id, size);
+    for (const { mode, size } of variantsOf(product)) {
+      const key = variantKey(product.id, mode, size);
       const item = linked.get(key);
       if (!item) continue;
       const mine = held[key];
       use[item.id] = {
         productId: product.id,
+        mode,
         size,
         productName: product.name,
         availability: product.availability,
@@ -254,47 +290,32 @@ export function stockShortfall(data, order, today) {
   const wanted = new Map();
   for (const line of order.lines) {
     if (!line.product) continue;
-    const key = variantKey(line.product, line.size);
+    const mode = line.mode === "rental" ? "rental" : "sale";
+    const key = variantKey(line.product, mode, line.size);
     const entry = wanted.get(key) ?? {
       productId: line.product,
+      mode,
       size: line.size ?? "",
-      sale: 0,
-      rental: 0,
+      quantity: 0,
     };
-    entry[line.mode === "rental" ? "rental" : "sale"] += line.quantity;
+    entry.quantity += line.quantity;
     wanted.set(key, entry);
   }
-  for (const [key, { productId, size, sale, rental }] of wanted) {
+  for (const [key, { productId, mode, size, quantity }] of wanted) {
     const product = data.products.find((p) => p.id === productId);
     if (product?.availability !== "stock") continue;
     const item = linked.get(key);
     const stock =
       item && item.active !== false ? stockOf(data.movements, item.id) : 0;
     const mine = held[key] ?? { sale: 0, rentals: [] };
-    const rentalHeld = rental
-      ? {
-          ...mine,
-          rentals: [
-            ...mine.rentals,
-            { from: order.startDate, to: order.endDate, qty: rental },
-          ],
-        }
-      : mine;
-    if (sale) {
-      const left = freeUnits(stock, rentalHeld, today);
-      if (left < sale)
-        return { product, size, mode: "sale", left: Math.max(0, left) };
-    }
-    if (rental) {
-      const left = freeUnits(
-        stock,
-        { ...mine, sale: mine.sale + sale },
-        order.startDate,
-        order.endDate,
-      );
-      if (left < rental)
-        return { product, size, mode: "rental", left: Math.max(0, left) };
-    }
+    // Purchases take from the sale stock for good; rentals use the rental
+    // stock on their dates.
+    const left =
+      mode === "sale"
+        ? freeUnits(stock, mine, today)
+        : freeUnits(stock, mine, order.startDate, order.endDate);
+    if (left < quantity)
+      return { product, size, mode, left: Math.max(0, left) };
   }
   return null;
 }
@@ -316,7 +337,7 @@ export function saleMovements(booking, data, date) {
   const out = [];
   for (const line of booking.payment?.lines ?? []) {
     if (!line.product || line.mode === "rental") continue;
-    const item = linked.get(variantKey(line.product, line.size));
+    const item = linked.get(variantKey(line.product, "sale", line.size));
     if (!item) continue;
     const same = out.find((m) => m.itemId === item.id);
     if (same) same.qty += Number(line.quantity) || 0;
@@ -350,8 +371,8 @@ export const unrecordedSales = (bookings, recorded) =>
 export function countMovements(counts, data, date) {
   const { linked } = stockState({ ...data, bookings: [] });
   const out = [];
-  for (const { productId, size, count } of counts) {
-    const item = linked.get(variantKey(productId, size));
+  for (const { productId, mode, size, count } of counts) {
+    const item = linked.get(variantKey(productId, mode, size));
     if (!item) continue;
     const qty = count - stockOf(data.movements, item.id);
     if (qty)
@@ -368,9 +389,9 @@ export function countMovements(counts, data, date) {
 }
 
 // The counts the Dive Shop editor sends with the catalog, as
-// "stockCounts" on a product: { size: count }, "" for a product without
-// sizes. The catalog itself does not keep them; the sizes are the saved
-// product's.
+// "stockCounts" on a product: { sale: { size: count }, rental: { … } }, ""
+// for a product without sizes. The catalog itself does not keep them; the
+// ways and sizes are the saved product's.
 export function shopStockCounts(sent, products) {
   const raw = new Map(
     (Array.isArray(sent?.shop?.products) ? sent.shop.products : []).map((p) => [
@@ -380,14 +401,15 @@ export function shopStockCounts(sent, products) {
   );
   const out = [];
   for (const product of products) {
-    const counts = raw.get(product.id);
-    if (!counts || typeof counts !== "object" || Array.isArray(counts))
-      continue;
-    for (const size of sizesOf(product)) {
+    const all = raw.get(product.id);
+    for (const { mode, size } of variantsOf(product)) {
+      const counts = all?.[mode];
+      if (!counts || typeof counts !== "object" || Array.isArray(counts))
+        continue;
       if (!Object.hasOwn(counts, size) || counts[size] === "") continue;
       const count = Number(counts[size]);
       if (Number.isInteger(count) && count >= 0 && count <= 100000)
-        out.push({ productId: product.id, size, count });
+        out.push({ productId: product.id, mode, size, count });
     }
   }
   return out;

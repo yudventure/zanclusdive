@@ -19,6 +19,7 @@ import {
   unitsLeft,
   stockBadge,
   deliveryChoice,
+  productAs,
 } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
@@ -371,7 +372,10 @@ export default function DiveShop({
                         className="shop-product-image"
                         onClick={locked ? undefined : () => openDetail(product)}
                       >
-                        <ProductVisual product={product} locale={locale} />
+                        <ProductVisual
+                          product={productAs(product, mode)}
+                          locale={locale}
+                        />
                         <span className={"shop-stock stock-" + badge.state}>
                           {badge.label}
                         </span>

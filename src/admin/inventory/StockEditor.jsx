@@ -8,6 +8,7 @@ import {
   inventoryLimits,
 } from "../../inventory-model.js";
 import { money } from "../../money.js";
+import { modeNames } from "../../shop-stock.js";
 
 const blank = () => ({
   name: "",
@@ -20,6 +21,7 @@ const blank = () => ({
   note: "",
   active: true,
   productId: "",
+  mode: "",
   size: "",
 });
 const blankMove = (today, kind) => ({
@@ -59,7 +61,7 @@ export default function StockEditor({ request, today }) {
       setProducts(result.products ?? []);
       if (result.created)
         setNotice(
-          `${result.created} barang Dive Shop masuk ke gudang dengan stok 0. Isi stoknya di Dive Shop, bagian Ukuran & stok, atau lewat tombol Masuk.`,
+          `${result.created} barang Dive Shop masuk ke gudang dengan stok 0. Isi stok jual dan stok sewanya di Dive Shop, atau lewat tombol Masuk.`,
         );
     } catch (e) {
       setError(e.message);
@@ -98,6 +100,7 @@ export default function StockEditor({ request, today }) {
       minStock: String(item.minStock),
       cost: String(item.cost || ""),
       productId: item.shop?.productId ?? "",
+      mode: item.shop?.mode ?? "",
       size: item.shop?.size ?? "",
     });
     setMove(null);
@@ -153,24 +156,32 @@ export default function StockEditor({ request, today }) {
       },
       `${item.name} dihapus.` +
         (item.shop
-          ? ` Produk Dive Shop ${item.shop.productName}${item.shop.size ? ` ukuran ${item.shop.size}` : ""} mendapat barang baru dengan stok 0.`
+          ? ` ${item.shop.mode === "rental" ? "Stok sewa" : "Stok jual"} ${item.shop.productName}${item.shop.size ? ` ukuran ${item.shop.size}` : ""} mendapat barang baru dengan stok 0.`
           : ""),
     );
   const shown = (items ?? []).filter((i) => showInactive || i.active !== false);
   const low = (items ?? []).filter((i) => i.low);
   const empty = (items ?? []).filter((i) => i.empty);
-  const linkedTo = (productId, size) =>
+  const linkedTo = (productId, mode, size) =>
     (items ?? []).find(
-      (i) => i.shop?.productId === productId && i.shop.size === size,
+      (i) =>
+        i.shop?.productId === productId &&
+        i.shop.mode === mode &&
+        i.shop.size === size,
     );
-  // Each product, or each size of it, is one choice in the item form.
+  // Each product's sale or rental stock, per size, is one choice in the
+  // item form.
   const variants = products.flatMap((product) =>
-    (product.sizes?.length ? product.sizes : [""]).map((size) => ({
-      value: size ? `${product.id}::${size}` : product.id,
-      productId: product.id,
-      size,
-      label: size ? `${product.name} · ${size}` : product.name,
-    })),
+    (product.modes ?? ["sale"]).flatMap((mode) =>
+      (product.sizes?.length ? product.sizes : [""]).map((size) => ({
+        value: [product.id, mode, size].join("::"),
+        productId: product.id,
+        mode,
+        size,
+        label:
+          `${product.name} · ${modeNames[mode]}` + (size ? ` · ${size}` : ""),
+      })),
+    ),
   );
   const moveItem = move && items?.find((i) => i.id === move.itemId);
   return (
@@ -249,7 +260,8 @@ export default function StockEditor({ request, today }) {
                       </small>
                       {i.shop && (
                         <span className="admin-stock-shop">
-                          Dive Shop · {i.shop.productName}
+                          Dive Shop · {i.shop.productName} ·{" "}
+                          {modeNames[i.shop.mode]}
                           {i.shop.size ? ` · ${i.shop.size}` : ""}
                           {i.shop.shown ? "" : " (draft)"}
                         </span>
@@ -519,11 +531,15 @@ export default function StockEditor({ request, today }) {
             </Field>
             <Field
               label="Produk Dive Shop"
-              hint="Barang Dive Shop dibuat dan diisi stoknya langsung di Dive Shop, jadi kolom ini hanya untuk memindahkan produk ke barang yang sudah ada di sini. Penjualan online mengurangi stok sendiri, dan sewa online memakai unitnya sesuai tanggal sewa."
+              hint="Barang Dive Shop dibuat dan diisi stoknya langsung di Dive Shop, terpisah untuk jual dan sewa, jadi kolom ini hanya untuk memindahkan produk ke barang yang sudah ada di sini. Penjualan online mengurangi stok jual sendiri, dan sewa online memakai stok sewa sesuai tanggal sewa."
             >
               <select
                 value={
-                  form.size ? `${form.productId}::${form.size}` : form.productId
+                  form.productId
+                    ? [form.productId, form.mode || "sale", form.size].join(
+                        "::",
+                      )
+                    : ""
                 }
                 onChange={(e) => {
                   const chosen = variants.find(
@@ -532,13 +548,18 @@ export default function StockEditor({ request, today }) {
                   setForm((f) => ({
                     ...f,
                     productId: chosen?.productId ?? "",
+                    mode: chosen?.mode ?? "",
                     size: chosen?.size ?? "",
                   }));
                 }}
               >
                 <option value="">Tidak dijual di Dive Shop</option>
                 {variants.map((variant) => {
-                  const other = linkedTo(variant.productId, variant.size);
+                  const other = linkedTo(
+                    variant.productId,
+                    variant.mode,
+                    variant.size,
+                  );
                   return (
                     <option key={variant.value} value={variant.value}>
                       {variant.label}

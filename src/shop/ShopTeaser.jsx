@@ -6,7 +6,7 @@ import DeliveryChoice, {
   firstDelivery,
   deliveryFee,
 } from "../components/DeliveryChoice.jsx";
-import { rupiah, unitsLeft, deliveryChoice } from "../shop-model.js";
+import { rupiah, unitsLeft, deliveryChoice, productAs } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
@@ -198,7 +198,7 @@ export default function ShopTeaser({
           price: p.salePrice,
           unit: "",
           mode: "sale",
-          visual: p,
+          visual: productAs(p, "sale"),
           product: p,
           productId: p.id,
           size: "",

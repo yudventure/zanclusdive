@@ -160,11 +160,12 @@ try {
   await page.goto(base + "/admin/stock", { waitUntil: "networkidle" });
   await page
     .getByText(
-      "17 barang Dive Shop masuk ke gudang dengan stok 0. Isi stoknya di Dive Shop, bagian Ukuran & stok, atau lewat tombol Masuk.",
+      "33 barang Dive Shop masuk ke gudang dengan stok 0. Isi stok jual dan stok sewanya di Dive Shop, atau lewat tombol Masuk.",
     )
     .waitFor();
-  // Eight products; the fins, wetsuit and BCD in four sizes each.
-  assert.equal(await page.locator(".admin-stock-shop").count(), 17);
+  // Eight products, each for sale and for rent apart (the cylinder is only
+  // rented), and the fins, wetsuit and BCD in four sizes each.
+  assert.equal(await page.locator(".admin-stock-shop").count(), 33);
   await page.getByLabel("Nama barang").fill("BCD ukuran M");
   await page.getByLabel("Kode barang (opsional)").fill("bcd-m");
   await page.getByLabel("Kategori").selectOption("alat");

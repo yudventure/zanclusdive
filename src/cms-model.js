@@ -469,13 +469,16 @@ export function validateShop(shop) {
     }),
   };
 }
-// A product's photos (the first is its cover, kept as "image" for the
-// cards) and its video links.
+// A product's photos of the units for sale (the first is its cover, kept
+// as "image" for the cards), of the units for rent, and its video links.
 function productMedia(p) {
-  const list = Array.isArray(p.images) ? p.images : [];
-  if (list.length > productLimits.images)
-    throw new Error(`Foto produk maksimal ${productLimits.images}.`);
-  const images = [...new Set(list.map((url) => imageURL(url)))];
+  const photos = (list, label) => {
+    if (!Array.isArray(list)) return [];
+    if (list.length > productLimits.images)
+      throw new Error(`${label} maksimal ${productLimits.images}.`);
+    return [...new Set(list.map((url) => imageURL(url)))];
+  };
+  const images = photos(p.images, "Foto barang jual");
   // Catalogs from before the gallery kept one photo.
   if (!images.length && p.image) images.push(imageURL(p.image));
   const videos = Array.isArray(p.videos) ? p.videos : [];
@@ -484,6 +487,8 @@ function productMedia(p) {
   return {
     image: images[0] ?? "",
     images,
+    // The photos of the units for rent, apart from the ones for sale.
+    rentalImages: photos(p.rentalImages, "Foto barang sewa"),
     videos: videos.map((value, index) => {
       const url = typeof value === "string" ? value.trim() : "";
       const source = url.length <= 300 ? videoSource(url) : null;
