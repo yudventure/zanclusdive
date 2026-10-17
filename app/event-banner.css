@@ -1,26 +1,38 @@
-/* Event banners above the experience cards: wide and short, only while an
-   event is on. */
+/* Event banners above the experience cards, only while an event is on.
+   Each is a wide photo banner, wider than the section (up to 1560px): the
+   owner's photo fills it with its subject on the right, the event, its
+   facts, the price and one button on the left. */
 .event-banners {
+  --event-width: min(calc(100vw - 32px), 1560px);
   display: grid;
-  gap: 12px;
-  margin: 0 0 28px;
+  gap: 16px;
+  width: var(--event-width);
+  margin: 4px 0 40px calc((100% - var(--event-width)) / 2);
 }
 .event-banner {
   position: relative;
   display: grid;
-  grid-template-columns: 148px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 26px;
-  min-height: 132px;
-  padding: 12px 26px 12px 12px;
+  grid-template-columns: minmax(0, 660px) minmax(0, 1fr);
+  align-content: center;
+  gap: 26px 0;
+  min-height: 380px;
+  padding: 52px 60px;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 34px;
   background:
-    radial-gradient(circle at 78% -20%, #4fd1e85c, transparent 46%),
-    radial-gradient(circle at 12% 120%, #c8f28a40, transparent 40%),
-    linear-gradient(110deg, #052a43 0%, #0a4a68 52%, #0f7287 100%);
+    radial-gradient(circle at 82% -10%, #4fd1e866, transparent 46%),
+    radial-gradient(circle at 10% 120%, #c8f28a40, transparent 42%),
+    linear-gradient(110deg, #031d2f 0%, #0a4a68 55%, #0f7287 100%);
   color: #fff;
-  box-shadow: 0 18px 40px #062b3b2e;
+  box-shadow: 0 30px 70px #062b3b3d;
+  cursor: pointer;
+  isolation: isolate;
+}
+.event-banner > .event-banner-text,
+.event-banner > .event-banner-offer {
+  position: relative;
+  z-index: 2;
+  grid-column: 1;
 }
 .event-banner-sea {
   position: absolute;
@@ -29,313 +41,266 @@
   height: 100%;
   pointer-events: none;
 }
-/* The flyer and sign-up dialogs stay fixed to the screen. */
-.event-banner > :not(.event-banner-sea, dialog) {
-  position: relative;
-}
-.event-banner-photo {
-  position: relative;
-  align-self: stretch;
-  min-height: 108px;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: 20px;
-  background: #ffffff1f;
-  cursor: zoom-in;
-}
-/* The photo fills its box without setting the banner's height. */
-.event-banner-photo img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top;
-  transition: transform 0.4s ease;
-}
-.event-banner-photo:hover img {
-  transform: scale(1.05);
-}
-.event-banner-photo.is-empty {
-  cursor: default;
-  background:
-    radial-gradient(circle at 30% 30%, #4fd1e870, transparent 55%), #0b3b55;
-}
-.event-banner-text {
-  min-width: 0;
-}
-.event-banner-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 8px;
-}
-.event-banner-badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #c8f28a;
-  color: #062b3b;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-}
-.event-banner-dates {
-  padding: 4px 10px;
-  border: 1px solid #ffffff40;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #d8f3fb;
-}
-.event-banner h3 {
-  margin: 0;
-  font-size: clamp(22px, 2.2vw, 30px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.6px;
-}
-.event-banner-text > p:last-child:not(.event-banner-meta) {
-  margin: 6px 0 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #bfe3ee;
-}
-.event-banner-offer {
-  display: grid;
-  justify-items: end;
-  gap: 10px;
-}
-.event-banner-price {
-  display: grid;
-  justify-items: end;
-  margin: 0;
-}
-.event-banner-price strong {
-  padding: 4px 14px;
-  border-radius: 12px;
-  background: #ffd84d;
-  color: #062b3b;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  transform: rotate(-2deg);
-}
-.event-banner-price small {
-  margin-top: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #d8f3fb;
-}
-.event-banner-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.event-banner-actions .button {
-  white-space: nowrap;
-  color: #062b3b;
-}
-.event-banner-photo:focus-visible {
-  outline: 3px solid #c8f28a;
-  outline-offset: 3px;
-}
-/* The flyer, full size. */
-.event-flyer {
-  width: min(520px, calc(100% - 24px));
-  padding: 16px 16px 18px;
-  text-align: center;
-  background: #062b3b;
-}
-.event-flyer img {
-  display: block;
-  width: 100%;
-  max-height: calc(90dvh - 120px);
-  object-fit: contain;
-  border-radius: 16px;
-}
-.event-flyer .button {
-  margin-top: 14px;
-}
-.event-flyer .close-modal {
-  z-index: 1;
-  top: 22px;
-  right: 24px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #062b3bcc;
-  color: #fff;
-  line-height: 1;
-}
-@media (max-width: 900px) {
-  .event-banner {
-    grid-template-columns: 120px minmax(0, 1fr);
-    gap: 14px 18px;
-    padding-right: 18px;
-  }
-  .event-banner-offer {
-    grid-column: 1 / -1;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    justify-items: start;
-  }
-  .event-banner-price {
-    justify-items: start;
-  }
-  .event-banner-actions {
-    justify-self: end;
-  }
-}
-@media (max-width: 560px) {
-  .event-banner {
-    grid-template-columns: 76px minmax(0, 1fr);
-    gap: 10px 12px;
-    border-radius: 22px;
-    padding: 10px 12px 12px 10px;
-  }
-  .event-banner-photo {
-    min-height: 92px;
-    border-radius: 14px;
-  }
-  .event-banner-meta {
-    margin-bottom: 4px;
-  }
-  .event-banner h3 {
-    font-size: 19px;
-  }
-  .event-banner-text > p:last-child:not(.event-banner-meta) {
-    display: -webkit-box;
-    margin-top: 4px;
-    overflow: hidden;
-    font-size: 12px;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-  /* The rupiah price, then the one button across the banner; the photo
-     opens the flyer. */
-  .event-banner-offer {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-  .event-banner-actions {
-    justify-self: stretch;
-  }
-  .event-banner-actions .button {
-    flex: 1;
-    justify-content: center;
-  }
-  .event-banner-price strong {
-    padding: 3px 10px;
-    font-size: 17px;
-  }
-  .event-banner-price small {
-    margin-top: 4px;
-  }
-  .event-banner-actions .button {
-    padding: 11px 14px;
-    font-size: 12px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .event-banner-photo img {
-    transition: none;
-  }
-}
-
-/* A photo behind the text: the owner's picture, darkened on the side the
-   words sit on so they stay readable. */
-.event-banner.has-photo {
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 168px;
-  padding: 22px 28px 22px 34px;
-  background: #052a43;
-}
-.event-banner.has-photo:has(> .event-banner-photo) {
-  grid-template-columns: 148px minmax(0, 1fr) auto;
-  padding-left: 12px;
-}
-.event-banner > .event-banner-bg {
+/* The photo drifts slowly, like the sea. */
+.event-banner-bg {
   position: absolute;
   z-index: 0;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 55%;
-  transition: transform 0.6s ease;
+  object-position: 68% 46%;
+  transform-origin: 70% 40%;
+  animation: event-drift 22s ease-in-out infinite alternate;
 }
-/* The turtle sits low in its photo; the wide banner shows that strip. */
-@media (min-width: 901px) {
-  .event-banner > .event-banner-bg[src*="banner-penyu"] {
-    object-position: center 66%;
+@keyframes event-drift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.1) translateX(-1.5%);
   }
 }
-.event-banner.has-photo:hover > .event-banner-bg {
-  transform: scale(1.03);
-}
-.event-banner.has-photo::before {
+/* Dark on the side the words sit on, the photo clear on the other. */
+.event-banner.has-photo::before,
+.event-banner.has-photo::after {
   content: "";
   position: absolute;
   z-index: 1;
   inset: 0;
+  pointer-events: none;
+}
+.event-banner.has-photo::before {
   background: linear-gradient(
     90deg,
-    #031b2cf0 0%,
-    #031b2cd1 36%,
-    #031b2c70 62%,
-    #031b2c1a 100%
+    #021827f5 0%,
+    #021827e0 32%,
+    #0218278c 52%,
+    #02182724 72%,
+    #02182700 100%
   );
 }
-.event-banner.has-photo > :not(.event-banner-bg, .event-banner-sea, dialog) {
-  z-index: 2;
+.event-banner.has-photo::after {
+  background: linear-gradient(0deg, #0218278a 0%, #02182700 38%);
 }
-.event-banner.has-photo .event-banner-sea {
-  display: none;
+.event-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
 }
-.event-banner.has-photo h3,
-.event-banner.has-photo .event-banner-text > p:last-child {
-  text-shadow: 0 1px 14px #031b2c99;
+.event-banner-badge {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #c8f28a;
+  color: #062b3b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
 }
-.event-banner.has-photo
-  .event-banner-text
-  > p:last-child:not(.event-banner-meta) {
-  max-width: 54ch;
-  color: #dcf1f7;
+.event-banner-dates {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e3f6fb;
 }
-@media (max-width: 900px) {
-  .event-banner.has-photo {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 20px 20px 18px;
+.event-banner h3 {
+  margin: 16px 0 12px;
+  font-size: clamp(36px, 4.2vw, 64px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-shadow: 0 2px 24px #02182766;
+}
+.event-banner-place {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d9f2f7;
+}
+.event-banner-place svg,
+.event-banner-facts svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #c8f28a;
+}
+.event-banner-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.event-banner-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px 8px 11px;
+  border: 1px solid #ffffff2e;
+  border-radius: 999px;
+  background: #ffffff14;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f2fbfd;
+}
+.event-banner-facts svg {
+  width: 16px;
+  height: 16px;
+}
+.event-banner-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 28px;
+}
+.event-banner-price {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: baseline;
+  column-gap: 8px;
+  margin: 0;
+}
+.event-banner-price small {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c8f28a;
+}
+.event-banner-price strong {
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.event-banner-price span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cde9f0;
+}
+.event-banner-actions {
+  display: flex;
+}
+/* The one button: large, bright, and gently glowing. */
+.event-banner-cta.button {
+  padding: 17px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #062b3b;
+  white-space: nowrap;
+  box-shadow: 0 12px 30px #c8f28a40;
+  animation: event-glow 2.8s ease-in-out infinite;
+}
+.event-banner-cta span {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+.event-banner:hover .event-banner-cta span {
+  transform: translateX(5px);
+}
+.event-banner:hover .event-banner-cta.button {
+  box-shadow: 0 14px 36px #c8f28a73;
+}
+@keyframes event-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 30px #c8f28a40,
+      0 0 0 0 #c8f28a66;
   }
-  .event-banner.has-photo:has(> .event-banner-photo) {
-    grid-template-columns: 120px minmax(0, 1fr);
-    padding-left: 12px;
+  55% {
+    box-shadow:
+      0 12px 30px #c8f28a40,
+      0 0 0 12px #c8f28a00;
+  }
+}
+.event-banner-cta:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .event-banner {
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    min-height: 340px;
+    padding: 44px 44px;
+  }
+}
+/* Tablets and phones: the photo on top, the words below on deep blue. */
+@media (max-width: 760px) {
+  .event-banners {
+    --event-width: calc(100vw - 24px);
+    margin-bottom: 30px;
+  }
+  .event-banner {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: end;
+    gap: 20px;
+    min-height: 0;
+    padding: 24px 20px 22px;
+    border-radius: 26px;
+  }
+  .event-banner.has-photo {
+    padding-top: 190px;
+    background: #021827;
+  }
+  .event-banner-bg {
+    height: 280px;
+    object-position: 74% 62%;
   }
   .event-banner.has-photo::before {
     background: linear-gradient(
       180deg,
-      #031b2c8c 0%,
-      #031b2cc2 48%,
-      #031b2cf0 100%
+      #02182700 0%,
+      #02182733 110px,
+      #021827d9 210px,
+      #021827 270px
     );
   }
-}
-@media (max-width: 560px) {
-  .event-banner.has-photo {
-    min-height: 210px;
-    align-content: end;
-    padding: 18px 16px 16px;
+  .event-banner.has-photo::after {
+    display: none;
   }
-  .event-banner.has-photo:has(> .event-banner-photo) {
-    grid-template-columns: 76px minmax(0, 1fr);
-    padding-left: 10px;
+  .event-banner h3 {
+    margin: 12px 0 10px;
+    font-size: clamp(30px, 8.6vw, 40px);
+  }
+  .event-banner-place {
+    font-size: 14px;
+  }
+  .event-banner-facts {
+    margin-top: 14px;
+  }
+  .event-banner-facts li {
+    padding: 6px 11px 6px 9px;
+    font-size: 12.5px;
+  }
+  .event-banner-offer {
+    display: grid;
+    gap: 14px;
+  }
+  .event-banner-actions,
+  .event-banner-cta.button {
+    width: 100%;
+    justify-content: center;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .event-banner > .event-banner-bg {
+  .event-banner-bg,
+  .event-banner-cta.button {
+    animation: none;
+  }
+  .event-banner-cta span {
     transition: none;
   }
 }

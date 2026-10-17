@@ -142,8 +142,8 @@ export default function CalendarEditor({
             tanggal <b>Mulai tampil</b> (atau langsung) sampai{" "}
             <b>Tanggal selesai</b> event, lalu hilang sendiri. Tanpa tanggal
             selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil
-            bersamaan. <b>Flyer</b> tampil kecil di kiri dan bisa dibuka penuh.
-            <b>Foto latar</b> yang opsional mengisi banner di belakang tulisan.
+            bersamaan. Banner selebar hampir seluruh layar, dengan{" "}
+            <b>Foto banner</b> sebagai latarnya. Seluruh banner bisa diklik.
             Harga ditulis dalam rupiah per orang. Banner punya satu tombol yang
             membuka formulir pendaftaran event. Pendaftaran masuk ke Reservasi
             sebagai Trip laut yang menunggu konfirmasi. Bila link diisi,
@@ -192,21 +192,20 @@ export default function CalendarEditor({
                 <div className="admin-gallery-item admin-banner-item">
                   <div className="admin-banner-photos">
                     <PhotoField
-                      label="Flyer event"
-                      guide="flyer"
-                      value={banner.image}
-                      media={media}
-                      placePhoto={placePhoto}
-                      onChange={(url) => set({ image: url })}
-                    />
-                    <PhotoField
-                      label="Foto latar banner (opsional)"
+                      label="Foto banner"
                       guide="bannerBackground"
                       value={banner.background}
                       media={media}
                       placePhoto={placePhoto}
                       onChange={(url) => set({ background: url })}
                     />
+                    <p className="admin-subtle">
+                      Foto mengisi seluruh banner. Judul, fakta, harga, dan
+                      tombol tampil di sisi kiri, jadi pilih foto yang objek
+                      utamanya di sisi kanan. Keterangan singkat dipisah dengan
+                      tanda · menjadi lokasi lalu poin-poin, misalnya Raja Ampat
+                      · 8 hari 7 malam · 15 log dive.
+                    </p>
                   </div>
                   <div className="admin-form-grid">
                     <label className="admin-dev-choice admin-agent-wide">

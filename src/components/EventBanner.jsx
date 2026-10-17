@@ -102,7 +102,9 @@ function EventSignup({
       <p className="eyebrow">{f.kicker}</p>
       <h2 id="event-signup-title">{f.title(title)}</h2>
       <div className="event-signup-offer">
-        {banner.image && <img src={banner.image} alt="" loading="lazy" />}
+        {banner.background && (
+          <img src={banner.background} alt="" loading="lazy" />
+        )}
         <dl>
           <div>
             <dt>{f.dates}</dt>
@@ -270,9 +272,43 @@ function EventSignup({
   );
 }
 
+// Small line icons for the banner's facts, picked from their words.
+const factIcons = [
+  [/hari|malam|day|night/i, "M4 7h16v13H4zM4 11h16M9 4v5M15 4v5"],
+  [
+    /dive|selam|log/i,
+    "M3 10a9 5 0 0 1 18 0v2a4 4 0 0 1-4 4h-1l-2-2h-4l-2 2H7a4 4 0 0 1-4-4z",
+  ],
+  [
+    /orang|people|peserta|pax|group/i,
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20a6 6 0 0 1 12 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14a5 5 0 0 1 3 6",
+  ],
+];
+const placeIcon =
+  "M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z";
+function Icon({ d }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d={d}
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+const iconFor = (text) =>
+  factIcons.find(([rule]) => rule.test(text))?.[1] ??
+  "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z";
+
+// One event as a wide photo banner: the owner's photo fills it, its
+// subject on the right; on the left the event, its facts, the price per
+// person and one button. The whole banner opens the sign-up form (or the
+// owner's link), the button being the way in for keyboards.
 function Banner({ banner, whatsapp, locale }) {
   const t = dictionary(locale).home.eventBanner;
-  const flyer = useRef(null);
   const signup = useRef(null);
   const text = (value) => calendarText(value, locale);
   const title = text(banner.title);
@@ -282,12 +318,16 @@ function Banner({ banner, whatsapp, locale }) {
     banner.amount > 0
       ? `${formatIDR(banner.amount, locale)} / ${t.perPerson}`
       : "";
-  const details = [
-    text(banner.note),
-    banner.minPeople > 1 ? t.minPeople(banner.minPeople) : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // The short description reads as where, then facts: "Raja Ampat · 8
+  // days 7 nights · 15 logged dives", and the minimum group.
+  const [place = "", ...parts] = text(banner.subtitle)
+    .split("·")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const facts = [
+    ...parts,
+    ...(banner.minPeople > 1 ? [t.minPeople(banner.minPeople)] : []),
+  ];
   // One button: the owner's link, or the sign-up form. A page of the site
   // opens in the visitor's language.
   const link = !banner.link
@@ -296,110 +336,108 @@ function Banner({ banner, whatsapp, locale }) {
       ? localeHref(locale, banner.link)
       : banner.link;
   const external = link.startsWith("https://");
-  const open = () => flyer.current?.showModal();
+  const action = useRef(null);
   const register = () => {
-    flyer.current?.close();
     signup.current?.showModal();
     signup.current?.querySelector("input")?.focus();
   };
-  const action = link ? (
-    <a
-      className="button lime small"
-      href={link}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-    >
-      {t.more} <span aria-hidden="true">↗</span>
-    </a>
-  ) : (
-    <button type="button" className="button lime small" onClick={register}>
-      {t.register} <span aria-hidden="true">→</span>
-    </button>
-  );
   return (
     <aside
       className={"event-banner" + (banner.background ? " has-photo" : "")}
       aria-label={`${t.label}: ${title}`}
+      onClick={(event) => {
+        // A tap anywhere on the banner does what its button does.
+        if (event.target.closest("a, button, dialog")) return;
+        action.current?.click();
+      }}
     >
-      {banner.background && (
+      {banner.background ? (
         <img
           className="event-banner-bg"
           src={banner.background}
           srcSet={photoSrcSet(banner.background)}
-          sizes="(max-width: 1440px) 100vw, 1440px"
+          sizes="(max-width: 1600px) 100vw, 1600px"
           alt=""
           loading="lazy"
         />
-      )}
-      <svg
-        className="event-banner-sea"
-        viewBox="0 0 600 160"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M0 118c60-14 110 10 170-2s110-30 170-14 110 26 170 10 60-14 90-10v58H0z"
-          fill="#ffffff10"
-        />
-        <path
-          d="M0 136c70-10 120 8 190-2s120-22 190-8 120 18 170 6 40-6 50-4v32H0z"
-          fill="#ffffff0d"
-        />
-        <path
-          d="M430 46c22-14 46-16 68-6 10-12 24-16 36-10-10 4-16 12-18 22 14 4 26 12 34 24-20-4-38-2-54 6-14 6-30 6-44-2-8 8-18 12-30 12 6-8 8-16 6-24-4-8 0-16 2-22z"
-          fill="#ffffff14"
-        />
-      </svg>
-      {banner.image ? (
-        <button
-          type="button"
-          className="event-banner-photo"
-          onClick={open}
-          aria-label={`${t.flyer}: ${title}`}
-        >
-          <img src={banner.image} alt="" loading="lazy" />
-        </button>
       ) : (
-        !banner.background && (
-          <span className="event-banner-photo is-empty" aria-hidden="true" />
-        )
+        <svg
+          className="event-banner-sea"
+          viewBox="0 0 600 160"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0 118c60-14 110 10 170-2s110-30 170-14 110 26 170 10 60-14 90-10v58H0z"
+            fill="#ffffff10"
+          />
+          <path
+            d="M0 136c70-10 120 8 190-2s120-22 190-8 120 18 170 6 40-6 50-4v32H0z"
+            fill="#ffffff0d"
+          />
+          <path
+            d="M430 46c22-14 46-16 68-6 10-12 24-16 36-10-10 4-16 12-18 22 14 4 26 12 34 24-20-4-38-2-54 6-14 6-30 6-44-2-8 8-18 12-30 12 6-8 8-16 6-24-4-8 0-16 2-22z"
+            fill="#ffffff14"
+          />
+        </svg>
       )}
       <div className="event-banner-text">
         <p className="event-banner-meta">
           {text(banner.badge) && (
             <span className="event-banner-badge">{text(banner.badge)}</span>
           )}
-          {dates && <span className="event-banner-dates">{dates}</span>}
+          <span className="event-banner-dates">{dates || t.anyDate}</span>
         </p>
         <h3>{title}</h3>
-        {text(banner.subtitle) && <p>{text(banner.subtitle)}</p>}
-      </div>
-      <div className="event-banner-offer">
-        {(price || details) && (
-          <p className="event-banner-price">
-            {price && <strong>{price}</strong>}
-            {details && <small>{details}</small>}
+        {place && (
+          <p className="event-banner-place">
+            <Icon d={placeIcon} />
+            {place}
           </p>
         )}
-        <div className="event-banner-actions">{action}</div>
+        {facts.length > 0 && (
+          <ul className="event-banner-facts">
+            {facts.map((fact) => (
+              <li key={fact}>
+                <Icon d={iconFor(fact)} />
+                {fact}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-      {banner.image && (
-        <dialog
-          ref={flyer}
-          className="modal event-flyer"
-          aria-label={t.flyerAlt(title)}
-        >
-          <button
-            type="button"
-            className="close-modal"
-            aria-label={t.close}
-            onClick={() => flyer.current?.close()}
-          >
-            ×
-          </button>
-          <img src={banner.image} alt={t.flyerAlt(title)} />
-          {action}
-        </dialog>
-      )}
+      <div className="event-banner-offer">
+        {price && (
+          <p className="event-banner-price">
+            <small>{text(banner.note) || t.pricePer}</small>
+            <strong>{formatIDR(banner.amount, locale)}</strong>
+            <span>/ {t.perPerson}</span>
+          </p>
+        )}
+        <div className="event-banner-actions">
+          {link ? (
+            <a
+              ref={action}
+              className="button lime event-banner-cta"
+              href={link}
+              {...(external
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
+            >
+              {t.more} <span aria-hidden="true">↗</span>
+            </a>
+          ) : (
+            <button
+              ref={action}
+              type="button"
+              className="button lime event-banner-cta"
+              onClick={register}
+            >
+              {t.register} <span aria-hidden="true">→</span>
+            </button>
+          )}
+        </div>
+      </div>
       {!link && (
         <EventSignup
           banner={banner}

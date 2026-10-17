@@ -113,11 +113,10 @@ const id = {
     heroAlt: "Visual konsep petualangan scuba diving di bawah laut",
     eventBanner: {
       label: "Event Zanclus",
-      flyer: "Lihat flyer",
       register: "Daftar sekarang",
       more: "Info lengkap",
-      close: "Tutup flyer",
-      flyerAlt: (title) => `Flyer ${title}`,
+      anyDate: "Pilih tanggalmu sendiri",
+      pricePer: "Harga per orang",
       perPerson: "orang",
       minPeople: (n) => `Minimal ${n} orang`,
       form: {
@@ -1394,11 +1393,10 @@ const en = {
     heroAlt: "Concept visual of a scuba diving adventure underwater",
     eventBanner: {
       label: "Zanclus event",
-      flyer: "View flyer",
       register: "Sign up now",
       more: "Full details",
-      close: "Close flyer",
-      flyerAlt: (title) => `${title} flyer`,
+      anyDate: "Pick your own dates",
+      pricePer: "Price per person",
       perPerson: "person",
       minPeople: (n) => `Minimum ${n} people`,
       form: {

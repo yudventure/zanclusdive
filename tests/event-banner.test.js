@@ -11,13 +11,14 @@ import {
 
 test("event banners show only while their event is on", () => {
   // The dive trip ships switched on, priced in rupiah per person, with
-  // its flyer and a minimum group of 4.
+  // the owner's photo filling the banner and a minimum group of 4.
   assert.deepEqual(
     defaultCalendar.banners.map((b) => [
       b.title.id,
       b.enabled,
       b.amount,
       b.minPeople,
+      b.background,
       b.image,
     ]),
     [
@@ -26,7 +27,8 @@ test("event banners show only while their event is on", () => {
         true,
         27500000,
         4,
-        "/assets/photos/event-dive-trip.webp",
+        "/assets/photos/banner-penyu.webp",
+        "",
       ],
     ],
   );
@@ -172,6 +174,31 @@ test("saved banners are brought up to date once", () => {
     const kept = { calendar: { events: [], banners } };
     assert.equal(withCalendar(kept), kept);
   }
+  // The flyer that shipped gives way to the photo; a photo of the owner's
+  // own stays.
+  const flyer = "/assets/photos/event-dive-trip.webp";
+  const [plain, ownPhoto] = withCalendar({
+    calendar: {
+      events: [],
+      banners: [
+        { ...sampleBanner(), image: flyer, background: "" },
+        {
+          ...sampleBanner(),
+          title: { id: "Promo", en: "" },
+          image: flyer,
+          background: "/api/media/00000000-0000-4000-8000-000000000000",
+        },
+      ],
+    },
+  }).calendar.banners;
+  assert.deepEqual(
+    [plain.image, plain.background],
+    ["", "/assets/photos/banner-penyu.webp"],
+  );
+  assert.deepEqual(
+    [ownPhoto.image, ownPhoto.background],
+    ["", "/api/media/00000000-0000-4000-8000-000000000000"],
+  );
   // A calendar without banners gets the dive trip.
   assert.equal(
     withCalendar({ calendar: { events: [] } }).calendar.banners[0].amount,

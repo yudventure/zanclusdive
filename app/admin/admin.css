@@ -1594,7 +1594,7 @@
   object-fit: cover;
   object-position: top;
 }
-/* Background photo above the flyer, each with its own upload. */
+/* The banner's photo, wide like the banner, with how it is used. */
 .admin-banner-photos {
   display: grid;
   align-content: start;
@@ -1602,7 +1602,10 @@
 }
 .admin-banner-photos .admin-image-slot:first-child img {
   height: 120px;
-  object-position: center;
+  object-position: 68% 58%;
+}
+.admin-banner-photos > p {
+  margin: 0;
 }
 .admin-banner-state {
   margin-right: 10px;

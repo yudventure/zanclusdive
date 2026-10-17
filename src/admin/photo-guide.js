@@ -17,8 +17,11 @@ export const photoGuides = {
   activityCover: { size: "1920 × 1080", ratio: "16:9" },
   activityCard: { size: "1200 × 800", ratio: "3:2" },
   courseCard: { size: "1600 × 900", ratio: "16:9" },
-  flyer: { size: "1080 × 1350", ratio: "4:5", tip: "seperti post Instagram" },
-  bannerBackground: { size: "1600 × 1067", ratio: "3:2" },
+  bannerBackground: {
+    size: "2400 × 1200",
+    ratio: "2:1",
+    tip: "objek utama di sisi kanan, sisi kiri untuk tulisan",
+  },
   diveGallery: {
     size: "1600 × 1067",
     ratio: "3:2",

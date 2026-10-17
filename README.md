@@ -149,20 +149,18 @@ Atur di `/admin/shop`, bagian **Pengambilan & pengantaran** (`shop.delivery`). P
 
 ### Ukuran foto terbaik
 
-Setiap tombol unggah foto di admin menyebut ukuran terbaiknya (`src/admin/photo-guide.js`), misalnya sampul beranda 1920 × 1080 px (16:9), foto kartu dan galeri beranda 1200 × 800 px (3:2), flyer event 1080 × 1350 px (4:5), foto produk 1200 × 1200 px (1:1), dan logo mitra PNG transparan dengan lebar minimal 600 px. Foto yang lebih besar tetap bisa diunggah, karena browser mengecilkannya dulu (sisi terpanjang maksimal 2400 px).
+Setiap tombol unggah foto di admin menyebut ukuran terbaiknya (`src/admin/photo-guide.js`), misalnya sampul beranda 1920 × 1080 px (16:9), foto kartu dan galeri beranda 1200 × 800 px (3:2), foto banner event 2400 × 1200 px (2:1, objek utama di kanan), foto produk 1200 × 1200 px (1:1), dan logo mitra PNG transparan dengan lebar minimal 600 px. Foto yang lebih besar tetap bisa diunggah, karena browser mengecilkannya dulu (sisi terpanjang maksimal 2400 px).
 
 Uji dengan `node scripts/verify-shop-market.mjs` pada server demo yang dijalankan seperti untuk `verify-fares`.
 
 ## Banner event di beranda
 
-Banner promosi lebar dan pendek tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
+Banner promosi foto yang lebar tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner melebar melewati kolom halaman, hampir selebar layar (sampai 1560 px). Fotonya mengisi seluruh banner dan bergerak pelan. Di kirinya tampil label, tanggal, judul besar, lokasi, fakta trip, harga per orang, dan satu tombol. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
 
 **Cara mengatur.** Buka `/admin/events` → tab **Banner event**. Isi setiap banner:
-- **Flyer event**: tampil kecil di kiri dan terbuka penuh saat diketuk.
-- **Foto latar banner** (opsional): foto lebar di belakang tulisan.
-- Kedua foto di-upload dari PC atau HP, langsung terpasang dan tersimpan.
-- **Teks**: judul, keterangan singkat, catatan (mis. `Harga spesial`), dan label kecil (bawaan `EVENT`), dalam Indonesia dan English.
-- **Harga per orang (Rp)** dan **Minimal peserta**. Harga selalu tampil dalam rupiah (`Rp 27.500.000 / orang`, di English `IDR 27,500,000 / person`), dan minimal peserta ditulis di bawahnya.
+- **Foto banner**: mengisi seluruh banner, terbaik 2400 × 1200 px dengan objek utama di sisi kanan karena tulisannya di kiri. Di-upload dari PC atau HP, langsung terpasang dan tersimpan. Tanpa foto, banner memakai latar laut biru.
+- **Teks**: judul, keterangan singkat, catatan (mis. `Harga spesial`), dan label kecil (bawaan `EVENT`), dalam Indonesia dan English. Keterangan singkat yang dipisah tanda `·` dibaca sebagai lokasi lalu fakta, misalnya `Raja Ampat The Last Paradise · 8 hari 7 malam · 15 log dive` menjadi lokasi dengan ikon pin dan dua chip fakta, ditambah chip minimal peserta.
+- **Harga per orang (Rp)** dan **Minimal peserta**. Harga selalu tampil dalam rupiah (`Rp 27.500.000 / orang`, di English `IDR 27,500,000 / person`) dengan catatannya di atas, dan minimal peserta menjadi chip fakta.
 - **Tanggal**: tanggal mulai dan selesai event, serta tanggal mulai tampil (opsional).
 - **Link tombol**: opsional. Bila kosong, tombolnya membuka formulir pendaftaran.
 
@@ -171,13 +169,13 @@ Simpan dengan **Simpan kalender**.
 **Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Tanpa tanggal selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil bersamaan, yang bertanggal lebih dulu. Label di admin menunjukkan statusnya: *Tampil sekarang*, *Terjadwal / selesai*, atau *Tidak tampil*.
 
 **Yang dilihat tamu.**
-- Satu tombol **Daftar sekarang** yang membuka formulir pendaftaran event (atau **Info lengkap** bila link diisi). Flyer yang dibuka penuh punya tombol yang sama.
+- Satu tombol **Daftar sekarang** yang membuka formulir pendaftaran event (atau **Info lengkap** bila link diisi). Seluruh banner, fotonya juga, bisa diklik dan melakukan hal yang sama. Event tanpa tanggal menampilkan *Pilih tanggalmu sendiri*.
 - Formulir berisi nama, WhatsApp, email (opsional), jumlah peserta (paling sedikit minimal peserta), tanggal mulai bila event belum bertanggal, dan catatan, dengan perkiraan biaya harga per orang × peserta.
 - Pendaftaran tersimpan di **Reservasi** sebagai **Trip laut** dari Website yang menunggu konfirmasi, dengan nilai harga × peserta dan catatan nama event (`/api/events`, `src/event-signup.js`). Harga, minimal peserta, dan tanggal diambil dari banner di server. Setelah terkirim, tamu mendapat kode pendaftaran dan tombol untuk mengabari tim lewat WhatsApp.
 
-**Ukuran.** Tinggi banner sekitar 140 px di desktop dan sekitar 240 px di HP, dengan harga di atas tombol.
+**Ukuran.** Tinggi banner sekitar 380 px di desktop. Di HP fotonya di atas dan tulisan di bawahnya, dengan harga di atas tombol yang selebar banner.
 
-**Banner bawaan.** *Dive Trip with Zanclus* (8 hari 7 malam, 15 log dive) menyala sejak awal dengan harga spesial Rp 27.500.000 per orang, minimal 4 orang, dan flyer baru dari dua foto pemilik (gua bawah laut sebagai latar, penyelam dan penyu sebagai foto cetak). Tanpa tanggal, tamu memilih tanggal mulainya. Konten lama dibawa sekali oleh `withCalendar`. Dive Trip yang masih memakai harga dolar mendapat harga rupiah dan minimal pesertanya, dan bila belum pernah diubah langsung dinyalakan. Dua banner foto yang sempat dipasang sehari diambil lagi bila belum diubah.
+**Banner bawaan.** *Dive Trip with Zanclus* (8 hari 7 malam, 15 log dive) menyala sejak awal dengan harga spesial Rp 27.500.000 per orang, minimal 4 orang, dan foto penyelam dan penyu milik pemilik sebagai foto banner. Banner yang masih memakai flyer bawaan beralih ke foto itu sekali. Tanpa tanggal, tamu memilih tanggal mulainya. Konten lama dibawa sekali oleh `withCalendar`. Dive Trip yang masih memakai harga dolar mendapat harga rupiah dan minimal pesertanya, dan bila belum pernah diubah langsung dinyalakan. Dua banner foto yang sempat dipasang sehari diambil lagi bila belum diubah.
 
 ## Halaman aktivitas
 

@@ -136,8 +136,9 @@ try {
     (await context.request.get(base + "/id/calendar/x")).status(),
     404,
   );
-  // Event banner: the dive trip is on from the start, priced in rupiah per
-  // person, with one button that opens its sign-up form.
+  // Event banner: the dive trip is on from the start, a wide photo banner
+  // priced in rupiah per person, with one button that opens its sign-up
+  // form.
   const days = (n) =>
     new Date(Date.parse(today + "T12:00:00Z") + n * 864e5)
       .toISOString()
@@ -149,10 +150,19 @@ try {
   const shown = page.locator(".event-banner");
   await shown.first().scrollIntoViewIfNeeded();
   assert.equal(await shown.count(), 1);
-  assert.equal(await page.locator(".event-banner.has-photo").count(), 0);
+  assert.equal(await page.locator(".event-banner.has-photo").count(), 1);
+  assert.match(
+    await shown.locator(".event-banner-bg").getAttribute("src"),
+    /banner-penyu/,
+  );
   assert.match(
     await shown.textContent(),
-    /EVENT[\s\S]*Dive Trip with Zanclus[\s\S]*Raja Ampat The Last Paradise · 8 hari 7 malam[\s\S]*Rp\s?27\.500\.000 \/ orang[\s\S]*Harga spesial · Minimal 4 orang/,
+    /EVENT[\s\S]*Pilih tanggalmu sendiri[\s\S]*Dive Trip with Zanclus[\s\S]*Raja Ampat The Last Paradise[\s\S]*Harga spesial[\s\S]*Rp\s?27\.500\.000\s*\/ orang/,
+  );
+  // The short description becomes the place, then the facts.
+  assert.deepEqual(
+    await shown.locator(".event-banner-facts li").allTextContents(),
+    ["8 hari 7 malam", "15 log dive", "Minimal 4 orang"],
   );
   assert.doesNotMatch(await shown.textContent(), /\$|pax/);
   // One button, no WhatsApp link straight from the banner.
@@ -164,9 +174,15 @@ try {
     ["Daftar sekarang →"],
   );
   assert.equal(await shown.locator('a[href*="wa.me"]').count(), 0);
+  // Wider than the section, nearly the whole screen.
+  const wide = await shown.boundingBox();
+  assert.ok(wide.width >= 1400, "the banner is nearly as wide as the screen");
+  assert.ok(wide.height >= 340 && wide.height <= 440, "a proper banner");
   assert.ok(
-    (await shown.boundingBox()).height <= 170,
-    "the banner stays short",
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    "no sideways scroll with the wide banner",
   );
   // Between the section title and the experience cards.
   assert.equal(
@@ -177,9 +193,8 @@ try {
     ),
     true,
   );
-  // The flyer opens from its photo, and its button leads to the same form.
-  // Both windows open on the screen the visitor is looking at, not at the
-  // top of the page.
+  // A tap anywhere on the banner, the photo too, opens the sign-up form on
+  // the screen the visitor is looking at, not at the top of the page.
   const onScreen = (dialog) =>
     dialog.evaluate((d) => {
       const box = d.getBoundingClientRect();
@@ -190,20 +205,16 @@ try {
         box.bottom <= innerHeight + 1
       );
     });
-  await shown.locator(".event-banner-photo").click();
-  const flyer = page.locator(".event-flyer[open]");
-  await flyer.waitFor();
-  assert.equal(await onScreen(flyer), true, "the flyer opens on screen");
-  assert.equal(
-    await flyer
-      .locator("img")
-      .evaluate((img) => img.complete && img.naturalWidth >= 1080),
-    true,
-  );
   await page.screenshot({
-    path: (process.env.SHOT_DIR || "artifacts") + "/event-flyer.png",
+    path: (process.env.SHOT_DIR || "artifacts") + "/event-banner-wide.png",
+    clip: {
+      x: 0,
+      y: Math.max(0, wide.y - 120),
+      width: 1440,
+      height: Math.min(950, wide.height + 200),
+    },
   });
-  await flyer.getByRole("button", { name: "Daftar sekarang" }).click();
+  await shown.click({ position: { x: wide.width - 200, y: 90 } });
   const signup = page.locator("dialog.event-signup[open]");
   await signup.waitFor();
   assert.equal(
@@ -211,7 +222,6 @@ try {
     true,
     "the sign-up form opens on screen",
   );
-  assert.equal(await page.locator(".event-flyer[open]").count(), 0);
   assert.equal(
     await signup.locator("h2").textContent(),
     "Ikut Dive Trip with Zanclus",
@@ -337,7 +347,7 @@ try {
       x: 0,
       y: Math.max(0, (await shown.boundingBox()).y - 160),
       width: 1440,
-      height: 420,
+      height: 620,
     },
   });
   // A dated event has no date to pick.
@@ -353,13 +363,15 @@ try {
   await page.goto(base + "/", { waitUntil: "networkidle" });
   assert.match(
     await page.locator(".event-banner").textContent(),
-    /IDR\s?27,500,000 \/ person[\s\S]*Special price · Minimum 4 people[\s\S]*Sign up now/,
+    /Minimum 4 people[\s\S]*Special price[\s\S]*IDR\s?27,500,000\s*\/ person[\s\S]*Sign up now/,
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const phone = page.locator(".event-banner");
   await phone.scrollIntoViewIfNeeded();
-  assert.ok((await phone.boundingBox()).height <= 280, "short on a phone too");
+  const small = await phone.boundingBox();
+  assert.ok(small.height <= 620, "not too tall on a phone");
+  assert.ok(small.width >= 360, "nearly as wide as the phone");
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -386,7 +398,7 @@ try {
   );
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1440, height: 950 });
-  // A new flyer is placed and saved in one step.
+  // A new banner photo is placed and saved in one step.
   await page.goto(base + "/admin/events", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Banner event" }).click();
   const photo = await page.evaluate(async () => {
@@ -415,10 +427,10 @@ try {
     .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
     .waitFor({ timeout: 60000 });
   const saved = await state();
-  assert.match(saved.content.calendar.banners[0].image, /^\/api\/media\//);
+  assert.match(saved.content.calendar.banners[0].background, /^\/api\/media\//);
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   assert.match(
-    await page.locator(".event-banner-photo img").getAttribute("src"),
+    await page.locator(".event-banner-bg").getAttribute("src"),
     /^\/api\/media\//,
   );
   // Unsafe links and photos, and a price that is not whole rupiah, are

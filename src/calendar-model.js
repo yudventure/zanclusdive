@@ -29,8 +29,9 @@ const event = (date, type, place, title, description) => ({
 // Wide banners above the experience cards on the homepage, shown only while
 // an event is on: from showFrom (or at once) until the event's endDate.
 // The price is in rupiah per person; the one button opens a sign-up form,
-// or the link when one is set. A background photo can fill the banner
-// behind the text; image is the flyer.
+// or the link when one is set. The background photo fills the banner, its
+// subject on the right with the words on the left. "image" held a flyer
+// before the banner was the design itself; it is no longer shown.
 export const blankBanner = () => ({
   enabled: false,
   badge: { id: "EVENT", en: "EVENT" },
@@ -49,6 +50,9 @@ export const blankBanner = () => ({
 // The Zanclus dive trip, on from the start at its special price. Without
 // dates it shows until switched off and guests pick their date.
 export const diveTripPrice = 27500000;
+// The owner's photo of a diver and a turtle in the Dampier Strait.
+export const tripPhoto = "/assets/photos/banner-penyu.webp";
+const shippedFlyer = "/assets/photos/event-dive-trip.webp";
 export const sampleBanner = () => ({
   ...blankBanner(),
   enabled: true,
@@ -60,7 +64,7 @@ export const sampleBanner = () => ({
   amount: diveTripPrice,
   minPeople: 4,
   note: t("Harga spesial", "Special price"),
-  image: "/assets/photos/event-dive-trip.webp",
+  background: tripPhoto,
 });
 export const defaultBanners = () => [sampleBanner()];
 export const defaultCalendar = {
@@ -393,7 +397,9 @@ function validateBanner(b) {
 // - the two photo banners shipped for a day, untouched, are taken out
 //   (the owner wanted the photos in the flyer, not new banners);
 // - the dive trip, priced in dollars as text before, gets its rupiah price
-//   and minimum group. Left as the untouched draft, it is switched on.
+//   and minimum group. Left as the untouched draft, it is switched on;
+// - a banner with the flyer that shipped shows the owner's photo instead,
+//   the banner being the design now.
 const retiredBanners = [
   "Menyelam pertama di Raja Ampat",
   "Jelajahi gua dan dinding karang",
@@ -420,15 +426,20 @@ function upgradeTrip(b) {
 function upgradeBanners(banners) {
   let changed = false;
   const list = [];
-  for (const b of banners) {
+  for (let b of banners) {
     if (retired(b)) {
       changed = true;
       continue;
     }
     if (b?.title?.id === sampleBanner().title.id && !(b.amount > 0)) {
       changed = true;
-      list.push(upgradeTrip(b));
-    } else list.push(b);
+      b = upgradeTrip(b);
+    }
+    if (b?.image === shippedFlyer) {
+      changed = true;
+      b = { ...b, image: "", background: b.background || tripPhoto };
+    }
+    list.push(b);
   }
   return changed ? list : banners;
 }
