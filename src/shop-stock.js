@@ -2,9 +2,9 @@ import { holdsPlaces, bookingReference } from "./booking-model.js";
 import { stockOf } from "./inventory-model.js";
 
 // Dive Shop and Gudang together. Gear for sale and gear for rent are kept
-// apart: every Dive Shop product has one item in the warehouse for each
-// way it is offered and each size (item.productId, item.mode "sale" or
-// "rental", and item.size; a product without sizes has one item per way).
+// apart: every Dive Shop product is for sale or for rent, and has one item
+// in the warehouse for each size (item.productId, item.mode "sale" or
+// "rental", and item.size; a product without sizes has one item).
 // Its stock is what the shop can sell, or rent out, and the team sets it
 // in the Dive Shop editor or with Masuk and Keluar. A paid purchase becomes
 // a "Penjualan" movement on the sale item, and a rental holds units of the
@@ -18,7 +18,8 @@ export const unitForProduct = (product) => shopUnits[product.category] ?? "pcs";
 // A product's sizes, or one variant without a size.
 export const sizesOf = (product) =>
   Array.isArray(product?.sizes) && product.sizes.length ? product.sizes : [""];
-// The ways a product is offered: for sale, for rent, or both.
+// The way a product is offered: for sale or for rent (both, in catalogs
+// from before they were apart).
 export const modesOf = (product) =>
   [product?.saleEnabled && "sale", product?.rentalEnabled && "rental"].filter(
     Boolean,
@@ -31,8 +32,30 @@ export const variantKey = (productId, mode, size = "") =>
 const legacyMode = (product) => (product?.saleEnabled ? "sale" : "rental");
 const modeOfItem = (item, products) =>
   item.mode ?? legacyMode(products.find((p) => p.id === item.productId));
-const itemKey = (item, products) =>
-  variantKey(item.productId, modeOfItem(item, products), item.size ?? "");
+// A product that was for sale and for rent became two (withSplitProducts):
+// its rental item in the warehouse and its rentals still name the product
+// for sale, and belong to the rental gear that has it as its pair.
+export function rentalPairs(products) {
+  const out = new Map();
+  for (const p of products)
+    if (
+      p?.rentalEnabled &&
+      p.pair &&
+      !products.some((q) => q?.id === p.pair && q.rentalEnabled)
+    )
+      out.set(p.pair, p.id);
+  return out;
+}
+const ownerOf = (productId, mode, pairs) =>
+  (mode === "rental" && pairs?.get(productId)) || productId;
+const itemKey = (item, products, pairs) => {
+  const mode = modeOfItem(item, products);
+  return variantKey(
+    ownerOf(item.productId, mode, pairs),
+    mode,
+    item.size ?? "",
+  );
+};
 export const variantName = (product, mode, size) =>
   String(
     `${product.name} · ${modeNames[mode]}` + (size ? ` · ${size}` : ""),
@@ -58,10 +81,11 @@ export function linkedItems(items, products) {
       variantsOf(p).map(({ mode, size }) => variantKey(p.id, mode, size)),
     ),
   );
+  const pairs = rentalPairs(products);
   const map = new Map();
   for (const item of items) {
     if (!item.productId) continue;
-    const key = itemKey(item, products);
+    const key = itemKey(item, products, pairs);
     if (!valid.has(key)) continue;
     const current = map.get(key);
     if (!current || linkTime(item) > linkTime(current)) map.set(key, item);
@@ -81,12 +105,17 @@ export function planShopItems(products, items, movements, now) {
     changes.set(item.id, { ...(changes.get(item.id) ?? {}), ...patch });
   let list = items.map((item) => ({ ...item }));
   const linked = linkedItems(list, products);
+  const pairs = rentalPairs(products);
   const used = new Set(movements.map((m) => m.itemId));
   const remove = [];
   for (const item of list) {
     if (!item.productId) continue;
-    if (linked.get(itemKey(item, products)) === item) {
-      if (!item.mode) change(item, { mode: modeOfItem(item, products) });
+    if (linked.get(itemKey(item, products, pairs)) === item) {
+      const mode = modeOfItem(item, products);
+      if (!item.mode) change(item, { mode });
+      // The rental item of a product split in two moves to its rental gear.
+      const owner = ownerOf(item.productId, mode, pairs);
+      if (owner !== item.productId) change(item, { productId: owner });
       continue;
     }
     item.productId = "";
@@ -162,15 +191,25 @@ export const gearLines = (booking) => [
 // Units each product, way and size's orders hold: purchases waiting for
 // payment (or for their movement) on the sale stock, and rentals by date
 // on the rental stock. Orders hold as long as their booking holds its
-// places: confirmed, or with an online payment open.
-export function shopReservations(bookings, recorded = new Set()) {
+// places: confirmed, or with an online payment open. "pairs" (rentalPairs)
+// gives the rentals of a product split in two to its rental gear.
+export function shopReservations(
+  bookings,
+  recorded = new Set(),
+  pairs = new Map(),
+) {
   const held = {};
   for (const booking of bookings) {
     if (!holdsPlaces(booking)) continue;
     for (const line of gearLines(booking)) {
       if (!line.product) continue;
       const mode = line.mode === "rental" ? "rental" : "sale";
-      const entry = (held[variantKey(line.product, mode, line.size)] ??= {
+      const key = variantKey(
+        ownerOf(line.product, mode, pairs),
+        mode,
+        line.size,
+      );
+      const entry = (held[key] ??= {
         sale: 0,
         rentals: [],
       });
@@ -192,10 +231,14 @@ export function shopReservations(bookings, recorded = new Set()) {
 // The reservation calendar's rental gear: for each day from..to, every
 // product and size out on rental that day, with the units out, the rental
 // stock ("gear", from the warehouse: { key, productId, size, name, stock,
-// follows }) and the bookings that hold them. A product that does not
+// follows, pair }) and the bookings that hold them. A product that does not
 // follow the warehouse has no limit.
 export function rentalCalendar(bookings, gear, from, to) {
-  const held = shopReservations(bookings);
+  const held = shopReservations(
+    bookings,
+    new Set(),
+    new Map(gear.filter((g) => g.pair).map((g) => [g.pair, g.productId])),
+  );
   const known = new Map(gear.map((g) => [g.key, g]));
   const days = {};
   for (let day = from; day <= to; day = nextDay(day)) {
@@ -259,7 +302,7 @@ export function stockState({ products, items, movements, bookings }) {
   const recorded = recordedBookings(movements);
   return {
     linked: linkedItems(items, products),
-    held: shopReservations(bookings, recorded),
+    held: shopReservations(bookings, recorded, rentalPairs(products)),
     recorded,
   };
 }
@@ -339,13 +382,15 @@ export const sizedName = (product, size) =>
 // left, or null.
 export function stockShortfall(data, order, today) {
   const { linked, held } = stockState(data);
+  const pairs = rentalPairs(data.products);
   const wanted = new Map();
   for (const line of order.lines) {
     if (!line.product) continue;
     const mode = line.mode === "rental" ? "rental" : "sale";
-    const key = variantKey(line.product, mode, line.size);
+    const productId = ownerOf(line.product, mode, pairs);
+    const key = variantKey(productId, mode, line.size);
     const entry = wanted.get(key) ?? {
-      productId: line.product,
+      productId,
       mode,
       size: line.size ?? "",
       quantity: 0,
@@ -453,7 +498,11 @@ export function shopStockCounts(sent, products) {
   );
   const out = [];
   for (const product of products) {
-    const all = raw.get(product.id);
+    // An admin page opened before sale and rental were apart sends the
+    // rental counts on the product for sale.
+    const all =
+      raw.get(product.id) ??
+      (product.rentalEnabled && product.pair ? raw.get(product.pair) : null);
     for (const { mode, size } of variantsOf(product)) {
       const counts = all?.[mode];
       if (!counts || typeof counts !== "object" || Array.isArray(counts))

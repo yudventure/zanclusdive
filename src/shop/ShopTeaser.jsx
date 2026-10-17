@@ -13,6 +13,7 @@ import {
   productAs,
   rentalTabs,
   rentalTabOf,
+  pairOf,
 } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
@@ -845,6 +846,10 @@ export default function ShopTeaser({
         <ProductDetail
           key={detail.product.id + detail.mode}
           product={detail.product}
+          pair={pairOf(
+            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
+            detail.product,
+          )}
           mode={detail.mode}
           stock={stock}
           locale={locale}

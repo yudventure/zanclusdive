@@ -111,8 +111,8 @@ try {
     200,
   );
 
-  // Saving the catalog gave every product, way and size its item, with
-  // stock 0 and the unit of its kind of gear.
+  // Saving the catalog gave every product (for sale, or for rent) and
+  // size its item, with stock 0 and the unit of its kind of gear.
   const products = first.content.shop.products;
   let items = await stockList();
   assert.equal(
@@ -126,9 +126,9 @@ try {
   assert.deepEqual(
     [
       "demo-mask::sale",
-      "demo-mask::rental",
+      "demo-mask-sewa::rental",
       "demo-fins::sale::L",
-      "demo-suit::rental::M",
+      "demo-suit-sewa::rental::M",
       "demo-cylinder::rental",
     ].map((key) => {
       const [id, mode, size = ""] = key.split("::");
@@ -151,54 +151,56 @@ try {
   // The cylinder is only rented out, so it has no sale item.
   assert.equal(await itemFor("demo-cylinder", "sale"), undefined);
 
-  // One place: sizes in the Dive Shop editor, and the price, stock and
-  // photos of the gear for sale and the gear for rent each in its own part.
+  // Gear for sale and rental gear are two lists, each product with its own
+  // sizes, price, stock and photos.
   await a.goto(base + "/admin/shop", { waitUntil: "networkidle" });
+  assert.deepEqual(
+    await a.getByRole("tab").locator("strong").allTextContents(),
+    ["Barang jual 7", "Barang sewa 26"],
+  );
+  const tab = (name) => a.getByRole("tab", { name: new RegExp(name) });
+  assert.equal(await tab("Barang jual").getAttribute("aria-selected"), "true");
+  // The cylinder is only rented out, so it is not in this list.
+  assert.equal(
+    await a.locator(".admin-shop-item", { hasText: "Tabung scuba" }).count(),
+    0,
+  );
   await a.locator(".admin-shop-item", { hasText: "Wetsuit 3 mm" }).click();
   const box = a.locator(".admin-shop-stock");
-  const sale = a.locator(".admin-shop-mode.is-sale");
-  const rent = a.locator(".admin-shop-mode.is-rental");
-  await sale.getByLabel("Stok jual ukuran M").waitFor();
-  assert.deepEqual(
-    await a.locator(".admin-shop-mode-head h3").allTextContents(),
-    ["Untuk dijual", "Untuk disewa"],
-  );
+  const part = a.locator(".admin-shop-mode");
+  const heading = a.locator(".admin-shop-detail > .admin-card-heading h2");
+  await part.getByLabel("Stok jual ukuran M").waitFor();
+  assert.equal(await heading.textContent(), "Detail barang jual");
   assert.equal(
-    await sale.getByLabel("Harga jual (Rp)").inputValue(),
+    await part.getByLabel("Harga jual (Rp)").inputValue(),
     "1850000",
   );
+  assert.equal(await part.getByLabel("Harga sewa per hari (Rp)").count(), 0);
   assert.equal(
-    await rent.getByLabel("Harga sewa per hari (Rp)").inputValue(),
-    "100000",
-  );
-  assert.equal(
-    await sale.getByRole("heading", { name: /^Foto barang jual/ }).count(),
+    await part.getByRole("heading", { name: /^Foto barang jual/ }).count(),
     1,
   );
   assert.equal(
-    await rent.getByRole("heading", { name: /^Foto barang sewa/ }).count(),
-    1,
+    await part.getByRole("heading", { name: /^Foto barang sewa/ }).count(),
+    0,
   );
+  const addSize = async (size) => {
+    await box.getByLabel("Ukuran", { exact: true }).fill(size);
+    await box.getByLabel("Ukuran", { exact: true }).press("Enter");
+  };
   assert.deepEqual(
     await box.locator(".admin-size-chips li").allTextContents(),
     ["S×", "M×", "L×", "XL×"],
   );
-  await box.getByLabel("Ukuran", { exact: true }).fill("XXL");
-  await box.getByLabel("Ukuran", { exact: true }).press("Enter");
+  await addSize("XXL");
   assert.equal(await box.locator(".admin-size-chips li").count(), 5);
-  for (const [part, label] of [
-    [sale, "Stok jual ukuran XXL"],
-    [rent, "Stok sewa ukuran XXL"],
-  ])
-    assert.equal(
-      await part.getByLabel(label).inputValue(),
-      "",
-      "a new size has no item yet",
-    );
-  await sale.getByLabel("Stok jual ukuran M").fill("2");
-  await sale.getByLabel("Stok jual ukuran XXL").fill("1");
-  await rent.getByLabel("Stok sewa ukuran M").fill("2");
-  await rent.getByLabel("Stok sewa ukuran XXL").fill("1");
+  assert.equal(
+    await part.getByLabel("Stok jual ukuran XXL").inputValue(),
+    "",
+    "a new size has no item yet",
+  );
+  await part.getByLabel("Stok jual ukuran M").fill("2");
+  await part.getByLabel("Stok jual ukuran XXL").fill("1");
   // Typing the stock makes the website follow it.
   assert.equal(
     await box.getByLabel("Ketersediaan di website").inputValue(),
@@ -207,47 +209,78 @@ try {
   shots &&
     (await a
       .locator(".admin-shop-detail")
-      .screenshot({ path: `${shots}/72-jual-sewa.png` }));
+      .screenshot({ path: `${shots}/72-barang-jual.png` }));
+  // The same wetsuit for rent is its own product, opened from here.
+  const pair = a.locator(".admin-shop-pair");
+  assert.match(
+    await pair.textContent(),
+    /^Juga disewakanWetsuit 3 mm, Rp\s100\.000 per hari, tampil\./,
+  );
+  await pair.getByRole("button", { name: "Buka barang sewanya" }).click();
+  assert.equal(await tab("Barang sewa").getAttribute("aria-selected"), "true");
+  assert.equal(await heading.textContent(), "Detail barang sewa");
+  assert.equal(
+    await part.getByLabel("Harga sewa per hari (Rp)").inputValue(),
+    "100000",
+  );
+  assert.equal(await part.getByLabel("Harga jual (Rp)").count(), 0);
+  assert.equal(
+    await part.getByRole("heading", { name: /^Foto barang sewa/ }).count(),
+    1,
+  );
+  assert.match(await pair.textContent(), /^Juga dijualWetsuit 3 mm/);
+  // Its sizes are its own.
+  assert.equal(await box.locator(".admin-size-chips li").count(), 4);
+  await addSize("XXL");
+  await part.getByLabel("Stok sewa ukuran M").fill("2");
+  await part.getByLabel("Stok sewa ukuran XXL").fill("1");
+  shots &&
+    (await a
+      .locator(".admin-shop-detail")
+      .screenshot({ path: `${shots}/73-barang-sewa.png` }));
   await a
     .locator(".admin-shop-item", { hasText: "Mask & snorkel set" })
     .click();
   assert.match(await box.textContent(), /Tanpa ukuran/);
-  await sale.getByLabel("Stok jual", { exact: true }).fill("3");
-  await rent.getByLabel("Stok sewa", { exact: true }).fill("2");
-  // The cylinder is not for sale: its sale part only says so.
-  await a.locator(".admin-shop-item", { hasText: "Tabung scuba 12 L" }).click();
-  assert.equal(await sale.getByLabel("Stok jual", { exact: true }).count(), 0);
-  assert.match(await sale.textContent(), /Produk ini tidak dijual/);
-  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
-  await a.locator(".admin-success").first().waitFor();
+  await part.getByLabel("Stok sewa", { exact: true }).fill("2");
+  await tab("Barang jual").click();
   await a
     .locator(".admin-shop-item", { hasText: "Mask & snorkel set" })
     .click();
+  await part.getByLabel("Stok jual", { exact: true }).fill("3");
+  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
+  await a.locator(".admin-success").first().waitFor();
   // The editor reads the stock back from the warehouse.
-  let shown = "";
-  for (let n = 0; n < 40 && shown !== "3,2"; n++) {
-    shown = [
-      await sale.getByLabel("Stok jual", { exact: true }).inputValue(),
-      await rent.getByLabel("Stok sewa", { exact: true }).inputValue(),
-    ].join();
-    if (shown !== "3,2") await a.waitForTimeout(250);
-  }
-  assert.equal(shown, "3,2");
+  const readBack = async (kind, label, want) => {
+    await tab(kind).click();
+    await a
+      .locator(".admin-shop-item", { hasText: "Mask & snorkel set" })
+      .click();
+    let shown = "";
+    for (let n = 0; n < 40 && shown !== want; n++) {
+      shown = await part.getByLabel(label, { exact: true }).inputValue();
+      if (shown !== want) await a.waitForTimeout(250);
+    }
+    assert.equal(shown, want);
+  };
+  await readBack("Barang jual", "Stok jual", "3");
+  await readBack("Barang sewa", "Stok sewa", "2");
   const saved = (await state()).content.shop.products;
-  assert.deepEqual(saved.find((p) => p.id === "demo-suit").sizes, [
-    "S",
-    "M",
-    "L",
-    "XL",
-    "XXL",
-  ]);
+  for (const id of ["demo-suit", "demo-suit-sewa"])
+    assert.deepEqual(saved.find((p) => p.id === id).sizes, [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL",
+    ]);
   assert.ok(saved.every((p) => !("stockCounts" in p)));
   assert.equal((await itemFor("demo-suit", "sale", "M")).stock, 2);
   assert.equal((await itemFor("demo-suit", "sale", "XXL")).stock, 1);
-  assert.equal((await itemFor("demo-suit", "rental", "M")).stock, 2);
-  assert.equal((await itemFor("demo-suit", "rental", "XXL")).stock, 1);
+  assert.equal((await itemFor("demo-suit-sewa", "rental", "M")).stock, 2);
+  assert.equal((await itemFor("demo-suit-sewa", "rental", "XXL")).stock, 1);
   assert.equal((await itemFor("demo-mask", "sale")).stock, 3);
-  assert.equal((await itemFor("demo-mask", "rental")).stock, 2);
+  assert.equal((await itemFor("demo-mask-sewa", "rental")).stock, 2);
   const month = today.slice(0, 7);
   const counted = (
     await (await api(`/api/admin/inventory/movements?month=${month}`)).json()
@@ -357,7 +390,7 @@ try {
   }
   assert.equal(left, 1, "the paid size leaves the sale stock");
   assert.equal(
-    (await itemFor("demo-suit", "rental", "M")).stock,
+    (await itemFor("demo-suit-sewa", "rental", "M")).stock,
     2,
     "the rental stock stays",
   );
@@ -417,7 +450,7 @@ try {
   }
   assert.equal(left, 0);
   assert.equal((await itemFor("demo-mask", "sale")).stock, 0);
-  assert.equal((await itemFor("demo-mask", "rental")).stock, 2);
+  assert.equal((await itemFor("demo-mask-sewa", "rental")).stock, 2);
   const paid = (await state()).bookings.find(
     (b) => b.payment?.orderId === shopId,
   );
@@ -433,7 +466,7 @@ try {
   // Sizes on the payment API: a size is needed, and each size has its own
   // stock and holds.
   let response = await order([
-    { source: "product", id: "demo-suit", mode: "rental", quantity: 1 },
+    { source: "product", id: "demo-suit-sewa", mode: "rental", quantity: 1 },
   ]);
   assert.equal(response.status(), 400);
   assert.equal(
@@ -442,7 +475,7 @@ try {
   );
   const xxl = (quantity, mode = "rental") => ({
     source: "product",
-    id: "demo-suit",
+    id: mode === "rental" ? "demo-suit-sewa" : "demo-suit",
     mode,
     quantity,
     size: "XXL",
@@ -456,7 +489,7 @@ try {
   response = await order([xxl(1)]);
   assert.equal(response.status(), 201);
   assert.equal(
-    (await itemFor("demo-suit", "rental", "XXL")).shop.bookedLater,
+    (await itemFor("demo-suit-sewa", "rental", "XXL")).shop.bookedLater,
     1,
   );
   // The unit for sale is another one: the rental does not take it.
@@ -516,11 +549,15 @@ try {
     waitUntil: "networkidle",
   });
   assert.equal(
-    await page.locator('[data-product="demo-suit"] .shop-stock').textContent(),
+    await page
+      .locator('[data-product="demo-suit-sewa"] .shop-stock')
+      .textContent(),
     "3 left",
   );
   assert.equal(
-    await page.locator('[data-product="demo-mask"] .shop-stock').textContent(),
+    await page
+      .locator('[data-product="demo-mask-sewa"] .shop-stock')
+      .textContent(),
     "2 left",
   );
   await page.goto(base + "/id", { waitUntil: "networkidle" });
@@ -575,7 +612,7 @@ try {
     /Dive Shop · Mask & snorkel set · Jual/,
   );
   // The rental item stays where it was.
-  assert.equal((await itemFor("demo-mask", "rental")).stock, 2);
+  assert.equal((await itemFor("demo-mask-sewa", "rental")).stock, 2);
 
   // Phones: the editor section and the product window fit the screen.
   const phone = await browser.newContext({

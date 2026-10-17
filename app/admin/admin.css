@@ -2886,8 +2886,106 @@ strong.admin-overdue {
     grid-column: 1 / -1;
   }
 }
-/* Dive Shop product: the gear for sale and the gear for rent, each with
-   its own switch, price, stock and photos. */
+/* Dive Shop: gear for sale and rental gear are two lists, picked with two
+   large tabs, each with its own products, price, stock and photos. */
+.admin-shop-kinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+.admin-shop-kinds button {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  padding: 18px 20px;
+  border: 1px solid #d6e3ec;
+  border-radius: 16px;
+  background: #fff;
+  color: #254961;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.admin-shop-kinds button:hover {
+  border-color: #9fbccc;
+}
+.admin-shop-kinds strong {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+.admin-shop-kinds strong span {
+  min-width: 28px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: #edf2f6;
+  font-size: 12px;
+  text-align: center;
+}
+.admin-shop-kinds small {
+  color: #607486;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-shop-kinds .is-sale.is-active {
+  border-color: #82b7cb;
+  background: #f1f6fc;
+  box-shadow: 0 6px 18px #25496114;
+}
+.admin-shop-kinds .is-rental.is-active {
+  border-color: #8cc7a8;
+  background: #eef8f3;
+  box-shadow: 0 6px 18px #1f5a3c14;
+}
+.admin-shop-kinds .is-active strong span {
+  background: #254961;
+  color: #fff;
+}
+.admin-shop-kinds .is-rental.is-active strong span {
+  background: #1f6b46;
+}
+@media (max-width: 600px) {
+  .admin-shop-kinds {
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .admin-shop-kinds button {
+    padding: 14px;
+  }
+  .admin-shop-kinds strong {
+    font-size: 15px;
+  }
+  .admin-shop-kinds small {
+    display: none;
+  }
+}
+/* The same model the other way: open it, or make it from this product. */
+.admin-shop-pair {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin: 18px 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f7fafb;
+}
+.admin-shop-pair p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #4d6477;
+}
+.admin-shop-pair strong {
+  display: block;
+  color: #254961;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+/* The price, stock and photos of a product for sale or of rental gear. */
 .admin-shop-mode {
   display: grid;
   gap: 12px;
@@ -3127,12 +3225,8 @@ strong.admin-overdue {
 /* Dive Shop editor: finding a product in a long catalog. */
 .admin-shop-find {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   margin: 4px 0 10px;
-}
-.admin-shop-find select {
-  width: auto;
 }
 @media (max-width: 1100px) {
   .admin-shop-find {

@@ -16,6 +16,7 @@ import { Video } from "../components/DiveVideos.jsx";
 // the details.
 export default function ProductDetail({
   product,
+  pair,
   mode,
   stock,
   locale,
@@ -57,13 +58,15 @@ export default function ProductDetail({
   // Nothing left of the product, or of the size picked.
   const blocked = (!sizes.length || Boolean(size)) && max <= 0;
   const price = product[mode === "sale" ? "salePrice" : "rentalPrice"];
-  const other =
-    mode === "sale"
-      ? product.rentalEnabled && product.rentalPrice !== null
-        ? t.alsoRent(rupiah(product.rentalPrice, locale))
+  // The same model the other way, as its own product (pairOf).
+  const other = !pair?.enabled
+    ? ""
+    : mode === "sale"
+      ? pair.rentalPrice !== null
+        ? t.alsoRent(rupiah(pair.rentalPrice, locale))
         : ""
-      : product.saleEnabled && product.salePrice !== null
-        ? t.alsoBuy(rupiah(product.salePrice, locale))
+      : pair.salePrice !== null
+        ? t.alsoBuy(rupiah(pair.salePrice, locale))
         : "";
   const badge = stockBadge(product, stock, mode, dict.availability);
   const zones = delivery?.enabled ? delivery.zones : [];

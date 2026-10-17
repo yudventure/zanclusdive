@@ -22,6 +22,7 @@ import {
   defaultDelivery,
   deliveryZoneLimit,
   shopProductLimit,
+  withSplitProducts,
 } from "./shop-model.js";
 import {
   blankSocials,
@@ -225,8 +226,9 @@ export function validateVideos(input) {
 export function validateContent(sent) {
   if (!sent || typeof sent !== "object") throw new Error("Konten tidak valid.");
   // An admin page opened before rental gear moved to the Dive Shop sends
-  // the rental lists; they become products here too.
-  const input = withPriceList(sent);
+  // the rental lists, and one opened before sale and rental were apart
+  // sends products for both; they become products here too.
+  const input = withSplitProducts(withPriceList(sent));
   const text = Object.fromEntries(
     textFields.map(([key, label]) => [
       key,
@@ -417,6 +419,7 @@ export function validateShop(shop) {
       `Katalog harus berisi maksimal ${shopProductLimit} produk. Muat ulang CMS jika katalog belum tersedia.`,
     );
   const ids = new Set();
+  const pairs = new Set();
   return {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
@@ -431,13 +434,27 @@ export function validateShop(shop) {
         !Object.hasOwn(availabilityLabels, p.availability) ||
         [p.enabled, p.saleEnabled, p.rentalEnabled].some(
           (v) => typeof v !== "boolean",
-        ) ||
-        (!p.saleEnabled && !p.rentalEnabled)
+        )
       )
         throw new Error(
           "Produk, kategori, atau pilihan jual/rental tidak valid.",
         );
+      // Gear for sale and rental gear are different products.
+      if (p.saleEnabled === p.rentalEnabled)
+        throw new Error(
+          `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
+        );
       ids.add(p.id);
+      // Rental gear may name the same model for sale, one rental gear each.
+      const pair =
+        p.rentalEnabled &&
+        typeof p.pair === "string" &&
+        /^[a-z0-9-]{1,50}$/.test(p.pair) &&
+        p.pair !== p.id &&
+        !pairs.has(p.pair)
+          ? p.pair
+          : "";
+      if (pair) pairs.add(pair);
       function price(value) {
         if (value === null || value === "") return null;
         if (typeof value !== "number" && typeof value !== "string")
@@ -456,6 +473,7 @@ export function validateShop(shop) {
         enabled: p.enabled,
         saleEnabled: p.saleEnabled,
         rentalEnabled: p.rentalEnabled,
+        ...(pair ? { pair } : {}),
         name: plain(p.name, "Nama produk", 100),
         description: plain(p.description, "Deskripsi produk", 500),
         specification: plain(
@@ -472,8 +490,9 @@ export function validateShop(shop) {
           false,
         ),
         specs: specRows(p.specs),
-        salePrice: price(p.salePrice),
-        rentalPrice: price(p.rentalPrice),
+        // Only the price of its own way.
+        salePrice: p.saleEnabled ? price(p.salePrice) : null,
+        rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
         sizes: cleanSizes(p.sizes),
       };
     }),

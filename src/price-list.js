@@ -1,7 +1,7 @@
 // Package prices shown beside the experience cards, from the Zanclus Dive
 // Center 2025 price list. Editable in the CMS; each text has both languages.
 import { dictionary } from "./i18n.js";
-import { rentalAddOn, rentalTabOf } from "./shop-model.js";
+import { rentalAddOn, rentalTabOf, shopAddOn } from "./shop-model.js";
 
 export const priceGroups = ["diving", "snorkeling", "trip"];
 // Gear rental lists of the homepage before rental gear became Dive Shop
@@ -20,7 +20,7 @@ export const extraGroups = ["extras"];
 export const allPriceGroups = [...priceGroups, ...extraGroups];
 export const extraLabels = { extras: "Layanan tambahan" };
 // An add-on that is Dive Shop rental gear: "shop:" and the product id.
-export const shopAddOn = "shop:";
+export { shopAddOn };
 // Add-ons offered on one activity page, picked from the other lists.
 export const addOnLimit = 16;
 

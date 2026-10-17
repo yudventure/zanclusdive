@@ -28,17 +28,17 @@ test("a Dive Shop cart is priced from the CMS", () => {
       },
       {
         source: "product",
-        id: "demo-suit",
+        id: "demo-suit-sewa",
         mode: "rental",
         quantity: 1,
         size: "M",
       },
-      { source: "product", id: "demo-mask", mode: "rental", quantity: 1 },
+      { source: "product", id: "demo-mask-sewa", mode: "rental", quantity: 1 },
     ],
     days: 3,
     startDate: "2030-02-10",
   });
-  const basic = content.shop.products.find((p) => p.id === "demo-mask");
+  const basic = content.shop.products.find((p) => p.id === "demo-mask-sewa");
   assert.equal(order.program, "shop");
   assert.deepEqual(
     [order.startDate, order.endDate],
@@ -48,8 +48,8 @@ test("a Dive Shop cart is priced from the CMS", () => {
     order.lines.map((l) => [l.id, l.price, l.quantity]),
     [
       ["product-demo-fins-sale-L", 1250000, 2],
-      ["product-demo-suit-rental-M", 100000 * 3, 1],
-      ["product-demo-mask-rental", basic.rentalPrice * 3, 1],
+      ["product-demo-suit-sewa-rental-M", 100000 * 3, 1],
+      ["product-demo-mask-sewa-rental", basic.rentalPrice * 3, 1],
     ],
   );
   assert.equal(order.amount, 2500000 + 300000 + basic.rentalPrice * 3);
@@ -64,8 +64,8 @@ test("a Dive Shop cart is priced from the CMS", () => {
     order.lines.map((l) => [l.product, l.mode, l.size]),
     [
       ["demo-fins", "sale", "L"],
-      ["demo-suit", "rental", "M"],
-      ["demo-mask", "rental", undefined],
+      ["demo-suit-sewa", "rental", "M"],
+      ["demo-mask-sewa", "rental", undefined],
     ],
   );
   // Gear with sizes needs one of them; gear without sizes takes none.
@@ -158,7 +158,7 @@ test("shop carts that cannot be paid online are refused", () => {
       lines: [
         {
           source: "product",
-          id: "demo-suit",
+          id: "demo-suit-sewa",
           mode: "rental",
           quantity: 1,
           size: "M",

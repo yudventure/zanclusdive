@@ -12,7 +12,7 @@ import { homedir } from "node:os";
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { demoSeed, withDemoEnglish, withoutSamples } from "../demo-data.js";
-import { demoShop, withShop } from "../shop-model.js";
+import { demoShop, withShop, withSplitProducts } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
@@ -131,8 +131,10 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
-      const titled = withCalendar(
-        withPriceList(withActivityRefresh(withRajaAmpatTitle(state.content))),
+      const titled = withSplitProducts(
+        withCalendar(
+          withPriceList(withActivityRefresh(withRajaAmpatTitle(state.content))),
+        ),
       );
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;

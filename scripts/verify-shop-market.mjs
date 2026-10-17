@@ -52,8 +52,8 @@ const api = (path, method = "GET", data) =>
     ...(data ? { data } : {}),
   });
 const state = async () => (await api("/api/admin/state")).json();
-const mask = async () =>
-  (await state()).content.shop.products.find((p) => p.id === "demo-mask");
+const mask = async (id = "demo-mask") =>
+  (await state()).content.shop.products.find((p) => p.id === id);
 const noSideScroll = async (tab) =>
   assert.ok(
     await tab.evaluate(
@@ -144,15 +144,12 @@ try {
   await photos
     .getByRole("button", { name: "Jadikan foto 3 foto utama" })
     .click();
-  // The units for rent have photos of their own, not the ones for sale.
+  // The same mask for rent is its own product, with photos of the units
+  // the dive center lends out.
+  await a.getByRole("button", { name: "Buka barang sewanya" }).click();
   const rentPhotos = a.locator(".admin-shop-mode.is-rental .admin-shop-photos");
   assert.equal(await rentPhotos.locator("li").count(), 0);
-  assert.equal(
-    await rentPhotos
-      .getByRole("button", { name: "Pakai foto barang jual" })
-      .count(),
-    1,
-  );
+  assert.equal(await photos.count(), 0);
   await rentPhotos.locator('input[type="file"]').setInputFiles([
     {
       name: "mask-sewa.png",
@@ -160,14 +157,17 @@ try {
       buffer: Buffer.from(pngs[3]),
     },
   ]);
+  let rented;
   for (let tries = 0; tries < 120; tries++) {
-    saved = await mask();
-    if (saved.rentalImages?.length === 1) break;
+    rented = await mask("demo-mask-sewa");
+    if (rented.rentalImages?.length === 1) break;
     await a.waitForTimeout(500);
   }
-  assert.equal(saved.rentalImages.length, 1, "the rental photo was saved");
-  assert.ok(!saved.images.includes(saved.rentalImages[0]));
+  assert.equal(rented.rentalImages.length, 1, "the rental photo was saved");
+  assert.deepEqual(rented.images, []);
   assert.equal(await rentPhotos.locator("li").count(), 1);
+  await a.getByRole("button", { name: "Buka barang jualnya" }).click();
+  await photos.waitFor();
   // A video, the full description and two spec rows.
   await a.getByLabel("Link video").fill("https://youtu.be/dQw4w9WgXcQ");
   await a.getByRole("button", { name: "Tambah video" }).click();
@@ -210,7 +210,10 @@ try {
   saved = await mask();
   assert.equal(saved.image, saved.images[0]);
   assert.equal(saved.images.length, 3);
-  assert.equal(saved.rentalImages.length, 1);
+  assert.deepEqual(saved.rentalImages, []);
+  rented = await mask("demo-mask-sewa");
+  assert.equal(rented.rentalImages.length, 1);
+  assert.ok(!saved.images.includes(rented.rentalImages[0]));
   assert.deepEqual(saved.videos, ["https://youtu.be/dQw4w9WgXcQ"]);
   assert.deepEqual(saved.specs, [
     { label: "Merek", value: "Scubapro Crystalvu" },
@@ -241,6 +244,10 @@ try {
   const detail = page.locator("dialog.shop-detail");
   await detail.waitFor();
   assert.ok((await detail.boundingBox()).width >= 1000);
+  assert.match(
+    await detail.locator(".shop-detail-price").textContent(),
+    /Bisa juga disewa Rp\s50\.000 per hari/,
+  );
   assert.equal(await detail.locator(".shop-detail-thumbs button").count(), 3);
   assert.equal(await detail.locator(".shop-detail-count").textContent(), "1/3");
   await detail.getByRole("button", { name: "Foto berikutnya" }).click();
@@ -270,9 +277,9 @@ try {
   });
   assert.equal(
     await page
-      .locator('[data-product="demo-mask"] .shop-product-photo')
+      .locator('[data-product="demo-mask-sewa"] .shop-product-photo')
       .getAttribute("src"),
-    saved.rentalImages[0],
+    rented.rentalImages[0],
   );
   await page
     .getByRole("button", { name: "Lihat detail Mask & snorkel set" })
@@ -281,12 +288,13 @@ try {
   await detail.waitFor();
   assert.equal(
     await detail.locator(".shop-detail-visual img").getAttribute("src"),
-    saved.rentalImages[0],
+    rented.rentalImages[0],
   );
   assert.equal(await detail.locator(".shop-detail-thumbs").count(), 0);
+  // Each window names the same mask the other way.
   assert.match(
     await detail.locator(".shop-detail-price").textContent(),
-    /Harga sewa/,
+    /Harga sewa[\s\S]*Bisa juga dibeli Rp\s650\.000/,
   );
   await detail.getByRole("button", { name: "Tutup detail" }).click();
   await page.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });

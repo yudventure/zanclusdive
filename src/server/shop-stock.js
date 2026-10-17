@@ -22,6 +22,7 @@ import {
   planShopItems,
   publicStock,
   recordedBookings,
+  rentalPairs,
   saleMovements,
   shortfallMessage,
   shopUse,
@@ -233,6 +234,7 @@ export async function shopStockUse(now = new Date()) {
 export async function rentalGear() {
   const { products, items, movements } = await loadStock();
   const linked = linkedItems(items, products);
+  const pairs = rentalPairs(products);
   return products
     .filter((p) => p.rentalEnabled)
     .flatMap((p) =>
@@ -248,6 +250,9 @@ export async function rentalGear() {
           stock:
             item && item.active !== false ? stockOf(movements, item.id) : 0,
           follows: p.availability === "stock",
+          // Rentals booked when the gear was the rental side of a product
+          // for sale name that product.
+          ...(pairs.get(p.pair) === p.id ? { pair: p.pair } : {}),
         };
       }),
     );

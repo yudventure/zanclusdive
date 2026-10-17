@@ -550,7 +550,7 @@ export default function StockEditor({ request, today }) {
             </Field>
             <Field
               label="Produk Dive Shop"
-              hint="Barang Dive Shop dibuat dan diisi stoknya langsung di Dive Shop, terpisah untuk jual dan sewa, jadi kolom ini hanya untuk memindahkan produk ke barang yang sudah ada di sini. Penjualan online mengurangi stok jual sendiri, dan sewa online memakai stok sewa sesuai tanggal sewa."
+              hint="Barang Dive Shop dibuat dan diisi stoknya langsung di Dive Shop, di Barang jual atau Barang sewa, jadi kolom ini hanya untuk memindahkan produk ke barang yang sudah ada di sini. Penjualan online mengurangi stok barang jual sendiri, dan sewa online memakai stok barang sewa sesuai tanggal sewa."
             >
               <select
                 value={

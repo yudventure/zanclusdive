@@ -12,9 +12,23 @@ import { freeUnits, shopReservations, variantKey } from "../shop-stock.js";
 export default function BookingGear({ value, setValue, gear, bookings }) {
   const id = useId();
   const lines = value.gear ?? [];
-  const keyOf = (line) => variantKey(line.product, "rental", line.size ?? "");
+  // Gear booked when it was the rental side of a product for sale names
+  // that product.
+  const pairs = new Map(
+    (gear ?? []).filter((g) => g.pair).map((g) => [g.pair, g.productId]),
+  );
+  const keyOf = (line) =>
+    variantKey(
+      pairs.get(line.product) ?? line.product,
+      "rental",
+      line.size ?? "",
+    );
   const info = new Map((gear ?? []).map((g) => [g.key, g]));
-  const held = shopReservations(bookings.filter((b) => b.id !== value.id));
+  const held = shopReservations(
+    bookings.filter((b) => b.id !== value.id),
+    new Set(),
+    pairs,
+  );
   // Gear rented in this booking's online order, shown as it is.
   const online = (value.payment?.lines ?? []).filter(
     (line) => line.product && line.mode === "rental",
@@ -131,7 +145,7 @@ export default function BookingGear({ value, setValue, gear, bookings }) {
           })}
           {!gear.length ? (
             <p className="admin-subtle">
-              Belum ada produk yang disewakan. Centang Disewakan di Dive Shop.
+              Belum ada barang sewa. Tambahkan di Dive Shop, Barang sewa.
             </p>
           ) : (
             <button

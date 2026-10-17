@@ -6,7 +6,7 @@ import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import * as demo from "./demo-store.js";
-import { withShop } from "../shop-model.js";
+import { withShop, withSplitProducts } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
@@ -74,14 +74,16 @@ async function storedContent() {
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withCalendar(
-      withPriceList(
-        withActivityRefresh(
-          withRajaAmpatTitle(
-            withTranslations(
-              withActivities(
-                withPhotography(
-                  withContactFields(withShop(JSON.parse(rows[0].payload))),
+    content: withSplitProducts(
+      withCalendar(
+        withPriceList(
+          withActivityRefresh(
+            withRajaAmpatTitle(
+              withTranslations(
+                withActivities(
+                  withPhotography(
+                    withContactFields(withShop(JSON.parse(rows[0].payload))),
+                  ),
                 ),
               ),
             ),

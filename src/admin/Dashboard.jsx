@@ -424,6 +424,27 @@ export default function Dashboard({ section, account, today }) {
     });
     setNotice("");
   }
+  // Gear for sale made into rental gear, or the other way, takes the
+  // English texts of the product it came from.
+  function copyProductTexts(from, to) {
+    setContent((current) => {
+      const english = current.en?.shop?.products?.[from];
+      if (!english) return current;
+      return {
+        ...current,
+        en: {
+          ...current.en,
+          shop: {
+            ...current.en.shop,
+            products: {
+              ...current.en.shop.products,
+              [to]: structuredClone(english),
+            },
+          },
+        },
+      };
+    });
+  }
   // A product file filled in from the admin: its texts per language
   // ({ id, en }, each a set of product fields) and the fields both share.
   function importProduct(id, texts, shared = {}) {
@@ -1484,6 +1505,8 @@ export default function Dashboard({ section, account, today }) {
                   placePhoto={placePhoto}
                   request={request}
                   canStock={can("gudang")}
+                  canCalendar={can("bookings")}
+                  onCopyTexts={copyProductTexts}
                 />
               )}
               {section === "experiences" && (

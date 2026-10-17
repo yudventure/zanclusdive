@@ -133,20 +133,17 @@ try {
     /Sewa alat dari Dive Shop[\s\S]*Perlengkapan scuba/,
   );
 
-  // The Dive Shop editor finds rental gear in the longer catalog: rental
-  // only, with its price per day.
+  // The Dive Shop editor lists rental gear apart from gear for sale, with
+  // its price per day.
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
-  await page.getByLabel("Saring produk").selectOption("rental");
+  await page.getByRole("tab", { name: /Barang sewa/ }).click();
   await page.getByLabel("Cari produk").fill("kamera");
   assert.deepEqual(
     await page.locator(".admin-shop-item strong").allTextContents(),
     ["Kamera bawah air TG-5", "Kamera TG-5 + perlengkapan"],
   );
   await page.locator(".admin-shop-item", { hasText: "TG-5 +" }).click();
-  assert.match(
-    await page.locator(".admin-shop-mode.is-sale").textContent(),
-    /Produk ini tidak dijual/,
-  );
+  assert.equal(await page.getByLabel("Harga jual (Rp)").count(), 0);
   assert.equal(
     await page.getByLabel("Harga sewa per hari (Rp)").inputValue(),
     "1500000",

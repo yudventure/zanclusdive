@@ -6,7 +6,7 @@ import {
   defaultActivities,
   legacyActivityDefaults,
 } from "./activity-model.js";
-import { productLimits } from "./shop-model.js";
+import { demoShop, productLimits } from "./shop-model.js";
 
 export const translatableFields = {
   experiences: ["title", "description", "cardDescription", "duration", "items"],
@@ -360,6 +360,12 @@ export const englishDefaults = {
     },
   },
 };
+// The demo gear for sale and the same gear for rent share their English.
+for (const p of demoShop().products)
+  if (p.pair)
+    englishDefaults.shop.products[p.id] = {
+      ...englishDefaults.shop.products[p.pair],
+    };
 
 const pick = (object, keys) =>
   Object.fromEntries(

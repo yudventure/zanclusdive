@@ -173,7 +173,7 @@ Peran **Finance** (dan superadmin), grup **Keuangan**:
 Peran **Gudang** (dan superadmin), grup **Gudang**:
 
 - **Barang & stok**: nama, kode, kategori (alat selam, suku cadang, bahan habis pakai, merchandise, perahu & mesin), satuan, stok minimum, harga beli, lokasi simpan. Stok dihitung dari catatan masuk/keluar, bukan diketik; nilai stok = stok × harga beli. Barang dengan stok 0 ditandai **Habis**, dan barang dengan stok di bawah atau sama dengan minimum ditandai **Menipis**. Keduanya dihitung di atas daftar. Tombol **Masuk** dan **Keluar** di tiap baris mencatat mutasi tanpa pindah halaman.
-- **Produk Dive Shop**: produk, ukuran, dan stoknya diatur di **Dive Shop**, pada detail produk, dengan stok jual di bagian **Untuk dijual** dan stok sewa di bagian **Untuk disewa**. Setiap produk otomatis punya barang di daftar ini untuk jual dan untuk sewa, per ukuran, dengan label seperti "Dive Shop · Wetsuit 3 mm · Sewa · M", dan angka stok yang diketik di Dive Shop tercatat sebagai stock opname saat katalog disimpan. Pembelian online yang lunas tercatat sendiri sebagai **Keluar · Penjualan** pada barang jual, dan sewa online memakai unit barang sewa pada tanggal sewanya tanpa perlu dicatat Keluar. Kolom **Produk Dive Shop** di formulir barang hanya untuk memindahkan produk ke barang yang sudah ada.
+- **Produk Dive Shop**: produk, ukuran, dan stoknya diatur di **Dive Shop**, dengan stok jual di **Barang jual** dan stok sewa di **Barang sewa**. Setiap produk otomatis punya barang di daftar ini per ukuran, dengan label seperti "Dive Shop · Wetsuit 3 mm · Sewa · M", dan angka stok yang diketik di Dive Shop tercatat sebagai stock opname saat katalog disimpan. Pembelian online yang lunas tercatat sendiri sebagai **Keluar · Penjualan** pada barang jual, dan sewa online memakai unit barang sewa pada tanggal sewanya tanpa perlu dicatat Keluar. Kolom **Produk Dive Shop** di formulir barang hanya untuk memindahkan produk ke barang yang sudah ada.
 - **Keluar masuk**: catatan per bulan (masuk: pembelian, sewa kembali; keluar: penjualan, sewa keluar, dipakai, rusak/hilang; koreksi stok ± dari stock opname). Mutasi yang salah dihapus lalu dicatat ulang supaya riwayatnya jujur. Unduhan Excel untuk stok dan mutasi per bulan.
 
 ## Modul PR: Kalender konten
@@ -226,13 +226,21 @@ Saat pembaruan ini dipasang, daftar diving yang tersimpan dipindahkan sekali sec
 
 ### Sewa alat pindah ke Dive Shop
 
-Daftar sewa (Sewa masker, snorkel & fin, Sewa BCD, regulator & wetsuit, Tabung & isi ulang, Dive computer, senter & pelampung, Sewa kamera bawah air) tidak lagi diatur di **Daftar harga**. Saat pembaruan ini dipasang, setiap itemnya otomatis menjadi produk Dive Shop untuk disewa saja, dengan nama, keterangan, dan harga per hari yang sama. Setelah itu, atur di **Dive Shop**, bagian **Untuk disewa**:
+Daftar sewa (Sewa masker, snorkel & fin, Sewa BCD, regulator & wetsuit, Tabung & isi ulang, Dive computer, senter & pelampung, Sewa kamera bawah air) tidak lagi diatur di **Daftar harga**. Saat pembaruan ini dipasang, setiap itemnya otomatis menjadi produk Dive Shop untuk disewa saja, dengan nama, keterangan, dan harga per hari yang sama. Setelah itu, atur di **Dive Shop**, tab **Barang sewa**:
 
 - **Stok sewa.** Isi berapa unit yang dimiliki. Ketersediaan langsung mengikuti stok gudang, dan website menolak sewa yang melebihi sisa pada tanggalnya. Selama stok belum diisi, alat tetap bisa dipesan seperti sebelumnya.
 - **Foto barang sewa.** Unggah foto alatnya. Tanpa foto, website menampilkan ilustrasi.
 - **Ukuran.** Tambahkan kalau tamu perlu memilih, misalnya wetsuit atau fin.
 
 Produk sewa lama dan produk Dive Shop yang sudah ada bisa mirip, misalnya Masker dan Mask & snorkel set. Matikan atau hapus yang tidak dipakai.
+
+### Barang jual dan barang sewa terpisah
+
+Di **Dive Shop**, barang jual dan barang sewa sekarang dua daftar terpisah lewat tab **Barang jual** dan **Barang sewa**. Barang jual adalah barang baru untuk dibeli tamu. Barang sewa adalah alat milik dive center yang disewakan lalu kembali, dan stoknya dihitung per tanggal di **Kalender reservasi**. Masing-masing punya foto, harga, ukuran, dan stoknya sendiri.
+
+Saat pembaruan ini dipasang, setiap produk lama yang dijual sekaligus disewakan otomatis dipecah. Produk itu tetap di **Barang jual** dengan foto dan harga jualnya, dan versi sewanya muncul di **Barang sewa** dengan nama yang sama, harga sewa, dan foto sewanya. Stok sewa di Gudang, reservasi sewa yang sudah ada, dan add-on aktivitas ikut pindah ke barang sewanya, jadi tidak ada yang perlu diisi ulang. Periksa sekali foto barang sewanya, lalu tekan **Simpan katalog Dive Shop**.
+
+Di bawah detail produk, kartu **Juga disewakan** atau **Juga dijual** membuka pasangannya. Kalau model yang sama belum ada di daftar lain, tombol **+ Buat barang sewa** atau **+ Buat barang jual** menyalin nama, deskripsi, spesifikasi, video, dan ukurannya. Foto, harga, dan stoknya diisi sendiri.
 
 ### Kalender sewa alat
 

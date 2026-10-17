@@ -13,8 +13,8 @@ export const shopCategories = {
   vest: "Pelampung",
   camera: "Kamera",
 };
-// Products in the catalog, rental gear included.
-export const shopProductLimit = 60;
+// Products in the catalog: gear for sale and rental gear.
+export const shopProductLimit = 80;
 // The homepage shows rental gear in tabs by kind.
 export const rentalTabs = [
   "rentalBasics",
@@ -47,6 +47,132 @@ export const rentalAddOn = (p) =>
     p.rentalPrice > 0 &&
     !p.sizes?.length,
   );
+// An add-on that is Dive Shop rental gear: "shop:" and the product id.
+export const shopAddOn = "shop:";
+
+// Gear sold new and gear rented out are different units: one leaves in its
+// box, the other is the dive center's own gear, lent out and brought back.
+// So a product is for sale or for rent, never both, each with its own
+// photos, price and stock, and rental gear has its dates in the reservation
+// calendar. Rental gear may name the same model for sale in "pair", which
+// links the two in the editor and in the product window.
+export const pairOf = (products, product) =>
+  product?.rentalEnabled
+    ? products.find((p) => p.saleEnabled && p.id === product.pair)
+    : products.find((p) => p.rentalEnabled && p.pair === product?.id);
+
+// Catalogs saved when one product could be both split it in two: the
+// product keeps its id for sale, and its rental side becomes rental gear
+// "<id>-sewa" right after it, with the rental price, photos and stock
+// counts, the same name, texts, sizes and availability, and the product for
+// sale as its pair. Returns the products and, per product split, the id of
+// its rental gear.
+export function splitProducts(products) {
+  const ids = new Set(products.map((p) => p?.id));
+  const rentals = new Map();
+  const out = [];
+  for (const p of products) {
+    if (!p?.saleEnabled || !p.rentalEnabled) {
+      out.push(p);
+      continue;
+    }
+    const { rentalImages, stockCounts, ...shared } = p;
+    out.push({
+      ...shared,
+      rentalEnabled: false,
+      rentalPrice: null,
+      rentalImages: [],
+      ...(stockCounts?.sale ? { stockCounts: { sale: stockCounts.sale } } : {}),
+    });
+    // Rental gear split from it before (an older admin page saved it whole
+    // again) is used, not copied.
+    const twin = products.find(
+      (q) => q?.rentalEnabled && !q.saleEnabled && q.pair === p.id,
+    );
+    if (twin) {
+      rentals.set(p.id, twin.id);
+      continue;
+    }
+    let id = `${p.id.slice(0, 45)}-sewa`;
+    for (let n = 2; ids.has(id); n++) id = `${p.id.slice(0, 40)}-sewa-${n}`;
+    ids.add(id);
+    rentals.set(p.id, id);
+    out.push({
+      ...shared,
+      id,
+      pair: p.id,
+      saleEnabled: false,
+      salePrice: null,
+      image: "",
+      images: [],
+      rentalImages: Array.isArray(rentalImages) ? rentalImages : [],
+      ...(stockCounts?.rental
+        ? { stockCounts: { rental: stockCounts.rental } }
+        : {}),
+    });
+  }
+  return { products: out, rentals };
+}
+// The same for a whole CMS document: the English texts, the activities
+// offering the gear as an add-on and the developer locks follow the rental
+// gear too. The warehouse items and the bookings keep the product for sale
+// and find the rental gear through its pair (src/shop-stock.js).
+export function withSplitProducts(content) {
+  const products = content?.shop?.products;
+  if (
+    !Array.isArray(products) ||
+    !products.some((p) => p?.saleEnabled && p?.rentalEnabled)
+  )
+    return content;
+  const { products: split, rentals } = splitProducts(products);
+  const out = { ...content, shop: { ...content.shop, products: split } };
+  const addOns = content.priceList?.addOns;
+  if (addOns && typeof addOns === "object")
+    out.priceList = {
+      ...content.priceList,
+      addOns: Object.fromEntries(
+        Object.entries(addOns).map(([activity, chosen]) => [
+          activity,
+          Array.isArray(chosen)
+            ? chosen.map((id) =>
+                typeof id === "string" &&
+                id.startsWith(shopAddOn) &&
+                rentals.has(id.slice(shopAddOn.length))
+                  ? shopAddOn + rentals.get(id.slice(shopAddOn.length))
+                  : id,
+              )
+            : chosen,
+        ]),
+      ),
+    };
+  const english = content.en?.shop?.products;
+  if (english && typeof english === "object") {
+    const copies = [...rentals]
+      .filter(([from, to]) => english[from] && !english[to])
+      .map(([from, to]) => [to, structuredClone(english[from])]);
+    out.en = {
+      ...content.en,
+      shop: {
+        ...content.en.shop,
+        products: { ...english, ...Object.fromEntries(copies) },
+      },
+    };
+  }
+  const locked = content.developer?.items;
+  if (Array.isArray(locked)) {
+    const more = [...rentals]
+      .filter(
+        ([from, to]) =>
+          locked.includes(`product:${from}`) &&
+          !locked.includes(`product:${to}`),
+      )
+      .map(([, to]) => `product:${to}`);
+    if (more.length)
+      out.developer = { ...content.developer, items: [...locked, ...more] };
+  }
+  return out;
+}
+
 export const availabilityLabels = {
   stock: "Ikuti stok gudang",
   request: "Konfirmasi ketersediaan",
@@ -231,39 +357,42 @@ export function demoShop() {
       75000,
     ],
   ];
+  // Each example is sold new and rented out, as two products.
   return {
     ...structuredClone(emptyShop),
-    products: examples.map(
-      ([
-        category,
-        name,
-        description,
-        specification,
-        salePrice,
-        rentalPrice,
-      ]) => ({
-        id: "demo-" + category,
-        category,
-        name,
-        description,
-        specification,
-        image: "",
-        saleEnabled: category !== "cylinder",
-        rentalEnabled: true,
-        salePrice,
-        rentalPrice,
-        enabled: true,
-        availability: "request",
-        sizes: ["fins", "suit", "bcd"].includes(category)
-          ? ["S", "M", "L", "XL"]
-          : [],
-        images: [],
-        rentalImages: [],
-        videos: [],
-        details: "",
-        specs: [],
-      }),
-    ),
+    products: splitProducts(
+      examples.map(
+        ([
+          category,
+          name,
+          description,
+          specification,
+          salePrice,
+          rentalPrice,
+        ]) => ({
+          id: "demo-" + category,
+          category,
+          name,
+          description,
+          specification,
+          image: "",
+          saleEnabled: category !== "cylinder",
+          rentalEnabled: true,
+          salePrice,
+          rentalPrice,
+          enabled: true,
+          availability: "request",
+          sizes: ["fins", "suit", "bcd"].includes(category)
+            ? ["S", "M", "L", "XL"]
+            : [],
+          images: [],
+          rentalImages: [],
+          videos: [],
+          details: "",
+          specs: [],
+        }),
+      ),
+    ).products,
   };
 }
 // How many units a guest may take of a product (and size) in this mode:

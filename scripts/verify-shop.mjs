@@ -155,10 +155,16 @@ try {
   );
   const initial = await state();
   originals = initial.content;
-  assert.equal(initial.content.shop.products.length, 26);
+  // Seven products for sale, and 26 rental gear: the same seven for rent,
+  // the cylinder, and the gear of the 2025 price list.
+  assert.equal(initial.content.shop.products.length, 33);
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Dive Shop", exact: true }).waitFor();
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("720000");
+  assert.equal(await page.getByLabel("Harga sewa per hari (Rp)").count(), 0);
+  // The mask for rent is its own product, in the other list.
+  await page.getByRole("tab", { name: /Barang sewa/ }).click();
+  assert.equal(await page.getByLabel("Harga jual (Rp)").count(), 0);
   await page.getByLabel("Harga sewa per hari (Rp)").fill("55000");
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
@@ -176,19 +182,21 @@ try {
   );
   await live.getByRole("button", { name: "Rental alat", exact: true }).click();
   assert.match(
-    await live.locator('[data-product="demo-mask"] .shop-price').textContent(),
+    await live
+      .locator('[data-product="demo-mask-sewa"] .shop-price')
+      .textContent(),
     /55\.000/,
   );
 
+  await page.getByRole("tab", { name: /Barang jual/ }).click();
   await page
-    .getByRole("button", { name: "+ Tambah produk", exact: true })
+    .getByRole("button", { name: "+ Tambah barang jual", exact: true })
     .click();
   await page.getByLabel("Nama produk", { exact: true }).fill("Mask Uji CMS");
   await page
     .getByLabel("Deskripsi singkat", { exact: true })
     .fill("Perlengkapan untuk pengujian katalog.");
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("800000");
-  await page.getByLabel("Harga sewa per hari (Rp)").fill("60000");
   await page.getByLabel("Tampilkan produk di website", { exact: true }).check();
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
@@ -201,7 +209,10 @@ try {
   const added = snapshot.content.shop.products.find(
     (p) => p.name === "Mask Uji CMS",
   );
-  assert.ok(added);
+  assert.deepEqual(
+    [added.saleEnabled, added.rentalEnabled, added.rentalPrice],
+    [true, false, null],
+  );
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Mask Uji CMS" }).click();
   assert.equal(
@@ -288,10 +299,65 @@ try {
     400,
     "Old editors cannot erase new shop data",
   );
+  // The same mask for rent is made from it: the texts come along, while
+  // the price, photos and stock are its own.
   await page.getByRole("button", { name: "Mask Uji CMS" }).click();
+  const pairCard = page.locator(".admin-shop-pair");
+  assert.match(await pairCard.textContent(), /^Model ini juga disewakan\?/);
+  await pairCard.getByRole("button", { name: "+ Buat barang sewa" }).click();
+  assert.equal(
+    await page
+      .getByRole("tab", { name: /Barang sewa/ })
+      .getAttribute("aria-selected"),
+    "true",
+  );
+  assert.equal(
+    await page.getByLabel("Nama produk", { exact: true }).inputValue(),
+    "Mask Uji CMS",
+  );
+  const rentPrice = page.getByLabel("Harga sewa per hari (Rp)");
+  assert.equal(await rentPrice.inputValue(), "");
+  await rentPrice.fill("60000");
+  await page
+    .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
+    .click();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  const copy = (await state()).content.shop.products.find(
+    (p) => p.pair === added.id,
+  );
+  assert.deepEqual(
+    [
+      copy.name,
+      copy.description,
+      copy.saleEnabled,
+      copy.rentalEnabled,
+      copy.rentalPrice,
+      copy.images,
+      copy.enabled,
+    ],
+    [
+      "Mask Uji CMS",
+      "Perlengkapan untuk pengujian katalog.",
+      false,
+      true,
+      60000,
+      [],
+      false,
+    ],
+  );
+  await page.getByRole("tab", { name: /Barang sewa/ }).click();
+  await page.getByRole("button", { name: "Mask Uji CMS" }).click();
+  await pairCard.getByRole("button", { name: "Buka barang jualnya" }).click();
+  assert.match(
+    await pairCard.textContent(),
+    /^Juga disewakanMask Uji CMS, Rp\s60\.000 per hari, draft\./,
+  );
   page.once("dialog", (dialog) => dialog.accept());
   await page
-    .getByRole("button", { name: "Hapus produk ini", exact: true })
+    .getByRole("button", { name: "Hapus barang jual ini", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })

@@ -13,7 +13,7 @@ test("mixed orders charge sales once and rental per unit per day", () => {
   const products = demoShop().products;
   const cart = [
     { id: "demo-mask", mode: "sale", quantity: 2 },
-    { id: "demo-fins", mode: "rental", quantity: 3, size: "M" },
+    { id: "demo-fins-sewa", mode: "rental", quantity: 3, size: "M" },
   ];
   const quote = quoteOrder(products, cart, 4);
   assert.equal(quote.total, 2200000);
@@ -79,7 +79,8 @@ test("requests for prices stay distinct from a zero-price total", () => {
 });
 test("unavailable equipment, forged modes, duplicates, and invalid rental dates are rejected", () => {
   const products = demoShop().products;
-  const item = { id: "demo-mask", mode: "rental", quantity: 1 };
+  const item = { id: "demo-mask-sewa", mode: "rental", quantity: 1 };
+  const rental = products.find((p) => p.id === item.id);
   for (const change of [
     { quantity: 0 },
     { quantity: 11 },
@@ -98,28 +99,32 @@ test("unavailable equipment, forged modes, duplicates, and invalid rental dates 
       startDate: "2026-02-31",
     }),
   );
-  products[0].availability = "unavailable";
+  rental.availability = "unavailable";
   assert.throws(() => quoteOrder(products, [item]));
-  products[0].availability = "request";
-  products[0].enabled = false;
+  rental.availability = "request";
+  rental.enabled = false;
   assert.throws(() => quoteOrder(products, [item]));
+  // The product for sale is not for rent.
+  assert.throws(() => quoteOrder(products, [{ ...item, id: "demo-mask" }], 1));
   assert.throws(() =>
     quoteOrder(products, [{ id: "demo-cylinder", mode: "sale", quantity: 1 }]),
   );
 });
 test("catalog validation rejects duplicate IDs, invalid prices and unsafe photos", () => {
-  assert.equal(validateShop(demoShop()).products.length, 8);
+  assert.equal(validateShop(demoShop()).products.length, 15);
   assert.equal(validateShop(emptyShop).products.length, 0);
-  for (const change of [
-    { salePrice: -1 },
-    { rentalPrice: 1.5 },
-    { salePrice: false },
-    { image: "javascript:alert(1)" },
-    { saleEnabled: false, rentalEnabled: false },
-    { category: "made-up" },
+  // The first product is for sale, the second is its rental gear.
+  for (const [index, change] of [
+    [0, { salePrice: -1 }],
+    [1, { rentalPrice: 1.5 }],
+    [0, { salePrice: false }],
+    [0, { image: "javascript:alert(1)" }],
+    [0, { saleEnabled: false, rentalEnabled: false }],
+    [0, { rentalEnabled: true }],
+    [0, { category: "made-up" }],
   ]) {
     const shop = demoShop();
-    Object.assign(shop.products[0], change);
+    Object.assign(shop.products[index], change);
     assert.throws(() => validateShop(shop));
   }
   const shop = demoShop();
@@ -134,7 +139,7 @@ test("old CMS content acquires shop defaults and existing catalog edits are pres
   const migrated = withShop(legacy, demoShop());
   assert.deepEqual(migrated.text, legacy.text);
   assert.deepEqual(migrated.contact, legacy.contact);
-  assert.equal(migrated.shop.products.length, 8);
+  assert.equal(migrated.shop.products.length, 15);
   assert.equal(
     withShop(legacy).shop.products.length,
     0,

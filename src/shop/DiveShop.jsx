@@ -20,6 +20,7 @@ import {
   stockBadge,
   deliveryChoice,
   productAs,
+  pairOf,
 } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
@@ -867,6 +868,10 @@ export default function DiveShop({
         <ProductDetail
           key={detail.product.id + detail.mode}
           product={detail.product}
+          pair={pairOf(
+            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
+            detail.product,
+          )}
           mode={detail.mode}
           stock={stock}
           locale={locale}
