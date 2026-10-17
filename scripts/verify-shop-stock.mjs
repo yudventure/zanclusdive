@@ -212,7 +212,7 @@ try {
   await detail.waitFor();
   assert.match(
     await detail.textContent(),
-    /Wetsuit 3 mm[\s\S]*Spesifikasi[\s\S]*Ketebalan 3 mm[\s\S]*Ukuran/,
+    /Wetsuit 3 mm[\s\S]*Ukuran[\s\S]*Spesifikasi[\s\S]*Ketebalan 3 mm/,
   );
   assert.deepEqual(
     await detail.locator(".shop-sizes label").allTextContents(),

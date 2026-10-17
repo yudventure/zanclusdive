@@ -181,7 +181,7 @@ try {
     .click();
   await page.getByLabel("Nama produk", { exact: true }).fill("Mask Uji CMS");
   await page
-    .getByLabel("Deskripsi produk", { exact: true })
+    .getByLabel("Deskripsi singkat", { exact: true })
     .fill("Perlengkapan untuk pengujian katalog.");
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("800000");
   await page.getByLabel("Harga rental per hari (Rp)").fill("60000");
@@ -247,7 +247,13 @@ try {
   assert.equal(upload.status(), 201);
   const picture = await upload.json();
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByLabel("Atau pilih dari koleksi").selectOption(picture.url);
+  // Other photos sit behind "Pilih foto lain atau tempel URL".
+  await page
+    .locator(".admin-shop-photos summary", {
+      hasText: "Pilih foto lain atau tempel URL",
+    })
+    .click();
+  await page.getByLabel("Tambah dari koleksi").selectOption(picture.url);
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();

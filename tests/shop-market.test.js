@@ -301,7 +301,8 @@ test("English edits keep delivery shared and translate details and specs", () =>
   );
   const mask = (c) => c.shop.products.find((p) => p.id === "demo-mask");
   assert.deepEqual(mask(english).images, [media(5)]);
-  assert.equal(mask(english).details, undefined);
+  // The Indonesian description stays as it was.
+  assert.equal(mask(english).details, "");
   const en = mask(localizeContent(english, "en"));
   assert.equal(en.details, "A premium mask.");
   assert.deepEqual(en.specs, [{ label: "Brand", value: "Scubapro" }]);

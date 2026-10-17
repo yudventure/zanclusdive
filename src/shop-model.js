@@ -234,6 +234,10 @@ export function demoShop() {
         sizes: ["fins", "suit", "bcd"].includes(category)
           ? ["S", "M", "L", "XL"]
           : [],
+        images: [],
+        videos: [],
+        details: "",
+        specs: [],
       }),
     ),
   };
