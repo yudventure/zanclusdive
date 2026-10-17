@@ -66,7 +66,7 @@ try {
     .getByRole("button", { name: "Pilih ukuran Open heel fins", exact: true })
     .click();
   const detail = page.locator("dialog.shop-detail");
-  await detail.locator("label", { hasText: "M" }).click();
+  await detail.locator(".shop-sizes label", { hasText: /^M$/ }).click();
   await detail.getByRole("button", { name: "Masukkan ke keranjang" }).click();
   await detail.waitFor({ state: "detached" });
   await page.getByLabel("Jumlah Open heel fins rental").selectOption("2");
@@ -206,7 +206,7 @@ try {
   );
   await live.reload({ waitUntil: "networkidle" });
   await live.locator(`[data-product="${added.id}"]`).waitFor();
-  await page.getByLabel("Ketersediaan produk").selectOption("unavailable");
+  await page.getByLabel("Ketersediaan di website").selectOption("unavailable");
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();
@@ -216,7 +216,9 @@ try {
     .waitFor();
   await live.reload({ waitUntil: "networkidle" });
   assert.equal(
-    await live.locator(`[data-product="${added.id}"] button`).isDisabled(),
+    await live
+      .locator(`[data-product="${added.id}"] .shop-product-bottom button`)
+      .isDisabled(),
     true,
   );
   await page

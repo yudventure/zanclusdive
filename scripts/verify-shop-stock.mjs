@@ -223,7 +223,7 @@ try {
     await detail.locator(".activity-error").textContent(),
     "Pilih ukuran dulu.",
   );
-  await detail.locator("label", { hasText: "XXL" }).click();
+  await detail.locator(".shop-sizes label", { hasText: /^XXL$/ }).click();
   assert.deepEqual(await detail.locator("select option").allTextContents(), [
     "1",
   ]);
@@ -288,7 +288,7 @@ try {
     .getByRole("button", { name: "Pilih ukuran Wetsuit 3 mm" })
     .click();
   await detail.waitFor();
-  await detail.locator("label", { hasText: "M" }).first().click();
+  await detail.locator(".shop-sizes label", { hasText: /^M$/ }).click();
   await detail.getByRole("button", { name: "Masukkan ke keranjang" }).click();
   await detail.waitFor({ state: "detached" });
   assert.equal(

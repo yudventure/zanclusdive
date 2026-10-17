@@ -366,8 +366,7 @@ try {
   await page.locator("#dive-shop").scrollIntoViewIfNeeded();
   await page
     .locator(".shop-item", { hasText: "Dive computer" })
-    .locator("button")
-    .first()
+    .locator(".shop-item-add")
     .click();
   await page.getByRole("tab").nth(1).click();
   const rental = page.locator(".shop-item").first();

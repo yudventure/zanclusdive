@@ -207,7 +207,7 @@ try {
   await page.goto(base + "/dive-shop?mode=rental", {
     waitUntil: "networkidle",
   });
-  await page.locator(".shop-product-card button").first().click();
+  await page.locator(".shop-product-bottom button").first().click();
   await page.fill("#order-name", "Alex");
   await page.fill("#order-whatsapp", "+44 7700 900123");
   await page.locator(".shop-submit").click();
