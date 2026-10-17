@@ -142,6 +142,10 @@ export async function startPayment(input, { origin, locale = "id" }) {
       notes: [
         `Bayar online: ${orderLabel(lines, "id")}`,
         order.fare && `Tarif ${fareNames[order.fare.tier]}`,
+        order.delivery &&
+          (order.delivery.method === "delivery"
+            ? `Diantar ke ${order.delivery.zone}, alamat ${order.delivery.address}`
+            : "Ambil sendiri di dive center"),
         certification && `Lisensi: ${certification}`,
         ...profile.map(([label, value]) => `${label}: ${value}`),
         notes,

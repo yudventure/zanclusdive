@@ -94,6 +94,7 @@ export default function AboutEditor({
         <div className="admin-photo-row">
           <PhotoField
             label="Foto sampul Tentang kami"
+            guide="about"
             value={page.image}
             media={media}
             onChange={(url) => update({ image: url })}

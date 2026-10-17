@@ -179,6 +179,7 @@ export default function ActivitiesEditor({
           <div className="admin-image-slot wide">
             <img src={activity.image} alt="Preview sampul" />
             <ImageUpload
+              guide="activityCover"
               label="Ganti foto sampul"
               onFile={(file) => placePhoto(file, (url) => change("image", url))}
             />
@@ -235,6 +236,7 @@ export default function ActivitiesEditor({
           <div className="admin-image-slot wide">
             <img src={activity.cardImage} alt="Preview foto kartu" />
             <ImageUpload
+              guide="activityCard"
               label="Ganti foto kartu"
               onFile={(file) =>
                 placePhoto(file, (url) => change("cardImage", url))

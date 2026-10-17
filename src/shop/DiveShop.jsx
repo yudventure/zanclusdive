@@ -6,6 +6,10 @@ import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import ProductVisual from "./ProductVisual.jsx";
 import ProductDetail from "./ProductDetail.jsx";
+import DeliveryChoice, {
+  firstDelivery,
+  deliveryFee,
+} from "../components/DeliveryChoice.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import {
@@ -14,6 +18,7 @@ import {
   orderMessage,
   unitsLeft,
   stockBadge,
+  deliveryChoice,
 } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
@@ -63,6 +68,11 @@ export default function DiveShop({
   const [fare, setFare] = useState("standard");
   // The product window: { product, mode, add } (add false from the cart).
   const [detail, setDetail] = useState(null);
+  // Picked up at the dive center or delivered: { method, zone, address }.
+  const [delivery, setDelivery] = useState(() => firstDelivery(shop.delivery));
+  const fee = deliveryFee(shop.delivery, delivery);
+  const zoneName =
+    shop.delivery?.zones.find((z) => z.id === delivery.zone)?.name ?? "";
   const [menu, setMenu] = useState(false),
     [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -164,7 +174,11 @@ export default function DiveShop({
         orderMessage(
           shop.products,
           cart,
-          { ...details, fare: { text: fareText, markup } },
+          {
+            ...details,
+            fare: { text: fareText, markup },
+            delivery: deliveryChoice(shop.delivery, delivery, locale),
+          },
           false,
           locale,
         ),
@@ -684,6 +698,17 @@ export default function DiveShop({
                         </FormField>
                       </div>
                     )}
+                    <DeliveryChoice
+                      id="order"
+                      delivery={shop.delivery}
+                      value={delivery}
+                      onChange={(next) => {
+                        setDelivery(next);
+                        setMessage("");
+                        setError("");
+                      }}
+                      locale={locale}
+                    />
                     <FormField
                       id="order-notes"
                       label={t.notes}
@@ -723,9 +748,16 @@ export default function DiveShop({
                             {money(markup)}
                           </small>
                         )}
+                        {fee > 0 && (
+                          <small className="shop-fare-note">
+                            {t.delivery.fee(zoneName)} {money(fee)}
+                          </small>
+                        )}
                       </span>
                       <strong>
-                        {quote ? money(quote.total + markup) : t.checkDuration}
+                        {quote
+                          ? money(quote.total + markup + fee)
+                          : t.checkDuration}
                       </strong>
                     </div>
                     {quote?.needsQuote && (
@@ -761,8 +793,9 @@ export default function DiveShop({
                           whatsapp: details.whatsapp,
                           email: details.email,
                           notes: details.notes,
+                          delivery,
                         }}
-                        total={quote.total + markup}
+                        total={quote.total + markup + fee}
                         message={message}
                         whatsapp={contact.whatsapp}
                         sandbox={payments.sandbox}
@@ -834,6 +867,7 @@ export default function DiveShop({
           stock={stock}
           locale={locale}
           category={shopCategories[detail.product.category]}
+          delivery={shop.delivery}
           onAdd={
             detail.add
               ? (size, quantity) => add(detail.product, size, quantity)

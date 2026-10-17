@@ -163,6 +163,7 @@ export default function CourseEditor({
                 )}
                 <ImageUpload
                   compact
+                  guide="courseCard"
                   label={course.image ? "Ganti foto" : "Upload foto"}
                   onFile={(file) =>
                     placePhoto(file, (url) => change(index, { image: url }))
@@ -317,6 +318,7 @@ export default function CourseEditor({
                 </span>
                 <ImageUpload
                   compact
+                  guide="logo"
                   label={partner.logo ? "Ganti logo" : "Upload logo"}
                   onFile={(file) =>
                     placeLogo(file, (url, logoStyle, logoRatio) =>

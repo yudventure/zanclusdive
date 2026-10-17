@@ -2,7 +2,11 @@
 import { useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
 import ProductDetail from "./ProductDetail.jsx";
-import { rupiah, unitsLeft } from "../shop-model.js";
+import DeliveryChoice, {
+  firstDelivery,
+  deliveryFee,
+} from "../components/DeliveryChoice.jsx";
+import { rupiah, unitsLeft, deliveryChoice } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
@@ -174,6 +178,11 @@ export default function ShopTeaser({
   const [message, setMessage] = useState("");
   // The product window: { product, add } (add false from the checkout).
   const [detail, setDetail] = useState(null);
+  // Picked up at the dive center or delivered: { method, zone, address }.
+  const [delivery, setDelivery] = useState(() => firstDelivery(shop.delivery));
+  const fee = deliveryFee(shop.delivery, delivery);
+  const zoneName =
+    shop.delivery?.zones.find((z) => z.id === delivery.zone)?.name ?? "";
   const id = useId();
   const tabRefs = useRef({});
   const dialog = useRef(null);
@@ -244,6 +253,7 @@ export default function ShopTeaser({
     whatsapp: form.whatsapp,
     email: form.email,
     notes: form.notes,
+    delivery,
   });
   const quantity = (key) =>
     cart.find((line) => line.key === key)?.quantity ?? 0;
@@ -326,7 +336,11 @@ export default function ShopTeaser({
       setMessage(
         checkoutMessage(
           cart,
-          { ...form, fare: { text: fareText, markup } },
+          {
+            ...form,
+            fare: { text: fareText, markup },
+            delivery: deliveryChoice(shop.delivery, delivery, locale),
+          },
           today(),
           locale,
         ),
@@ -651,9 +665,15 @@ export default function ShopTeaser({
               <dd>{rupiah(markup, locale)}</dd>
             </div>
           )}
+          {fee > 0 && (
+            <div>
+              <dt>{t.delivery.fee(zoneName)}</dt>
+              <dd>{rupiah(fee, locale)}</dd>
+            </div>
+          )}
           <div>
             <dt>{payable ? p.total : s.estimate}</dt>
-            <dd>{rupiah(totals.total + markup, locale)}</dd>
+            <dd>{rupiah(totals.total + markup + fee, locale)}</dd>
           </div>
         </dl>
         {offered && !message && (
@@ -670,7 +690,7 @@ export default function ShopTeaser({
           <div className="shop-checkout-done">
             <PayPanel
               order={order()}
-              total={totals.total + markup}
+              total={totals.total + markup + fee}
               message={message}
               whatsapp={whatsapp}
               sandbox={payments.sandbox}
@@ -788,6 +808,17 @@ export default function ShopTeaser({
                 </FormField>
               </div>
             )}
+            <DeliveryChoice
+              id={id}
+              delivery={shop.delivery}
+              value={delivery}
+              onChange={(next) => {
+                setDelivery(next);
+                setMessage("");
+                setError("");
+              }}
+              locale={locale}
+            />
             <FormField
               id={`${id}-notes`}
               label={s.notes}
@@ -821,6 +852,7 @@ export default function ShopTeaser({
           stock={stock}
           locale={locale}
           category={dictionary(locale).shopCategories[detail.product.category]}
+          delivery={shop.delivery}
           onAdd={
             detail.add
               ? (size, count) => addSized(detail.product, size, count)

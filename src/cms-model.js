@@ -18,6 +18,9 @@ import {
   shopCategories,
   availabilityLabels,
   cleanSizes,
+  productLimits,
+  defaultDelivery,
+  deliveryZoneLimit,
 } from "./shop-model.js";
 import {
   blankSocials,
@@ -407,6 +410,7 @@ export function validateShop(shop) {
   return {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
+    delivery: validateDelivery(shop.delivery),
     products: shop.products.map((p) => {
       if (
         !p ||
@@ -450,12 +454,113 @@ export function validateShop(shop) {
           300,
           false,
         ),
-        image: p.image ? imageURL(p.image) : "",
+        ...productMedia(p),
+        details: plain(
+          p.details ?? "",
+          "Deskripsi lengkap",
+          productLimits.details,
+          false,
+        ),
+        specs: specRows(p.specs),
         salePrice: price(p.salePrice),
         rentalPrice: price(p.rentalPrice),
         sizes: cleanSizes(p.sizes),
       };
     }),
+  };
+}
+// A product's photos (the first is its cover, kept as "image" for the
+// cards) and its video links.
+function productMedia(p) {
+  const list = Array.isArray(p.images) ? p.images : [];
+  if (list.length > productLimits.images)
+    throw new Error(`Foto produk maksimal ${productLimits.images}.`);
+  const images = [...new Set(list.map((url) => imageURL(url)))];
+  // Catalogs from before the gallery kept one photo.
+  if (!images.length && p.image) images.push(imageURL(p.image));
+  const videos = Array.isArray(p.videos) ? p.videos : [];
+  if (videos.length > productLimits.videos)
+    throw new Error(`Video produk maksimal ${productLimits.videos}.`);
+  return {
+    image: images[0] ?? "",
+    images,
+    videos: videos.map((value, index) => {
+      const url = typeof value === "string" ? value.trim() : "";
+      const source = url.length <= 300 ? videoSource(url) : null;
+      if (!source)
+        throw new Error(
+          `Link video produk ${index + 1} belum dikenali. Tempel link dari YouTube, TikTok, Instagram, atau Facebook.`,
+        );
+      if (source.short)
+        throw new Error(
+          `Link video produk ${index + 1} masih link pendek. Buka link itu di browser, lalu salin alamat lengkapnya.`,
+        );
+      return url;
+    }),
+  };
+}
+// Spec rows such as Merek / Scubapro, shown as a table on the product.
+export function specRows(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > productLimits.specs)
+    throw new Error(`Baris spesifikasi maksimal ${productLimits.specs}.`);
+  return input
+    .map((row) => ({
+      label: plain(row?.label ?? "", "Nama spesifikasi", 40, false),
+      value: plain(row?.value ?? "", "Isi spesifikasi", 160, false),
+    }))
+    .filter((row) => row.label || row.value)
+    .map((row) => {
+      if (!row.label || !row.value)
+        throw new Error("Isi nama dan isi setiap baris spesifikasi.");
+      if (/[<>]/.test(row.label + row.value))
+        throw new Error("Spesifikasi tidak boleh berisi < atau >.");
+      return row;
+    });
+}
+// Pick-up and delivery for Dive Shop orders.
+function validateDelivery(input) {
+  if (input === undefined || input === null)
+    return structuredClone(defaultDelivery);
+  if (typeof input !== "object" || Array.isArray(input))
+    throw new Error("Pengaturan pengantaran tidak valid.");
+  const zones = Array.isArray(input.zones) ? input.zones : [];
+  if (zones.length > deliveryZoneLimit)
+    throw new Error(`Wilayah antar maksimal ${deliveryZoneLimit}.`);
+  const seen = new Set();
+  const clean = zones.map((zone) => {
+    const id = typeof zone?.id === "string" ? zone.id : "";
+    if (!/^[a-z0-9-]{1,40}$/.test(id) || seen.has(id))
+      throw new Error("Wilayah antar tidak valid.");
+    seen.add(id);
+    const name = plain(zone.name ?? "", "Nama wilayah antar", 60);
+    const fee = Number(zone.fee);
+    if (!Number.isSafeInteger(fee) || fee < 0 || fee > 1e7)
+      throw new Error(
+        `Ongkos antar ${name} harus rupiah 0 sampai 10 juta (0 berarti gratis).`,
+      );
+    return { id, name, fee };
+  });
+  const enabled = input.enabled === true;
+  const pickup = input.pickup !== false;
+  if (enabled && !clean.length)
+    throw new Error("Tambahkan minimal satu wilayah antar beserta ongkosnya.");
+  if (!enabled && !pickup)
+    throw new Error("Aktifkan ambil sendiri atau antar ke alamat.");
+  const note = (value, fallback, label) => ({
+    id: plain(value?.id ?? fallback.id, label, 300, false),
+    en: plain(value?.en ?? fallback.en, label + " (English)", 300, false),
+  });
+  return {
+    pickup,
+    pickupNote: note(
+      input.pickupNote,
+      defaultDelivery.pickupNote,
+      "Keterangan ambil sendiri",
+    ),
+    enabled,
+    zones: clean,
+    note: note(input.note, defaultDelivery.note, "Keterangan pengantaran"),
   };
 }
 function validDate(s) {

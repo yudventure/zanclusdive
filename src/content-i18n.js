@@ -23,7 +23,7 @@ export const translatableFields = {
     "itinerary",
     "faqs",
   ],
-  products: ["name", "description", "specification"],
+  products: ["name", "description", "specification", "details", "specs"],
 };
 const experienceKeys = ["beginner", "explorer", "specialty"];
 const textKeys = [
@@ -557,10 +557,13 @@ export function applyEnglishEdit(content, group, key, value) {
     };
   }
   if (group === "shop") {
-    if (key !== "products") {
+    if (["heading", "description"].includes(key)) {
       en.shop[key] = value;
       return { ...current, en };
     }
+    // Delivery settings carry both languages themselves.
+    if (key !== "products")
+      return { ...current, shop: { ...current.shop, [key]: value } };
     const fields = translatableFields.products;
     en.shop.products = Object.fromEntries(
       value.map((p) => [p.id, pick(p, fields)]),
@@ -582,6 +585,18 @@ function optional(value, label, max) {
   if (typeof value !== "string" || value.length > max)
     throw new Error(`${label} (English) tidak valid.`);
   return value.trim();
+}
+// English spec rows; empty rows are dropped, as in Indonesian.
+function specList(value) {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || value.length > 16)
+    throw new Error("Spesifikasi (English) tidak valid.");
+  return value
+    .map((row) => ({
+      label: optional(row?.label, "Nama spesifikasi", 40),
+      value: optional(row?.value, "Isi spesifikasi", 160),
+    }))
+    .filter((row) => row.label && row.value);
 }
 function list(value, label, max, limit) {
   if (value === undefined || value === null) return [];
@@ -680,6 +695,8 @@ export function validateTranslations(input, products = []) {
                 "Spesifikasi produk",
                 300,
               ),
+              details: optional(t.details, "Deskripsi lengkap", 3000),
+              specs: specList(t.specs),
             },
           ];
         }),

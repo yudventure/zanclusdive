@@ -84,15 +84,6 @@
   border-radius: 14px;
   overflow: hidden;
 }
-.admin-shop-image-editor {
-  display: grid;
-  grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1.3fr);
-  gap: 20px;
-  margin-top: 25px;
-}
-.admin-shop-image-editor .admin-field {
-  margin-bottom: 12px;
-}
 .admin-shop-save {
   position: sticky;
   bottom: 12px;
@@ -136,8 +127,7 @@
   .admin-shop-layout .admin-card {
     padding: 18px;
   }
-  .admin-shop-pricing,
-  .admin-shop-image-editor {
+  .admin-shop-pricing {
     grid-template-columns: 1fr;
   }
   .admin-shop-list {
@@ -2757,4 +2747,154 @@ strong.admin-overdue {
 }
 .admin-fare-tag.warn {
   color: #a73428;
+}
+/* The best size for a photo slot, under its upload button. */
+.admin-upload-drop .admin-photo-guide {
+  display: block;
+  margin-top: 2px;
+  color: #0d6f73;
+  font-size: 11px;
+  font-weight: 600;
+}
+/* Dive Shop product: photos, videos and spec rows. */
+.admin-shop-photos,
+.admin-shop-videos,
+.admin-shop-specs,
+.admin-shop-delivery {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #f4f9f9;
+}
+.admin-shop-photos h3,
+.admin-shop-videos h3,
+.admin-shop-specs h3,
+.admin-shop-delivery h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.admin-shop-photos h3 small,
+.admin-shop-videos h3 small {
+  margin-left: 6px;
+  color: #5f7480;
+  font-weight: 500;
+}
+.admin-shop-photos p,
+.admin-shop-videos p,
+.admin-shop-specs p,
+.admin-shop-delivery p {
+  margin: 0;
+}
+.admin-shop-photo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-shop-photo-list li {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #d8e6e6;
+  border-radius: 12px;
+  background: white;
+}
+.admin-shop-photo-list img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.admin-shop-photo-list div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 6px;
+}
+/* "Utama" takes the row above the arrows and the remove button. */
+.admin-shop-photo-list div button:first-child:not([aria-label*="Geser"]) {
+  grid-column: 1 / -1;
+}
+.admin-shop-photo-list button {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #d8e6e6;
+  border-radius: 8px;
+  background: white;
+  color: #0d5f63;
+  font-size: 12px;
+  cursor: pointer;
+}
+.admin-shop-photo-list button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.admin-shop-photo-list button.danger {
+  color: #b23b2d;
+}
+.admin-photo-cover {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #0d6f73;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+}
+.admin-shop-videos ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-shop-videos li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: white;
+  font-size: 13px;
+}
+.admin-shop-videos li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #5f7480;
+}
+.admin-spec-row,
+.admin-zone-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.admin-spec-row .admin-inline,
+.admin-zone-row .admin-inline {
+  margin-bottom: 12px;
+}
+.admin-zones {
+  display: grid;
+  gap: 10px;
+}
+.admin-shop-delivery {
+  margin-top: 0;
+}
+@media (max-width: 560px) {
+  .admin-spec-row,
+  .admin-zone-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .admin-spec-row .admin-field:first-child,
+  .admin-zone-row .admin-field:first-child {
+    grid-column: 1 / -1;
+  }
 }

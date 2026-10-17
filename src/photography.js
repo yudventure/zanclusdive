@@ -1,16 +1,17 @@
 // Local concept imagery: each placement has its own scene, without external requests.
 export const photographyVersion = 1;
 export const siteImageFields = [
-  ["hero", "Sampul beranda"],
-  ["reef", "Jelajahi laut — kehidupan terumbu"],
-  ["ocean", "Jelajahi laut — laut terbuka"],
-  ["galleryDive", "Galeri — scuba diving"],
-  ["galleryFreedive", "Galeri — freediving"],
-  ["galleryCoral", "Galeri — kehidupan karang"],
-  ["galleryTurtle", "Galeri — penyu"],
-  ["galleryIsland", "Galeri — pulau & pantai"],
-  ["shop", "Sampul Dive Shop — perlengkapan"],
-  ["course", "Latar bagian kursus beranda (foto selam gelap)"],
+  // [key, label, best size in src/admin/photo-guide.js]
+  ["hero", "Sampul beranda", "hero"],
+  ["reef", "Jelajahi laut, kehidupan terumbu", "reef"],
+  ["ocean", "Jelajahi laut, laut terbuka", "ocean"],
+  ["galleryDive", "Galeri, scuba diving", "gallery"],
+  ["galleryFreedive", "Galeri, freediving", "gallery"],
+  ["galleryCoral", "Galeri, kehidupan karang", "gallery"],
+  ["galleryTurtle", "Galeri, penyu", "gallery"],
+  ["galleryIsland", "Galeri, pulau & pantai", "gallery"],
+  ["shop", "Sampul Dive Shop, perlengkapan", "shop"],
+  ["course", "Latar bagian kursus beranda (foto selam gelap)", "course"],
 ];
 export const defaultSiteImages = {
   hero: "/assets/hero.webp",
@@ -56,8 +57,8 @@ export const builtInPhotos = [
   [bannerPhotos.turtle, "Banner, penyelam dan penyu"],
   [bannerPhotos.cave, "Banner, penyelam di gua bawah laut"],
   ...Object.entries(activityPhotos).flatMap(([key, photo]) => [
-    [photo.cardImage, `${key} — kartu pengalaman`],
-    [photo.image, `${key} — sampul halaman`],
+    [photo.cardImage, `${key}, kartu pengalaman`],
+    [photo.image, `${key}, sampul halaman`],
   ]),
 ];
 const responsivePhotos = [

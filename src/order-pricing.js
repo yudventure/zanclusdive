@@ -10,6 +10,7 @@ import {
 import { addOnItems, priceText, rentalGroups } from "./price-list.js";
 import { itemLocked, pageLocked } from "./developer.js";
 import { fareNames, orderFare } from "./fare-model.js";
+import { deliveryChoice } from "./shop-model.js";
 
 export class PricingError extends Error {
   constructor(message, status = 409) {
@@ -180,12 +181,39 @@ function shopOrder(content, input, window, locks) {
   });
   const sum = (list) =>
     list.reduce((total, line) => total + line.price * line.quantity, 0);
+  // Picked up at the dive center, or delivered to a zone for its fee.
+  let delivery;
+  try {
+    delivery = deliveryChoice(content.shop?.delivery, input.delivery, "id");
+  } catch (error) {
+    fail(error.message, 400);
+  }
+  const extras = delivery.fee
+    ? [
+        {
+          id: `delivery-${delivery.zone.id}`.slice(0, 50),
+          name: both(
+            `Ongkos antar ${delivery.zone.name}`,
+            `Delivery to ${delivery.zone.name}`,
+          ),
+          price: delivery.fee,
+          quantity: 1,
+          extra: true,
+        },
+      ]
+    : [];
   return {
     program: "shop",
     startDate,
     endDate: rental ? addDays(startDate, days - 1) : startDate,
     participants: 1,
-    lines: priced,
+    lines: [...priced, ...extras],
+    delivery: {
+      method: delivery.method,
+      zone: delivery.zone?.name ?? "",
+      fee: delivery.fee,
+      address: delivery.address,
+    },
     // Rentals are booked for dates and take a fare; purchases do not.
     fareBase: sum(priced.filter((line) => line.rent)),
     purchases: sum(priced.filter((line) => !line.rent)),
@@ -303,11 +331,11 @@ export function priceOrder(content, input, window, locks) {
 }
 
 // "Discovery Dive × 2" or "Beli Fins × 1, Sewa Wetsuit (2 hari) × 1"; the
-// fare's increase is named without a count.
+// fare's increase and the delivery fee are named without a count.
 export const orderLabel = (lines, locale) =>
   lines
     .map((line) =>
-      line.fare
+      line.fare || line.extra
         ? priceText(line.name, locale)
         : `${priceText(line.name, locale)} × ${line.quantity}`,
     )

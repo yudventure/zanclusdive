@@ -7,15 +7,21 @@ import {
   availabilityLabels,
   rupiah,
   sizeLimit,
+  productImages,
+  productLimits,
+  deliveryOf,
+  deliveryZoneLimit,
 } from "../shop-model.js";
+import { videoPlatforms, videoSource } from "../gallery.js";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 
-function Field({ label, children }) {
+function Field({ label, hint, children }) {
   const id = useId();
   return (
     <div className="admin-field">
       <label htmlFor={id}>{label}</label>
       {cloneElement(children, { id })}
+      {hint && <small className="admin-subtle">{hint}</small>}
     </div>
   );
 }
@@ -76,6 +82,10 @@ export default function ShopEditor({
         enabled: false,
         availability: "stock",
         sizes: [],
+        images: [],
+        videos: [],
+        details: "",
+        specs: [],
       },
     ]);
     setSelectedID(id);
@@ -111,6 +121,10 @@ export default function ShopEditor({
             Lihat Dive Shop ↗
           </a>
         </div>
+        <DeliverySettings
+          delivery={deliveryOf(shop)}
+          onChange={(delivery) => update("delivery", delivery)}
+        />
         <div className="admin-form-grid">
           <Field label="Judul Dive Shop">
             <input
@@ -208,7 +222,10 @@ export default function ShopEditor({
                   ))}
                 </select>
               </Field>
-              <Field label="Deskripsi produk">
+              <Field
+                label="Deskripsi singkat"
+                hint="Tampil di kartu produk, satu sampai dua kalimat."
+              >
                 <textarea
                   required
                   rows={3}
@@ -217,7 +234,10 @@ export default function ShopEditor({
                   onChange={(e) => edit("description", e.target.value)}
                 />
               </Field>
-              <Field label="Spesifikasi / ukuran">
+              <Field
+                label="Ringkasan spesifikasi"
+                hint="Satu baris di kartu, misalnya Mask + snorkel, lensa tempered."
+              >
                 <textarea
                   rows={3}
                   maxLength={300}
@@ -226,6 +246,21 @@ export default function ShopEditor({
                 />
               </Field>
             </div>
+            <Field
+              label="Deskripsi lengkap"
+              hint="Tampil di jendela detail produk, seperti halaman barang di marketplace. Pisahkan paragraf dengan baris kosong, dan awali baris dengan tanda - untuk daftar."
+            >
+              <textarea
+                rows={8}
+                maxLength={productLimits.details}
+                value={product.details ?? ""}
+                onChange={(e) => edit("details", e.target.value)}
+              />
+            </Field>
+            <SpecRows
+              rows={product.specs ?? []}
+              onChange={(rows) => edit("specs", rows)}
+            />
             <div className="admin-shop-pricing">
               <div>
                 <label className="admin-toggle">
@@ -294,57 +329,28 @@ export default function ShopEditor({
               edit={edit}
               editMany={editMany}
             />
-            <div className="admin-shop-image-editor">
-              <div className="admin-shop-preview">
-                <ProductVisual product={product} />
-              </div>
-              <div>
-                <ImageUpload
-                  label={
-                    product.image ? "Ganti foto produk" : "Upload foto produk"
-                  }
-                  onFile={(file) =>
-                    placePhoto(file, (url) => edit("image", url))
-                  }
-                />
-                <Field label="URL foto produk (opsional)">
-                  <input
-                    placeholder="URL HTTPS atau /api/media/…"
-                    maxLength={1200}
-                    value={product.image}
-                    onChange={(e) => edit("image", e.target.value)}
-                  />
-                </Field>
-                <Field label="Atau pilih dari koleksi">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) edit("image", e.target.value);
-                    }}
-                  >
-                    <option value="">Pilih foto…</option>
-                    {media.map((m) => (
-                      <option key={m.id} value={m.url}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <p className="admin-subtle">
-                  Foto langsung terpasang setelah diupload. Tanpa foto, website
-                  menampilkan ilustrasi alat.
-                </p>
-                {product.image && (
-                  <button
-                    type="button"
-                    className="admin-inline"
-                    onClick={() => edit("image", "")}
-                  >
-                    Gunakan ilustrasi
-                  </button>
-                )}
-              </div>
-            </div>
+            <ProductPhotos
+              product={product}
+              media={media}
+              // Uploads land one after another, so each adds to the list
+              // as it is now, not as it was when the upload started.
+              onAdd={(file) =>
+                placePhoto(file, (url) =>
+                  update("products", (products) =>
+                    products.map((p) =>
+                      p.id === product.id
+                        ? withImages(p, [...productImages(p), url])
+                        : p,
+                    ),
+                  ),
+                )
+              }
+              onChange={(images) => editMany(withImages(product, images))}
+            />
+            <ProductVideos
+              videos={product.videos ?? []}
+              onChange={(videos) => edit("videos", videos)}
+            />
             <p className="admin-shop-price-preview">
               {product.saleEnabled &&
                 `Jual ${product.salePrice === null ? "dengan penawaran" : rupiah(product.salePrice)}`}
@@ -539,3 +545,451 @@ function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
     </section>
   );
 }
+
+// The first photo is the cover on cards; "image" follows it for the parts
+// of the site that show one photo.
+const withImages = (product, images) => {
+  const list = [...new Set(images)].slice(0, productLimits.images);
+  return { ...product, images: list, image: list[0] ?? "" };
+};
+
+// A product's photos like a marketplace listing: several at once from a
+// computer or phone, in order, the first one as the cover.
+function ProductPhotos({ product, media, onAdd, onChange }) {
+  const images = productImages(product);
+  const [url, setUrl] = useState("");
+  const move = (index, delta) => {
+    const next = [...images];
+    const [item] = next.splice(index, 1);
+    next.splice(index + delta, 0, item);
+    onChange(next);
+  };
+  const full = images.length >= productLimits.images;
+  return (
+    <section className="admin-shop-photos" aria-label="Foto produk">
+      <h3>
+        Foto produk{" "}
+        <small>
+          {images.length} dari {productLimits.images}
+        </small>
+      </h3>
+      {images.length ? (
+        <ul className="admin-shop-photo-list">
+          {images.map((src, index) => (
+            <li key={src}>
+              <img src={src} alt={`Foto ${index + 1} ${product.name}`} />
+              {index === 0 && <span className="admin-photo-cover">Utama</span>}
+              <div>
+                {index > 0 && (
+                  <button
+                    type="button"
+                    aria-label={`Jadikan foto ${index + 1} foto utama`}
+                    onClick={() =>
+                      onChange([src, ...images.filter((s) => s !== src)])
+                    }
+                  >
+                    Utama
+                  </button>
+                )}
+                <button
+                  type="button"
+                  aria-label={`Geser foto ${index + 1} ke kiri`}
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Geser foto ${index + 1} ke kanan`}
+                  disabled={index === images.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  →
+                </button>
+                <button
+                  type="button"
+                  className="danger"
+                  aria-label={`Hapus foto ${index + 1}`}
+                  onClick={() => onChange(images.filter((s) => s !== src))}
+                >
+                  ×
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="admin-shop-preview">
+          <ProductVisual product={product} />
+        </div>
+      )}
+      {!full && (
+        <ImageUpload
+          multiple
+          guide="product"
+          label="Tambah foto produk"
+          hint={`Bisa pilih beberapa foto sekaligus, maksimal ${productLimits.images}. Langsung terpasang.`}
+          onFile={onAdd}
+        />
+      )}
+      <p className="admin-subtle">
+        Foto pertama tampil di kartu. Tambahkan foto dari depan, samping,
+        detail, dan saat dipakai supaya tamu melihat barang aslinya. Tanpa foto,
+        website menampilkan ilustrasi alat.
+      </p>
+      <details className="admin-more">
+        <summary>Pilih foto lain atau tempel URL</summary>
+        <Field label="Tambah dari koleksi">
+          <select
+            value=""
+            disabled={full}
+            onChange={(e) =>
+              e.target.value && onChange([...images, e.target.value])
+            }
+          >
+            <option value="">Pilih foto…</option>
+            {media.map((m) => (
+              <option key={m.id} value={m.url}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div className="admin-size-row">
+          <Field label="URL foto">
+            <input
+              placeholder="URL HTTPS atau /api/media/…"
+              maxLength={1200}
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </Field>
+          <button
+            type="button"
+            className="admin-button secondary"
+            disabled={!url.trim() || full}
+            onClick={() => {
+              onChange([...images, url.trim()]);
+              setUrl("");
+            }}
+          >
+            Tambah foto
+          </button>
+        </div>
+      </details>
+    </section>
+  );
+}
+
+// Video links that show the real gear: YouTube, TikTok, Instagram or
+// Facebook. Share links are opened on the server for their full address.
+function ProductVideos({ videos, onChange }) {
+  const [draft, setDraft] = useState("");
+  const [state, setState] = useState("");
+  async function add() {
+    let url = draft.trim();
+    let source = videoSource(url);
+    setState("");
+    if (!source) {
+      setState(
+        "Link belum dikenali. Tempel link video dari YouTube, TikTok, Instagram, atau Facebook.",
+      );
+      return;
+    }
+    if (source.short) {
+      setState("Membuka link pendek…");
+      try {
+        const response = await fetch("/api/admin/videos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error);
+        url = result.url;
+        source = videoSource(url);
+      } catch (error) {
+        setState(error.message || "Link pendek belum bisa dibuka.");
+        return;
+      }
+    }
+    onChange([...videos, url]);
+    setDraft("");
+    setState("");
+  }
+  return (
+    <section className="admin-shop-videos" aria-label="Video produk">
+      <h3>
+        Video produk{" "}
+        <small>
+          {videos.length} dari {productLimits.videos}
+        </small>
+      </h3>
+      {videos.length > 0 && (
+        <ul>
+          {videos.map((url, index) => (
+            <li key={url}>
+              <strong>
+                {videoPlatforms[videoSource(url)?.platform] ?? "Video"}
+              </strong>
+              <span>{url}</span>
+              <button
+                type="button"
+                className="admin-inline danger"
+                aria-label={`Hapus video ${index + 1}`}
+                onClick={() => onChange(videos.filter((v) => v !== url))}
+              >
+                Hapus
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {videos.length < productLimits.videos && (
+        <div className="admin-size-row">
+          <Field label="Link video">
+            <input
+              maxLength={300}
+              placeholder="https://youtu.be/… atau link TikTok, Instagram, Facebook"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  add();
+                }
+              }}
+            />
+          </Field>
+          <button
+            type="button"
+            className="admin-button secondary"
+            disabled={!draft.trim()}
+            onClick={add}
+          >
+            Tambah video
+          </button>
+        </div>
+      )}
+      {state && (
+        <p className="admin-subtle is-warn" role="status">
+          {state}
+        </p>
+      )}
+      <p className="admin-subtle">
+        Video tampil di jendela detail produk, misalnya unboxing atau alat
+        dipakai di laut. Unggah videonya ke YouTube, TikTok, atau Instagram,
+        lalu tempel linknya di sini.
+      </p>
+    </section>
+  );
+}
+
+// Spec rows shown as a table in the product window, such as Merek and
+// Scubapro, or Bahan and Silikon.
+function SpecRows({ rows, onChange }) {
+  const set = (index, key, value) =>
+    onChange(
+      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
+  return (
+    <section className="admin-shop-specs" aria-label="Tabel spesifikasi">
+      <h3>Tabel spesifikasi</h3>
+      {rows.map((row, index) => (
+        <div className="admin-spec-row" key={index}>
+          <Field label={`Nama ${index + 1}`}>
+            <input
+              maxLength={40}
+              placeholder="Merek"
+              value={row.label}
+              onChange={(e) => set(index, "label", e.target.value)}
+            />
+          </Field>
+          <Field label={`Isi ${index + 1}`}>
+            <input
+              maxLength={160}
+              placeholder="Scubapro"
+              value={row.value}
+              onChange={(e) => set(index, "value", e.target.value)}
+            />
+          </Field>
+          <button
+            type="button"
+            className="admin-inline danger"
+            aria-label={`Hapus baris spesifikasi ${index + 1}`}
+            onClick={() => onChange(rows.filter((_, i) => i !== index))}
+          >
+            Hapus
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="admin-button secondary"
+        disabled={rows.length >= productLimits.specs}
+        onClick={() => onChange([...rows, { label: "", value: "" }])}
+      >
+        + Tambah baris spesifikasi
+      </button>
+      <p className="admin-subtle">
+        Contoh Merek, Bahan, Ukuran lensa, Berat, Garansi. Baris kosong
+        diabaikan.
+      </p>
+    </section>
+  );
+}
+
+// Pick-up at the dive center, delivery to an address in zones with their
+// fees, and what the guest reads about each.
+function DeliverySettings({ delivery, onChange }) {
+  const set = (patch) => onChange({ ...delivery, ...patch });
+  const setZone = (index, patch) =>
+    set({
+      zones: delivery.zones.map((zone, i) =>
+        i === index ? { ...zone, ...patch } : zone,
+      ),
+    });
+  const note = (key, lang, value) =>
+    set({ [key]: { ...delivery[key], [lang]: value } });
+  return (
+    <section
+      className="admin-shop-delivery"
+      aria-label="Pengambilan dan pengantaran"
+    >
+      <h3>Pengambilan & pengantaran</h3>
+      <p className="admin-subtle">
+        Tamu memilih saat checkout. Ongkos antar ikut ke total dan pembayaran
+        Midtrans.
+      </p>
+      <label className="admin-toggle">
+        <input
+          type="checkbox"
+          checked={delivery.pickup}
+          onChange={(e) => set({ pickup: e.target.checked })}
+        />
+        Tamu bisa ambil sendiri di dive center
+      </label>
+      {delivery.pickup && (
+        <div className="admin-form-grid">
+          <Field label="Keterangan ambil sendiri">
+            <input
+              maxLength={300}
+              value={delivery.pickupNote.id}
+              onChange={(e) => note("pickupNote", "id", e.target.value)}
+            />
+          </Field>
+          <Field label="Keterangan ambil sendiri (English)">
+            <input
+              maxLength={300}
+              value={delivery.pickupNote.en}
+              onChange={(e) => note("pickupNote", "en", e.target.value)}
+            />
+          </Field>
+        </div>
+      )}
+      <label className="admin-toggle">
+        <input
+          type="checkbox"
+          checked={delivery.enabled}
+          onChange={(e) =>
+            set({
+              enabled: e.target.checked,
+              // The first zone, ready to fill in.
+              ...(e.target.checked && !delivery.zones.length
+                ? {
+                    zones: [
+                      { id: newZoneId(), name: "Waisai kota", fee: 25000 },
+                    ],
+                  }
+                : {}),
+            })
+          }
+        />
+        Bisa diantar sampai rumah atau penginapan
+      </label>
+      {delivery.enabled && (
+        <>
+          <div className="admin-zones">
+            {delivery.zones.map((zone, index) => (
+              <div className="admin-zone-row" key={zone.id}>
+                <Field label={`Wilayah ${index + 1}`}>
+                  <input
+                    required
+                    maxLength={60}
+                    placeholder="Waisai kota"
+                    value={zone.name}
+                    onChange={(e) => setZone(index, { name: e.target.value })}
+                  />
+                </Field>
+                <Field label={`Ongkos antar ${index + 1} (Rp)`}>
+                  <input
+                    type="number"
+                    min={0}
+                    max={10000000}
+                    step={1000}
+                    required
+                    value={zone.fee}
+                    onChange={(e) =>
+                      setZone(index, {
+                        fee:
+                          e.target.value === "" ? "" : Number(e.target.value),
+                      })
+                    }
+                  />
+                </Field>
+                <button
+                  type="button"
+                  className="admin-inline danger"
+                  aria-label={`Hapus wilayah ${index + 1}`}
+                  disabled={delivery.zones.length === 1}
+                  onClick={() =>
+                    set({ zones: delivery.zones.filter((_, i) => i !== index) })
+                  }
+                >
+                  Hapus
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="admin-button secondary"
+            disabled={delivery.zones.length >= deliveryZoneLimit}
+            onClick={() =>
+              set({
+                zones: [
+                  ...delivery.zones,
+                  { id: newZoneId(), name: "", fee: 0 },
+                ],
+              })
+            }
+          >
+            + Tambah wilayah antar
+          </button>
+          <p className="admin-subtle">
+            Isi 0 untuk gratis ongkos. Contoh Waisai kota Rp 25.000, Saonek atau
+            pulau terdekat Rp 150.000.
+          </p>
+          <div className="admin-form-grid">
+            <Field label="Keterangan pengantaran">
+              <input
+                maxLength={300}
+                value={delivery.note.id}
+                onChange={(e) => note("note", "id", e.target.value)}
+              />
+            </Field>
+            <Field label="Keterangan pengantaran (English)">
+              <input
+                maxLength={300}
+                value={delivery.note.en}
+                onChange={(e) => note("note", "en", e.target.value)}
+              />
+            </Field>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+const newZoneId = () => "zone-" + crypto.randomUUID().slice(0, 8);

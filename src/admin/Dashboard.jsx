@@ -384,14 +384,23 @@ export default function Dashboard({ section, account, today }) {
     setNotice("");
   }, [section]);
   function mutateContent(group, key, value) {
-    setContent((current) =>
-      editLocale === "en"
-        ? applyEnglishEdit(current, group, key, value)
+    setContent((current) => {
+      const english = editLocale === "en";
+      // A function gets the value as the editor shows it, so edits that
+      // land one after another (several photos at once) keep each other.
+      const next =
+        typeof value === "function"
+          ? value(
+              (english ? localizeContent(current, "en") : current)[group][key],
+            )
+          : value;
+      return english
+        ? applyEnglishEdit(current, group, key, next)
         : {
             ...current,
-            [group]: { ...current[group], [key]: value },
-          },
-    );
+            [group]: { ...current[group], [key]: next },
+          };
+    });
     setNotice("");
   }
   async function saveSettings(
@@ -1027,7 +1036,7 @@ export default function Dashboard({ section, account, today }) {
                           .map((c) => (
                             <tr key={c.phone || c.name}>
                               <td>{c.name}</td>
-                              <td>{c.phone || "—"}</td>
+                              <td>{c.phone || "–"}</td>
                               <td>{c.count}</td>
                               <td>{money(c.total)}</td>
                             </tr>
@@ -1537,7 +1546,7 @@ export default function Dashboard({ section, account, today }) {
                         Foto langsung terpasang dan tampil di website.
                       </p>
                       <div className="admin-image-grid">
-                        {siteImageFields.map(([key, label]) => (
+                        {siteImageFields.map(([key, label, guide]) => (
                           <div key={key} className="admin-image-slot">
                             <img
                               src={content.images[key]}
@@ -1546,6 +1555,7 @@ export default function Dashboard({ section, account, today }) {
                             <strong>{label}</strong>
                             <ImageUpload
                               label="Ganti foto"
+                              guide={guide}
                               onFile={(file) =>
                                 placePhoto(file, (url) =>
                                   mutateContent("images", key, url),
@@ -1630,6 +1640,7 @@ export default function Dashboard({ section, account, today }) {
                     </p>
                     <ImageUpload
                       multiple
+                      guide="collection"
                       label="Upload beberapa foto"
                       hint="Foto besar dari kamera otomatis dikecilkan"
                       onFile={async (file) => {

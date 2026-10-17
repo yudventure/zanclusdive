@@ -193,6 +193,7 @@ export default function CalendarEditor({
                   <div className="admin-banner-photos">
                     <PhotoField
                       label="Flyer event"
+                      guide="flyer"
                       value={banner.image}
                       media={media}
                       placePhoto={placePhoto}
@@ -200,6 +201,7 @@ export default function CalendarEditor({
                     />
                     <PhotoField
                       label="Foto latar banner (opsional)"
+                      guide="bannerBackground"
                       value={banner.background}
                       media={media}
                       placePhoto={placePhoto}

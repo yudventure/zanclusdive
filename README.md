@@ -118,11 +118,24 @@ Produk, ukuran, dan stok diatur di satu tempat, yaitu detail produk di `/admin/s
 - **Pembelian dan sewa.** Pembelian yang lunas lewat Midtrans menjadi **Keluar · Penjualan** "Pesanan online ZC-…" pada barang ukurannya, sekali per pesanan (`payment.stockRecorded`). Pesanan yang menunggu pembayaran menahan unitnya. Sewa tidak membuat catatan keluar masuk, tetapi memakai unit pada tanggal sewa selama reservasinya berlaku, jadi tanggal baru atau pembatalan langsung membebaskannya. Tamu Comfort atau Flexi tidak bisa memindah sewa ke tanggal yang alatnya penuh.
 - Pesanan lewat WhatsApp dan reservasi yang dicatat tim tidak mengubah stok. Catat sendiri lewat tombol Masuk atau Keluar.
 
-### Detail produk dan ukuran untuk tamu
+### Halaman produk seperti marketplace
 
-Nama atau foto produk di kartu Dive Shop (beranda dan `/dive-shop`) membuka jendela detail berisi foto, deskripsi, spesifikasi, ukuran beserta yang sudah habis, harga, dan jumlah (`src/shop/ProductDetail.jsx`). Produk berukuran masuk keranjang lewat tombol **Pilih ukuran**. Di keranjang dan jendela checkout, setiap baris berukuran punya pilihan ukuran, dan namanya membuka detail lagi tanpa tombol tambah. Ukuran ikut ke pembayaran Midtrans ("Beli Wetsuit 3 mm ukuran M"), pesan WhatsApp, reservasi, dan stok, sehingga kolom catatan tidak lagi meminta ukuran.
+Setiap produk di `/admin/shop` bisa diisi seperti barang di marketplace.
 
-Uji dengan `node scripts/verify-shop-stock.mjs` pada server demo yang dijalankan seperti untuk `verify-fares`.
+- **Foto.** Sampai 8 foto per produk, bisa dipilih sekaligus dari PC atau HP. Foto langsung terpasang dan tersimpan (`product.images`). Foto pertama menjadi foto utama di kartu, dan bisa diganti lewat tombol **Utama**, digeser, atau dihapus.
+- **Video.** Sampai 4 link video YouTube, TikTok, Instagram, atau Facebook (`product.videos`) untuk memperlihatkan barang aslinya. Link pendek dibuka dulu di server.
+- **Deskripsi lengkap dan tabel spesifikasi.** Deskripsi sampai 3.000 karakter (`product.details`): baris kosong memisahkan paragraf, dan baris yang diawali tanda - menjadi daftar. Tabel berisi sampai 16 baris nama dan isi, misalnya Merek dan Bahan (`product.specs`). Keduanya punya versi English lewat pilihan bahasa di admin.
+- **Jendela produk.** Nama atau foto di kartu membuka jendela besar (`src/shop/ProductDetail.jsx`). Isinya galeri foto dengan thumbnail, panah, dan geser di HP, lalu harga beli atau sewa, sisa stok, ukuran (yang habis ditandai), jumlah, dan cara pengambilan. Di bawahnya ada deskripsi, spesifikasi, dan video. Produk berukuran masuk keranjang lewat tombol **Pilih ukuran**, dan di keranjang setiap baris berukuran punya pilihan ukuran. Ukuran ikut ke pembayaran Midtrans, pesan WhatsApp, reservasi, dan stok.
+
+### Pengambilan dan pengantaran
+
+Atur di `/admin/shop`, bagian **Pengambilan & pengantaran** (`shop.delivery`). Pilihannya ambil sendiri di dive center beserta keterangannya, dan antar ke alamat dengan daftar wilayah dan ongkosnya (sampai 12 wilayah, 0 berarti gratis). Keterangan ditulis dalam dua bahasa. Saat checkout di beranda dan `/dive-shop`, tamu memilih ambil sendiri atau diantar. Kalau diantar, tamu memilih wilayah dan mengisi alamat. Ongkos antar menjadi baris sendiri di total dan di Midtrans ("Ongkos antar Waisai kota"), dan wilayah serta alamatnya tercatat di catatan reservasi dan pesan WhatsApp. Katalog lama otomatis hanya memakai ambil sendiri.
+
+### Ukuran foto terbaik
+
+Setiap tombol unggah foto di admin menyebut ukuran terbaiknya (`src/admin/photo-guide.js`), misalnya sampul beranda 1920 × 1080 px (16:9), foto kartu dan galeri beranda 1200 × 800 px (3:2), flyer event 1080 × 1350 px (4:5), foto produk 1200 × 1200 px (1:1), dan logo mitra PNG transparan dengan lebar minimal 600 px. Foto yang lebih besar tetap bisa diunggah, karena browser mengecilkannya dulu (sisi terpanjang maksimal 2400 px).
+
+Uji dengan `node scripts/verify-shop-market.mjs` pada server demo yang dijalankan seperti untuk `verify-fares`.
 
 ## Banner event di beranda
 

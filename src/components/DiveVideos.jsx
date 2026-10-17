@@ -69,7 +69,7 @@ function playerSrc(source, { tapped, still, width }) {
 // One 9:16 video. The player loads only when the frame comes near the
 // screen; YouTube and TikTok then play muted on a loop and pause again once
 // they scroll away. With reduced motion they wait for a tap instead.
-function Video({ source, name, caption, t }) {
+export function Video({ source, name, caption, t }) {
   const box = useRef(null);
   const frame = useRef(null);
   const [active, setActive] = useState(false);

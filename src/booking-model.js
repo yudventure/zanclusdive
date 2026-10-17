@@ -24,6 +24,10 @@ const englishErrors = {
     "This program isn't taking bookings yet. Please choose another program.",
   "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.":
     "This date is closed for the selected program. Please choose another date.",
+  "Pilih cara pengambilan pesanan.": "Choose how to receive your order.",
+  "Pilih wilayah antar.": "Choose a delivery area.",
+  "Isi alamat antar, 5–300 karakter.":
+    "Enter the delivery address, 5 to 300 characters.",
   "Pilih ukuran untuk setiap alat sebelum membayar.":
     "Choose a size for each item before paying.",
   "Alat sewa pesanan ini sudah penuh dipesan pada tanggal itu. Pilih tanggal lain.":

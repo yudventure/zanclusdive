@@ -240,7 +240,7 @@ export default function MonthCalendar({
                 {b.payment?.status === "paid" && " · Lunas"}
               </span>
               <small>
-                {shortDate(b.startDate)} — {shortDate(b.endDate)}
+                {shortDate(b.startDate)}–{shortDate(b.endDate)}
               </small>
               <span className={"admin-status " + b.status}>
                 {statuses[b.status]}
@@ -255,7 +255,7 @@ export default function MonthCalendar({
               <strong>{agent.name}</strong>
               <span>{event.summary}</span>
               <small>
-                {shortDate(event.start)} — {shortDate(event.end)}
+                {shortDate(event.start)}–{shortDate(event.end)}
               </small>
               <span className="admin-status agent">Agen</span>
             </div>

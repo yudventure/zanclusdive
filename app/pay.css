@@ -396,3 +396,64 @@
     justify-self: stretch;
   }
 }
+
+/* Picking up at the dive center or delivery, in the shop checkouts. */
+.delivery-choice {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+.delivery-choice legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.delivery-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+.delivery-options label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 11px 13px;
+  border: 1px solid #cfe3d6;
+  border-radius: 12px;
+  background: #fff;
+  color: #062b3b;
+  cursor: pointer;
+}
+.delivery-options label.is-chosen {
+  border-color: #1f8f8a;
+  background: #f1faf6;
+}
+.delivery-options input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #1f8f8a;
+}
+.delivery-options strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.delivery-options small {
+  display: block;
+  margin-top: 2px;
+  color: #4d6b73;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.delivery-note {
+  margin: 0;
+  color: #4d6b73;
+  font-size: 12px;
+}

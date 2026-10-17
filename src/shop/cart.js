@@ -1,5 +1,5 @@
 import { dictionary } from "../i18n.js";
-import { rupiah } from "../shop-model.js";
+import { rupiah, deliveryLines } from "../shop-model.js";
 import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 
 // Homepage Dive Shop cart. A line is
@@ -77,7 +77,8 @@ export function checkoutMessage(cart, details, today, locale = "id") {
     ...(totals.hasRental ? [m.period(details.days, details.startDate)] : []),
     // The fare picked for the rentals, with its increase in the total.
     ...(details.fare?.text ? [details.fare.text] : []),
-    `${m.total} ${rupiah(totals.total + (details.fare?.markup ?? 0), locale)}`,
+    ...deliveryLines(details.delivery, locale),
+    `${m.total} ${rupiah(totals.total + (details.fare?.markup ?? 0) + (details.delivery?.fee ?? 0), locale)}`,
     ...(totals.needsQuote ? [m.quote] : []),
     ...(notes ? [`${m.notes} ${notes}`] : []),
     "",

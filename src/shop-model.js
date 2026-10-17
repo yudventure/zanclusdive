@@ -36,7 +36,106 @@ export function cleanSizes(input) {
   });
 }
 const hasSizes = (product) => Boolean(product?.sizes?.length);
+
+// A product page like a marketplace: several photos (the first is the
+// cover on cards), video links, a full description and spec rows.
+export const productLimits = {
+  images: 8,
+  videos: 4,
+  details: 3000,
+  specs: 16,
+};
+export const productImages = (product) =>
+  Array.isArray(product?.images) && product.images.length
+    ? product.images
+    : product?.image
+      ? [product.image]
+      : [];
+
+// The full description as blocks for the product window: paragraphs, and
+// lists from lines that start with "-" or "•".
+export function detailBlocks(text) {
+  return String(text ?? "")
+    .replace(/\r\n?/g, "\n")
+    .split(/\n\s*\n/)
+    .map((block) =>
+      block
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    )
+    .filter((lines) => lines.length)
+    .flatMap((lines) => {
+      const out = [];
+      for (const line of lines) {
+        const item = /^[-•*]\s*(.+)$/.exec(line);
+        const last = out[out.length - 1];
+        if (item) {
+          if (last?.type === "list") last.items.push(item[1]);
+          else out.push({ type: "list", items: [item[1]] });
+        } else if (last?.type === "text") last.lines.push(line);
+        else out.push({ type: "text", lines: [line] });
+      }
+      return out;
+    });
+}
+
+// How a Dive Shop order reaches the guest: picked up at the dive center,
+// or delivered to an address in one of the zones, each with its fee.
+export const deliveryZoneLimit = 12;
+export const defaultDelivery = {
+  pickup: true,
+  pickupNote: {
+    id: "Ambil di Zanclus Dive Center, Waisai, pada jam buka.",
+    en: "Pick up at Zanclus Dive Center, Waisai, during opening hours.",
+  },
+  enabled: false,
+  zones: [],
+  note: {
+    id: "Diantar tim kami ke alamatmu. Waktu antar dikonfirmasi lewat WhatsApp.",
+    en: "Our team brings it to your address. We confirm the time on WhatsApp.",
+  },
+};
+export const deliveryOf = (shop) => shop?.delivery ?? defaultDelivery;
+// The delivery a guest picked, checked against the settings: the method,
+// the zone and fee, and the address. Throws a message for the guest.
+export function deliveryChoice(delivery, choice, locale = "id") {
+  const t = dictionary(locale).order;
+  const settings = delivery ?? defaultDelivery;
+  const method = choice?.method === "delivery" ? "delivery" : "pickup";
+  if (method === "pickup") {
+    if (!settings.pickup) throw new Error(t.pickDelivery);
+    return { method, zone: null, fee: 0, address: "" };
+  }
+  const zone = settings.enabled
+    ? settings.zones.find((z) => z.id === choice?.zone)
+    : null;
+  if (!zone) throw new Error(t.pickZone);
+  const address =
+    typeof choice?.address === "string"
+      ? choice.address.trim().replace(/\s+/g, " ")
+      : "";
+  if (address.length < 5 || address.length > 300 || /[<>]/.test(address))
+    throw new Error(t.address);
+  return { method, zone, fee: zone.fee, address };
+}
+// The delivery picked, as lines of a WhatsApp order: picked up, or the
+// zone with its fee and the address.
+export function deliveryLines(choice, locale = "id") {
+  if (!choice) return [];
+  const t = dictionary(locale).shop.delivery;
+  return choice.method === "delivery"
+    ? [
+        t.lineDeliver(
+          choice.zone.name,
+          choice.fee ? rupiah(choice.fee, locale) : t.free,
+        ),
+        t.lineAddress(choice.address),
+      ]
+    : [t.linePickup];
+}
 export const emptyShop = {
+  delivery: defaultDelivery,
   heading: "Perlengkapan untuk cerita berikutnya.",
   description:
     "Temukan alat diving untuk dimiliki atau disewa. Tim Zanclus membantu memilih perlengkapan yang sesuai dengan rencana menyelammu.",
@@ -166,7 +265,14 @@ export function stockBadge(product, stock, mode, labels) {
 }
 // Existing CMS documents acquire the new section without losing saved content.
 export function withShop(content, fallback = emptyShop) {
-  return { ...content, shop: content.shop ?? structuredClone(fallback) };
+  const shop = content.shop ?? structuredClone(fallback);
+  // Catalogs saved before delivery settings get pick-up only.
+  return {
+    ...content,
+    shop: shop.delivery
+      ? shop
+      : { ...shop, delivery: structuredClone(defaultDelivery) },
+  };
 }
 export const rupiah = (amount, locale = "id") => formatIDR(amount, locale);
 
@@ -270,10 +376,16 @@ export function orderMessage(
       : []),
     // The fare picked for the rentals, with its increase in the estimate.
     ...(details.fare?.text ? [details.fare.text] : []),
+    ...deliveryLines(details.delivery, locale),
     "",
     t.estimate(
       quote.needsQuote,
-      rupiah(quote.total + (details.fare?.markup ?? 0), locale),
+      rupiah(
+        quote.total +
+          (details.fare?.markup ?? 0) +
+          (details.delivery?.fee ?? 0),
+        locale,
+      ),
     ),
     ...(notes ? [`${t.notesLabel} ${notes}`] : []),
     t.closing,

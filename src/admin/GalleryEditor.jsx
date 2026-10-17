@@ -269,6 +269,7 @@ export default function GalleryEditor({
         {items.length < galleryLimit && (
           <ImageUpload
             multiple
+            guide="diveGallery"
             label="Tambah foto ke galeri"
             hint="Bisa pilih beberapa foto sekaligus · langsung tampil"
             onFile={(file) => placePhoto(file, addPhoto)}
@@ -314,6 +315,7 @@ export default function GalleryEditor({
                   )}
                   <ImageUpload
                     compact
+                    guide="diveGallery"
                     label={item.src ? "Ganti foto" : "Upload foto"}
                     onFile={(file) =>
                       placePhoto(file, (url) => change(index, { src: url }))
