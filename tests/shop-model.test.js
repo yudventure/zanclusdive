@@ -13,7 +13,7 @@ test("mixed orders charge sales once and rental per unit per day", () => {
   const products = demoShop().products;
   const cart = [
     { id: "demo-mask", mode: "sale", quantity: 2 },
-    { id: "demo-fins", mode: "rental", quantity: 3 },
+    { id: "demo-fins", mode: "rental", quantity: 3, size: "M" },
   ];
   const quote = quoteOrder(products, cart, 4);
   assert.equal(quote.total, 2200000);
@@ -36,11 +36,25 @@ test("mixed orders charge sales once and rental per unit per day", () => {
     true,
   );
   assert.doesNotMatch(message, /demo|contoh/i);
-  assert.match(message, /RENTAL · Open heel fins × 3/);
+  assert.match(message, /RENTAL · Open heel fins ukuran M × 3/);
+  assert.doesNotMatch(message, /[:;—]/);
+  // Gear with sizes is ordered in one of them.
+  assert.throws(
+    () =>
+      quoteOrder(products, [{ id: "demo-fins", mode: "sale", quantity: 1 }]),
+    { message: "Pilih ukuran untuk setiap alat." },
+  );
+  assert.throws(
+    () =>
+      quoteOrder(products, [
+        { id: "demo-mask", mode: "sale", quantity: 1, size: "M" },
+      ]),
+    { message: "Pilih ukuran untuk setiap alat." },
+  );
   assert.match(message, /2026-10-25, selama 4 hari/);
   assert.match(message, /2\.200\.000/);
   assert.match(message, /Fin ukuran M/);
-  assert.match(message, /WhatsApp: 081234567890/);
+  assert.match(message, /WhatsApp 081234567890/);
   assert.throws(() =>
     orderMessage(products, cart, {
       name: "Tamu",

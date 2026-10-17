@@ -3,7 +3,8 @@ import { rupiah } from "../shop-model.js";
 import { cleanWhatsApp, cleanEmail } from "../contact-fields.js";
 
 // Homepage Dive Shop cart. A line is
-// { key, name, price (rupiah or null), mode: "sale" | "rental", quantity }.
+// { key, name, price (rupiah or null), mode: "sale" | "rental", quantity },
+// and "size" for Dive Shop gear that comes in sizes.
 
 export function addLine(cart, item, delta = 1) {
   const current = cart.find((line) => line.key === item.key);
@@ -70,7 +71,7 @@ export function checkoutMessage(cart, details, today, locale = "id") {
     "",
     ...cart.map(
       (line) =>
-        `${line.mode === "sale" ? m.buy : m.rent} · ${line.name} × ${line.quantity} · ${price(line)}`,
+        `${line.mode === "sale" ? m.buy : m.rent} · ${line.name}${line.size ? " " + m.size(line.size) : ""} × ${line.quantity} · ${price(line)}`,
     ),
     "",
     ...(totals.hasRental ? [m.period(details.days, details.startDate)] : []),

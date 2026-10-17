@@ -49,13 +49,18 @@ export function validateItem(input, current = null, { products } = {}) {
   const active = typeof pick("active") === "boolean" ? pick("active") : true;
   const productId =
     typeof pick("productId") === "string" ? pick("productId") : "";
+  const size =
+    productId && typeof pick("size") === "string" ? pick("size") : "";
+  const product = products?.find((p) => p.id === productId);
   if (
     productId &&
     (!/^[a-z0-9-]{1,50}$/.test(productId) ||
-      (products && !products.some((p) => p.id === productId)))
+      (products &&
+        (!product ||
+          (product.sizes?.length ? !product.sizes.includes(size) : size))))
   )
-    throw new Error("Produk Dive Shop tidak ditemukan.");
-  const before = current?.productId ?? "";
+    throw new Error("Produk atau ukuran Dive Shop tidak ditemukan.");
+  const before = `${current?.productId ?? ""}::${current?.size ?? ""}`;
   return {
     name,
     sku,
@@ -67,8 +72,9 @@ export function validateItem(input, current = null, { products } = {}) {
     note: cleanText(pick("note"), inventoryLimits.note, "Catatan"),
     active,
     productId,
-    // The latest link wins when two items name the same product.
-    ...(productId && productId !== before
+    size,
+    // The latest link wins when two items name the same product and size.
+    ...(productId && `${productId}::${size}` !== before
       ? { linkedAt: new Date().toISOString() }
       : {}),
   };

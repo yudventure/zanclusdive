@@ -16,6 +16,26 @@ export const availabilityLabels = {
   available: "Tersedia",
   unavailable: "Tidak tersedia",
 };
+// Sizes a product comes in, such as S, M, L or 38–39. A product with sizes
+// is ordered per size, and the warehouse keeps stock per size.
+export const sizeLimit = 12;
+export function cleanSizes(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > sizeLimit)
+    throw new Error(`Ukuran produk maksimal ${sizeLimit}.`);
+  const seen = new Set();
+  return input.map((value) => {
+    const size =
+      typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+    if (!size || size.length > 16 || /[<>]|::/.test(size))
+      throw new Error("Setiap ukuran 1–16 karakter, tanpa < atau >.");
+    const key = size.toLocaleLowerCase("id");
+    if (seen.has(key)) throw new Error(`Ukuran ${size} tertulis dua kali.`);
+    seen.add(key);
+    return size;
+  });
+}
+const hasSizes = (product) => Boolean(product?.sizes?.length);
 export const emptyShop = {
   heading: "Perlengkapan untuk cerita berikutnya.",
   description:
@@ -112,16 +132,20 @@ export function demoShop() {
         rentalPrice,
         enabled: true,
         availability: "request",
+        sizes: ["fins", "suit", "bcd"].includes(category)
+          ? ["S", "M", "L", "XL"]
+          : [],
       }),
     ),
   };
 }
-// How many units a guest may take of a product in this mode: the
-// warehouse's free units for products that follow it (null while the stock
-// cannot be read), else 10.
-export function unitsLeft(product, stock, mode) {
+// How many units a guest may take of a product (and size) in this mode:
+// the warehouse's free units for products that follow it (null while the
+// stock cannot be read), else 10.
+export function unitsLeft(product, stock, mode, size = "") {
   if (product.availability !== "stock") return 10;
-  const left = stock?.[product.id]?.[mode];
+  const entry = stock?.[product.id];
+  const left = size ? entry?.sizes?.[size]?.[mode] : entry?.[mode];
   return Number.isInteger(left) ? Math.min(10, left) : null;
 }
 // The badge on a product card: its availability, or the stock left.
@@ -166,7 +190,7 @@ export function quoteOrder(products, cart, days = 1, locale = "id") {
   const seen = new Set();
   const lines = cart.map((item) => {
     const product = products.find((p) => p.id === item.id);
-    const key = item.id + ":" + item.mode;
+    const key = item.id + ":" + item.mode + ":" + (item.size ?? "");
     if (
       !product?.enabled ||
       product.availability === "unavailable" ||
@@ -175,6 +199,13 @@ export function quoteOrder(products, cart, days = 1, locale = "id") {
       seen.has(key)
     )
       throw new Error(t.unavailable);
+    // Gear with sizes is ordered in one of its sizes.
+    if (
+      hasSizes(product)
+        ? !product.sizes.includes(item.size)
+        : Boolean(item.size)
+    )
+      throw new Error(t.pickSize);
     seen.add(key);
     if (
       !Number.isInteger(item.quantity) ||
@@ -191,6 +222,7 @@ export function quoteOrder(products, cart, days = 1, locale = "id") {
     return {
       ...item,
       name: product.name,
+      size: item.size ?? "",
       price,
       total:
         price === null
@@ -226,12 +258,12 @@ export function orderMessage(
   if (notes.length > 500) throw new Error(t.notes);
   return [
     t.greeting(name),
-    `WhatsApp: ${whatsapp}`,
-    ...(email ? [`Email: ${email}`] : []),
+    `WhatsApp ${whatsapp}`,
+    ...(email ? [`Email ${email}`] : []),
     "",
     ...quote.lines.map(
       (line) =>
-        `${line.mode === "sale" ? t.sale : t.rental} · ${line.name} × ${line.quantity} — ${line.total === null ? t.askPrice : rupiah(line.total, locale)}`,
+        `${line.mode === "sale" ? t.sale : t.rental} · ${line.name}${line.size ? " " + t.size(line.size) : ""} × ${line.quantity} · ${line.total === null ? t.askPrice : rupiah(line.total, locale)}`,
     ),
     ...(quote.hasRental
       ? ["", t.rentalPeriod(details.startDate, details.days)]
@@ -243,7 +275,7 @@ export function orderMessage(
       quote.needsQuote,
       rupiah(quote.total + (details.fare?.markup ?? 0), locale),
     ),
-    ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
+    ...(notes ? [`${t.notesLabel} ${notes}`] : []),
     t.closing,
   ].join("\n");
 }

@@ -212,7 +212,7 @@ try {
   await page.fill("#order-whatsapp", "+44 7700 900123");
   await page.locator(".shop-submit").click();
   const order = await page.textContent(".shop-message pre");
-  assert.ok(order.includes("RENTAL · Mask & snorkel set × 1 — IDR"));
+  assert.ok(order.includes("RENTAL · Mask & snorkel set × 1 · IDR"));
 
   // Mobile header fits both languages.
   for (const width of [320, 390]) {

@@ -122,7 +122,7 @@ function shopOrder(content, input, window, locks) {
   const priced = lines.map((line) => {
     const quantity = whole(line?.quantity, 1, 10);
     if (!quantity) fail("Jumlah setiap alat harus 1–10.", 400);
-    let name, price, key, rent, product;
+    let name, price, key, rent, product, size;
     if (line.source === "product") {
       product = (content.shop?.products ?? []).find((p) => p.id === line.id);
       rent = line.mode === "rental";
@@ -134,9 +134,13 @@ function shopOrder(content, input, window, locks) {
         itemLocked(locks, "product", product.id)
       )
         fail("Ada alat yang belum tersedia. Muat ulang halaman.");
+      // Gear with sizes is ordered in one of its sizes.
+      size = typeof line.size === "string" ? line.size : "";
+      if (product.sizes?.length ? !product.sizes.includes(size) : size)
+        fail("Pilih ukuran untuk setiap alat sebelum membayar.", 400);
       name = both(product.name);
       price = product[rent ? "rentalPrice" : "salePrice"];
-      key = `product-${product.id}-${line.mode}`;
+      key = `product-${product.id}-${line.mode}${size ? "-" + size : ""}`;
     } else if (line.source === "price") {
       const item = rentalGroups.includes(line.group)
         ? content.priceList?.[line.group]?.[Number(line.index)]
@@ -158,15 +162,20 @@ function shopOrder(content, input, window, locks) {
       id: key,
       name: rent
         ? both(
-            `Sewa ${priceText(name, "id")} (${days} hari)`,
-            `Rent ${priceText(name, "en")} (${days} ${days === 1 ? "day" : "days"})`,
+            `Sewa ${priceText(name, "id")}${size ? ` ukuran ${size}` : ""} (${days} hari)`,
+            `Rent ${priceText(name, "en")}${size ? ` size ${size}` : ""} (${days} ${days === 1 ? "day" : "days"})`,
           )
-        : both(`Beli ${priceText(name, "id")}`, `Buy ${priceText(name, "en")}`),
+        : both(
+            `Beli ${priceText(name, "id")}${size ? ` ukuran ${size}` : ""}`,
+            `Buy ${priceText(name, "en")}${size ? ` size ${size}` : ""}`,
+          ),
       price: rent ? price * days : price,
       quantity,
       rent,
       // Dive Shop products are counted against the warehouse.
-      ...(product ? { product: product.id, mode: line.mode } : {}),
+      ...(product
+        ? { product: product.id, mode: line.mode, ...(size ? { size } : {}) }
+        : {}),
     };
   });
   const sum = (list) =>

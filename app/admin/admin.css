@@ -2221,6 +2221,66 @@
 .admin-shop-stock .admin-field {
   margin: 0;
 }
+.admin-size-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+.admin-size-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-size-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 12px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid #cfe3e3;
+  font-weight: 600;
+  font-size: 13px;
+}
+.admin-size-chips button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #e6f0f0;
+  color: #0d5f63;
+  cursor: pointer;
+  line-height: 1;
+}
+.admin-stock-rows {
+  display: grid;
+  gap: 10px;
+}
+.admin-stock-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+.admin-stock-row small,
+.admin-stock-unit {
+  padding-bottom: 12px;
+  color: #5f7480;
+  font-size: 12px;
+}
+@media (max-width: 560px) {
+  .admin-stock-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .admin-stock-row small {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+}
 .admin-quick-move {
   border-color: #cfe6e2;
   background: #f4fbf9;

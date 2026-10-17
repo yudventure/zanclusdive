@@ -112,7 +112,7 @@ test("WhatsApp messages and booking errors follow the visitor's language", () =>
       false,
       "en",
     ),
-    /BUY · Mask & snorkel set × 1 — IDR/,
+    /BUY · Mask & snorkel set × 1 · IDR[\s\S]*Estimated total IDR/,
   );
   assert.equal(
     bookingErrorMessage("Jumlah peserta harus 1–30 orang.", "en"),

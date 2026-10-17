@@ -11,6 +11,7 @@ import { newId } from "./records.js";
 import { BookingError, bookingDates } from "../booking-model.js";
 import { shiftDate } from "../fare-model.js";
 import {
+  countMovements,
   planShopItems,
   publicStock,
   recordedBookings,
@@ -47,18 +48,6 @@ async function loadStock() {
   return { products, items, movements, bookings };
 }
 
-// Links chosen in the Dive Shop editor travel with the catalog as
-// "stockItem" on a product; the catalog itself does not keep them.
-export const shopLinks = (content) =>
-  (Array.isArray(content?.shop?.products) ? content.shop.products : [])
-    .filter(
-      (p) =>
-        typeof p?.id === "string" &&
-        typeof p.stockItem === "string" &&
-        /^item:[0-9a-f]{12}$/.test(p.stockItem),
-    )
-    .map((p) => ({ productId: p.id, itemId: p.stockItem }));
-
 async function recordSales(booking, data, now) {
   const recorded = recordedBookings(data.movements);
   if (recorded.has(booking.id)) return 0;
@@ -87,20 +76,15 @@ async function recordSales(booking, data, now) {
   return moves.length;
 }
 
-// Makes the warehouse match the Dive Shop: links chosen in the editor,
-// an item for every product, and the purchases of paid orders that are not
-// movements yet. Returns how many items were made and movements recorded.
-export function syncShopStock({ links = [], now = Date.now() } = {}) {
+// Makes the warehouse match the Dive Shop: an item for every product and
+// size, the stock counts typed in the Dive Shop editor, and the purchases
+// of paid orders that are not movements yet. Returns how many items were
+// made and movements recorded.
+export function syncShopStock({ counts = [], now = Date.now() } = {}) {
   return withStockLock(async () => {
     const data = await loadStock();
     const at = new Date(now).toISOString();
-    const plan = planShopItems(
-      data.products,
-      data.items,
-      data.movements,
-      links,
-      at,
-    );
+    const plan = planShopItems(data.products, data.items, data.movements, at);
     for (const { id, changes } of plan.update) {
       const item = data.items.find((i) => i.id === id);
       await saveRecord("item", { ...item, ...changes, updatedAt: at });
@@ -116,6 +100,21 @@ export function syncShopStock({ links = [], now = Date.now() } = {}) {
       });
     let recorded = 0;
     const fresh = { ...data, items: await listRecords("item") };
+    for (const move of countMovements(
+      counts,
+      fresh,
+      bookingDates(new Date(now)).today,
+    )) {
+      const saved = {
+        id: newId("mv"),
+        ...move,
+        createdAt: at,
+        updatedAt: at,
+        createdBy: "Dive Shop",
+      };
+      await saveRecord("movement", saved);
+      fresh.movements.push(saved);
+    }
     for (const booking of unrecordedSales(
       data.bookings,
       recordedBookings(data.movements),
@@ -211,6 +210,10 @@ export async function shopStockUse(now = new Date()) {
   const data = await loadStock();
   return {
     use: shopUse(data, bookingDates(now).today),
-    products: data.products.map((p) => ({ id: p.id, name: p.name })),
+    products: data.products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      sizes: p.sizes ?? [],
+    })),
   };
 }

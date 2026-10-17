@@ -8,8 +8,8 @@ import {
 } from "../../../../src/server/shop-stock.js";
 
 export const dynamic = "force-dynamic";
-// For the Dive Shop editor: the warehouse items a product can be linked
-// to, with their stock and what the shop holds of them.
+// For the Dive Shop editor: the warehouse item of each product and size,
+// with its stock and what the shop holds of it.
 export async function GET(request) {
   const denied = await requireAdmin(request, "website");
   if (denied) return denied;
@@ -33,6 +33,7 @@ export async function GET(request) {
           stock: item.stock,
           active: item.active !== false,
           productId: shop.use[item.id]?.productId ?? "",
+          size: shop.use[item.id]?.size ?? "",
           shop: shop.use[item.id] ?? null,
         })),
       },

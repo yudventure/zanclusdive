@@ -19,8 +19,20 @@ test("a Dive Shop cart is priced from the CMS", () => {
   const order = price({
     kind: "shop",
     lines: [
-      { source: "product", id: "demo-fins", mode: "sale", quantity: 2 },
-      { source: "product", id: "demo-suit", mode: "rental", quantity: 1 },
+      {
+        source: "product",
+        id: "demo-fins",
+        mode: "sale",
+        quantity: 2,
+        size: "L",
+      },
+      {
+        source: "product",
+        id: "demo-suit",
+        mode: "rental",
+        quantity: 1,
+        size: "M",
+      },
       {
         source: "price",
         group: "rentalBasics",
@@ -41,15 +53,61 @@ test("a Dive Shop cart is priced from the CMS", () => {
   assert.deepEqual(
     order.lines.map((l) => [l.id, l.price, l.quantity]),
     [
-      ["product-demo-fins-sale", 1250000, 2],
-      ["product-demo-suit-rental", 100000 * 3, 1],
+      ["product-demo-fins-sale-L", 1250000, 2],
+      ["product-demo-suit-rental-M", 100000 * 3, 1],
       ["rent-rentalBasics-0", basic.price * 3, 1],
     ],
   );
   assert.equal(order.amount, 2500000 + 300000 + basic.price * 3);
-  assert.equal(order.lines[1].name.id, "Sewa Wetsuit 3 mm (3 hari)");
-  assert.equal(order.lines[1].name.en, "Rent Wetsuit 3 mm (3 days)");
-  assert.match(orderLabel(order.lines, "id"), /^Beli Open heel fins × 2, Sewa/);
+  assert.equal(order.lines[1].name.id, "Sewa Wetsuit 3 mm ukuran M (3 hari)");
+  assert.equal(order.lines[1].name.en, "Rent Wetsuit 3 mm size M (3 days)");
+  assert.match(
+    orderLabel(order.lines, "id"),
+    /^Beli Open heel fins ukuran L × 2, Sewa/,
+  );
+  // The warehouse counts each product and size.
+  assert.deepEqual(
+    order.lines.map((l) => [l.product, l.mode, l.size]),
+    [
+      ["demo-fins", "sale", "L"],
+      ["demo-suit", "rental", "M"],
+      [undefined, undefined, undefined],
+    ],
+  );
+  // Gear with sizes needs one of them; gear without sizes takes none.
+  for (const size of [undefined, "XXL"])
+    assert.throws(
+      () =>
+        price({
+          kind: "shop",
+          lines: [
+            {
+              source: "product",
+              id: "demo-fins",
+              mode: "sale",
+              quantity: 1,
+              size,
+            },
+          ],
+        }),
+      { message: "Pilih ukuran untuk setiap alat sebelum membayar." },
+    );
+  assert.throws(
+    () =>
+      price({
+        kind: "shop",
+        lines: [
+          {
+            source: "product",
+            id: "demo-mask",
+            mode: "sale",
+            quantity: 1,
+            size: "M",
+          },
+        ],
+      }),
+    { message: "Pilih ukuran untuk setiap alat sebelum membayar." },
+  );
   // Buying only: today, no rental dates needed.
   const sale = price({
     kind: "shop",
@@ -104,7 +162,13 @@ test("shop carts that cannot be paid online are refused", () => {
   refused(
     {
       lines: [
-        { source: "product", id: "demo-suit", mode: "rental", quantity: 1 },
+        {
+          source: "product",
+          id: "demo-suit",
+          mode: "rental",
+          quantity: 1,
+          size: "M",
+        },
       ],
       days: 2,
       startDate: "2029-12-31",

@@ -187,7 +187,13 @@ export async function startPayment(input, { origin, locale = "id" }) {
           },
           price: line.price,
           quantity: line.quantity,
-          ...(line.product ? { product: line.product, mode: line.mode } : {}),
+          ...(line.product
+            ? {
+                product: line.product,
+                mode: line.mode,
+                ...(line.size ? { size: line.size } : {}),
+              }
+            : {}),
         })),
         createdAt,
         dueHours,

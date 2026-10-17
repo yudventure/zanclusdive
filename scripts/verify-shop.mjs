@@ -61,19 +61,21 @@ try {
   assert.equal(await page.locator(".shop-product-card").count(), 8);
   await page.getByLabel("Kategori perlengkapan").selectOption("fins");
   assert.equal(await page.locator(".shop-product-card").count(), 1);
+  // Fins come in sizes: the size is picked in the product window.
   await page
-    .getByRole("button", {
-      name: "Tambahkan Open heel fins untuk rental",
-      exact: true,
-    })
+    .getByRole("button", { name: "Pilih ukuran Open heel fins", exact: true })
     .click();
+  const detail = page.locator("dialog.shop-detail");
+  await detail.locator("label", { hasText: "M" }).click();
+  await detail.getByRole("button", { name: "Masukkan ke keranjang" }).click();
+  await detail.waitFor({ state: "detached" });
   await page.getByLabel("Jumlah Open heel fins rental").selectOption("2");
   await page.getByLabel("Durasi (hari)").fill("3");
   await page.getByLabel("Nama kamu").fill("Tamu Uji Shop");
   await page.getByLabel("Nomor WhatsApp").fill("081234567890");
   await page
-    .getByLabel("Ukuran / catatan", { exact: false })
-    .fill("Fin ukuran M, ambil di dive center");
+    .getByLabel("Catatan", { exact: false })
+    .fill("Ambil di dive center");
   assert.match(await page.locator(".shop-total").textContent(), /1\.100\.000/);
   await page.getByRole("button", { name: "Siapkan pesan pesanan" }).click();
   const url = await page
@@ -82,9 +84,10 @@ try {
   assert.ok(url.startsWith("https://wa.me/6285190969308?text="));
   const message = new URL(url).searchParams.get("text");
   assert.match(message, /BELI · Mask & snorkel set × 1/);
-  assert.match(message, /RENTAL · Open heel fins × 2/);
+  assert.match(message, /RENTAL · Open heel fins ukuran M × 2/);
   assert.match(message, /selama 3 hari/);
-  assert.match(message, /Fin ukuran M/);
+  assert.match(message, /Catatan Ambil di dive center/);
+  assert.doesNotMatch(message, /[:;—]/);
   assert.doesNotMatch(message, /demo|contoh/i);
   // Do not send or navigate to WhatsApp during verification.
   await page.getByLabel("Durasi (hari)").fill("2");

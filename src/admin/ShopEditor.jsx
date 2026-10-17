@@ -2,7 +2,13 @@
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
 import ProductVisual from "../shop/ProductVisual.jsx";
-import { shopCategories, availabilityLabels, rupiah } from "../shop-model.js";
+import {
+  shopCategories,
+  availabilityLabels,
+  rupiah,
+  sizeLimit,
+} from "../shop-model.js";
+import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 
 function Field({ label, children }) {
   const id = useId();
@@ -38,6 +44,12 @@ export default function ShopEditor({
   }, [busy]);
   const product =
     shop.products.find((p) => p.id === selectedID) || shop.products[0];
+  function editMany(patch) {
+    update(
+      "products",
+      shop.products.map((p) => (p.id === product.id ? { ...p, ...patch } : p)),
+    );
+  }
   function edit(key, value) {
     update(
       "products",
@@ -63,6 +75,7 @@ export default function ShopEditor({
         rentalPrice: null,
         enabled: false,
         availability: "stock",
+        sizes: [],
       },
     ]);
     setSelectedID(id);
@@ -273,24 +286,13 @@ export default function ShopEditor({
               Aktifkan minimal satu layanan. Harga kosong ditampilkan sebagai
               permintaan penawaran. Rental dihitung per unit per hari.
             </p>
-            <Field label="Ketersediaan produk">
-              <select
-                value={product.availability}
-                onChange={(e) => edit("availability", e.target.value)}
-              >
-                {Object.entries(availabilityLabels).map(([k, label]) => (
-                  <option key={k} value={k}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <ProductStock
+            <SizesAndStock
               product={product}
               items={stock}
               error={stockError}
               canStock={canStock}
-              onPick={(itemId) => edit("stockItem", itemId)}
+              edit={edit}
+              editMany={editMany}
             />
             <div className="admin-shop-image-editor">
               <div className="admin-shop-preview">
@@ -371,84 +373,169 @@ export default function ShopEditor({
   );
 }
 
-// The product's item in the warehouse: which one, its stock, and what the
-// shop holds of it. A new choice is applied when the catalog is saved.
-function ProductStock({ product, items, error, canStock, onPick }) {
-  const linked = items?.find((item) => item.productId === product.id);
-  const chosen = product.stockItem ?? linked?.id ?? "";
-  const picked = items?.find((item) => item.id === chosen);
-  const changed = chosen !== (linked?.id ?? "");
-  const options = (items ?? []).filter(
-    (item) => item.active || item.id === chosen,
+// Sizes, stock and availability of one product, in one place. Each size
+// (or the product, without sizes) is an item in Gudang. A count typed here
+// is saved with the catalog as a stock opname in the warehouse.
+function SizesAndStock({ product, items, error, canStock, edit, editMany }) {
+  const [draft, setDraft] = useState("");
+  const sizes = product.sizes ?? [];
+  const byVariant = new Map(
+    (items ?? [])
+      .filter((item) => item.productId)
+      .map((item) => [variantKey(item.productId, item.size), item]),
   );
+  const unit = (size) =>
+    byVariant.get(variantKey(product.id, size))?.unit ??
+    unitForProduct(product);
+  // An item without a size that this product leaves behind when it gets
+  // sizes, so its stock is not lost from sight.
+  const before = sizes.length ? byVariant.get(product.id) : null;
+  function addSizes() {
+    const next = [...sizes];
+    for (const raw of draft.split(",")) {
+      const size = raw.trim().replace(/\s+/g, " ").slice(0, 16);
+      if (
+        size &&
+        !/[<>]|::/.test(size) &&
+        next.length < sizeLimit &&
+        !next.some((s) => s.toLowerCase() === size.toLowerCase())
+      )
+        next.push(size);
+    }
+    edit("sizes", next);
+    setDraft("");
+  }
+  function setCount(size, value) {
+    editMany({
+      stockCounts: { ...product.stockCounts, [size]: value },
+      // Typing the stock means the website should follow it.
+      ...(product.availability === "request" ? { availability: "stock" } : {}),
+    });
+  }
   return (
-    <div className="admin-shop-stock">
-      <h3>Stok di gudang</h3>
+    <section className="admin-shop-stock" aria-label="Ukuran dan stok">
+      <h3>Ukuran & stok</h3>
+      <div className="admin-size-row">
+        <Field label="Ukuran">
+          <input
+            maxLength={120}
+            placeholder="Contoh S, M, L, XL"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                addSizes();
+              }
+            }}
+          />
+        </Field>
+        <button
+          type="button"
+          className="admin-button secondary"
+          disabled={!draft.trim() || sizes.length >= sizeLimit}
+          onClick={addSizes}
+        >
+          Tambah ukuran
+        </button>
+      </div>
+      {sizes.length ? (
+        <ul className="admin-size-chips" aria-label="Ukuran produk">
+          {sizes.map((size) => (
+            <li key={size}>
+              {size}
+              <button
+                type="button"
+                aria-label={`Hapus ukuran ${size}`}
+                onClick={() =>
+                  edit(
+                    "sizes",
+                    sizes.filter((s) => s !== size),
+                  )
+                }
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="admin-subtle">
+          Tanpa ukuran. Tambahkan ukuran kalau tamu perlu memilih, misalnya
+          wetsuit, fin, atau BCD.
+        </p>
+      )}
       {error ? (
         <p className="admin-error" role="alert">
           {error}
         </p>
       ) : !items ? (
-        <p className="admin-subtle">Memuat stok gudang…</p>
+        <p className="admin-subtle">Memuat stok…</p>
       ) : (
-        <>
-          <Field label="Barang di gudang">
-            <select value={chosen} onChange={(e) => onPick(e.target.value)}>
-              {!linked && (
-                <option value="">Buat barang baru saat katalog disimpan</option>
-              )}
-              {options.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} · stok {item.stock} {item.unit}
-                  {item.productId && item.productId !== product.id
-                    ? ` · dipakai ${item.shop?.productName ?? "produk lain"}`
-                    : ""}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <p className="admin-subtle">
-            {changed
-              ? picked
-                ? `Produk ini memakai stok ${picked.name} setelah katalog disimpan.`
-                : "Barang gudang untuk produk ini dibuat setelah katalog disimpan."
-              : linked
-                ? [
-                    `Stok ${linked.stock} ${linked.unit}.`,
-                    linked.shop?.rentedToday
-                      ? `${linked.shop.rentedToday} disewa hari ini.`
-                      : "",
-                    linked.shop?.waiting
-                      ? `${linked.shop.waiting} menunggu pembayaran.`
-                      : "",
-                    "Penjualan online mengurangi stok sendiri, sewa online memakai unit sesuai tanggalnya.",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")
-                : ""}
-          </p>
-          {!changed &&
-            linked &&
-            product.availability === "stock" &&
-            linked.stock <= 0 && (
-              <p className="admin-subtle is-warn">
-                Stok masih 0, jadi website menampilkan Stok habis. Catat barang
-                masuk di Gudang, Barang & stok.
-              </p>
-            )}
-          {product.availability !== "stock" && (
-            <p className="admin-subtle">
-              Pilih Ikuti stok gudang di Ketersediaan produk supaya website
-              menampilkan sisa stok dan pesanan online tidak melebihi stok.
-            </p>
-          )}
-          {canStock && linked && (
-            <a className="admin-inline" href="/admin/stock">
-              Buka Barang & stok
-            </a>
-          )}
-        </>
+        <div className="admin-stock-rows">
+          {sizesOf(product).map((size) => {
+            const item = byVariant.get(variantKey(product.id, size));
+            const held = item?.shop;
+            const typed = product.stockCounts?.[size];
+            const notes = [
+              held?.rentedToday && `${held.rentedToday} disewa hari ini`,
+              held?.bookedLater && `${held.bookedLater} dipesan untuk nanti`,
+              held?.waiting && `${held.waiting} menunggu pembayaran`,
+            ].filter(Boolean);
+            return (
+              <div className="admin-stock-row" key={size || "all"}>
+                <Field label={size ? `Stok ukuran ${size}` : "Stok"}>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100000}
+                    step={1}
+                    placeholder="0"
+                    value={typed ?? item?.stock ?? ""}
+                    onChange={(e) => setCount(size, e.target.value)}
+                  />
+                </Field>
+                <span className="admin-stock-unit">{unit(size)}</span>
+                <small>
+                  {notes.length
+                    ? notes.join(", ")
+                    : item
+                      ? "Belum ada pesanan"
+                      : "Baru, tersimpan saat katalog disimpan"}
+                </small>
+              </div>
+            );
+          })}
+        </div>
       )}
-    </div>
+      {before && before.stock > 0 && (
+        <p className="admin-subtle is-warn">
+          Stok lama tanpa ukuran ({before.stock} {before.unit}) tetap di Gudang
+          sebagai barang biasa. Isi stok tiap ukuran di atas.
+        </p>
+      )}
+      <Field label="Ketersediaan di website">
+        <select
+          value={product.availability}
+          onChange={(e) => edit("availability", e.target.value)}
+        >
+          {Object.entries(availabilityLabels).map(([k, label]) => (
+            <option key={k} value={k}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <p className="admin-subtle">
+        {product.availability === "stock"
+          ? "Website menampilkan sisa stok, dan pesanan online tidak bisa melebihinya. Penjualan online mengurangi stok sendiri, sewa online memakai unit pada tanggal sewanya."
+          : "Stok tetap tercatat di Gudang, tapi website tidak memeriksanya. Pilih Ikuti stok gudang supaya website menampilkan sisa stok."}
+      </p>
+      {canStock && (
+        <a className="admin-inline" href="/admin/stock">
+          Buka Barang & stok
+        </a>
+      )}
+    </section>
   );
 }

@@ -13,7 +13,12 @@ import { defaultService, validateService } from "./service-model.js";
 import { defaultDeveloper, validateDeveloper } from "./developer.js";
 import { defaultPayments, validatePayments } from "./payment-model.js";
 import { defaultFares, validateFares } from "./fare-model.js";
-import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
+import {
+  emptyShop,
+  shopCategories,
+  availabilityLabels,
+  cleanSizes,
+} from "./shop-model.js";
 import {
   blankSocials,
   socialPlatforms,
@@ -448,6 +453,7 @@ export function validateShop(shop) {
         image: p.image ? imageURL(p.image) : "",
         salePrice: price(p.salePrice),
         rentalPrice: price(p.rentalPrice),
+        sizes: cleanSizes(p.sizes),
       };
     }),
   };

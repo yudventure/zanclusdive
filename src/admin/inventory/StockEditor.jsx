@@ -20,6 +20,7 @@ const blank = () => ({
   note: "",
   active: true,
   productId: "",
+  size: "",
 });
 const blankMove = (today, kind) => ({
   date: today,
@@ -58,7 +59,7 @@ export default function StockEditor({ request, today }) {
       setProducts(result.products ?? []);
       if (result.created)
         setNotice(
-          `${result.created} produk Dive Shop masuk ke gudang dengan stok 0. Catat stok awalnya lewat tombol Masuk.`,
+          `${result.created} barang Dive Shop masuk ke gudang dengan stok 0. Isi stoknya di Dive Shop, bagian Ukuran & stok, atau lewat tombol Masuk.`,
         );
     } catch (e) {
       setError(e.message);
@@ -97,6 +98,7 @@ export default function StockEditor({ request, today }) {
       minStock: String(item.minStock),
       cost: String(item.cost || ""),
       productId: item.shop?.productId ?? "",
+      size: item.shop?.size ?? "",
     });
     setMove(null);
     document.getElementById("item-form")?.scrollIntoView({ block: "start" });
@@ -151,14 +153,25 @@ export default function StockEditor({ request, today }) {
       },
       `${item.name} dihapus.` +
         (item.shop
-          ? ` Produk Dive Shop ${item.shop.productName} mendapat barang baru dengan stok 0.`
+          ? ` Produk Dive Shop ${item.shop.productName}${item.shop.size ? ` ukuran ${item.shop.size}` : ""} mendapat barang baru dengan stok 0.`
           : ""),
     );
   const shown = (items ?? []).filter((i) => showInactive || i.active !== false);
   const low = (items ?? []).filter((i) => i.low);
   const empty = (items ?? []).filter((i) => i.empty);
-  const linkedTo = (productId) =>
-    (items ?? []).find((i) => i.shop?.productId === productId);
+  const linkedTo = (productId, size) =>
+    (items ?? []).find(
+      (i) => i.shop?.productId === productId && i.shop.size === size,
+    );
+  // Each product, or each size of it, is one choice in the item form.
+  const variants = products.flatMap((product) =>
+    (product.sizes?.length ? product.sizes : [""]).map((size) => ({
+      value: size ? `${product.id}::${size}` : product.id,
+      productId: product.id,
+      size,
+      label: size ? `${product.name} · ${size}` : product.name,
+    })),
+  );
   const moveItem = move && items?.find((i) => i.id === move.itemId);
   return (
     <div className="admin-hr">
@@ -237,6 +250,7 @@ export default function StockEditor({ request, today }) {
                       {i.shop && (
                         <span className="admin-stock-shop">
                           Dive Shop · {i.shop.productName}
+                          {i.shop.size ? ` · ${i.shop.size}` : ""}
                           {i.shop.shown ? "" : " (draft)"}
                         </span>
                       )}
@@ -505,15 +519,29 @@ export default function StockEditor({ request, today }) {
             </Field>
             <Field
               label="Produk Dive Shop"
-              hint="Stok barang ini dipakai produk yang dipilih. Penjualan online mengurangi stok sendiri, dan sewa online memakai unitnya sesuai tanggal sewa. Produk tanpa barang pilihan mendapat barang baru sendiri."
+              hint="Barang Dive Shop dibuat dan diisi stoknya langsung di Dive Shop, jadi kolom ini hanya untuk memindahkan produk ke barang yang sudah ada di sini. Penjualan online mengurangi stok sendiri, dan sewa online memakai unitnya sesuai tanggal sewa."
             >
-              <select value={form.productId} onChange={set("productId")}>
+              <select
+                value={
+                  form.size ? `${form.productId}::${form.size}` : form.productId
+                }
+                onChange={(e) => {
+                  const chosen = variants.find(
+                    (v) => v.value === e.target.value,
+                  );
+                  setForm((f) => ({
+                    ...f,
+                    productId: chosen?.productId ?? "",
+                    size: chosen?.size ?? "",
+                  }));
+                }}
+              >
                 <option value="">Tidak dijual di Dive Shop</option>
-                {products.map((product) => {
-                  const other = linkedTo(product.id);
+                {variants.map((variant) => {
+                  const other = linkedTo(variant.productId, variant.size);
                   return (
-                    <option key={product.id} value={product.id}>
-                      {product.name}
+                    <option key={variant.value} value={variant.value}>
+                      {variant.label}
                       {other && other.id !== editing?.id
                         ? ` (sekarang ${other.name})`
                         : ""}

@@ -109,13 +109,18 @@ Kelola katalog di `/admin/shop`: tambah/hapus maksimal 20 produk, atur harga jua
 
 ### Dive Shop dan Gudang
 
-Setiap produk Dive Shop punya satu barang di **Gudang → Barang & stok** (`item.productId`, `src/shop-stock.js`, `src/server/shop-stock.js`). Barangnya dibuat otomatis saat katalog disimpan atau saat Barang & stok dibuka (stok 0, satuan set/pasang/pcs menurut jenis alat), atau memakai barang gudang yang sudah ada: pilih di kotak **Stok di gudang** pada detail produk, atau di kolom **Produk Dive Shop** pada formulir barang. Barang buatan gudang yang belum pernah dicatat dihapus saat produknya pindah ke barang lain, dan ikut berganti nama selama timnya belum memberi nama sendiri.
+Produk, ukuran, dan stok diatur di satu tempat, yaitu detail produk di `/admin/shop`, bagian **Ukuran & stok** (`src/shop-stock.js`, `src/server/shop-stock.js`).
 
-- Pilih **Ikuti stok gudang** di **Ketersediaan produk** (bawaan produk baru). Website lalu menampilkan **Tersedia**, **Sisa 3** (tiga atau kurang), atau **Stok habis**, keranjang berhenti di sisa stok, dan server menolak pesanan online yang melebihinya. Produk dengan pilihan lain tidak diperiksa stoknya.
-- Pembelian yang lunas lewat Midtrans menjadi catatan **Keluar · Penjualan** dengan catatan "Pesanan online ZC-…" pada tanggal bayar, sekali per pesanan (`payment.stockRecorded`). Pesanan yang menunggu pembayaran menahan unitnya.
-- Sewa tidak membuat catatan keluar masuk. Selama reservasinya berlaku (lunas, atau pembayaran masih terbuka), unitnya terpakai pada tanggal sewa saja, jadi tanggal baru atau pembatalan langsung membebaskannya. Pembelian juga memperhitungkan sewa yang sudah dipesan untuk tanggal nanti.
-- Barang & stok menampilkan label Dive Shop, jumlah yang disewa hari ini, dipesan untuk sewa nanti, dan menunggu pembayaran, serta status **Habis** untuk stok 0.
+- **Ukuran.** Ketik ukuran (S, M, L, XL, 38–39, dan seterusnya, maksimal 12) lalu Enter atau **Tambah ukuran**. Produk tanpa ukuran dipesan tanpa memilih.
+- **Stok.** Isi stok tiap ukuran (atau satu angka untuk produk tanpa ukuran). Saat katalog disimpan, angkanya dicatat di Gudang sebagai **Koreksi stok · Stock opname** dengan catatan "Diatur dari Dive Shop". Mengisi stok mengubah Ketersediaan dari "Konfirmasi ketersediaan" menjadi **Ikuti stok gudang**.
+- **Gudang ikut sendiri.** Setiap produk, atau setiap ukurannya, punya satu barang di **Gudang → Barang & stok** (`item.productId`, `item.size`) dengan label Dive Shop. Barangnya dibuat otomatis, ikut berganti nama, dan barang buatan gudang yang belum pernah dicatat dihapus saat ukurannya dihapus. Kolom **Produk Dive Shop** di formulir barang hanya untuk memindahkan produk ke barang yang sudah ada di gudang.
+- **Website.** Dengan Ikuti stok gudang, kartu menampilkan **Tersedia**, **Sisa 3** (tiga atau kurang), atau **Stok habis**, keranjang berhenti di sisa stok, dan server menolak pesanan online yang melebihinya, per ukuran.
+- **Pembelian dan sewa.** Pembelian yang lunas lewat Midtrans menjadi **Keluar · Penjualan** "Pesanan online ZC-…" pada barang ukurannya, sekali per pesanan (`payment.stockRecorded`). Pesanan yang menunggu pembayaran menahan unitnya. Sewa tidak membuat catatan keluar masuk, tetapi memakai unit pada tanggal sewa selama reservasinya berlaku, jadi tanggal baru atau pembatalan langsung membebaskannya. Tamu Comfort atau Flexi tidak bisa memindah sewa ke tanggal yang alatnya penuh.
 - Pesanan lewat WhatsApp dan reservasi yang dicatat tim tidak mengubah stok. Catat sendiri lewat tombol Masuk atau Keluar.
+
+### Detail produk dan ukuran untuk tamu
+
+Nama atau foto produk di kartu Dive Shop (beranda dan `/dive-shop`) membuka jendela detail berisi foto, deskripsi, spesifikasi, ukuran beserta yang sudah habis, harga, dan jumlah (`src/shop/ProductDetail.jsx`). Produk berukuran masuk keranjang lewat tombol **Pilih ukuran**. Di keranjang dan jendela checkout, setiap baris berukuran punya pilihan ukuran, dan namanya membuka detail lagi tanpa tombol tambah. Ukuran ikut ke pembayaran Midtrans ("Beli Wetsuit 3 mm ukuran M"), pesan WhatsApp, reservasi, dan stok, sehingga kolom catatan tidak lagi meminta ukuran.
 
 Uji dengan `node scripts/verify-shop-stock.mjs` pada server demo yang dijalankan seperti untuk `verify-fares`.
 

@@ -1372,3 +1372,213 @@
     font-size: 10px;
   }
 }
+
+/* A product's name opens its window: on cards and cart lines. */
+.shop-product-open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.shop-product-open:hover,
+.shop-product-open:focus-visible {
+  text-decoration-color: currentColor;
+}
+.shop-checkout-lines .shop-product-open {
+  display: block;
+  margin: 2px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.shop-product-image,
+.shop-item-visual {
+  cursor: pointer;
+}
+.shop-item-in-cart {
+  margin-top: 6px;
+  color: #0d6f73;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* The product window. */
+.modal.shop-detail {
+  width: min(560px, calc(100% - 32px));
+  padding: 0 0 28px;
+  overflow-x: hidden;
+}
+.shop-detail > :not(.shop-detail-visual, .close-modal) {
+  margin-left: 32px;
+  margin-right: 32px;
+}
+.shop-detail .close-modal {
+  z-index: 1;
+  background: #ffffffd9;
+}
+.shop-detail-visual {
+  height: 260px;
+  background: #edf3f0;
+}
+.shop-detail .eyebrow {
+  margin-top: 22px;
+}
+.modal.shop-detail h2 {
+  margin: 8px 32px 10px;
+  font-size: 28px;
+}
+.shop-detail-text {
+  color: #49646d;
+}
+.shop-detail-spec {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f2f7f5;
+}
+.shop-detail-spec h3 {
+  margin: 0 0 4px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #4c7884;
+}
+.shop-detail-spec p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.shop-sizes {
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+}
+.shop-sizes legend {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.shop-sizes > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shop-sizes label {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #cfe0db;
+  border-radius: 12px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+.shop-sizes input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.shop-sizes label.is-chosen {
+  border-color: #0d6f73;
+  background: #0d6f73;
+  color: white;
+}
+.shop-sizes label:has(input:focus-visible) {
+  outline: 2px solid #0d6f73;
+  outline-offset: 2px;
+}
+.shop-sizes label.is-out {
+  color: #9aabb0;
+  background: #f3f5f5;
+  cursor: not-allowed;
+}
+.shop-sizes small {
+  font-size: 9px;
+  font-weight: 500;
+}
+.shop-detail-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+.shop-detail-price span {
+  color: #637d87;
+  font-size: 12px;
+}
+.shop-detail-price strong {
+  font-size: 22px;
+}
+.shop-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.shop-detail-actions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #637d87;
+}
+.shop-detail-actions select {
+  padding: 10px 12px;
+  border: 1px solid #dce7e0;
+  border-radius: 10px;
+  background: #f7faf8;
+}
+.shop-detail-actions .button {
+  flex: 1;
+  justify-content: center;
+}
+.shop-detail .activity-error {
+  margin-top: 12px;
+}
+
+/* A cart line's size. */
+.shop-cart-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: #69818a;
+}
+.shop-cart-size select {
+  padding: 4px 6px;
+  background: #f7faf8;
+  border: 1px solid #dce7e0;
+  border-radius: 6px;
+}
+@media (max-width: 560px) {
+  .shop-detail > :not(.shop-detail-visual, .close-modal) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .modal.shop-detail h2 {
+    margin: 8px 20px 10px;
+    font-size: 24px;
+  }
+  .shop-detail-visual {
+    height: 200px;
+  }
+  .shop-detail-actions {
+    flex-wrap: wrap;
+  }
+  .shop-detail-actions .button {
+    flex-basis: 100%;
+  }
+}
