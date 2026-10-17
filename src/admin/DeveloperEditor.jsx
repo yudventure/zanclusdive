@@ -199,9 +199,10 @@ export default function DeveloperEditor({
         <Choices
           legend="Per item: produk Dive Shop"
           hint="Produk tetap terlihat dengan tanda “Sedang diperbarui”, tapi tidak bisa dimasukkan ke keranjang."
+          // The same model can be both a product for sale and rental gear.
           options={products.map((p) => [
             "product:" + p.id,
-            p.name || p.id,
+            `${p.name || p.id} · ${p.saleEnabled ? "Jual" : "Sewa"}`,
             p.enabled ? "" : "Draft, belum tampil",
           ])}
           chosen={developer.items}

@@ -136,7 +136,7 @@ try {
     "Dive Shop/dive-shop",
     "Cara menuju ke sini",
     "Video YouTube",
-    "Open heel fins",
+    "Open heel fins · Jual",
     "Servis BCD",
   ])
     await a
