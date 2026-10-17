@@ -12,7 +12,10 @@ import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import { demoAccount } from "../demo-data.js";
 import { operatorAccount } from "./operator-account.js";
-export const COOKIE = "zanclus_admin_session";
+import { adminCookie } from "../developer.js";
+import { areasOf, hasArea, roleLabel } from "../roles.js";
+import { listPasswords, savePassword, listUsers } from "./store.js";
+export const COOKIE = adminCookie;
 // The public demo login only works when CMS_DEMO_LOGIN=true (local tests).
 export const demoLoginEnabled = () =>
   isDemo() && process.env.CMS_DEMO_LOGIN === "true";
@@ -26,7 +29,7 @@ function secret() {
   return globalThis.__zanclusSessionSecret;
 }
 // Accounts that may sign in. MySQL mode uses the environment account only.
-function accounts() {
+function baseAccounts() {
   if (!isDemo()) return [envAccount()].filter(Boolean);
   // The operator account always works; an ADMIN_EMAIL/ADMIN_PASSWORD pair
   // left in the hosting panel is accepted as well, not instead.
@@ -40,6 +43,45 @@ function accounts() {
       ) === i,
   );
   return demoLoginEnabled() ? [...own, demoAccount] : own;
+}
+const emailKey = (email) => String(email).trim().toLowerCase();
+// The accounts from the hosting panel or the code: always superadmin.
+export const builtInAccounts = () =>
+  baseAccounts().map((account) => ({
+    email: account.email,
+    role: "superadmin",
+  }));
+// Built-in accounts plus the staff accounts made in the admin. A password
+// changed in the admin replaces the account's original one; a staff
+// account only exists while it is active and has a password.
+async function accounts() {
+  const [changed, users] = await Promise.all([listPasswords(), listUsers()]);
+  const base = baseAccounts().map((account) => ({
+    ...account,
+    role: "superadmin",
+    kind: "base",
+  }));
+  const own = new Set(base.map((account) => emailKey(account.email)));
+  const staff = users
+    .filter(
+      (user) =>
+        user.active !== false &&
+        !own.has(emailKey(user.email)) &&
+        changed[emailKey(user.email)],
+    )
+    .map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      kind: "user",
+    }));
+  return [...base, ...staff].map((account) => {
+    const record = changed[emailKey(account.email)];
+    if (!record) return account;
+    const { password: _password, ...rest } = account;
+    return { ...rest, salt: record.salt, hash: record.hash };
+  });
 }
 export function authConfigured() {
   return isDemo() || configurationIssues().length === 0;
@@ -73,9 +115,46 @@ const passwordMatchesAccount = (account, password) =>
 const sameEmail = (account, email) =>
   equal(String(email).trim().toLowerCase(), account.email.trim().toLowerCase());
 // Returns the matching account, or null.
-export function passwordMatches(email, password) {
-  const account = accounts().find((a) => sameEmail(a, email));
+export async function passwordMatches(email, password) {
+  const account = (await accounts()).find((a) => sameEmail(a, email));
   return account && passwordMatchesAccount(account, password) ? account : null;
+}
+// The hosting-panel password, for the database check only: it must work
+// while the database holding a changed password is unreachable.
+export function basePasswordMatches(email, password) {
+  const account = baseAccounts().find((a) => sameEmail(a, email));
+  return account && passwordMatchesAccount(account, password) ? account : null;
+}
+// The account with this email, or null.
+export async function findAccount(email) {
+  return (await accounts()).find((a) => sameEmail(a, email)) ?? null;
+}
+// New passwords: 10–200 characters, not the email address.
+export function passwordProblem(email, password) {
+  if (typeof password !== "string" || password.length < 10)
+    return "Password baru minimal 10 karakter.";
+  if (password.length > 200) return "Password baru maksimal 200 karakter.";
+  if (password.trim() !== password)
+    return "Password baru tidak boleh diawali atau diakhiri spasi.";
+  if (emailKey(password) === emailKey(email))
+    return "Password baru tidak boleh sama dengan email.";
+  return "";
+}
+// Saves a new password for the account and returns the account as it now
+// signs in. Its earlier sessions stop working.
+export async function changePassword(account, password) {
+  const salt = randomBytes(16).toString("base64url");
+  const hash = scryptSync(password, salt, 64, {
+    N: 16384,
+    r: 8,
+    p: 1,
+  }).toString("base64url");
+  await savePassword(account.email, {
+    salt,
+    hash,
+    changedAt: new Date().toISOString(),
+  });
+  return { email: account.email, salt, hash };
 }
 // A session for the account returned by passwordMatches.
 export function sessionToken(account) {
@@ -95,12 +174,19 @@ export async function currentAdmin() {
     const [data, sig, ...rest] = token.split(".");
     if (rest.length || !sig) return null;
     const value = JSON.parse(Buffer.from(data, "base64url").toString());
-    const account = accounts().find((a) => a.email === value.email);
+    const account = (await accounts()).find((a) => a.email === value.email);
     return account &&
       equal(sign(account, data), sig) &&
       Number.isFinite(value.expires) &&
       value.expires > Date.now()
-      ? { email: value.email }
+      ? {
+          email: value.email,
+          name: account.name ?? "",
+          role: account.role,
+          areas: areasOf(account.role),
+          kind: account.kind,
+          id: account.id ?? null,
+        }
       : null;
   } catch {
     return null;
@@ -132,8 +218,10 @@ export function sameOrigin(request) {
     return false;
   }
 }
-export async function requireAdmin(request) {
-  if (!(await currentAdmin()))
+// A signed-in account whose role covers the area, or the refusal to send.
+export async function requireAdmin(request, area = null) {
+  const admin = await currentAdmin();
+  if (!admin)
     return Response.json(
       { error: "Silakan login sebagai admin." },
       { status: 401 },
@@ -141,6 +229,13 @@ export async function requireAdmin(request) {
   if (request.method !== "GET" && !sameOrigin(request))
     return Response.json(
       { error: "Permintaan dari origin lain ditolak." },
+      { status: 403 },
+    );
+  if (!hasArea(admin.role, area))
+    return Response.json(
+      {
+        error: `Peran ${roleLabel(admin.role)} tidak punya akses ke bagian ini.`,
+      },
       { status: 403 },
     );
   return null;

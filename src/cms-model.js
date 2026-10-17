@@ -1,10 +1,29 @@
 import { experiences } from "./domain.js";
-import { defaultGallery, galleryLimit } from "./gallery.js";
+import { validateSeo, defaultSeo } from "./seo.js";
+import {
+  defaultGallery,
+  galleryLimit,
+  videoLimit,
+  videoSource,
+} from "./gallery.js";
 import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { defaultCourses, validateCourses } from "./course-model.js";
 import { defaultAbout, validateAbout } from "./about-model.js";
 import { defaultService, validateService } from "./service-model.js";
-import { emptyShop, shopCategories, availabilityLabels } from "./shop-model.js";
+import { defaultDeveloper, validateDeveloper } from "./developer.js";
+import { defaultPayments, validatePayments } from "./payment-model.js";
+import { defaultFares, validateFares } from "./fare-model.js";
+import {
+  emptyShop,
+  shopCategories,
+  availabilityLabels,
+  cleanSizes,
+  productLimits,
+  defaultDelivery,
+  deliveryZoneLimit,
+  shopProductLimit,
+  withSplitProducts,
+} from "./shop-model.js";
 import {
   blankSocials,
   socialPlatforms,
@@ -12,9 +31,10 @@ import {
 } from "./contact-model.js";
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import {
-  defaultPriceList,
+  legacyPriceList,
   validatePriceList,
   withPriceList,
+  withRentalProducts,
 } from "./price-list.js";
 import {
   englishDefaults,
@@ -27,7 +47,32 @@ import {
   photographyVersion,
 } from "./photography.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
-export const defaultContent = {
+// Reservations are for a diving program or, when booked and paid from an
+// activity page, for the activity itself. Paid Dive Shop orders, courses
+// and gear servicing are kept as reservations on their date too.
+export const activityPrograms = {
+  diving: "Diving",
+  snorkeling: "Snorkeling",
+  trip: "Trip laut",
+};
+export const orderPrograms = {
+  course: "Kursus selam",
+  shop: "Dive Shop",
+  service: "Servis alat",
+};
+export const bookingPrograms = [
+  ...experienceKeys,
+  ...Object.keys(activityPrograms),
+  ...Object.keys(orderPrograms),
+];
+export const programTitle = (content, key) =>
+  content.experiences?.[key]?.title ??
+  activityPrograms[key] ??
+  orderPrograms[key] ??
+  key;
+// New sites start with the 2025 price list, its rental gear as Dive Shop
+// products.
+export const defaultContent = withRentalProducts({
   photographyVersion,
   en: structuredClone(englishDefaults),
   activities: structuredClone(defaultActivities),
@@ -50,19 +95,23 @@ export const defaultContent = {
   },
   contact: {
     ...blankSocials,
-    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190849237",
+    whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6285190969308",
     email: "halo@zanclusdive.com",
     location: "",
     mapQuery: defaultMapQuery,
     instagram: "",
   },
   images: { ...defaultSiteImages },
-  priceList: structuredClone(defaultPriceList),
+  seo: { ...defaultSeo },
+  priceList: structuredClone(legacyPriceList),
   gallery: structuredClone(defaultGallery),
   calendar: structuredClone(defaultCalendar),
   courses: structuredClone(defaultCourses),
   about: structuredClone(defaultAbout),
   service: structuredClone(defaultService),
+  developer: structuredClone(defaultDeveloper),
+  payments: { ...defaultPayments },
+  fares: structuredClone(defaultFares),
   experiences: Object.fromEntries(
     experienceKeys.map((key) => [
       key,
@@ -80,7 +129,7 @@ export const defaultContent = {
       },
     ]),
   ),
-};
+});
 export const textFields = [
   ["heroEyebrow", "Label di atas hero"],
   ["heroTitle1", "Judul hero — baris 1"],
@@ -150,12 +199,36 @@ export function validateGallery(input) {
       src: imageURL(item?.src),
       caption: galleryCaptionText(item?.caption),
     })),
+    videos: validateVideos(input.videos),
   };
 }
+// Video links (YouTube, TikTok, Instagram, Facebook) for the video row;
+// documents without videos get none.
+export function validateVideos(input) {
+  const videos = input ?? [];
+  if (!Array.isArray(videos) || videos.length > videoLimit)
+    throw new Error(`Video maksimal ${videoLimit}.`);
+  return videos.map((video, index) => {
+    const url = typeof video?.url === "string" ? video.url.trim() : "";
+    const source = url.length <= 300 ? videoSource(url) : null;
+    if (!source)
+      throw new Error(
+        `Link video ${index + 1} belum dikenali. Tempel link video dari YouTube, TikTok, Instagram, atau Facebook.`,
+      );
+    if (source.short)
+      throw new Error(
+        `Link video ${index + 1} masih link pendek. Buka link itu di browser, lalu salin alamat lengkap dari kolom alamat.`,
+      );
+    return { url, caption: galleryCaptionText(video?.caption) };
+  });
+}
 
-export function validateContent(input) {
-  if (!input || typeof input !== "object")
-    throw new Error("Konten tidak valid.");
+export function validateContent(sent) {
+  if (!sent || typeof sent !== "object") throw new Error("Konten tidak valid.");
+  // An admin page opened before rental gear moved to the Dive Shop sends
+  // the rental lists, and one opened before sale and rental were apart
+  // sends products for both; they become products here too.
+  const input = withSplitProducts(withPriceList(sent));
   const text = Object.fromEntries(
     textFields.map(([key, label]) => [
       key,
@@ -243,7 +316,7 @@ export function validateContent(input) {
     text,
     contact,
     images,
-    priceList: validatePriceList(withPriceList(input).priceList),
+    priceList: validatePriceList(input.priceList, shop.products),
     experiences: catalog,
     shop,
     activities: validateActivities(input.activities),
@@ -252,6 +325,10 @@ export function validateContent(input) {
     courses: validateCourses(input.courses),
     about: validateAbout(input.about),
     service: validateService(input.service),
+    developer: validateDeveloper(input.developer),
+    payments: validatePayments(input.payments),
+    fares: validateFares(input.fares),
+    seo: validateSeo(input.seo),
     en: validateTranslations(withTranslations(input).en, shop.products),
   };
 }
@@ -290,6 +367,13 @@ export function validateActivities(input) {
         throw new Error("Isi 1–8 langkah alur kegiatan.");
       if (!Array.isArray(a.faqs) || a.faqs.length < 1 || a.faqs.length > 6)
         throw new Error("Isi 1–6 pertanyaan umum.");
+      const capacity = Number(
+        a.capacity ?? defaultActivities[key].capacity ?? 0,
+      );
+      if (!Number.isInteger(capacity) || capacity < 0 || capacity > 500)
+        throw new Error(
+          "Kuota peserta per hari harus 0–500 (0 = tanpa batas).",
+        );
       return [
         key,
         {
@@ -309,6 +393,7 @@ export function validateActivities(input) {
           audience: plain(a.audience, "Peserta aktivitas", 150),
           meetingPoint: plain(a.meetingPoint, "Titik temu", 250),
           price,
+          capacity,
           highlights: points(a.highlights, "Sorotan aktivitas"),
           preparations: points(a.preparations, "Persiapan aktivitas"),
           itinerary: a.itinerary.map((item) => ({
@@ -325,14 +410,20 @@ export function validateActivities(input) {
   );
 }
 export function validateShop(shop) {
-  if (!shop || !Array.isArray(shop.products) || shop.products.length > 20)
+  if (
+    !shop ||
+    !Array.isArray(shop.products) ||
+    shop.products.length > shopProductLimit
+  )
     throw new Error(
-      "Katalog harus berisi maksimal 20 produk. Muat ulang CMS jika katalog belum tersedia.",
+      `Katalog harus berisi maksimal ${shopProductLimit} produk. Muat ulang CMS jika katalog belum tersedia.`,
     );
   const ids = new Set();
+  const pairs = new Set();
   return {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
+    delivery: validateDelivery(shop.delivery),
     products: shop.products.map((p) => {
       if (
         !p ||
@@ -343,13 +434,27 @@ export function validateShop(shop) {
         !Object.hasOwn(availabilityLabels, p.availability) ||
         [p.enabled, p.saleEnabled, p.rentalEnabled].some(
           (v) => typeof v !== "boolean",
-        ) ||
-        (!p.saleEnabled && !p.rentalEnabled)
+        )
       )
         throw new Error(
           "Produk, kategori, atau pilihan jual/rental tidak valid.",
         );
+      // Gear for sale and rental gear are different products.
+      if (p.saleEnabled === p.rentalEnabled)
+        throw new Error(
+          `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
+        );
       ids.add(p.id);
+      // Rental gear may name the same model for sale, one rental gear each.
+      const pair =
+        p.rentalEnabled &&
+        typeof p.pair === "string" &&
+        /^[a-z0-9-]{1,50}$/.test(p.pair) &&
+        p.pair !== p.id &&
+        !pairs.has(p.pair)
+          ? p.pair
+          : "";
+      if (pair) pairs.add(pair);
       function price(value) {
         if (value === null || value === "") return null;
         if (typeof value !== "number" && typeof value !== "string")
@@ -368,6 +473,7 @@ export function validateShop(shop) {
         enabled: p.enabled,
         saleEnabled: p.saleEnabled,
         rentalEnabled: p.rentalEnabled,
+        ...(pair ? { pair } : {}),
         name: plain(p.name, "Nama produk", 100),
         description: plain(p.description, "Deskripsi produk", 500),
         specification: plain(
@@ -376,11 +482,119 @@ export function validateShop(shop) {
           300,
           false,
         ),
-        image: p.image ? imageURL(p.image) : "",
-        salePrice: price(p.salePrice),
-        rentalPrice: price(p.rentalPrice),
+        ...productMedia(p),
+        details: plain(
+          p.details ?? "",
+          "Deskripsi lengkap",
+          productLimits.details,
+          false,
+        ),
+        specs: specRows(p.specs),
+        // Only the price of its own way.
+        salePrice: p.saleEnabled ? price(p.salePrice) : null,
+        rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
+        sizes: cleanSizes(p.sizes),
       };
     }),
+  };
+}
+// A product's photos of the units for sale (the first is its cover, kept
+// as "image" for the cards), of the units for rent, and its video links.
+function productMedia(p) {
+  const photos = (list, label) => {
+    if (!Array.isArray(list)) return [];
+    if (list.length > productLimits.images)
+      throw new Error(`${label} maksimal ${productLimits.images}.`);
+    return [...new Set(list.map((url) => imageURL(url)))];
+  };
+  const images = photos(p.images, "Foto barang jual");
+  // Catalogs from before the gallery kept one photo.
+  if (!images.length && p.image) images.push(imageURL(p.image));
+  const videos = Array.isArray(p.videos) ? p.videos : [];
+  if (videos.length > productLimits.videos)
+    throw new Error(`Video produk maksimal ${productLimits.videos}.`);
+  return {
+    image: images[0] ?? "",
+    images,
+    // The photos of the units for rent, apart from the ones for sale.
+    rentalImages: photos(p.rentalImages, "Foto barang sewa"),
+    videos: videos.map((value, index) => {
+      const url = typeof value === "string" ? value.trim() : "";
+      const source = url.length <= 300 ? videoSource(url) : null;
+      if (!source)
+        throw new Error(
+          `Link video produk ${index + 1} belum dikenali. Tempel link dari YouTube, TikTok, Instagram, atau Facebook.`,
+        );
+      if (source.short)
+        throw new Error(
+          `Link video produk ${index + 1} masih link pendek. Buka link itu di browser, lalu salin alamat lengkapnya.`,
+        );
+      return url;
+    }),
+  };
+}
+// Spec rows such as Merek / Scubapro, shown as a table on the product.
+export function specRows(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > productLimits.specs)
+    throw new Error(`Baris spesifikasi maksimal ${productLimits.specs}.`);
+  return input
+    .map((row) => ({
+      label: plain(row?.label ?? "", "Nama spesifikasi", 40, false),
+      value: plain(row?.value ?? "", "Isi spesifikasi", 160, false),
+    }))
+    .filter((row) => row.label || row.value)
+    .map((row) => {
+      if (!row.label || !row.value)
+        throw new Error("Isi nama dan isi setiap baris spesifikasi.");
+      if (/[<>]/.test(row.label + row.value))
+        throw new Error("Spesifikasi tidak boleh berisi < atau >.");
+      return row;
+    });
+}
+// Pick-up and delivery for Dive Shop orders.
+function validateDelivery(input) {
+  if (input === undefined || input === null)
+    return structuredClone(defaultDelivery);
+  if (typeof input !== "object" || Array.isArray(input))
+    throw new Error("Pengaturan pengantaran tidak valid.");
+  const zones = Array.isArray(input.zones) ? input.zones : [];
+  if (zones.length > deliveryZoneLimit)
+    throw new Error(`Wilayah antar maksimal ${deliveryZoneLimit}.`);
+  const seen = new Set();
+  const clean = zones.map((zone) => {
+    const id = typeof zone?.id === "string" ? zone.id : "";
+    if (!/^[a-z0-9-]{1,40}$/.test(id) || seen.has(id))
+      throw new Error("Wilayah antar tidak valid.");
+    seen.add(id);
+    const name = plain(zone.name ?? "", "Nama wilayah antar", 60);
+    const fee = Number(zone.fee);
+    if (!Number.isSafeInteger(fee) || fee < 0 || fee > 1e7)
+      throw new Error(
+        `Ongkos antar ${name} harus rupiah 0 sampai 10 juta (0 berarti gratis).`,
+      );
+    return { id, name, fee };
+  });
+  const enabled = input.enabled === true;
+  const pickup = input.pickup !== false;
+  if (enabled && !clean.length)
+    throw new Error("Tambahkan minimal satu wilayah antar beserta ongkosnya.");
+  if (!enabled && !pickup)
+    throw new Error("Aktifkan ambil sendiri atau antar ke alamat.");
+  const note = (value, fallback, label) => ({
+    id: plain(value?.id ?? fallback.id, label, 300, false),
+    en: plain(value?.en ?? fallback.en, label + " (English)", 300, false),
+  });
+  return {
+    pickup,
+    pickupNote: note(
+      input.pickupNote,
+      defaultDelivery.pickupNote,
+      "Keterangan ambil sendiri",
+    ),
+    enabled,
+    zones: clean,
+    note: note(input.note, defaultDelivery.note, "Keterangan pengantaran"),
   };
 }
 function validDate(s) {
@@ -388,10 +602,39 @@ function validDate(s) {
   const d = new Date(s + "T12:00:00Z");
   return !Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === s;
 }
+// Rental gear the team books by hand, for a walk-in guest or an order made
+// on WhatsApp: Dive Shop products and sizes, held on the booking's dates
+// like gear rented online.
+export const bookingGearLimit = 20;
+function bookingGear(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input) || input.length > bookingGearLimit)
+    throw new Error(`Alat sewa maksimal ${bookingGearLimit} baris.`);
+  const out = [];
+  for (const line of input) {
+    const product = line?.product;
+    const size = typeof line?.size === "string" ? line.size : "";
+    const quantity = Number(line?.quantity);
+    if (
+      typeof product !== "string" ||
+      !/^[a-z0-9-]{1,50}$/.test(product) ||
+      size.length > 16 ||
+      size.includes("::") ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100
+    )
+      throw new Error("Pilih alat sewa dan jumlahnya, 1–100 unit.");
+    const same = out.find((l) => l.product === product && l.size === size);
+    if (same) same.quantity = Math.min(100, same.quantity + quantity);
+    else out.push({ product, size, quantity });
+  }
+  return out.map(({ size, ...line }) => (size ? { ...line, size } : line));
+}
 export function validateBooking(input) {
   if (
     !input ||
-    !experienceKeys.includes(input.experience) ||
+    !bookingPrograms.includes(input.experience) ||
     !Object.hasOwn(statuses, input.status) ||
     !Object.hasOwn(sources, input.source)
   )
@@ -417,6 +660,10 @@ export function validateBooking(input) {
   const phone = plain(input.phone || "", "Telepon", 30, false);
   if (phone && !/^\+?[\d\s()-]{6,30}$/.test(phone))
     throw new Error("Telepon tidak valid.");
+  const email = plain(input.email || "", "Email", 200, false).trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new Error("Email tamu tidak valid.");
+  const gear = bookingGear(input.gear);
   return {
     experience: input.experience,
     status: input.status,
@@ -433,5 +680,9 @@ export function validateBooking(input) {
     participants,
     amount,
     notes: plain(input.notes || "", "Catatan", 2000, false),
+    ...(email ? { email } : {}),
+    // The language of the emails to the guest.
+    ...(input.lang === "en" || input.lang === "id" ? { lang: input.lang } : {}),
+    ...(gear.length ? { gear } : {}),
   };
 }

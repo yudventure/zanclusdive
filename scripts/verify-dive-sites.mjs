@@ -56,7 +56,7 @@ try {
     await map.locator('[data-tanda="cape-kri"]').click();
     await map.locator("[data-kartu-tanda]").waitFor();
     const link = map.locator("[data-kartu-tanda] a", { hasText: card });
-    assert.match(await link.getAttribute("href"), /\/diving#inquiry$/);
+    assert.match(await link.getAttribute("href"), /\/diving#prices$/);
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await page.waitForTimeout(900);

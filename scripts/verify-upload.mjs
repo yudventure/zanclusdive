@@ -126,7 +126,7 @@ try {
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page
     .locator(".admin-upload-drop")
-    .filter({ hasText: /foto produk/ })
+    .filter({ hasText: /foto barang jual/ })
     .locator('input[type="file"]')
     .setInputFiles({
       name: "mask.png",

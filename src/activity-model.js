@@ -1,6 +1,6 @@
 import { cleanWhatsApp, cleanEmail } from "./contact-fields.js";
 import { activityPhotos } from "./photography.js";
-import { dictionary } from "./i18n.js";
+import { dictionary, formatIDR } from "./i18n.js";
 export const activityLabels = {
   diving: "Diving",
   snorkeling: "Snorkeling",
@@ -27,6 +27,8 @@ export const legacyActivityDefaults = {
 export const defaultActivities = {
   diving: {
     ...common,
+    // People a day across diving programs and courses; 0 = no limit shown.
+    capacity: 30,
     title: "Temukan cerita di bawah permukaan.",
     summary:
       "Dari pengalaman pertama hingga petualangan berikutnya, susun rencana menyelam yang sesuai denganmu.",
@@ -89,6 +91,7 @@ export const defaultActivities = {
   },
   snorkeling: {
     ...common,
+    capacity: 0,
     title: "Dekat dengan laut, dari permukaannya.",
     summary:
       "Nikmati warna dan kehidupan laut dengan rencana snorkeling yang nyaman untukmu dan teman perjalananmu.",
@@ -150,6 +153,7 @@ export const defaultActivities = {
   },
   trip: {
     ...common,
+    capacity: 0,
     title: "Satu perjalanan, banyak cerita laut.",
     summary:
       "Susun trip laut bersama teman atau keluarga, dengan aktivitas dan rute yang mengikuti caramu menikmati perjalanan.",
@@ -228,6 +232,8 @@ export function withActivities(content) {
   };
 }
 
+// order, when packages were chosen: { lines: [{ item, quantity, unit }],
+// total } with texts already in the visitor's language.
 export function activityInquiry(
   key,
   activity,
@@ -235,6 +241,7 @@ export function activityInquiry(
   today,
   demo = false,
   locale = "id",
+  order = null,
 ) {
   const t = dictionary(locale).inquiry;
   const label = dictionary(locale).activityLabels[key];
@@ -267,6 +274,18 @@ export function activityInquiry(
     ...(email ? [`Email: ${email}`] : []),
     `${t.proposedDate}: ${date}`,
     t.people(participants),
+    ...(order?.lines?.length
+      ? [
+          `${t.package}: ${order.lines
+            .map(
+              (line) =>
+                `${line.item} × ${line.quantity}${line.unit ? " " + line.unit : ""}`,
+            )
+            .join(", ")}`,
+          ...(order.fare ? [order.fare] : []),
+          `${t.estimate}: ${formatIDR(order.total, locale)}`,
+        ]
+      : []),
     ...(notes ? [`${t.notesLabel}: ${notes}`] : []),
     t.closing,
   ].join("\n");

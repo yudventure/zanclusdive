@@ -53,13 +53,13 @@
 /* Sticky section menu */
 .activity-jump-links {
   position: sticky;
-  top: 96px;
+  top: var(--header-h);
   z-index: 5;
   gap: 8px;
   margin: 0 -40px;
   padding: 14px 40px;
-  border-bottom: 1px solid #e3ecea;
   background: #ffffffeb;
+  box-shadow: 0 10px 18px -16px #062b3b59;
   backdrop-filter: blur(12px);
   overflow-x: auto;
   scrollbar-width: none;
@@ -262,8 +262,31 @@
 
 /* Plan card: shorter head */
 .activity-inquiry {
-  top: 172px;
+  --inquiry-bg: #f4f8f5;
+  top: calc(var(--header-h) + 76px);
   padding: 26px;
+}
+/* The plan form stays in view while the page scrolls. When it is taller
+   than the window it scrolls by itself and its send button stays at the
+   bottom of the panel, so the whole form can be filled in right away
+   instead of after scrolling to the end of the page. */
+@media (min-width: 901px) {
+  .activity-inquiry {
+    max-height: max(420px, calc(100vh - var(--header-h) - 96px));
+    max-height: max(420px, calc(100dvh - var(--header-h) - 96px));
+    overflow-y: auto;
+    scroll-padding: 12px 0 96px;
+    scrollbar-width: thin;
+    scrollbar-color: #b9cfc4 transparent;
+  }
+  .activity-inquiry .activity-form > .button[type="submit"] {
+    position: sticky;
+    bottom: -12px;
+    z-index: 2;
+    box-shadow:
+      0 0 0 12px var(--inquiry-bg),
+      0 -22px 20px -4px var(--inquiry-bg);
+  }
 }
 .activity-inquiry h2 {
   font-size: 26px;
@@ -330,7 +353,7 @@
     padding: 11px 14px;
   }
   .activity-jump-links {
-    top: 76px;
+    top: var(--header-h);
     margin: 0 -24px;
     padding: 12px 24px;
     flex-wrap: nowrap;
@@ -563,13 +586,798 @@ nav.open .nav-sub a {
   font-weight: 400;
   color: #57717a;
 }
+/* Price cards add packages to the cart, like the Dive Shop. */
+.activity-price-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.activity-price-foot .shop-item-add,
+.activity-price-foot .shop-item-stepper {
+  margin-top: 0;
+}
+.activity-cart-bar {
+  margin-top: 16px;
+}
 .activity-price-note {
   margin-top: 12px;
   font-size: 12px;
   color: #6b8289;
 }
+/* A card left alone on the last row takes the whole row. */
+.activity-prices li:last-child:nth-child(odd),
+.activity-addon-list li:last-child:nth-child(odd),
+.plan-addons li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Add-ons: gear, cameras and services from the other price lists, offered
+   beside the main packages. */
+.activity-addons {
+  margin-top: 26px;
+}
+.activity-addons h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+.activity-addons > p {
+  margin: 6px 0 14px;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.activity-addon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.activity-addon-list li {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #e3ecea;
+  border-radius: 14px;
+  background: #f6faf8;
+}
+.activity-addon-list em {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #1f8f8a;
+}
+.activity-addon-list strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.activity-addon-list span small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #57717a;
+}
+.activity-addon-list b {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--act-ink, #062b3b);
+}
+.activity-addon-list b small {
+  margin-left: 4px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #57717a;
+}
 @media (max-width: 700px) {
-  .activity-prices {
+  .activity-prices,
+  .activity-addon-list {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Plan form: details, then a summary, then Midtrans or WhatsApp. */
+.plan-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 16px 0 20px;
+  padding: 0;
+  list-style: none;
+  scroll-margin-top: 160px;
+}
+.plan-steps li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #6b8086;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
+}
+/* The line joining each step to the one before it. */
+.plan-steps li + li::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: #d6e4dc;
+}
+.plan-steps span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #c9dad1;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 12px;
+}
+.plan-steps li.current {
+  color: #062b3b;
+}
+.plan-steps li.current span {
+  border-color: #062b3b;
+  background: #062b3b;
+  color: #c8f28a;
+}
+.plan-steps li.done {
+  color: #1f6b47;
+}
+.plan-steps li.done span {
+  border-color: #2e9a63;
+  background: #2e9a63;
+  color: #fff;
+}
+.plan-steps li.done + li::before {
+  background: #2e9a63;
+}
+.plan-package {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid #cfe3d6;
+  border-radius: 16px;
+  background: #fff;
+}
+.plan-package legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 2px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.plan-cart {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-cart li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+  border-radius: 12px;
+  background: #f1f7f3;
+}
+.plan-cart strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.plan-cart small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: #57717a;
+}
+.plan-cart .shop-item-stepper {
+  flex: none;
+  margin-top: 0;
+  padding: 3px;
+  font-size: 12px;
+}
+.plan-cart .shop-item-stepper button {
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+}
+.plan-cart li.is-addon {
+  background: #f4f6fb;
+}
+.plan-addon-tag {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #1f8f8a;
+}
+/* Add-ons still to pick, one tap each. */
+.plan-addons > p {
+  margin: 2px 0 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #33525a;
+}
+.plan-addons ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.plan-addons button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 9px 11px;
+  border: 1px solid #cfe3d6;
+  border-radius: 12px;
+  background: #fff;
+  color: #062b3b;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.plan-addons button > span {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e5f4ea;
+  color: #087873;
+  font-size: 15px;
+  font-weight: 700;
+}
+.plan-addons button strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.plan-addons button small {
+  font-size: 11px;
+  color: #57717a;
+}
+.plan-addons button:hover {
+  border-color: #20b8b1;
+}
+.plan-addons button:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+@media (max-width: 340px) {
+  .plan-addons ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* The date, picked from the places left on each day. */
+.plan-dates {
+  margin: 0 0 14px;
+  padding: 14px 14px 12px;
+  border: 1px solid #cfe3d6;
+  border-radius: 16px;
+  background: #f4f8f5;
+}
+.plan-dates legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.plan-dates-intro {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.plan-dates .slot-month-name {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.plan-dates .slot-day {
+  aspect-ratio: 1 / 0.92;
+}
+.plan-dates .slot-legend {
+  margin-top: 8px;
+}
+.plan-dates .slot-note {
+  margin: 10px 0 0;
+  font-weight: 600;
+}
+.plan-cart-empty {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.plan-add {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px dashed #9fcfc6;
+  border-radius: 12px;
+  background: #fff;
+  color: #087873;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.plan-add:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+.plan-summary {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #cfe3d6;
+  border-radius: 18px;
+  background: #fff;
+}
+.plan-summary:focus {
+  outline: none;
+}
+.plan-summary h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.plan-summary-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.plan-summary-list div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f6faf8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.plan-summary-list dt {
+  color: #6b8086;
+}
+.plan-summary-list dd {
+  margin: 0;
+  color: #062b3b;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.plan-summary-total {
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f1f7f3;
+}
+.plan-summary .button {
+  width: 100%;
+  justify-content: center;
+  padding: 16px;
+  font-size: 13px;
+  white-space: normal;
+}
+.plan-summary .activity-error {
+  margin: 0;
+}
+.plan-summary .activity-message {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.plan-ask-note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.plan-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-top: 4px;
+}
+.plan-back {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #062b3b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.plan-back:focus-visible,
+.pay-unsure:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Calendar beside the activity page: places left per day, closed days,
+   scheduled activities, and the best months below. */
+.slot-calendar {
+  position: sticky;
+  top: calc(var(--header-h) + 76px);
+  padding: 24px;
+  border: 1px solid #dbe8e1;
+  border-radius: 24px;
+  background: #f4f8f5;
+}
+@media (min-width: 901px) {
+  .slot-calendar {
+    max-height: max(420px, calc(100vh - var(--header-h) - 96px));
+    max-height: max(420px, calc(100dvh - var(--header-h) - 96px));
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #b9cfc4 transparent;
+  }
+}
+@media (max-width: 900px) {
+  .slot-calendar {
+    position: static;
+    max-width: 640px;
+    width: 100%;
+  }
+}
+.slot-calendar h2 {
+  margin-top: 8px;
+  font-size: 26px;
+}
+.slot-intro {
+  margin: 8px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.slot-month-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.slot-month-bar .slot-month-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.slot-month-bar button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #cfe0d8;
+  border-radius: 50%;
+  background: #fff;
+  color: #062b3b;
+  font: inherit;
+  cursor: pointer;
+}
+.slot-month-bar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.slot-weekday {
+  padding-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  color: #6b8086;
+}
+.slot-day {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1px;
+  min-width: 0;
+  aspect-ratio: 1 / 1.08;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #e5f4ea;
+  color: #1f6b47;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.slot-day-number {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.slot-day small {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 9.5px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slot-day.is-low {
+  background: #fff1cf;
+  color: #7a5a00;
+}
+.slot-day.is-full {
+  background: #fde5df;
+  color: #a73428;
+}
+.slot-day.is-closed {
+  background: #e8edef;
+  color: #7d8f95;
+}
+.slot-day.is-past {
+  background: transparent;
+  color: #b3c2c7;
+}
+.slot-day:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px #062b3b1f;
+}
+.slot-day:disabled {
+  cursor: default;
+}
+.slot-day.is-today {
+  border-color: #20b8b1;
+}
+.slot-day.is-selected {
+  background: #062b3b;
+  color: #fff;
+}
+.slot-day.has-events::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1f8f8a;
+}
+.slot-day.is-selected.has-events::after {
+  background: #c8f28a;
+}
+.slot-day:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+.slot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: #57717a;
+}
+.slot-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slot-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: #e5f4ea;
+}
+.slot-legend i.is-low {
+  background: #fff1cf;
+}
+.slot-legend i.is-full {
+  background: #fde5df;
+}
+.slot-legend i.is-closed {
+  background: #e8edef;
+}
+.slot-picked {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #fff;
+  font-size: 13px;
+}
+.slot-picked > span {
+  color: #57717a;
+}
+.slot-picked .button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+  padding: 14px;
+  font-size: 12.5px;
+}
+.slot-link {
+  margin-top: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #087873;
+}
+.slot-events {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+.slot-events li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.slot-events i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--type, #1f8f8a);
+}
+.slot-events small {
+  color: #6b8086;
+}
+.slot-seasons {
+  margin-top: 26px;
+  scroll-margin-top: 170px;
+}
+.slot-seasons h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.slot-seasons > p {
+  margin: 4px 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #57717a;
+}
+.slot-seasons ol {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.slot-seasons li {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+}
+.slot-seasons li strong {
+  font-size: 11.5px;
+  text-transform: capitalize;
+}
+.slot-seasons li span {
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+.slot-seasons li.season-best {
+  background: #dff3e6;
+  color: #1f6b47;
+}
+.slot-seasons li.season-good {
+  background: #eaf4f7;
+  color: #24607a;
+}
+.slot-seasons li.season-windy {
+  background: #fff1cf;
+  color: #7a5a00;
+}
+.slot-seasons li.is-current {
+  border-color: #062b3b;
+}
+.slot-season-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #3d5b63;
+}
+.slot-season-note strong {
+  display: block;
+  text-transform: capitalize;
+}
+
+/* Checkout over the page. */
+.activity-checkout {
+  width: min(560px, calc(100% - 24px));
+  padding: 34px 30px 28px;
+}
+.activity-checkout h2 {
+  margin: 8px 0 14px;
+  font-size: 28px;
+}
+.activity-checkout .activity-form .button[type="submit"] {
+  position: static;
+  box-shadow: none;
+}
+.slot-note {
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #1f6b47;
+}
+.slot-note.is-full {
+  color: #a73428;
+}
+.activity-cart-bar {
+  margin-top: 28px;
+}
+@media (max-width: 600px) {
+  .activity-checkout {
+    padding: 28px 18px 22px;
+  }
+  .slot-calendar {
+    padding: 18px;
+  }
+}
+.activity-checkout .plan-cart,
+.activity-checkout .slot-events,
+.activity-checkout .plan-summary-list {
+  margin: 0;
+  padding: 0;
 }

@@ -12,6 +12,8 @@ const icons = {
   days: "M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z",
   note: "M6 4h9l3 3v13H6zM9 10h6M9 14h6",
   lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3",
+  flag: "M6 21V4M6 4h11l-2.5 4L17 12H6",
+  home: "M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5",
 };
 
 export default function FormField({

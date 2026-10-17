@@ -3,14 +3,16 @@ import {
   jsonBody,
   apiFailure,
 } from "../../../../src/server/auth.js";
-import { saveBooking } from "../../../../src/server/store.js";
+import { getContent, saveBooking } from "../../../../src/server/store.js";
 import { validateBooking } from "../../../../src/cms-model.js";
+import { saveWithBilling } from "../../../../src/server/admin-booking.js";
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
-  let payload;
+  let body, payload;
   try {
-    payload = validateBooking(await jsonBody(request));
+    body = await jsonBody(request);
+    payload = validateBooking(body);
   } catch (error) {
     return Response.json(
       { error: error.message || "Reservasi tidak valid." },
@@ -18,7 +20,7 @@ export async function POST(request) {
     );
   }
   try {
-    return Response.json(await saveBooking(payload), { status: 201 });
+    return await saveWithBilling({ request, payload, body });
   } catch (error) {
     return apiFailure(error);
   }

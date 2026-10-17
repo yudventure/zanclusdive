@@ -5,10 +5,29 @@ import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import ProductVisual from "./ProductVisual.jsx";
+import ProductDetail from "./ProductDetail.jsx";
+import DeliveryChoice, {
+  firstDelivery,
+  deliveryFee,
+} from "../components/DeliveryChoice.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
-import { rupiah, quoteOrder, orderMessage } from "../shop-model.js";
+import {
+  rupiah,
+  quoteOrder,
+  orderMessage,
+  unitsLeft,
+  stockBadge,
+  deliveryChoice,
+  productAs,
+  pairOf,
+} from "../shop-model.js";
+import PayPanel from "../components/PayPanel.jsx";
+import FareChoice from "../components/FareChoice.jsx";
+import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import { dictionary, intlLocale, localeHref } from "../i18n.js";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked } from "../developer.js";
 
 export default function DiveShop({
   shop,
@@ -19,9 +38,15 @@ export default function DiveShop({
   today,
   tagline,
   locale = "en",
+  locks = noLocks,
+  payments,
+  fares,
+  stock = {},
 }) {
   const dict = dictionary(locale);
   const t = dict.shop;
+  const p = dict.payment;
+  const f = dict.fare;
   const shopCategories = dict.shopCategories;
   const href = (path) => localeHref(locale, path);
   const money = (amount) => rupiah(amount, locale);
@@ -41,6 +66,15 @@ export default function DiveShop({
   const [message, setMessage] = useState(""),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
+  // Standard, Comfort or Flexi for the rentals.
+  const [fare, setFare] = useState("standard");
+  // The product window: { product, mode, add } (add false from the cart).
+  const [detail, setDetail] = useState(null);
+  // Picked up at the dive center or delivered: { method, zone, address }.
+  const [delivery, setDelivery] = useState(() => firstDelivery(shop.delivery));
+  const fee = deliveryFee(shop.delivery, delivery);
+  const zoneName =
+    shop.delivery?.zones.find((z) => z.id === delivery.zone)?.name ?? "";
   const [menu, setMenu] = useState(false),
     [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -66,25 +100,69 @@ export default function DiveShop({
       quote = quoteOrder(shop.products, cart, details.days, locale);
   } catch {}
   const hasRental = cart.some((p) => p.mode === "rental");
+  // The fare's increase applies to the rentals, not the purchases.
+  const rentalBase = (quote?.lines ?? [])
+    .filter((line) => line.mode === "rental" && line.total !== null)
+    .reduce((sum, line) => sum + line.total, 0);
+  const offered = fareChoices(fares).length > 1 && rentalBase > 0;
+  const fareChoice = fareFor(fares, offered ? fare : "standard");
+  const markup = fareMarkup(rentalBase, fareChoice.percent);
+  const fareText = offered
+    ? f.message(f.names[fareChoice.tier], fareChoice.percent)
+    : "";
+  // With online payment on, an order priced in full is paid with Midtrans.
+  const payable =
+    Boolean(payments?.ready) && Boolean(quote) && !quote.needsQuote;
   const count = cart.reduce((n, p) => n + p.quantity, 0);
   function changeCart(next) {
     setCart(next);
     setMessage("");
     setError("");
   }
-  function add(product) {
-    const item = cart.find((p) => p.id === product.id && p.mode === mode);
-    if (item?.quantity >= 10) {
-      setNotice(t.maxUnits);
+  // Adds gear in the current mode; gear with sizes in the size picked in
+  // its window.
+  function add(product, size = "", quantity = 1) {
+    const item = cart.find(
+      (p) => p.id === product.id && p.mode === mode && p.size === size,
+    );
+    // Gear that follows the warehouse stops at the units left.
+    const left = unitsLeft(product, stock, mode, size) ?? 10;
+    const name = size ? `${product.name} ${size}` : product.name;
+    if ((item?.quantity ?? 0) >= left) {
+      setNotice(left >= 10 ? t.maxUnits : t.onlyLeft(name, left));
       return;
     }
+    const next = Math.min(left, (item?.quantity ?? 0) + quantity);
     changeCart(
       item
-        ? cart.map((p) => (p === item ? { ...p, quantity: p.quantity + 1 } : p))
-        : [...cart, { id: product.id, mode, quantity: 1 }],
+        ? cart.map((p) => (p === item ? { ...p, quantity: next } : p))
+        : [...cart, { id: product.id, mode, size, quantity: next }],
     );
-    setNotice(t.added(product.name, mode === "sale"));
+    setNotice(t.added(name, mode === "sale"));
   }
+  // A cart line moved to another size joins a line already in that size.
+  function changeSize(item, size) {
+    const same = cart.find(
+      (p) =>
+        p !== item &&
+        p.id === item.id &&
+        p.mode === item.mode &&
+        p.size === size,
+    );
+    changeCart(
+      same
+        ? cart
+            .filter((p) => p !== item)
+            .map((p) =>
+              p === same
+                ? { ...p, quantity: Math.min(10, p.quantity + item.quantity) }
+                : p,
+            )
+        : cart.map((p) => (p === item ? { ...p, size } : p)),
+    );
+  }
+  const openDetail = (product, canAdd = true, lineMode = mode) =>
+    setDetail({ product, mode: lineMode, add: canAdd });
   function changeDetails(key, value) {
     setDetails({ ...details, [key]: value });
     setMessage("");
@@ -94,7 +172,19 @@ export default function DiveShop({
     event.preventDefault();
     try {
       if (hasRental && details.startDate < today) throw new Error(t.pastDate);
-      setMessage(orderMessage(shop.products, cart, details, false, locale));
+      setMessage(
+        orderMessage(
+          shop.products,
+          cart,
+          {
+            ...details,
+            fare: { text: fareText, markup },
+            delivery: deliveryChoice(shop.delivery, delivery, locale),
+          },
+          false,
+          locale,
+        ),
+      );
       setError("");
     } catch (err) {
       setError(err.message);
@@ -262,26 +352,53 @@ export default function DiveShop({
                 {products.map((product) => {
                   const price =
                     product[mode === "sale" ? "salePrice" : "rentalPrice"];
+                  const locked = itemLocked(locks, "product", product.id);
+                  const badge = stockBadge(
+                    product,
+                    stock,
+                    mode,
+                    dict.availability,
+                  );
                   return (
                     <article
-                      className="shop-product-card"
+                      className={
+                        "shop-product-card" + (locked ? " is-locked" : "")
+                      }
                       key={product.id}
                       data-product={product.id}
                       data-reveal
                     >
-                      <div className="shop-product-image">
-                        <ProductVisual product={product} locale={locale} />
-                        <span
-                          className={"shop-stock stock-" + product.availability}
-                        >
-                          {dict.availability[product.availability]}
+                      {locked && <LockedBadge locale={locale} />}
+                      <div
+                        className="shop-product-image"
+                        onClick={locked ? undefined : () => openDetail(product)}
+                      >
+                        <ProductVisual
+                          product={productAs(product, mode)}
+                          locale={locale}
+                        />
+                        <span className={"shop-stock stock-" + badge.state}>
+                          {badge.label}
                         </span>
                       </div>
                       <div className="shop-product-info">
                         <p className="shop-category">
                           {shopCategories[product.category]}
                         </p>
-                        <h3>{product.name}</h3>
+                        <h3>
+                          {locked ? (
+                            product.name
+                          ) : (
+                            <button
+                              type="button"
+                              className="shop-product-open"
+                              aria-label={t.detail.open(product.name)}
+                              onClick={() => openDetail(product)}
+                            >
+                              {product.name}
+                            </button>
+                          )}
+                        </h3>
                         <p className="shop-description">
                           {product.description}
                         </p>
@@ -297,14 +414,25 @@ export default function DiveShop({
                               <small>{t.perDay}</small>
                             )}
                           </p>
-                          <button
-                            disabled={product.availability === "unavailable"}
-                            aria-label={t.add(product.name, mode === "sale")}
-                            onClick={() => add(product)}
-                          >
-                            <span aria-hidden="true">+</span>{" "}
-                            {mode === "sale" ? t.buyShort : t.rentShort}
-                          </button>
+                          {product.sizes?.length ? (
+                            // Gear with sizes is added from its window.
+                            <button
+                              disabled={locked || badge.state === "unavailable"}
+                              aria-label={`${t.detail.pickSize} ${product.name}`}
+                              onClick={() => openDetail(product)}
+                            >
+                              {t.detail.pickSize}
+                            </button>
+                          ) : (
+                            <button
+                              disabled={locked || badge.state === "unavailable"}
+                              aria-label={t.add(product.name, mode === "sale")}
+                              onClick={() => add(product)}
+                            >
+                              <span aria-hidden="true">+</span>{" "}
+                              {mode === "sale" ? t.buyShort : t.rentShort}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </article>
@@ -348,16 +476,30 @@ export default function DiveShop({
                         (p) => p.id === item.id,
                       );
                       const line = quote?.lines.find(
-                        (p) => p.id === item.id && p.mode === item.mode,
+                        (p) =>
+                          p.id === item.id &&
+                          p.mode === item.mode &&
+                          p.size === (item.size ?? ""),
                       );
                       return (
-                        <li key={item.id + item.mode}>
+                        <li key={item.id + item.mode + (item.size ?? "")}>
                           <div className="shop-cart-heading">
                             <div>
                               <span>
                                 {item.mode === "sale" ? t.saleTag : t.rentalTag}
                               </span>
-                              <h3>{product.name}</h3>
+                              <h3>
+                                <button
+                                  type="button"
+                                  className="shop-product-open"
+                                  aria-label={t.detail.open(product.name)}
+                                  onClick={() =>
+                                    openDetail(product, false, item.mode)
+                                  }
+                                >
+                                  {product.name}
+                                </button>
+                              </h3>
                             </div>
                             <button
                               aria-label={t.remove(
@@ -371,6 +513,42 @@ export default function DiveShop({
                               ×
                             </button>
                           </div>
+                          {product.sizes?.length > 0 && (
+                            <label className="shop-cart-size">
+                              {t.detail.size}
+                              <select
+                                aria-label={t.cartSize(product.name)}
+                                value={item.size ?? ""}
+                                onChange={(e) =>
+                                  changeSize(item, e.target.value)
+                                }
+                              >
+                                {!item.size && (
+                                  <option value="">{t.detail.pickSize}</option>
+                                )}
+                                {product.sizes.map((size) => {
+                                  const left = unitsLeft(
+                                    product,
+                                    stock,
+                                    item.mode,
+                                    size,
+                                  );
+                                  return (
+                                    <option
+                                      key={size}
+                                      value={size}
+                                      disabled={left === 0}
+                                    >
+                                      {size}
+                                      {left === 0
+                                        ? ` (${t.detail.sizeOut})`
+                                        : ""}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                            </label>
+                          )}
                           <div className="shop-cart-quantity">
                             <label>
                               {t.quantity}
@@ -393,11 +571,25 @@ export default function DiveShop({
                                   )
                                 }
                               >
-                                {Array.from({ length: 10 }, (_, i) => (
-                                  <option key={i} value={i + 1}>
-                                    {i + 1}
-                                  </option>
-                                ))}
+                                {Array.from(
+                                  {
+                                    length: Math.max(
+                                      1,
+                                      item.quantity,
+                                      unitsLeft(
+                                        product,
+                                        stock,
+                                        item.mode,
+                                        item.size,
+                                      ) ?? 10,
+                                    ),
+                                  },
+                                  (_, i) => (
+                                    <option key={i} value={i + 1}>
+                                      {i + 1}
+                                    </option>
+                                  ),
+                                )}
                               </select>
                             </label>
                             <strong>
@@ -511,6 +703,17 @@ export default function DiveShop({
                         </FormField>
                       </div>
                     )}
+                    <DeliveryChoice
+                      id="order"
+                      delivery={shop.delivery}
+                      value={delivery}
+                      onChange={(next) => {
+                        setDelivery(next);
+                        setMessage("");
+                        setError("");
+                      }}
+                      locale={locale}
+                    />
                     <FormField
                       id="order-notes"
                       label={t.notes}
@@ -526,10 +729,40 @@ export default function DiveShop({
                         onChange={(e) => changeDetails("notes", e.target.value)}
                       />
                     </FormField>
+                    {offered && (
+                      <FareChoice
+                        fares={fares}
+                        base={rentalBase}
+                        value={fareChoice.tier}
+                        onChange={(tier) => {
+                          setFare(tier);
+                          setMessage("");
+                        }}
+                        locale={locale}
+                      />
+                    )}
                     <div className="shop-total">
-                      <span>{t.estimate(quote?.needsQuote)}</span>
+                      <span>
+                        {t.estimate(quote?.needsQuote)}
+                        {markup > 0 && (
+                          <small className="shop-fare-note">
+                            {f.line(
+                              f.names[fareChoice.tier],
+                              fareChoice.percent,
+                            )}{" "}
+                            {money(markup)}
+                          </small>
+                        )}
+                        {fee > 0 && (
+                          <small className="shop-fare-note">
+                            {t.delivery.fee(zoneName)} {money(fee)}
+                          </small>
+                        )}
+                      </span>
                       <strong>
-                        {quote ? money(quote.total) : t.checkDuration}
+                        {quote
+                          ? money(quote.total + markup + fee)
+                          : t.checkDuration}
                       </strong>
                     </div>
                     {quote?.needsQuote && (
@@ -542,12 +775,45 @@ export default function DiveShop({
                       </p>
                     )}
                     <button className="button dark shop-submit" type="submit">
-                      {t.prepare}
+                      {payable ? p.toPay : t.prepare}
                     </button>
                   </form>
-                  {message && (
+                  {message && payable && (
+                    <div className="shop-message" role="status">
+                      <h3>{p.summaryPay}</h3>
+                      <PayPanel
+                        order={{
+                          kind: "shop",
+                          lines: cart.map((line) => ({
+                            source: "product",
+                            id: line.id,
+                            mode: line.mode,
+                            quantity: line.quantity,
+                            size: line.size ?? "",
+                          })),
+                          days: Number(details.days) || 1,
+                          startDate: details.startDate,
+                          fare: fareChoice.tier,
+                          name: details.name,
+                          whatsapp: details.whatsapp,
+                          email: details.email,
+                          notes: details.notes,
+                          delivery,
+                        }}
+                        total={quote.total + markup + fee}
+                        message={message}
+                        whatsapp={contact.whatsapp}
+                        sandbox={payments.sandbox}
+                        locale={locale}
+                      />
+                    </div>
+                  )}
+                  {message && !payable && (
                     <div className="shop-message" role="status">
                       <h3>{t.ready}</h3>
+                      {payments?.ready && (
+                        <p className="shop-small">{p.quoteOnly}</p>
+                      )}
                       <details>
                         <summary>{t.viewMessage}</summary>
                         <pre>{message}</pre>
@@ -597,6 +863,27 @@ export default function DiveShop({
           {t.mobileOrder(count)}{" "}
           <span>{quote ? money(quote.total) : t.checkDuration} ↓</span>
         </a>
+      )}
+      {detail && (
+        <ProductDetail
+          key={detail.product.id + detail.mode}
+          product={detail.product}
+          pair={pairOf(
+            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
+            detail.product,
+          )}
+          mode={detail.mode}
+          stock={stock}
+          locale={locale}
+          category={shopCategories[detail.product.category]}
+          delivery={shop.delivery}
+          onAdd={
+            detail.add
+              ? (size, quantity) => add(detail.product, size, quantity)
+              : null
+          }
+          onClose={() => setDetail(null)}
+        />
       )}
     </div>
   );

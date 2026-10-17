@@ -1,15 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useReveal } from "../components/useReveal.js";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import PageHeader from "../components/PageHeader.jsx";
 import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import FormField from "../components/FormField.jsx";
+import PayPanel from "../components/PayPanel.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
 import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
 import { serviceInquiry, serviceText } from "../service-model.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked } from "../developer.js";
 
 const icons = {
   gear: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
@@ -48,9 +52,11 @@ function Icon({ name, size = 18 }) {
   );
 }
 
-function Request({ items, chosen, onToggle, contact, locale }) {
+function Request({ items, chosen, onToggle, contact, payments, locale }) {
   const s = dictionary(locale).service;
   const a = dictionary(locale).activity;
+  const p = dictionary(locale).payment;
+  const ready = Boolean(payments?.ready);
   const [today, setToday] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -60,6 +66,7 @@ function Request({ items, chosen, onToggle, contact, locale }) {
     notes: "",
   });
   const [message, setMessage] = useState("");
+  const messageRef = useReveal(message);
   const [error, setError] = useState("");
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
   useEffect(() => setMessage(""), [chosen]);
@@ -199,11 +206,32 @@ function Request({ items, chosen, onToggle, contact, locale }) {
           </p>
         )}
         <button className="button dark" type="submit">
-          {a.prepare} <span aria-hidden="true">↗</span>
+          {ready ? p.toPay : a.prepare} <span aria-hidden="true">↗</span>
         </button>
       </form>
-      {message && (
-        <div className="activity-message" role="status">
+      {message && ready && (
+        <div className="activity-message" role="status" ref={messageRef}>
+          <h3>{p.summaryPay}</h3>
+          <PayPanel
+            order={{
+              kind: "service",
+              services: picked.map((item) => item.id),
+              date: details.date,
+              name: details.name,
+              whatsapp: details.whatsapp,
+              email: details.email,
+              notes: details.notes,
+            }}
+            total={estimate}
+            message={message}
+            whatsapp={contact.whatsapp}
+            sandbox={payments.sandbox}
+            locale={locale}
+          />
+        </div>
+      )}
+      {message && !ready && (
+        <div className="activity-message" role="status" ref={messageRef}>
           <h3>{a.ready}</h3>
           <p className="activity-message-preview">{message}</p>
           <a
@@ -216,7 +244,7 @@ function Request({ items, chosen, onToggle, contact, locale }) {
           </a>
         </div>
       )}
-      <p className="activity-form-note">{s.formNote}</p>
+      <p className="activity-form-note">{ready ? p.paidNote : s.formNote}</p>
       <a
         className="activity-inquiry-contact"
         href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(s.askMessage)}`}
@@ -230,12 +258,20 @@ function Request({ items, chosen, onToggle, contact, locale }) {
   );
 }
 
-export default function ServicePage({ content, locale = "en" }) {
+export default function ServicePage({
+  content,
+  locale = "en",
+  locks = noLocks,
+  payments,
+}) {
   const dict = dictionary(locale);
   const s = dict.service;
   const href = (path) => localeHref(locale, path);
   const motionRoot = useRef(null);
   const items = content.service.items.filter((x) => x.enabled);
+  // Services locked in developer mode stay listed but can't be chosen.
+  const locked = (item) => itemLocked(locks, "service", item.id);
+  const open = items.filter((item) => !locked(item));
   const [chosen, setChosen] = useState([]);
   const toggle = (id) =>
     setChosen((current) =>
@@ -246,7 +282,7 @@ export default function ServicePage({ content, locale = "en" }) {
   useEffect(() => {
     const pick = () => {
       const id = window.location.hash.slice(1);
-      if (items.some((x) => x.id === id))
+      if (open.some((x) => x.id === id))
         setChosen((current) =>
           current.includes(id) ? current : [...current, id],
         );
@@ -348,9 +384,12 @@ export default function ServicePage({ content, locale = "en" }) {
                           key={item.id}
                           id={item.id}
                           className={
-                            "service-item" + (on ? " is-selected" : "")
+                            "service-item" +
+                            (on ? " is-selected" : "") +
+                            (locked(item) ? " is-locked" : "")
                           }
                         >
+                          {locked(item) && <LockedBadge locale={locale} />}
                           <span
                             className="service-item-icon"
                             aria-hidden="true"
@@ -381,6 +420,7 @@ export default function ServicePage({ content, locale = "en" }) {
                             <button
                               type="button"
                               className={"button " + (on ? "lime" : "dark")}
+                              disabled={locked(item)}
                               aria-pressed={on}
                               onClick={() => toggle(item.id)}
                             >
@@ -442,10 +482,11 @@ export default function ServicePage({ content, locale = "en" }) {
               </div>
               {items.length > 0 && (
                 <Request
-                  items={items}
+                  items={open}
                   chosen={chosen}
                   onToggle={toggle}
                   contact={content.contact}
+                  payments={payments}
                   locale={locale}
                 />
               )}

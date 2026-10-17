@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { activityKeys, activityLabels } from "../src/activity-model.js";
 import { demoAccount } from "../src/demo-data.js";
+import { addOnItems } from "../src/price-list.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3190";
 // The Indonesian website (/id); English is served at the root.
@@ -97,10 +98,87 @@ try {
     const activity = originals.content.activities[key];
     assert.equal(await page.locator("h1").textContent(), activity.title);
     assert.ok((await page.title()).includes(activityLabels[key]));
-    assert.equal(
-      await page.locator(".activity-price strong").textContent(),
-      "Minta penawaran",
+    // A clear package and cost card instead of "request a quote".
+    const packages = originals.content.priceList[key].filter(
+      (item) => item.price > 0,
     );
+    assert.equal(await page.locator(".activity-price").count(), 0);
+    // Packages go into a cart from the price cards or the panel.
+    assert.equal(
+      await page.locator(".plan-package legend").textContent(),
+      "Paket dipilih",
+    );
+    assert.equal(
+      await page.locator(".activity-prices .shop-item-add").count(),
+      packages.length,
+    );
+    assert.equal(
+      await page.locator(".plan-add option").count(),
+      packages.length + 1,
+    );
+    // Gear, cameras and services from the other lists are add-ons, after
+    // the main packages. Diving offers them by default.
+    const addOns = addOnItems(
+      originals.content.priceList,
+      key,
+      originals.content.shop.products,
+    );
+    assert.equal(addOns.length, key === "diving" ? 7 : 0);
+    assert.equal(
+      await page.locator(".activity-addon-list li").count(),
+      addOns.length,
+    );
+    assert.equal(
+      await page.locator(".plan-addons button").count(),
+      addOns.length,
+    );
+    if (key === "diving") {
+      assert.deepEqual(
+        packages.map((item) => item.name.id),
+        ["Discovery Dive", "Pemandu selam"],
+      );
+      assert.equal(
+        await page.locator("#add-ons-title").textContent(),
+        "Add-on diving",
+      );
+      // The seventh add-on is alone on its row and takes all of it.
+      const [list, last] = await Promise.all([
+        page.locator(".activity-addon-list").boundingBox(),
+        page.locator(".activity-addon-list li").last().boundingBox(),
+      ]);
+      assert.ok(Math.abs(list.width - last.width) < 2, "lone add-on full row");
+    }
+    // The cart bar appears with the first package; the old side panel is
+    // gone and checkout opens in a window.
+    assert.equal(await page.locator(".activity-cart-bar").count(), 0);
+    assert.equal(await page.locator(".activity-inquiry").count(), 0);
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
+    // The side calendar shows the places left each day.
+    const slotCalendar = page.locator(".slot-calendar");
+    assert.equal(await slotCalendar.isVisible(), true);
+    assert.equal(
+      await slotCalendar.locator("h2").textContent(),
+      `Pilih tanggal ${activityLabels[key].toLowerCase()}.`,
+    );
+    const capacity = activity.capacity ?? (key === "diving" ? 30 : 0);
+    if (capacity)
+      assert.match(
+        await slotCalendar.locator(".slot-intro").textContent(),
+        new RegExp(`maksimal ${capacity} orang`),
+      );
+    assert.equal(
+      await slotCalendar.locator(".slot-seasons").count(),
+      key === "diving" ? 1 : 0,
+    );
+    assert.match(
+      await page.locator(".pay-total").textContent(),
+      /^Perkiraan biaya/,
+    );
+    assert.deepEqual(await page.locator(".plan-steps li").allTextContents(), [
+      "1Isi data",
+      "2Ringkasan",
+      "3WhatsApp",
+    ]);
     assert.equal(
       await page
         .locator(".activity-hero-photo")
@@ -129,20 +207,69 @@ try {
     const faq = page.locator(".activity-faqs details").first();
     await faq.locator("summary").click();
     assert.equal(await faq.locator("p").isVisible(), true);
-    const date = await page.evaluate(() => {
-      const future = new Date();
-      future.setDate(future.getDate() + 8);
-      return future.toLocaleDateString("en-CA");
-    });
+    // A package from its price card, after the header checks above.
+    await page
+      .getByRole("button", {
+        name: `Tambahkan ${packages[0].name.id} ke keranjang`,
+      })
+      .click();
+    assert.match(
+      await page.locator(".activity-cart-bar").textContent(),
+      /Keranjang · 1 paket/,
+    );
+    assert.equal(await page.locator(".plan-cart li").count(), 1);
+    if (key === "diving") {
+      await page
+        .locator(".activity-addon-list")
+        .getByRole("button", { name: "Tambahkan Dokumentasi ke keranjang" })
+        .click();
+      assert.match(
+        await page.locator(".activity-cart-bar").textContent(),
+        /Keranjang · 1 paket \+ 1 add-on/,
+      );
+      assert.equal(await page.locator(".plan-cart li.is-addon").count(), 1);
+      assert.equal(
+        await page.locator(".plan-addons button").count(),
+        addOns.length - 1,
+      );
+    }
+    // A day picked in the calendar is the checkout date.
+    const day = slotCalendar.locator(".slot-day:not([disabled])").nth(8);
+    const date = await day.getAttribute("data-date");
+    await day.click();
+    assert.equal(await day.getAttribute("aria-pressed"), "true");
+    if (capacity)
+      assert.match(
+        await slotCalendar.locator(".slot-picked").textContent(),
+        new RegExp(`dari ${capacity} slot tersisa`),
+      );
+    await slotCalendar
+      .getByRole("button", { name: "Checkout untuk tanggal ini" })
+      .click();
+    const dialog = page.locator(".activity-checkout");
+    await dialog.locator("#inquiry-name").waitFor({ state: "visible" });
+    // The checkout shows the same day, with the places left on it.
+    const checkoutDay = dialog.locator(
+      `.plan-dates .slot-day[data-date="${date}"]`,
+    );
+    assert.equal(await checkoutDay.getAttribute("aria-pressed"), "true");
+    assert.match(
+      await dialog.locator(".plan-dates .slot-note").textContent(),
+      capacity ? new RegExp(`dari ${capacity} slot tersisa`) : /dipilih\.$/,
+    );
+    // The first field still to fill has the focus.
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.id),
+      "inquiry-name",
+    );
     await page.getByLabel("Nama kamu").fill("Tamu Uji Aktivitas");
     // Required fields are marked; WhatsApp is checked before the message.
     assert.equal(
       await page.locator(".activity-form .form-required").count(),
       4,
     );
-    await page.getByLabel("Usulan tanggal").fill(date);
     await page.getByLabel("Jumlah peserta").fill("3");
-    await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
     assert.match(
       await page.locator(".activity-error").textContent(),
       /nomor WhatsApp/,
@@ -153,7 +280,20 @@ try {
     await page
       .getByLabel("Ceritakan rencanamu", { exact: false })
       .fill("Perlu fins ukuran M");
-    await page.getByRole("button", { name: "Siapkan pesan WhatsApp" }).click();
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
+    assert.equal(
+      await page.locator("#plan-summary-title").textContent(),
+      "Ringkasan rencana",
+    );
+    assert.match(
+      await page.locator(".plan-summary-list").textContent(),
+      /Tamu Uji Aktivitas[\s\S]*\+62 812 3456 7890[\s\S]*Perlu fins ukuran M/,
+    );
+    if (key === "diving")
+      assert.match(
+        await page.locator(".plan-summary-list").textContent(),
+        /PaketDiscovery Dive × 3 orangAdd-onDokumentasi × 1 hari/,
+      );
     const url = new URL(
       await page
         .getByRole("link", { name: "Lanjutkan ke WhatsApp" })
@@ -169,17 +309,41 @@ try {
       date,
       "3 orang",
       "Perlu fins ukuran M",
+      ...(key === "diving" ? ["Dokumentasi (Add-on) × 1"] : []),
       "WhatsApp: +62 812 3456 7890",
       "Email: tamu@example.com",
       "belum menjadi reservasi",
+      `Paket: ${packages[0].name.id} × `,
+      "Perkiraan biaya: Rp",
     ])
       assert.ok(message.includes(value), value);
-    await page.getByLabel("Jumlah peserta").fill("4");
+    // Editing keeps the details and the summary follows the change.
+    await page.getByRole("button", { name: "← Ubah data" }).click();
     assert.equal(
-      await page.locator(".activity-message").count(),
-      0,
-      "An edited inquiry cannot send stale details",
+      await page.getByLabel("Nama kamu").inputValue(),
+      "Tamu Uji Aktivitas",
     );
+    await page.getByLabel("Jumlah peserta").fill("4");
+    await page.getByRole("button", { name: "Lanjut ke ringkasan" }).click();
+    assert.match(
+      await page.locator(".plan-summary-list").textContent(),
+      /Peserta4 orang/,
+    );
+    await page.getByRole("button", { name: "← Ubah data" }).click();
+    await page.screenshot({ path: `artifacts/${key}-checkout-desktop.png` });
+    await page.getByRole("button", { name: "Tutup checkout" }).click();
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
+    // The cart bar opens the same checkout, with what was typed.
+    await page
+      .locator(".activity-cart-bar")
+      .getByRole("button", { name: "Checkout" })
+      .click();
+    assert.equal(
+      await page.getByLabel("Nama kamu").inputValue(),
+      "Tamu Uji Aktivitas",
+    );
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator(".activity-checkout[open]").count(), 0);
     await page.evaluate(() => scrollTo({ top: 700, behavior: "instant" }));
     await page.waitForFunction(() =>
       document.querySelector(".site-header").classList.contains("is-scrolled"),
@@ -201,8 +365,23 @@ try {
     for (const key of activityKeys) {
       await page.goto(`${site}/${key}`, { waitUntil: "networkidle" });
       await noOverflow(`${key} overflow at ${width}`);
-      await page.locator("#inquiry").scrollIntoViewIfNeeded();
+      await page.locator(".slot-calendar").scrollIntoViewIfNeeded();
+      assert.equal(await page.locator(".slot-calendar").isVisible(), true);
+      // The checkout window fits the screen.
+      await page.locator(".activity-prices .shop-item-add").first().click();
+      await page
+        .locator(".activity-cart-bar")
+        .getByRole("button", { name: "Checkout" })
+        .click();
       await page.locator("#inquiry-name").waitFor({ state: "visible" });
+      const box = await page.locator(".activity-checkout").boundingBox();
+      assert.ok(
+        box.x >= 0 && box.x + box.width <= width,
+        `${key} checkout fits at ${width}`,
+      );
+      if (width === 390)
+        await page.screenshot({ path: `artifacts/${key}-checkout-mobile.png` });
+      await page.getByRole("button", { name: "Tutup checkout" }).click();
       if (width <= 820) {
         await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
         await page
@@ -298,15 +477,101 @@ try {
     path: "artifacts/admin-activities.png",
     fullPage: true,
   });
+  // Price lists: a service offered only as an add-on, added in Layanan
+  // tambahan and ticked for diving; a camera rental ticked for snorkeling.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Layanan tambahan", exact: true })
+    .click();
+  assert.equal(await page.locator(".admin-addons").count(), 0);
+  await page.getByRole("button", { name: "+ Tambah item" }).click();
+  const fresh = page.locator(".admin-price-item").last();
+  await fresh.getByLabel("Nama (Indonesia)").fill("Antar jemput mobil");
+  await fresh.getByLabel("Name (English)").fill("Car pick-up");
+  await fresh.getByLabel("Harga (Rp)").fill("250000");
+  await fresh.getByLabel("Satuan (Indonesia)").fill("/ trip");
+  await fresh.getByLabel("Unit (English)").fill("/ trip");
+  await page.getByRole("button", { name: "Diving", exact: true }).click();
+  const divingAddOns = page.locator(".admin-addons");
+  assert.match(
+    await divingAddOns.locator("h2").textContent(),
+    /^Add-on Diving$/,
+  );
+  assert.equal(
+    await divingAddOns.locator("input:checked").count(),
+    7,
+    "diving starts with its gear, cameras and documentation",
+  );
+  await divingAddOns
+    .getByRole("checkbox", { name: /^Antar jemput mobil/ })
+    .check();
+  await page.getByRole("button", { name: "Simpan add-on" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  await page.getByRole("button", { name: "Snorkeling", exact: true }).click();
+  await page
+    .locator(".admin-addons")
+    .getByRole("checkbox", { name: /^Kamera bawah air TG-5/ })
+    .check();
+  await page.getByRole("button", { name: "Simpan add-on" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  let priced = (await state()).content.priceList;
+  const car = priced.extras.find(
+    (item) => item.name.id === "Antar jemput mobil",
+  );
+  assert.match(car.id, /^extras-/);
+  assert.equal(priced.addOns.diving.at(-1), car.id);
+  // The camera is Dive Shop rental gear.
+  assert.deepEqual(priced.addOns.snorkeling, [
+    "shop:sewa-kamera-bawah-air-tg-5",
+  ]);
+  await page.setViewportSize({ width: 390, height: 900 });
+  await noOverflow("admin add-ons at 390");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(site + "/diving", { waitUntil: "networkidle" });
+  assert.match(
+    await page.locator(".activity-addon-list li").last().textContent(),
+    /Layanan Zanclus[\s\S]*Antar jemput mobil[\s\S]*Rp\s?250\.000/,
+  );
+  await page.goto(base + "/snorkeling", { waitUntil: "networkidle" });
+  assert.equal(await page.textContent("#add-ons-title"), "Snorkeling add-ons");
+  assert.match(
+    await page.locator(".activity-addon-list").textContent(),
+    /Rent an underwater camera[\s\S]*Underwater camera TG-5/,
+  );
+  // Deleting the item from its list drops it from the add-ons.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Layanan tambahan", exact: true })
+    .click();
+  await page
+    .locator(".admin-price-item", {
+      has: page.locator('input[value="Antar jemput mobil"]'),
+    })
+    .getByRole("button", { name: "Hapus" })
+    .click();
+  await page.getByRole("button", { name: "Simpan daftar harga" }).click();
+  await page
+    .getByText("Perubahan sudah tersimpan dan tampil di website.", {
+      exact: true,
+    })
+    .waitFor();
+  priced = (await state()).content.priceList;
+  assert.ok(!priced.addOns.diving.includes(car.id));
+  assert.equal(priced.addOns.diving.length, 7);
   await page.goto(site + "/snorkeling", { waitUntil: "networkidle" });
   assert.equal(
     await page.locator("h1").textContent(),
     "Snorkeling bersama keluarga — uji CMS",
   );
-  assert.match(
-    await page.locator(".activity-price strong").textContent(),
-    /450\.000/,
-  );
+  assert.match(await (await api.get(site)).text(), /Rp\s?450\.000/);
   assert.ok(
     (await page.locator(".activity-hero-facts").textContent()).includes(
       "Setengah hari · contoh uji",
@@ -422,7 +687,7 @@ try {
   }
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: three detail pages, home/footer links, WhatsApp inquiry details and stale message clearing, FAQs, sticky/transparent headers, five responsive widths, live CMS content/image/price changes, legacy content preservation, validation and disabled-page 404. No external messages sent.",
+    "PASS: three detail pages, side slot calendar and checkout window, home/footer links, WhatsApp inquiry details and stale message clearing, FAQs, sticky/transparent headers, five responsive widths, live CMS content/image/price changes, legacy content preservation, validation and disabled-page 404. No external messages sent.",
   );
 } finally {
   try {

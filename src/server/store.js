@@ -1,12 +1,12 @@
 import "server-only";
 import mysql from "mysql2/promise";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { defaultContent } from "../cms-model.js";
 import { databaseIssues, mysqlSettings } from "../cms-config.js";
 import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import * as demo from "./demo-store.js";
-import { withShop } from "../shop-model.js";
+import { withShop, withSplitProducts } from "../shop-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
@@ -16,6 +16,9 @@ import {
   withActivityRefresh,
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
+import { withCalendar } from "../calendar-model.js";
+import { rememberLocks } from "../developer.js";
+import { agentHolds } from "../agent-calendar.js";
 import {
   assertBookable,
   bookingReceipt,
@@ -58,20 +61,30 @@ async function db() {
   }
   return globalThis.__zanclusDB;
 }
+// Every read and save also tells proxy.js which pages are locked.
 export async function getContent() {
+  const result = await storedContent();
+  rememberLocks(result.content);
+  return result;
+}
+async function storedContent() {
   if (isDemo()) return demo.getContent();
   const pool = await db();
   const [rows] = await pool.execute(
     "SELECT payload,version FROM zanclus_records WHERE id='site'",
   );
   return {
-    content: withPriceList(
-      withActivityRefresh(
-        withRajaAmpatTitle(
-          withTranslations(
-            withActivities(
-              withPhotography(
-                withContactFields(withShop(JSON.parse(rows[0].payload))),
+    content: withSplitProducts(
+      withCalendar(
+        withPriceList(
+          withActivityRefresh(
+            withRajaAmpatTitle(
+              withTranslations(
+                withActivities(
+                  withPhotography(
+                    withContactFields(withShop(JSON.parse(rows[0].payload))),
+                  ),
+                ),
               ),
             ),
           ),
@@ -82,7 +95,7 @@ export async function getContent() {
   };
 }
 export async function publicContent() {
-  if (isDemo()) return (await demo.getContent()).content;
+  if (isDemo()) return (await getContent()).content;
   if (!databaseConfigured()) return structuredClone(defaultContent);
   try {
     return (await getContent()).content;
@@ -95,7 +108,11 @@ export async function publicContent() {
   }
 }
 export async function saveContent(content, version) {
-  if (isDemo()) return demo.saveContent(content, version);
+  if (isDemo()) {
+    const saved = await demo.saveContent(content, version);
+    if (saved) rememberLocks(saved.content);
+    return saved;
+  }
   const pool = await db();
   const [result] = await pool.execute(
     "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id='site' AND version=?",
@@ -166,9 +183,20 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
     const [bookingRows] = await connection.execute(
       "SELECT payload FROM zanclus_records WHERE kind='booking'",
     );
+    // Places used by linked agent and OTA calendars count too.
+    const [agentRows] = await connection.execute(
+      "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+    );
+    const siteContent = JSON.parse(contentRows[0].payload);
     assertBookable(
-      JSON.parse(contentRows[0].payload),
-      bookingRows.map((r) => JSON.parse(r.payload)),
+      siteContent,
+      [
+        ...bookingRows.map((r) => JSON.parse(r.payload)),
+        ...agentHolds(
+          siteContent,
+          agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+        ),
+      ],
       payload,
     );
     const id = randomUUID(),
@@ -189,6 +217,309 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
   } finally {
     connection.release();
   }
+}
+// A booking paid online: checked like a website request, saved at once.
+export async function createPaymentBooking(payload) {
+  if (isDemo()) return demo.createPaymentBooking(payload);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [contentRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id='site' FOR UPDATE",
+    );
+    const [bookingRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE kind='booking'",
+    );
+    // Places used by linked agent and OTA calendars count too.
+    const [agentRows] = await connection.execute(
+      "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+    );
+    const siteContent = JSON.parse(contentRows[0].payload);
+    assertBookable(
+      siteContent,
+      [
+        ...bookingRows.map((r) => JSON.parse(r.payload)),
+        ...agentHolds(
+          siteContent,
+          agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+        ),
+      ],
+      payload,
+    );
+    const id = randomUUID();
+    await connection.execute(
+      "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'booking',?)",
+      [id, JSON.stringify(payload)],
+    );
+    await connection.commit();
+    return { id, ...payload };
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+// Changes one booking in place; change returns the new booking, or null to
+// leave it as it is.
+export async function updateBooking(id, change) {
+  if (isDemo()) return demo.updateBooking(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='booking' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { id, ...JSON.parse(rows[0].payload) };
+    const next = change(structuredClone(current));
+    if (next) {
+      const { id: _id, updatedAt: _at, ...payload } = next;
+      await connection.execute(
+        "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+        [JSON.stringify(payload), id],
+      );
+    }
+    await connection.commit();
+    return next ? { ...next, id } : current;
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+// A guest changing their own paid booking (a new date, or a cancellation):
+// a new date is checked against the daily places without the booking
+// itself. The site row is locked first, as for new bookings, so two
+// changes at once cannot pass the limit. change returns the new booking or
+// null, and may throw to refuse.
+export async function changeOwnBooking(id, change) {
+  if (isDemo()) return demo.changeOwnBooking(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [contentRows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id='site' FOR UPDATE",
+    );
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='booking' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { id, ...JSON.parse(rows[0].payload) };
+    const next = change(structuredClone(current));
+    if (!next) {
+      await connection.commit();
+      return current;
+    }
+    if (
+      next.status !== "cancelled" &&
+      (next.startDate !== current.startDate || next.endDate !== current.endDate)
+    ) {
+      const [bookingRows] = await connection.execute(
+        "SELECT id,payload FROM zanclus_records WHERE kind='booking' AND id<>?",
+        [id],
+      );
+      const [agentRows] = await connection.execute(
+        "SELECT id,payload FROM zanclus_records WHERE kind='agent'",
+      );
+      const siteContent = JSON.parse(contentRows[0].payload);
+      assertBookable(
+        siteContent,
+        [
+          ...bookingRows.map((r) => JSON.parse(r.payload)),
+          ...agentHolds(
+            siteContent,
+            agentRows.map((r) => ({ ...JSON.parse(r.payload), id: r.id })),
+          ),
+        ],
+        next,
+      );
+    }
+    const { id: _id, updatedAt: _at, ...payload } = next;
+    await connection.execute(
+      "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+      [JSON.stringify(payload), id],
+    );
+    await connection.commit();
+    return { ...next, id };
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+// Travel agents whose calendars are linked with ours.
+export async function listAgents() {
+  if (isDemo()) return demo.listAgents();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT id,payload FROM zanclus_records WHERE kind='agent' ORDER BY id",
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+export async function saveAgent(agent) {
+  if (isDemo()) return demo.saveAgent(agent);
+  const pool = await db();
+  const { id, ...payload } = agent;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'agent',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, JSON.stringify(payload)],
+  );
+  return agent;
+}
+// Changes an agent only if it still exists, so a calendar read that
+// finishes late cannot bring back a deleted agent or an old link.
+export async function updateAgent(id, change) {
+  if (isDemo()) return demo.updateAgent(id, change);
+  const connection = await (await db()).getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      "SELECT payload FROM zanclus_records WHERE id=? AND kind='agent' FOR UPDATE",
+      [id],
+    );
+    if (!rows.length) {
+      await connection.commit();
+      return null;
+    }
+    const current = { ...JSON.parse(rows[0].payload), id };
+    const next = change(structuredClone(current));
+    if (next) {
+      const { id: _id, ...payload } = next;
+      await connection.execute(
+        "UPDATE zanclus_records SET payload=?,version=version+1 WHERE id=?",
+        [JSON.stringify(payload), id],
+      );
+    }
+    await connection.commit();
+    return next ? { ...next, id } : current;
+  } catch (error) {
+    await connection.rollback().catch(() => {});
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+export async function deleteAgent(id) {
+  if (isDemo()) return demo.deleteAgent(id);
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='agent'",
+    [id],
+  );
+  return Boolean(r.affectedRows);
+}
+// Generic records for the modules (finance, inventory, content plan): one
+// kind per record type, the payload as JSON.
+export async function listRecords(kind, where = "", params = []) {
+  if (isDemo()) return demo.listRecords(kind, where, params);
+  return listKind(kind, where, params);
+}
+export async function saveRecord(kind, record) {
+  if (isDemo()) return demo.saveRecord(kind, record);
+  return upsertKind(kind, record);
+}
+export async function deleteRecord(kind, id) {
+  if (isDemo()) return demo.deleteRecord(kind, id);
+  return deleteKind(kind, id);
+}
+// HRD records: kinds "employee", "attendance" (id att:<employee>:<date>)
+// and "payslip" (id slip:<employee>:<month>).
+async function listKind(kind, where = "", params = []) {
+  const pool = await db();
+  const [rows] = await pool.execute(
+    `SELECT id,payload FROM zanclus_records WHERE kind=? ${where} ORDER BY id`,
+    [kind, ...params],
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+async function upsertKind(kind, record) {
+  const pool = await db();
+  const { id, ...payload } = record;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, kind, JSON.stringify(payload)],
+  );
+  return record;
+}
+async function deleteKind(kind, id) {
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind=?",
+    [id, kind],
+  );
+  return Boolean(r.affectedRows);
+}
+export async function listEmployees() {
+  if (isDemo()) return demo.listEmployees();
+  return listKind("employee");
+}
+export async function saveEmployee(employee) {
+  if (isDemo()) return demo.saveEmployee(employee);
+  return upsertKind("employee", employee);
+}
+export async function deleteEmployee(id) {
+  if (isDemo()) return demo.deleteEmployee(id);
+  return deleteKind("employee", id);
+}
+export async function listAttendance(month) {
+  if (isDemo()) return demo.listAttendance(month);
+  return listKind("attendance", "AND id LIKE ?", [`att:%:${month}-%`]);
+}
+export async function saveAttendance(records) {
+  if (isDemo()) return demo.saveAttendance(records);
+  for (const record of records) await upsertKind("attendance", record);
+  return records;
+}
+export async function listPayslips(month) {
+  if (isDemo()) return demo.listPayslips(month);
+  return listKind("payslip", "AND id LIKE ?", [`slip:%:${month}`]);
+}
+export async function savePayslip(slip) {
+  if (isDemo()) return demo.savePayslip(slip);
+  return upsertKind("payslip", slip);
+}
+export async function deletePayslip(id) {
+  if (isDemo()) return demo.deletePayslip(id);
+  return deleteKind("payslip", id);
+}
+// Staff accounts made in the admin (kind "user").
+export async function listUsers() {
+  if (isDemo()) return demo.listUsers();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT id,payload FROM zanclus_records WHERE kind='user' ORDER BY id",
+  );
+  return rows.map((r) => ({ ...JSON.parse(r.payload), id: r.id }));
+}
+export async function saveUser(user) {
+  if (isDemo()) return demo.saveUser(user);
+  const pool = await db();
+  const { id, ...payload } = user;
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'user',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [id, JSON.stringify(payload)],
+  );
+  return user;
+}
+export async function deleteUser(id) {
+  if (isDemo()) return demo.deleteUser(id);
+  const pool = await db();
+  const [r] = await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='user'",
+    [id],
+  );
+  return Boolean(r.affectedRows);
 }
 export async function deleteBooking(id) {
   if (isDemo()) return demo.deleteBooking(id);
@@ -229,6 +560,44 @@ export async function getMedia(id) {
     [id],
   );
   return rows[0] || null;
+}
+// Passwords changed in the admin, by lower-case email: { salt, hash,
+// changedAt }. Never part of the content or the admin state.
+const passwordId = (email) =>
+  "pw:" +
+  createHash("sha256")
+    .update(email.trim().toLowerCase())
+    .digest("hex")
+    .slice(0, 40);
+export async function listPasswords() {
+  if (isDemo()) return demo.listPasswords();
+  const pool = await db();
+  const [rows] = await pool.execute(
+    "SELECT payload FROM zanclus_records WHERE kind='password'",
+  );
+  return Object.fromEntries(
+    rows.map((r) => {
+      const { email, ...record } = JSON.parse(r.payload);
+      return [email, record];
+    }),
+  );
+}
+export async function savePassword(email, record) {
+  if (isDemo()) return demo.savePassword(email, record);
+  const pool = await db();
+  const key = email.trim().toLowerCase();
+  await pool.execute(
+    "INSERT INTO zanclus_records (id,kind,payload) VALUES (?,'password',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload),version=version+1",
+    [passwordId(key), JSON.stringify({ email: key, ...record })],
+  );
+}
+export async function deletePassword(email) {
+  if (isDemo()) return demo.deletePassword(email);
+  const pool = await db();
+  await pool.execute(
+    "DELETE FROM zanclus_records WHERE id=? AND kind='password'",
+    [passwordId(email.trim().toLowerCase())],
+  );
 }
 export async function loginBlocked() {
   if (isDemo()) return demo.loginBlocked();

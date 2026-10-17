@@ -48,7 +48,7 @@ Tidak perlu memasukkan nilai tersebut ke file repository. Jangan menggunakan con
 
 Jika penyedia database mensyaratkan TLS, atur `MYSQL_SSL=true`. Sertifikat tetap diverifikasi; aplikasi tidak menonaktifkan verifikasi TLS.
 
-`NEXT_PUBLIC_WHATSAPP_NUMBER` tetap menjadi default awal website. Setelah CMS aktif, nomor dan konten dapat diganti melalui menu CMS tanpa rebuild. `NEXT_PUBLIC_SITE_URL=https://zanclusdive.com` tetap dipakai untuk metadata sosial pada waktu build.
+`NEXT_PUBLIC_WHATSAPP_NUMBER` tetap menjadi default awal website. Setelah CMS aktif, nomor dan konten dapat diganti melalui menu CMS tanpa rebuild. `NEXT_PUBLIC_SITE_URL=https://zanclusdivecenter.com` dipakai untuk link kanonik, sitemap, dan gambar share; tanpa variabel ini situs memakai alamat itu juga.
 
 ## 3. Deploy dan masuk
 
@@ -104,11 +104,185 @@ Upload gambar saja belum mengganti gambar website: pilih gambar pada slot hero/r
 
 Login memakai cookie HttpOnly, SameSite=Lax, Secure pada HTTPS produksi, dan sesi 8 jam. API admin memerlukan sesi sah, perubahan memerlukan origin yang sesuai, serta login dibatasi setelah 8 kegagalan selama jendela 15 menit. Mengganti password atau SESSION_SECRET membatalkan sesi lama.
 
-Tidak ada akun staf, password reset melalui email, MFA, atau integrasi OTA otomatis. Pengguna pemilik dapat mengganti kredensial dari environment variable hPanel lalu restart/redeploy. Jangan menetapkan `CMS_COOKIE_SECURE=false` di Hostinger; pengaturan tersebut hanya dipakai untuk pengujian HTTP localhost.
+Akun staf dengan peran dibuat di **Pengguna & peran** (lihat di bawah). Belum ada MFA.
+
+### Ganti password dengan kode OTP email
+
+Di admin, buka **Ubah password** (menu kiri, atau menu akun di kanan atas). Tekan **Kirim kode OTP**, lalu masukkan kode 6 angka dari email bersama password baru (minimal 10 karakter). Lupa password? Di halaman login, tekan **Lupa password? Reset dengan kode OTP email**, isi email operator, lalu ikuti langkah yang sama. Setelah reset, kamu langsung masuk.
+
+- Kode berlaku 10 menit, sekali pakai, dan batal setelah 5 kali salah. Kode baru bisa diminta 1 menit kemudian, maksimal 5 kode per jam.
+- Password baru disimpan sebagai hash scrypt di penyimpanan CMS (folder data demo, atau tabel `zanclus_records` di MySQL). Password ini menggantikan password bawaan akun operator atau `ADMIN_PASSWORD` untuk email yang sama.
+- Setelah password diganti, login di perangkat lain berakhir.
+- Halaman lupa password tidak memberi tahu apakah sebuah email terdaftar.
+
+Kode dikirim lewat akun email SMTP yang diisi di hPanel → Variabel environment, lalu deploy ulang:
+
+| Nama | Isi |
+| --- | --- |
+| `SMTP_HOST` | Server SMTP. Email Hostinger: `smtp.hostinger.com`. Gmail: `smtp.gmail.com` |
+| `SMTP_PORT` | `465` (SSL, bawaan). Untuk port 587 isi juga `SMTP_SECURE=false` |
+| `SMTP_USER` | Alamat email pengirim lengkap, mis. `admin@zanclusdive.com` |
+| `SMTP_PASS` | Password email itu. Untuk Gmail pakai *App Password*, bukan password akun |
+| `SMTP_FROM` | Opsional. Nama dan alamat pengirim, mis. `Zanclus Dive Center <admin@zanclusdive.com>` |
+| `ADMIN_OTP_EMAIL` | Opsional. Email yang menerima kode. Tanpa ini, kode dikirim ke email login |
+
+Isi `ADMIN_OTP_EMAIL` dengan email yang benar-benar kamu buka. Alamat login operator belum tentu punya kotak masuk. Selama SMTP belum diisi, halaman **Ubah password** menampilkan variabel yang masih kurang. Jika server email menolak login, halaman menampilkan alasannya. Jangan menetapkan `CMS_COOKIE_SECURE=false` di Hostinger; pengaturan tersebut hanya dipakai untuk pengujian HTTP localhost.
+
+## Peran dan pengguna
+
+Admin dibagi per kategori, dan setiap akun punya satu peran yang menentukan menu dan API yang bisa dipakainya:
+
+| Peran | Dipakai oleh | Menu yang terlihat |
+| --- | --- | --- |
+| **Superadmin** | Owner, developer, manager | Semua menu, termasuk **Pengguna & peran** dan **Mode developer** |
+| **HRD** | Urusan pegawai | **HRD**: Pegawai, Absensi, Slip gaji (lihat Modul HRD) |
+| **Finance** | Keuangan | **Keuangan**: Pembayaran online, Buku kas, Laba rugi & pajak (lihat Modul Keuangan) |
+| **Gudang** | Stok | **Gudang**: Barang & stok, Keluar masuk (lihat Modul Gudang) |
+| **PR** | Media sosial dan website | Kalender reservasi, Reservasi, Tamu, **Situs web**, **PR & mitra** (Kalender konten, Agen & kalender) |
+
+Setiap peran juga bisa mengganti password sendiri lewat **Ubah password**.
+
+- Akun dari hPanel (`ADMIN_EMAIL`/`ADMIN_PASSWORD`) dan akun operator bawaan selalu superadmin dan tidak bisa dihapus dari admin, jadi pemilik tidak pernah terkunci.
+- Superadmin membuat akun di **Pengaturan → Pengguna & peran**: nama, email login, peran, dan password awal (minimal 10 karakter). Beri tahu password awalnya; orang itu lalu menggantinya di **Ubah password** dengan kode OTP yang dikirim ke emailnya sendiri (bukan `ADMIN_OTP_EMAIL`, yang hanya berlaku untuk akun bawaan).
+- Superadmin bisa mengganti peran, menonaktifkan, mengatur ulang password, dan menghapus akun. Menonaktifkan atau mengatur ulang password langsung mengakhiri sesi akun itu. Akun yang sedang dipakai tidak bisa menonaktifkan atau menurunkan perannya sendiri.
+- Halaman di luar peran menampilkan pemberitahuan, dan API-nya menjawab 403. Data admin yang dimuat pun mengikuti peran: HRD dan Gudang tidak menerima reservasi, media, atau agen; Finance hanya menerima reservasi dengan pembayaran online.
+- Saat PR menyimpan isi website, bagian yang bukan haknya (kunci mode developer, saklar pembayaran) tetap seperti tersimpan.
+- Data akun tersimpan sebagai record `user` di tabel `zanclus_records` (atau folder data demo); password sebagai hash scrypt seperti password yang diganti. Tidak ada tabel baru. Maksimal 50 akun.
+
+## Modul HRD
+
+Peran **HRD** (dan superadmin) mengelola tiga halaman di grup **HRD**:
+
+- **Pegawai**: nama, jabatan, jenis (pegawai tetap, kontrak, harian lepas, magang), tanggal mulai dan akhir kontrak, WhatsApp, email, NIK, status aktif. Di kartu yang sama: gaji pokok per bulan atau upah per hari hadir (harian lepas), potongan per hari tanpa keterangan, tunjangan tetap dan potongan tetap (maksimal 8 baris masing-masing), jatah cuti, BPJS Kesehatan/Ketenagakerjaan, asuransi lain, dan rekening bank. Pegawai nonaktif tidak masuk absensi dan slip gaji baru; hapus hanya menghapus data pegawainya.
+- **Absensi**: satu tanggal untuk semua pegawai aktif (hadir, izin, sakit, cuti, tanpa keterangan, libur) dengan jam masuk/pulang dan catatan; simpan sekali untuk semua. Tanggal yang sudah diisi bisa dibuka dan diubah lagi. Di bawahnya rekap per bulan.
+- **Slip gaji**: per bulan, satu slip per pegawai aktif. Pegawai tetap/kontrak: gaji pokok + tunjangan − potongan − (hari tanpa keterangan × potongan per hari). Harian lepas: upah harian × hari hadir + tunjangan − potongan. Slip bersifat **draf** dan mengikuti data terbaru sampai ditekan **Kunci (dibayar)**; setelah itu angkanya tersimpan dan tidak berubah walau gaji atau absensi diubah. **Buka** mengembalikannya menjadi draf.
+- **Unduh Excel** di tiap halaman: daftar pegawai, rekap dan rincian absensi per bulan, dan daftar gaji per bulan (`.xlsx`, dibuat server tanpa pustaka tambahan).
+
+Data tersimpan di tabel `zanclus_records` sebagai record `employee`, `attendance` (satu per pegawai per hari), dan `payslip` (slip terkunci). Tidak ada tabel baru. Data gaji termasuk data pribadi; jaga backup database seperti data tamu.
+
+## Modul Keuangan
+
+Peran **Finance** (dan superadmin), grup **Keuangan**:
+
+- **Pembayaran online**: pengaturan Midtrans dan riwayat pembayaran (sudah ada).
+- **Buku kas**: pemasukan dan pengeluaran per bulan dengan kategori (diving, snorkeling, trip, kursus, Dive Shop, sewa alat, servis; gaji, operasional, perlengkapan, sewa/listrik, pemasaran, konsumsi, pajak), cara bayar, referensi nota, dan catatan. **Pembayaran online yang lunas masuk sendiri** sebagai baris "Otomatis" (dari data reservasi, tidak diketik ulang dan tidak bisa diubah di sini). Total masuk, keluar, dan bersih per bulan, serta unduhan Excel.
+- **Laba rugi & pajak**: dua belas bulan dalam setahun (pemasukan, pengeluaran, laba, pajak), rincian per kategori, dan rekap pajak. Pajak dihitung dari pemasukan kotor dengan tarif yang bisa diatur; bawaannya PPh final UMKM 0,5% (PP 55/2022). Ini perkiraan untuk setoran, bukan pengganti perhitungan konsultan pajak. Unduhan Excel per tahun.
+
+## Modul Gudang
+
+Peran **Gudang** (dan superadmin), grup **Gudang**:
+
+- **Barang & stok**: nama, kode, kategori (alat selam, suku cadang, bahan habis pakai, merchandise, perahu & mesin), satuan, stok minimum, harga beli, lokasi simpan. Stok dihitung dari catatan masuk/keluar, bukan diketik; nilai stok = stok × harga beli. Barang dengan stok 0 ditandai **Habis**, dan barang dengan stok di bawah atau sama dengan minimum ditandai **Menipis**. Keduanya dihitung di atas daftar. Tombol **Masuk** dan **Keluar** di tiap baris mencatat mutasi tanpa pindah halaman.
+- **Produk Dive Shop**: produk, ukuran, dan stoknya diatur di **Dive Shop**, dengan stok jual di **Barang jual** dan stok sewa di **Barang sewa**. Setiap produk otomatis punya barang di daftar ini per ukuran, dengan label seperti "Dive Shop · Wetsuit 3 mm · Sewa · M", dan angka stok yang diketik di Dive Shop tercatat sebagai stock opname saat katalog disimpan. Pembelian online yang lunas tercatat sendiri sebagai **Keluar · Penjualan** pada barang jual, dan sewa online memakai unit barang sewa pada tanggal sewanya tanpa perlu dicatat Keluar. Kolom **Produk Dive Shop** di formulir barang hanya untuk memindahkan produk ke barang yang sudah ada.
+- **Keluar masuk**: catatan per bulan (masuk: pembelian, sewa kembali; keluar: penjualan, sewa keluar, dipakai, rusak/hilang; koreksi stok ± dari stock opname). Mutasi yang salah dihapus lalu dicatat ulang supaya riwayatnya jujur. Unduhan Excel untuk stok dan mutasi per bulan.
+
+## Modul PR: Kalender konten
+
+Peran **PR** (dan superadmin), grup **PR & mitra** → **Kalender konten**:
+
+- Satu kalender bulanan untuk Instagram, TikTok, Facebook, YouTube, dan website. Tiap konten punya judul/ide, format (reel, foto, carousel, story, video panjang, artikel, live), tanggal dan jam tayang, penanggung jawab, caption/catatan produksi, dan tautan setelah tayang.
+- Status mengikuti alur kerja: **Ide → Draf → Terjadwal → Tayang → Dievaluasi**. Di kalender, konten ide/draf tampil pudar dan konten yang tayang tampil tebal, dengan warna per platform.
+- Saat status Tayang atau Dievaluasi, isi angka hasilnya (tayangan, jangkauan, suka, komentar, simpan, bagikan) dan catatan evaluasi. Kartu **Hasil bulan ini** menjumlahkan konten yang tayang per platform dan angkanya, dan unduhan Excel memuat semua konten bulan itu beserta ringkasannya.
+
+Data ketiga modul tersimpan sebagai record `transaction`, `setting`, `item`, `movement`, dan `post` di tabel `zanclus_records`; tidak ada tabel baru.
+
+## Google Search Console
+
+Situs sudah menyiapkan semua yang dibaca Google:
+
+- **`/sitemap.xml`**: semua halaman publik dalam bahasa Inggris dan Indonesia (`/id/...`) dengan hreflang. Halaman yang dimatikan di CMS (aktivitas, kursus, servis) otomatis keluar dari sitemap.
+- **`/robots.txt`**: halaman publik boleh dirayapi; `/admin`, `/api/admin/`, `/partner/`, dan `/payment/` tidak. Foto upload di `/api/media/` tetap boleh dirayapi. Keduanya tetap terbuka saat mode developer mengunci situs.
+- **Link kanonik, hreflang, dan gambar share** memakai alamat lengkap `https://zanclusdivecenter.com`. Bila domain utama lain, isi `SITE_URL=https://domain-utama` di hPanel → Variabel environment (dibaca saat berjalan).
+- **Data bisnis (schema.org)** di beranda: nama, WhatsApp, email, alamat (Waisai, Papua Barat Daya), dan tautan sosial media dari menu **Kontak & sosial media**.
+
+Langkah mendaftarkan situs (perlu akun Google pemilik):
+
+1. Buka [search.google.com/search-console](https://search.google.com/search-console), **Tambahkan properti**, pilih **Domain**, isi `zanclusdivecenter.com` (tanpa `https://` dan `www`). Properti Domain mencakup www, non-www, http, dan https.
+2. Salin catatan TXT dari Google. Di hPanel → **Domain → DNS**, tambah catatan **TXT** dengan nama `@` dan isi catatan tadi. Kembali ke Search Console dan tekan **Verifikasi**; bila belum berhasil, tunggu DNS menyebar lalu coba lagi. Catatan TXT jangan dihapus. Cara ini tidak memakai kolom tag HTML di admin.
+   - Tanpa akses DNS: properti **Awalan URL** `https://zanclusdivecenter.com/` dengan metode **Tag HTML**. Tempel tag `<meta name="google-site-verification" …>` (atau `content`-nya saja) di admin **Situs web → SEO & Search Console → Tag HTML (opsional)**, simpan, lalu tekan **Verifikasi**. Kode juga bisa diisi lewat `GOOGLE_SITE_VERIFICATION` di hPanel.
+3. Buka **Sitemap**, isi `https://zanclusdivecenter.com/sitemap.xml`, tekan **Kirim**. Status **Couldn't fetch** sesaat setelah dikirim biasanya berubah menjadi **Success** dalam beberapa jam. Sitemap tidak perlu dikirim ulang saat halaman di CMS berubah.
+4. Di **Pemeriksaan URL**, periksa `https://zanclusdivecenter.com/` dan `/id`, lalu **Minta pengindeksan**.
+
+Halaman **SEO & Search Console** bisa dibuka superadmin dan PR. Halaman itu juga memperingatkan bila admin dibuka di domain lain dari alamat yang dipakai untuk Google.
+
+## Tentang kami: profil perusahaan
+
+Halaman **Tentang kami** memuat bagian **Profil perusahaan** setelah cerita: nama perusahaan (PT Zanclus Daya Cipta), profil singkat, kalimat sorotan, portofolio (sampai 6 bidang), dan mitra kerja, dalam bahasa Indonesia dan Inggris. Isinya diubah di **Situs web → Tentang kami → Profil perusahaan**. Halaman yang tersimpan sebelum bagian ini ada otomatis memakai isi bawaan dari company profile.
+
+## Daftar harga, add-on, dan slot di keranjang
+
+Daftar harga diatur di **Situs web → Daftar harga**. Setiap aktivitas (Diving, Snorkeling, Trip laut) berisi layanan utamanya. Untuk diving itu Discovery Dive dan Pemandu selam.
+
+Alat dan layanan lain ditawarkan sebagai **add-on**, diambil dari daftar yang sudah ada, jadi nama dan harganya cukup diubah di satu tempat.
+
+- Alat sewa Dive Shop (masker, scuba, tabung, dive computer, kamera) ada di kelompok **Sewa alat dari Dive Shop**. Alat ini disewa untuk tanggal aktivitasnya dan memakai stok sewanya. Produk yang punya ukuran tidak bisa jadi add-on.
+- Daftar baru **Layanan tambahan** untuk layanan yang bukan alat, misalnya dokumentasi, antar jemput mobil, atau catering. Daftar ini hanya tampil sebagai add-on.
+- Di tab setiap aktivitas ada kartu **Add-on**. Centang item dari daftar lain (maksimal 16), lalu tekan **Simpan add-on**.
+- Item yang dihapus dari daftarnya otomatis hilang dari add-on.
+
+Di halaman aktivitas, add-on tampil di bawah paket utama dengan nama daftar asalnya, dan di jendela checkout di bagian **Mau tambah sesuatu?**. Add-on dibayar bersama minimal satu paket utama. Harga dihitung ulang di server dari CMS.
+
+Saat pembaruan ini dipasang, daftar diving yang tersimpan dipindahkan sekali secara otomatis. Perlengkapan scuba masuk ke daftar sewa BCD, regulator & wetsuit. Dokumentasi masuk ke Layanan tambahan dengan harga yang tersimpan. Tabung dan dive computer memakai item yang sudah ada di daftar sewa. Semuanya, ditambah tiga kamera sewa, menjadi add-on diving. Snorkeling dan trip tidak diubah dan belum punya add-on.
+
+### Sewa alat pindah ke Dive Shop
+
+Daftar sewa (Sewa masker, snorkel & fin, Sewa BCD, regulator & wetsuit, Tabung & isi ulang, Dive computer, senter & pelampung, Sewa kamera bawah air) tidak lagi diatur di **Daftar harga**. Saat pembaruan ini dipasang, setiap itemnya otomatis menjadi produk Dive Shop untuk disewa saja, dengan nama, keterangan, dan harga per hari yang sama. Setelah itu, atur di **Dive Shop**, tab **Barang sewa**:
+
+- **Stok sewa.** Isi berapa unit yang dimiliki. Ketersediaan langsung mengikuti stok gudang, dan website menolak sewa yang melebihi sisa pada tanggalnya. Selama stok belum diisi, alat tetap bisa dipesan seperti sebelumnya.
+- **Foto barang sewa.** Unggah foto alatnya. Tanpa foto, website menampilkan ilustrasi.
+- **Ukuran.** Tambahkan kalau tamu perlu memilih, misalnya wetsuit atau fin.
+
+Produk sewa lama dan produk Dive Shop yang sudah ada bisa mirip, misalnya Masker dan Mask & snorkel set. Matikan atau hapus yang tidak dipakai.
+
+### Barang jual dan barang sewa terpisah
+
+Di **Dive Shop**, barang jual dan barang sewa sekarang dua daftar terpisah lewat tab **Barang jual** dan **Barang sewa**. Barang jual adalah barang baru untuk dibeli tamu. Barang sewa adalah alat milik dive center yang disewakan lalu kembali, dan stoknya dihitung per tanggal di **Kalender reservasi**. Masing-masing punya foto, harga, ukuran, dan stoknya sendiri.
+
+Saat pembaruan ini dipasang, setiap produk lama yang dijual sekaligus disewakan otomatis dipecah. Produk itu tetap di **Barang jual** dengan foto dan harga jualnya, dan versi sewanya muncul di **Barang sewa** dengan nama yang sama, harga sewa, dan foto sewanya. Stok sewa di Gudang, reservasi sewa yang sudah ada, dan add-on aktivitas ikut pindah ke barang sewanya, jadi tidak ada yang perlu diisi ulang. Periksa sekali foto barang sewanya, lalu tekan **Simpan katalog Dive Shop**.
+
+Di bawah detail produk, kartu **Juga disewakan** atau **Juga dijual** membuka pasangannya. Kalau model yang sama belum ada di daftar lain, tombol **+ Buat barang sewa** atau **+ Buat barang jual** menyalin nama, deskripsi, spesifikasi, video, dan ukurannya. Foto, harga, dan stoknya diisi sendiri.
+
+### Kalender sewa alat
+
+Di **Kalender reservasi**, tombol **Sewa alat** menampilkan alat yang disewa setiap hari dibanding stok sewanya (misalnya "Masker 2/3"). Hari dengan alat penuh diberi warna oranye. Klik tanggalnya untuk melihat setiap alat, siapa yang menyewanya, dan sisa semua alat pada hari itu. Tombol **Catat sewa tanggal ini** membuka formulir reservasi Dive Shop pada tanggal itu.
+
+Sewa dari WhatsApp atau tamu yang datang langsung dicatat di formulir reservasi, bagian **Alat sewa**: pilih alatnya dan jumlahnya. Di sampingnya tampil sisa alat itu pada tanggal reservasi. Alat baru ditahan setelah status reservasinya **Dikonfirmasi**, lalu ikut dihitung di kalender dan di website.
+
+Antar jemput mobil dan catering belum ada di daftar harga mana pun. Tambahkan di **Layanan tambahan** dengan harganya, lalu centang di kartu Add-on aktivitas yang menawarkannya.
+
+Di jendela checkout, tanggal dipilih dari kalender **Tanggal & slot** tepat di bawah keranjang. Setiap tanggal menunjukkan sisa slot hari itu, tanggal penuh atau tutup tidak bisa dipilih, dan di bawahnya tertulis tanggal yang dipilih beserta sisa slotnya.
+
+## Email tamu & invoice
+
+Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia atau Inggris. Email dikirim lewat SMTP yang sama dengan kode OTP (lihat tabel `SMTP_*` di atas). Balasan tamu masuk ke email di menu **Kontak & sosial media**.
+
+| Email | Kapan dikirim |
+| --- | --- |
+| **Pesanan & batas bayar** | Pesanan website dibayar lewat Midtrans, atau reservasi di admin ditagih lewat transfer bank atau link Midtrans. Berisi batas bayar (WIT), tombol bayar atau rekening transfer, dan rincian pesanan. |
+| **Invoice** | Begitu Midtrans melaporkan lunas, atau admin mencatat reservasi **Sudah lunas**. Berisi nomor invoice `INV-tanggal-kode`, metode bayar, rincian, dan status LUNAS. |
+| **Pesanan dibatalkan** | Link Midtrans kedaluwarsa sebelum dibayar. Tempatnya dilepas dan tamu diajak memesan lagi. |
+
+Pengaturan ada di **Keuangan → Pembayaran online → Email tamu & invoice** (superadmin dan keuangan):
+
+- **Batas waktu pembayaran**: 1 jam sampai 3 hari, bawaan 24 jam. Link Midtrans kedaluwarsa pada batas ini.
+- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer.
+- **Catatan di invoice**: mis. ketentuan pembatalan, dalam bahasa Indonesia dan Inggris.
+- **Salinan setiap email ke**: email kantor yang menerima salinan (BCC) untuk arsip.
+- **Pratinjau** dan **Kirim ke email saya** menampilkan contoh setiap email dengan pengaturan yang sudah disimpan.
+- Sakelar di kanan atas mematikan email otomatis dari website dan Midtrans.
+
+Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Reservasi**. Isi **Email tamu** dan **Bahasa email**, lalu pilih **Pembayaran**:
+
+- **Tanpa tagihan**: hanya dicatat.
+- **Tagih lewat transfer bank**: tamu menerima rekening dan batas bayar. Setelah bukti transfer masuk, ubah ke **Sudah lunas**.
+- **Tagih lewat link Midtrans**: website membuat link pembayaran Midtrans untuk nilai reservasi. Begitu dibayar, reservasi otomatis Dikonfirmasi dan invoice terkirim.
+- **Sudah lunas** (transfer, tunai, kartu, QRIS): reservasi menjadi Dikonfirmasi dan invoice terkirim.
+
+Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyimpan. Saat mengedit, kotak **Email ke tamu** menampilkan riwayat kirim, **Pratinjau**, dan **Kirim ulang**. Tagihan transfer yang lewat batas ditandai **Lewat batas bayar**; tagihan transfer tidak dibatalkan otomatis. Pembayaran Midtrans yang masih berjalan atau sudah lunas hanya berubah lewat Midtrans. Pembayaran tunai dan transfer tidak otomatis masuk Buku kas; tim keuangan mencatatnya di sana. Logo dan foto email diambil dari `https://zanclusdivecenter.com/assets/email/`, jadi tampil setelah versi ini di-deploy.
 
 ## Data dan reservasi
 
-Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu secara manual. Kalender website publik tetap kalender rencana; kalender CMS merupakan catatan operasional, belum sistem kapasitas/ketersediaan otomatis. Penutupan tanggal CMS tidak otomatis memblokir formulir WhatsApp publik.
+Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu secara manual. Kalender di halaman aktivitas menampilkan sisa slot per hari dari reservasi yang dikonfirmasi dan pembayaran online yang sedang menunggu. Kuotanya diatur di **Aktivitas → Kuota peserta per hari**; diving bawaannya 30 orang per hari, dipakai bersama program diving dan kursus. Tanggal penuh atau ditutup tidak bisa dipilih dan pembayarannya ditolak server. Pesan WhatsApp tetap perlu dicatat manual.
 
 Data berada di tabel `zanclus_records`, `zanclus_media`, dan `zanclus_login_attempts`. Backup ketiganya melalui fasilitas backup database/ekspor SQL Hostinger. Simpan backup secara aman; tabel reservasi mengandung data tamu. Media BLOB menambah ukuran database; gunakan URL gambar dari penyimpanan eksternal jika koleksi besar.
 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { statuses } from "../cms-model.js";
+import { statuses, programTitle } from "../cms-model.js";
 import { AdminIcon } from "./icons.jsx";
 
 const zone = "Asia/Jayapura";
@@ -222,7 +222,10 @@ function ScheduleChart({ bookings, content, today }) {
               <li key={b.id}>
                 <span>
                   {b.guestName || "Penutupan tanggal"}
-                  <small>{content.experiences[b.experience]?.title}</small>
+                  <small>
+                    {programTitle(content, b.experience)}
+                    {b.payment?.status === "paid" && " · Lunas"}
+                  </small>
                 </span>
                 <em className={"admin-status " + b.status}>
                   {statuses[b.status]}

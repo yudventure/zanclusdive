@@ -1,0 +1,6 @@
+# Files left out of the Hostinger upload ZIP (npm run zip:hostinger).
+.gitattributes export-ignore
+.claude export-ignore
+Zanclus-Website-Source.zip export-ignore
+scripts export-ignore
+tests export-ignore

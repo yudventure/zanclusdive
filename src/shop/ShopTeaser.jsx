@@ -1,28 +1,33 @@
 "use client";
 import { useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
-import { rupiah } from "../shop-model.js";
+import ProductDetail from "./ProductDetail.jsx";
+import DeliveryChoice, {
+  firstDelivery,
+  deliveryFee,
+} from "../components/DeliveryChoice.jsx";
+import {
+  rupiah,
+  unitsLeft,
+  deliveryChoice,
+  productAs,
+  rentalTabs,
+  rentalTabOf,
+  pairOf,
+} from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
-import { rentalGroups, priceText } from "../price-list.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
+import PayPanel from "../components/PayPanel.jsx";
+import FareChoice from "../components/FareChoice.jsx";
+import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
+import CartIcon from "../components/CartIcon.jsx";
+import { LockedBadge } from "../components/Locked.jsx";
+import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
-const tabs = ["buy", ...rentalGroups];
-
-// Illustration for a rental item, picked from its Indonesian name.
-const visualRules = [
-  [/masker|mask|snorkel/i, "mask"],
-  [/fin|booties/i, "fins"],
-  [/wetsuit/i, "suit"],
-  [/bcd|pelampung|weight/i, "bcd"],
-  [/regulator/i, "regulator"],
-  [/tabung|isi ulang|tank|refill/i, "cylinder"],
-  [/computer/i, "computer"],
-  [/senter|torch/i, "light"],
-  [/kamera|camera|gopro/i, "camera"],
-];
-const visualFor = (name) =>
-  visualRules.find(([rule]) => rule.test(name))?.[1] ?? "mask";
+// The cart key of a product in one way and size.
+const keyOf = (mode, productId, size = "") =>
+  (mode === "sale" ? "buy:" : "rent:") + productId + (size ? ":" + size : "");
 
 // Small line icons for the service list.
 function TabIcon({ name }) {
@@ -49,17 +54,87 @@ function TabIcon({ name }) {
   );
 }
 
-function CartIcon() {
+// Pressure gauge, hose and cog for the gear service banner.
+function ServiceArt() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 140 140" fill="none" aria-hidden="true" focusable="false">
       <path
-        d="M3 4h2l2.4 11h10.2L20 7H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm7 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
+        d="M62 100c0 24 26 30 42 18"
+        stroke="#8fd3cf"
+        strokeWidth="7"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
+      <circle
+        cx="62"
+        cy="60"
+        r="40"
+        fill="#0b3442"
+        stroke="#bef4a5"
+        strokeWidth="3"
+      />
+      <circle
+        cx="62"
+        cy="60"
+        r="30"
+        stroke="#ffffff55"
+        strokeWidth="5"
+        strokeDasharray="1.5 6.35"
+      />
+      <path
+        d="M83 81a30 30 0 0 0 9-21"
+        stroke="#ff9c8a"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M62 60 80 40"
+        stroke="white"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      <circle cx="62" cy="60" r="5" fill="#bef4a5" />
+      <circle
+        cx="108"
+        cy="106"
+        r="15"
+        stroke="#bef4a5"
+        strokeWidth="7"
+        strokeDasharray="4.7 3.15"
+      />
+      <circle cx="108" cy="106" r="11.5" fill="#bef4a5" />
+      <circle cx="108" cy="106" r="4.5" fill="#0d6f73" />
+      <circle cx="118" cy="30" r="5" stroke="#ffffff66" strokeWidth="2" />
+      <circle cx="128" cy="14" r="3" stroke="#ffffff44" strokeWidth="2" />
+      <circle cx="108" cy="12" r="2" fill="#ffffff44" />
     </svg>
+  );
+}
+
+// Banner under the service list leading to the dive gear service page.
+function ServiceBanner({ service, locale, locks }) {
+  const b = dictionary(locale).shop.teaser.serviceBanner;
+  const prices = (service?.items ?? [])
+    .filter((item) => item.enabled && !itemLocked(locks, "service", item.id))
+    .map((item) => item.price);
+  if (pageLocked(locks, "service")) return null;
+  return (
+    <a className="shop-service-banner" href={localeHref(locale, "/service")}>
+      <span className="shop-service-banner-top">
+        <span className="shop-service-banner-eyebrow">{b.eyebrow}</span>
+        <ServiceArt />
+      </span>
+      <strong>{b.title}</strong>
+      <span className="shop-service-banner-text">{b.text}</span>
+      <span className="shop-service-banner-meta">
+        {prices.length > 0 && (
+          <span>{b.from(rupiah(Math.min(...prices), locale))}</span>
+        )}
+        <span>{b.fast}</span>
+      </span>
+      <span className="shop-service-banner-cta">
+        {b.cta} <span aria-hidden="true">↗</span>
+      </span>
+    </a>
   );
 }
 
@@ -68,13 +143,21 @@ function CartIcon() {
 // cart is checked out into a WhatsApp order.
 export default function ShopTeaser({
   shop,
-  priceList,
+  service,
   whatsapp,
   locale = "en",
+  locks = noLocks,
+  payments,
+  fares,
+  stock = {},
 }) {
   const t = dictionary(locale).shop;
   const s = t.teaser;
+  const p = dictionary(locale).payment;
+  const f = dictionary(locale).fare;
   const [active, setActive] = useState("buy");
+  // Standard, Comfort or Flexi for the rentals.
+  const [fare, setFare] = useState("standard");
   const [cart, setCart] = useState([]);
   const [form, setForm] = useState({
     name: "",
@@ -86,40 +169,131 @@ export default function ShopTeaser({
   });
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  // The product window: { product, add } (add false from the checkout).
+  const [detail, setDetail] = useState(null);
+  // Picked up at the dive center or delivered: { method, zone, address }.
+  const [delivery, setDelivery] = useState(() => firstDelivery(shop.delivery));
+  const fee = deliveryFee(shop.delivery, delivery);
+  const zoneName =
+    shop.delivery?.zones.find((z) => z.id === delivery.zone)?.name ?? "";
   const id = useId();
   const tabRefs = useRef({});
   const dialog = useRef(null);
+  // Dive Shop gear to buy, then the rental gear in tabs by kind, each tab
+  // shown when it has gear.
+  const renting = (p, tab) =>
+    p.enabled && p.rentalEnabled && rentalTabOf[p.category] === tab;
+  const tabs = [
+    "buy",
+    ...rentalTabs.filter((tab) => shop.products.some((p) => renting(p, tab))),
+  ];
   const [title, text] = s.groups[active];
   const buying = active === "buy";
-  const items = buying
-    ? shop.products
-        .filter((p) => p.enabled && p.saleEnabled)
-        .map((p) => ({
-          key: "buy:" + p.id,
-          name: p.name,
-          info: p.specification,
-          price: p.salePrice,
-          unit: "",
-          mode: "sale",
-          visual: p,
-        }))
-    : priceList[active].map((item, index) => ({
-        key: `${active}:${index}`,
-        name: priceText(item.name, locale),
-        info: priceText(item.info, locale),
-        price: item.price,
-        unit: priceText(item.unit, locale),
-        mode: "rental",
-        visual: { category: visualFor(item.name.id), image: "" },
-      }));
+  const mode = buying ? "sale" : "rental";
+  const items = shop.products
+    .filter((p) => (buying ? p.enabled && p.saleEnabled : renting(p, active)))
+    .map((p) => ({
+      key: keyOf(mode, p.id),
+      name: p.name,
+      info: p.specification,
+      price: buying ? p.salePrice : p.rentalPrice,
+      unit: buying ? "" : s.message.perDay,
+      mode,
+      // The photos of the units for sale, or of the units for rent.
+      visual: productAs(p, mode),
+      product: p,
+      productId: p.id,
+      size: "",
+      locked: itemLocked(locks, "product", p.id),
+      // Gear that follows the warehouse stops at the units left.
+      left: unitsLeft(p, stock, mode) ?? 10,
+    }));
   const totals = cartTotals(cart, form.days || 1);
+  // The fare's increase applies to the rentals, not the purchases.
+  const offered = fareChoices(fares).length > 1 && totals.rental > 0;
+  const fareChoice = fareFor(fares, offered ? fare : "standard");
+  const markup = fareMarkup(totals.rental, fareChoice.percent);
+  const fareText = offered
+    ? f.message(f.names[fareChoice.tier], fareChoice.percent)
+    : "";
+  // With online payment on, a cart priced in full is paid with Midtrans.
+  const payable = Boolean(payments?.ready) && !totals.needsQuote;
+  const order = () => ({
+    kind: "shop",
+    lines: cart.map((line) => ({
+      source: "product",
+      id: line.productId,
+      mode: line.mode,
+      quantity: line.quantity,
+      size: line.size ?? "",
+    })),
+    days: Number(form.days) || 1,
+    startDate: form.startDate,
+    fare: fareChoice.tier,
+    name: form.name,
+    whatsapp: form.whatsapp,
+    email: form.email,
+    notes: form.notes,
+    delivery,
+  });
   const quantity = (key) =>
     cart.find((line) => line.key === key)?.quantity ?? 0;
+  // Every size of a product in the cart in one way, for its card.
+  const inCart = (productId, mode) =>
+    cart
+      .filter((line) => line.productId === productId && line.mode === mode)
+      .reduce((total, line) => total + line.quantity, 0);
+  const productOf = (line) =>
+    shop.products.find((p) => p.id === line.productId);
+  // What one more of a cart line may take: the units left of its size.
+  const lineLeft = (line) => {
+    const product = productOf(line);
+    return product
+      ? (unitsLeft(product, stock, line.mode, line.size) ?? 10)
+      : 10;
+  };
   const change = (item, delta) => {
-    const { key, name, price, mode } = item;
-    setCart((current) => addLine(current, { key, name, price, mode }, delta));
+    const { key, name, price, mode, productId, size } = item;
+    setCart((current) =>
+      addLine(current, { key, name, price, mode, productId, size }, delta),
+    );
     setMessage("");
   };
+  // From the product window: the size and quantity picked, to buy or rent.
+  function addSized(product, mode, size, count) {
+    const key = keyOf(mode, product.id, size);
+    const left = unitsLeft(product, stock, mode, size) ?? 10;
+    const room = Math.max(0, Math.min(left, 10) - quantity(key));
+    if (!room) return;
+    change(
+      {
+        key,
+        name: product.name,
+        price: product[mode === "sale" ? "salePrice" : "rentalPrice"],
+        mode,
+        productId: product.id,
+        size,
+      },
+      Math.min(count, room),
+    );
+  }
+  // A cart line moved to another size joins a line already in that size.
+  function changeSize(line, size) {
+    const key = keyOf(line.mode, line.productId, size);
+    setCart((current) => {
+      const same = current.find((l) => l.key === key);
+      return same
+        ? current
+            .filter((l) => l !== line)
+            .map((l) =>
+              l === same
+                ? { ...l, quantity: Math.min(10, l.quantity + line.quantity) }
+                : l,
+            )
+        : current.map((l) => (l === line ? { ...l, key, size } : l));
+    });
+    setMessage("");
+  }
   function onKeyDown(event) {
     const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[
       event.key
@@ -142,7 +316,18 @@ export default function ShopTeaser({
   function review(event) {
     event.preventDefault();
     try {
-      setMessage(checkoutMessage(cart, form, today(), locale));
+      setMessage(
+        checkoutMessage(
+          cart,
+          {
+            ...form,
+            fare: { text: fareText, markup },
+            delivery: deliveryChoice(shop.delivery, delivery, locale),
+          },
+          today(),
+          locale,
+        ),
+      );
       setError("");
     } catch (err) {
       setError(err.message);
@@ -173,39 +358,35 @@ export default function ShopTeaser({
           <a className="button dark" href={localeHref(locale, "/dive-shop")}>
             {t.explore}
           </a>
-          <a
-            className="shop-teaser-service"
-            href={localeHref(locale, "/service")}
-          >
-            {dictionary(locale).service.fromShop[1]}{" "}
-            <span aria-hidden="true">↗</span>
-          </a>
         </div>
       </div>
       <div className="shop-services" data-reveal>
-        <div
-          className="shop-service-tabs"
-          role="tablist"
-          aria-label={s.tabsLabel}
-          aria-orientation="vertical"
-        >
-          {tabs.map((key) => (
-            <button
-              type="button"
-              role="tab"
-              key={key}
-              id={`${id}-tab-${key}`}
-              ref={(el) => (tabRefs.current[key] = el)}
-              aria-selected={active === key}
-              aria-controls={`${id}-panel`}
-              tabIndex={active === key ? 0 : -1}
-              onClick={() => setActive(key)}
-              onKeyDown={onKeyDown}
-            >
-              <TabIcon name={key} />
-              <span>{s.groups[key][0]}</span>
-            </button>
-          ))}
+        <div className="shop-services-side">
+          <div
+            className="shop-service-tabs"
+            role="tablist"
+            aria-label={s.tabsLabel}
+            aria-orientation="vertical"
+          >
+            {tabs.map((key) => (
+              <button
+                type="button"
+                role="tab"
+                key={key}
+                id={`${id}-tab-${key}`}
+                ref={(el) => (tabRefs.current[key] = el)}
+                aria-selected={active === key}
+                aria-controls={`${id}-panel`}
+                tabIndex={active === key ? 0 : -1}
+                onClick={() => setActive(key)}
+                onKeyDown={onKeyDown}
+              >
+                <TabIcon name={key} />
+                <span>{s.groups[key][0]}</span>
+              </button>
+            ))}
+          </div>
+          <ServiceBanner service={service} locale={locale} locks={locks} />
         </div>
         <div
           className="shop-service-panel"
@@ -220,13 +401,50 @@ export default function ShopTeaser({
               {items.map((item) => {
                 const count = quantity(item.key);
                 return (
-                  <li className="shop-item" key={item.key}>
-                    <ProductVisual product={item.visual} locale={locale} />
+                  <li
+                    className={"shop-item" + (item.locked ? " is-locked" : "")}
+                    key={item.key}
+                  >
+                    {item.locked && <LockedBadge locale={locale} />}
+                    <div
+                      className="shop-item-visual"
+                      onClick={
+                        item.product && !item.locked
+                          ? () =>
+                              setDetail({
+                                product: item.product,
+                                mode: item.mode,
+                                add: !item.locked,
+                              })
+                          : undefined
+                      }
+                    >
+                      <ProductVisual product={item.visual} locale={locale} />
+                    </div>
                     <div className="shop-item-body">
                       <p className="shop-service-tag">
                         {buying ? s.buyTag : s.rentalTag}
                       </p>
-                      <h4>{item.name}</h4>
+                      <h4>
+                        {item.product && !item.locked ? (
+                          <button
+                            type="button"
+                            className="shop-product-open"
+                            aria-label={t.detail.open(item.name)}
+                            onClick={() =>
+                              setDetail({
+                                product: item.product,
+                                mode: item.mode,
+                                add: !item.locked,
+                              })
+                            }
+                          >
+                            {item.name}
+                          </button>
+                        ) : (
+                          item.name
+                        )}
+                      </h4>
                       {item.info && (
                         <p className="shop-item-info">{item.info}</p>
                       )}
@@ -236,7 +454,32 @@ export default function ShopTeaser({
                           : rupiah(item.price, locale)}
                         {item.unit && <small> {item.unit}</small>}
                       </p>
-                      {count ? (
+                      {item.locked ? null : item.product?.sizes?.length ? (
+                        // Gear with sizes goes into the cart from its window.
+                        <>
+                          <button
+                            type="button"
+                            className="shop-item-add"
+                            disabled={item.left <= 0}
+                            onClick={() =>
+                              setDetail({
+                                product: item.product,
+                                mode: item.mode,
+                                add: true,
+                              })
+                            }
+                          >
+                            {item.left <= 0 ? s.out : t.detail.pickSize}
+                          </button>
+                          {inCart(item.productId, item.mode) > 0 && (
+                            <small className="shop-item-in-cart">
+                              {t.detail.inCart(
+                                inCart(item.productId, item.mode),
+                              )}
+                            </small>
+                          )}
+                        </>
+                      ) : count ? (
                         <div className="shop-item-stepper">
                           <button
                             type="button"
@@ -249,12 +492,14 @@ export default function ShopTeaser({
                           <button
                             type="button"
                             aria-label={s.more(item.name)}
-                            disabled={count >= 10}
+                            disabled={count >= item.left}
                             onClick={() => change(item, 1)}
                           >
                             +
                           </button>
                         </div>
+                      ) : item.left <= 0 ? (
+                        <p className="shop-item-out">{s.out}</p>
                       ) : (
                         <button
                           type="button"
@@ -316,42 +561,87 @@ export default function ShopTeaser({
         </button>
         <p className="eyebrow">ZANCLUS DIVE SHOP</p>
         <h2 id={`${id}-checkout`}>{s.checkoutTitle}</h2>
-        <p>{s.checkoutIntro}</p>
+        <p>{payable ? p.shopIntro : s.checkoutIntro}</p>
         <ul className="shop-checkout-lines">
-          {cart.map((line) => (
-            <li key={line.key}>
-              <span>
-                <small>
-                  {line.mode === "sale" ? s.message.buy : s.message.rent}
-                </small>
-                <strong>{line.name}</strong>
-                <small>
-                  {line.price === null
-                    ? s.askPrice
-                    : rupiah(line.price, locale) +
-                      (line.mode === "rental" ? " " + s.message.perDay : "")}
-                </small>
-              </span>
-              <span className="shop-item-stepper">
-                <button
-                  type="button"
-                  aria-label={s.less(line.name)}
-                  onClick={() => change(line, -1)}
-                >
-                  −
-                </button>
-                <span>{line.quantity}</span>
-                <button
-                  type="button"
-                  aria-label={s.more(line.name)}
-                  disabled={line.quantity >= 10}
-                  onClick={() => change(line, 1)}
-                >
-                  +
-                </button>
-              </span>
-            </li>
-          ))}
+          {cart.map((line) => {
+            const product = productOf(line);
+            return (
+              <li key={line.key}>
+                <span>
+                  <small>
+                    {line.mode === "sale" ? s.message.buy : s.message.rent}
+                  </small>
+                  {product ? (
+                    <button
+                      type="button"
+                      className="shop-product-open"
+                      aria-label={t.detail.open(line.name)}
+                      onClick={() =>
+                        setDetail({ product, mode: line.mode, add: false })
+                      }
+                    >
+                      {line.name}
+                    </button>
+                  ) : (
+                    <strong>{line.name}</strong>
+                  )}
+                  <small>
+                    {line.price === null
+                      ? s.askPrice
+                      : rupiah(line.price, locale) +
+                        (line.mode === "rental" ? " " + s.message.perDay : "")}
+                  </small>
+                  {product?.sizes?.length > 0 && (
+                    <label className="shop-cart-size">
+                      {t.detail.size}
+                      <select
+                        aria-label={t.cartSize(line.name)}
+                        value={line.size ?? ""}
+                        onChange={(e) => changeSize(line, e.target.value)}
+                      >
+                        {product.sizes.map((size) => {
+                          const left = unitsLeft(
+                            product,
+                            stock,
+                            line.mode,
+                            size,
+                          );
+                          return (
+                            <option
+                              key={size}
+                              value={size}
+                              disabled={left === 0}
+                            >
+                              {size}
+                              {left === 0 ? ` (${t.detail.sizeOut})` : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
+                  )}
+                </span>
+                <span className="shop-item-stepper">
+                  <button
+                    type="button"
+                    aria-label={s.less(line.name)}
+                    onClick={() => change(line, -1)}
+                  >
+                    −
+                  </button>
+                  <span>{line.quantity}</span>
+                  <button
+                    type="button"
+                    aria-label={s.more(line.name)}
+                    disabled={line.quantity >= lineLeft(line)}
+                    onClick={() => change(line, 1)}
+                  >
+                    +
+                  </button>
+                </span>
+              </li>
+            );
+          })}
         </ul>
         {!cart.length && <p className="muted">{s.cartEmpty}</p>}
         <dl className="shop-checkout-totals">
@@ -367,14 +657,55 @@ export default function ShopTeaser({
               <dd>{rupiah(totals.rental, locale)}</dd>
             </div>
           )}
+          {markup > 0 && (
+            <div>
+              <dt>{f.line(f.names[fareChoice.tier], fareChoice.percent)}</dt>
+              <dd>{rupiah(markup, locale)}</dd>
+            </div>
+          )}
+          {fee > 0 && (
+            <div>
+              <dt>{t.delivery.fee(zoneName)}</dt>
+              <dd>{rupiah(fee, locale)}</dd>
+            </div>
+          )}
           <div>
-            <dt>{s.estimate}</dt>
-            <dd>{rupiah(totals.total, locale)}</dd>
+            <dt>{payable ? p.total : s.estimate}</dt>
+            <dd>{rupiah(totals.total + markup + fee, locale)}</dd>
           </div>
         </dl>
+        {offered && !message && (
+          <FareChoice
+            fares={fares}
+            base={totals.rental}
+            value={fareChoice.tier}
+            onChange={setFare}
+            locale={locale}
+          />
+        )}
         {totals.needsQuote && <p className="muted">{s.quoteNote}</p>}
-        {message ? (
+        {message && payable ? (
           <div className="shop-checkout-done">
+            <PayPanel
+              order={order()}
+              total={totals.total + markup + fee}
+              message={message}
+              whatsapp={whatsapp}
+              sandbox={payments.sandbox}
+              locale={locale}
+              showTotal={false}
+            />
+            <button
+              type="button"
+              className="shop-checkout-edit"
+              onClick={() => setMessage("")}
+            >
+              {s.edit}
+            </button>
+          </div>
+        ) : message ? (
+          <div className="shop-checkout-done">
+            {payments?.ready && <p className="muted">{p.quoteOnly}</p>}
             <pre>{message}</pre>
             <a
               className="button dark"
@@ -475,6 +806,17 @@ export default function ShopTeaser({
                 </FormField>
               </div>
             )}
+            <DeliveryChoice
+              id={id}
+              delivery={shop.delivery}
+              value={delivery}
+              onChange={(next) => {
+                setDelivery(next);
+                setMessage("");
+                setError("");
+              }}
+              locale={locale}
+            />
             <FormField
               id={`${id}-notes`}
               label={s.notes}
@@ -495,11 +837,33 @@ export default function ShopTeaser({
               </p>
             )}
             <button className="button dark" disabled={!cart.length}>
-              {s.review}
+              {payable ? p.toPay : s.review}
             </button>
           </form>
         )}
       </dialog>
+      {detail && (
+        <ProductDetail
+          key={detail.product.id + detail.mode}
+          product={detail.product}
+          pair={pairOf(
+            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
+            detail.product,
+          )}
+          mode={detail.mode}
+          stock={stock}
+          locale={locale}
+          category={dictionary(locale).shopCategories[detail.product.category]}
+          delivery={shop.delivery}
+          onAdd={
+            detail.add
+              ? (size, count) =>
+                  addSized(detail.product, detail.mode, size, count)
+              : null
+          }
+          onClose={() => setDetail(null)}
+        />
+      )}
     </section>
   );
 }

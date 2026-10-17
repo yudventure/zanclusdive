@@ -30,6 +30,80 @@
   line-height: 1.7;
   color: #062b3b;
 }
+/* About: the company behind the dive center, its portfolio and partners */
+.about-company {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+.about-company-text {
+  display: grid;
+  gap: 14px;
+}
+.about-company-text h3 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: #062b3b;
+}
+.about-company-text p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #3f5d66;
+}
+.about-company-standing {
+  padding: 26px 24px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 85% 0%, #1f8f8a55, transparent 60%), #062b3b;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.about-company-heading {
+  margin-top: 32px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #062b3b;
+}
+.about-portfolio {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  padding: 0;
+  list-style: none;
+}
+.about-portfolio li {
+  padding: 20px;
+  border: 1px solid #e3ecea;
+  border-radius: 20px;
+  background: #fff;
+}
+.about-portfolio li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.about-portfolio strong {
+  font-size: 17px;
+  color: #062b3b;
+}
+.about-portfolio p {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.about-partners p {
+  margin-top: 10px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: var(--act-soft);
+  font-size: 15px;
+  line-height: 1.75;
+  color: #2f4f58;
+}
 .about-values li > span {
   font-size: 15px;
   font-weight: 800;
@@ -272,16 +346,7 @@
   accent-color: var(--act-accent);
 }
 
-/* Links to the gear service from the Dive Shop. */
-.shop-teaser-service {
-  display: inline-block;
-  margin: 14px 0 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #087873;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+/* Link to the gear service from the Dive Shop page. */
 .shop-hero-service {
   display: inline-flex;
   align-items: center;
@@ -313,6 +378,9 @@
   .about-services {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .about-company {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .about-visit {
     grid-template-columns: minmax(0, 1fr);
     justify-items: start;
@@ -324,6 +392,15 @@
 @media (max-width: 700px) {
   .about-story p:first-child {
     font-size: 17px;
+  }
+  .about-company-text p {
+    font-size: 15px;
+  }
+  .about-company-standing {
+    font-size: 16px;
+  }
+  .about-portfolio {
+    grid-template-columns: minmax(0, 1fr);
   }
   .about-story p {
     font-size: 15px;
@@ -354,9 +431,5 @@
     padding-top: 12px;
     border-top: 1px solid #e3ecea;
     text-align: left;
-  }
-  .shop-teaser-service {
-    margin-left: 0;
-    display: block;
   }
 }
