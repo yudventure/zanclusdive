@@ -159,7 +159,26 @@ export default function StockEditor({ request, today }) {
           ? ` ${item.shop.mode === "rental" ? "Stok sewa" : "Stok jual"} ${item.shop.productName}${item.shop.size ? ` ukuran ${item.shop.size}` : ""} mendapat barang baru dengan stok 0.`
           : ""),
     );
-  const shown = (items ?? []).filter((i) => showInactive || i.active !== false);
+  // Dive Shop items first, in the catalog's order, each product's sale
+  // items before its rental ones and the sizes in their order, so both
+  // ways of one product sit together. The team's own items follow by name.
+  const place = (i) => {
+    const at = products.findIndex((p) => p.id === i.shop?.productId);
+    if (at < 0) return [Infinity, 0, 0];
+    const sizes = products[at].sizes ?? [];
+    return [at, i.shop.mode === "rental" ? 1 : 0, sizes.indexOf(i.shop.size)];
+  };
+  const shown = (items ?? [])
+    .filter((i) => showInactive || i.active !== false)
+    .map((i) => [place(i), i])
+    .sort(
+      ([a, x], [b, y]) =>
+        a[0] - b[0] ||
+        a[1] - b[1] ||
+        a[2] - b[2] ||
+        x.name.localeCompare(y.name, "id", { numeric: true }),
+    )
+    .map(([, i]) => i);
   const low = (items ?? []).filter((i) => i.low);
   const empty = (items ?? []).filter((i) => i.empty);
   const linkedTo = (productId, mode, size) =>
