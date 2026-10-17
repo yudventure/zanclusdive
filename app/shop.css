@@ -197,6 +197,33 @@
   background: white;
   max-width: 180px;
 }
+.shop-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.shop-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid #d6e3df;
+  border-radius: 8px;
+  background: white;
+  color: #385e66;
+  font-size: 11px;
+  cursor: pointer;
+}
+.shop-filter-toggle input {
+  margin: 0;
+  accent-color: #0d6f73;
+}
+.shop-filter-toggle.is-on {
+  border-color: #0d6f73;
+  background: #e6f4f1;
+}
 .shop-add-notice {
   font-size: 11px;
   color: #4a7470;
@@ -861,6 +888,210 @@
   opacity: 0.4;
   cursor: default;
 }
+/* Search and filters above the gear of a tab, the same in Beli and in
+   every rental tab. */
+.shop-finder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: -8px 0 12px;
+}
+.shop-finder-search {
+  position: relative;
+  flex: 1 1 240px;
+  display: flex;
+  align-items: center;
+}
+.shop-finder-search svg {
+  position: absolute;
+  left: 16px;
+  width: 17px;
+  height: 17px;
+  color: #4c7884;
+  pointer-events: none;
+}
+.shop-finder-search input {
+  width: 100%;
+  padding: 13px 44px;
+  border: 1px solid #d6e3df;
+  border-radius: 999px;
+  background: white;
+  color: #0b3442;
+  font: inherit;
+  font-size: 13px;
+}
+.shop-finder-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.shop-finder-search input:focus {
+  border-color: #0d6f73;
+  outline: 3px solid #0d6f7322;
+}
+.shop-finder-search button {
+  position: absolute;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: #eaf2f0;
+  color: #36585f;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.shop-finder-select select {
+  max-width: 220px;
+  padding: 12px 16px;
+  border: 1px solid #d6e3df;
+  border-radius: 999px;
+  background-color: white;
+  color: #285560;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.shop-finder-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid #d6e3df;
+  border-radius: 999px;
+  background: white;
+  color: #285560;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.shop-finder-toggle input {
+  margin: 0;
+  accent-color: #0d6f73;
+}
+.shop-finder-toggle.is-on {
+  border-color: #0d6f73;
+  background: #e6f4f1;
+  color: #0b4f52;
+}
+.shop-finder-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #69818a;
+}
+.shop-finder-status button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #e6f1f0;
+  color: #0b4f52;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.shop-finder-elsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #4c6b70;
+}
+.shop-finder-elsewhere button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px 7px 13px;
+  border: 1px solid #cfe2ea;
+  border-radius: 999px;
+  background: #eef6f8;
+  color: #0b3442;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.shop-finder-elsewhere button span {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #0d6f73;
+  color: white;
+  font-size: 11px;
+  text-align: center;
+}
+.shop-finder-empty {
+  padding: 26px 22px;
+  border-radius: 18px;
+  background: #eef5f3;
+  color: #4c6b70;
+  font-size: 13px;
+  line-height: 1.7;
+}
+/* A card alone on the last row takes the whole row, lying down (photo
+   left, text right), and two cards on the last row of three share it. */
+.shop-service-panel {
+  container-type: inline-size;
+}
+@container (max-width: 559px) {
+  .shop-item-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .shop-item:nth-child(odd):last-child {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+  .shop-item:nth-child(odd):last-child .shop-item-visual {
+    flex: 0 0 42%;
+  }
+  .shop-item:nth-child(odd):last-child .shop-illustration,
+  .shop-item:nth-child(odd):last-child .shop-product-photo {
+    height: 100%;
+    min-height: 150px;
+  }
+}
+@container (min-width: 560px) {
+  .shop-item-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .shop-item {
+    grid-column: span 2;
+  }
+  .shop-item:nth-child(3n + 1):nth-last-child(2),
+  .shop-item:nth-child(3n + 2):last-child {
+    grid-column: span 3;
+  }
+  .shop-item:nth-child(3n + 1):last-child {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+  .shop-item:nth-child(3n + 1):last-child .shop-item-visual {
+    flex: 0 0 40%;
+  }
+  .shop-item:nth-child(3n + 1):last-child .shop-illustration,
+  .shop-item:nth-child(3n + 1):last-child .shop-product-photo {
+    height: 100%;
+    min-height: 190px;
+  }
+  .shop-item:nth-child(3n + 1):last-child .shop-item-body {
+    justify-content: center;
+    padding: 22px 26px;
+  }
+  .shop-item:nth-child(3n + 1):last-child .shop-item-add,
+  .shop-item:nth-child(3n + 1):last-child .shop-item-stepper,
+  .shop-item:nth-child(3n + 1):last-child .shop-item-out {
+    align-self: flex-start;
+    min-width: 220px;
+    margin-top: 0;
+  }
+}
 .shop-service-panel .shop-empty {
   padding: 22px;
   font-size: 13px;
@@ -1197,6 +1428,22 @@
   }
   .shop-search {
     width: 100%;
+  }
+  /* The count, then the filters across the width. */
+  .shop-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .shop-filter-controls {
+    justify-content: flex-start;
+  }
+  .shop-filter-controls label:not(.shop-filter-toggle) {
+    flex: 1 1 140px;
+  }
+  .shop-filter-controls select {
+    width: 100%;
+    max-width: none;
   }
   .shop-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

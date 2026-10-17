@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3182";
+const shots = process.env.SHOT_DIR;
 // The Indonesian website (/id); English is served at the root.
 const site = base + "/id";
 assert.ok(
@@ -40,6 +41,66 @@ try {
   await mkdir("artifacts", { recursive: true });
   assert.equal((await api.get(base + "/api/admin/state")).status(), 401);
   await page.goto(site, { waitUntil: "networkidle" });
+  // Homepage Dive Shop: search and filters, in Beli and in every rental
+  // tab.
+  const panel = page.locator("#dive-shop .shop-service-panel");
+  const cards = panel.locator(".shop-item h4");
+  const found = panel.locator(".shop-finder-status p");
+  const find = panel.getByRole("searchbox", { name: "Cari perlengkapan" });
+  const width = async (locator) => (await locator.boundingBox()).width;
+  assert.equal(await found.textContent(), "7 alat");
+  await find.fill("wetsuit");
+  assert.deepEqual(await cards.allTextContents(), ["Wetsuit 3 mm"]);
+  assert.equal(await found.textContent(), "1 dari 7 alat");
+  // A card alone on its row takes the whole row.
+  const grid = panel.locator(".shop-item-grid");
+  assert.ok(
+    Math.abs((await width(panel.locator(".shop-item"))) - (await width(grid))) <
+      2,
+  );
+  // The other tabs with the same words are one tap away.
+  await find.fill("kamera");
+  assert.equal(await panel.locator(".shop-finder-empty").count(), 1);
+  await panel.getByRole("button", { name: "Sewa kamera bawah air 3" }).click();
+  assert.equal(
+    await page
+      .getByRole("tab", { name: "Sewa kamera bawah air" })
+      .getAttribute("aria-selected"),
+    "true",
+  );
+  assert.equal(await cards.count(), 3);
+  await panel.getByRole("button", { name: "Hapus pencarian" }).click();
+  // A category and an order in a rental tab.
+  await page.getByRole("tab", { name: "Sewa masker, snorkel & fin" }).click();
+  await panel.getByLabel("Kategori").selectOption("fins");
+  assert.deepEqual(await cards.allTextContents(), [
+    "Open heel fins",
+    "Fin full foot",
+    "Fin open heel",
+    "Booties",
+  ]);
+  await panel.getByLabel("Urutkan").selectOption("priceHigh");
+  assert.deepEqual(await cards.allTextContents(), [
+    "Fin open heel",
+    "Open heel fins",
+    "Fin full foot",
+    "Booties",
+  ]);
+  assert.equal(await found.textContent(), "4 dari 7 alat");
+  shots &&
+    (await panel.screenshot({ path: `${shots}/89-cari-saring-beranda.png` }));
+  await panel.getByRole("button", { name: "Hapus filter" }).click();
+  assert.equal(await found.textContent(), "7 alat");
+  // Two cards on the last row of three share it.
+  await page
+    .getByRole("tab", { name: "Sewa BCD, regulator & wetsuit" })
+    .click();
+  assert.equal(await cards.count(), 8);
+  const items = panel.locator(".shop-item");
+  const half = ((await width(grid)) - 14) / 2;
+  for (const n of [6, 7])
+    assert.ok(Math.abs((await width(items.nth(n))) - half) < 2);
+  await page.getByRole("tab", { name: "Beli alat selam & aksesori" }).click();
   await page.locator('#dive-shop a[href="/id/dive-shop"]').click();
   await page
     .getByRole("heading", { name: "Temukan perlengkapanmu." })
@@ -65,6 +126,13 @@ try {
     await page.locator(".shop-product-card h3").allTextContents(),
     ["Open heel fins", "Fin full foot", "Fin open heel", "Booties"],
   );
+  // The same orders as the homepage.
+  await page.getByLabel("Urutkan").selectOption("priceHigh");
+  assert.deepEqual(
+    await page.locator(".shop-product-card h3").allTextContents(),
+    ["Fin open heel", "Open heel fins", "Fin full foot", "Booties"],
+  );
+  await page.getByLabel("Urutkan").selectOption("default");
   // Fins come in sizes: the size is picked in the product window.
   await page
     .getByRole("button", { name: "Pilih ukuran Open heel fins", exact: true })

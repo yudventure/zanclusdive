@@ -25,9 +25,10 @@ import {
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
-import { dictionary, intlLocale, localeHref } from "../i18n.js";
+import { dictionary, localeHref } from "../i18n.js";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked } from "../developer.js";
+import { filterItems, sortOrders } from "./shop-filter.js";
 
 export default function DiveShop({
   shop,
@@ -53,7 +54,9 @@ export default function DiveShop({
   const motionRoot = useRef(null);
   const [mode, setMode] = useState(initialMode),
     [category, setCategory] = useState("all"),
-    [search, setSearch] = useState("");
+    [search, setSearch] = useState(""),
+    [sort, setSort] = useState("default"),
+    [available, setAvailable] = useState(false);
   const [cart, setCart] = useState([]),
     [details, setDetails] = useState({
       name: "",
@@ -86,13 +89,17 @@ export default function DiveShop({
   const eligible = shop.products.filter(
     (p) => p.enabled && p[mode === "sale" ? "saleEnabled" : "rentalEnabled"],
   );
-  const products = eligible.filter(
-    (p) =>
-      (category === "all" || p.category === category) &&
-      `${p.name} ${p.description} ${shopCategories[p.category]}`
-        .toLocaleLowerCase(intlLocale[locale])
-        .includes(search.toLocaleLowerCase(intlLocale[locale])),
-  );
+  // The same search and filters as the homepage Dive Shop.
+  const products = filterItems(
+    eligible.map((p) => ({
+      product: p,
+      name: p.name,
+      price: p[mode === "sale" ? "salePrice" : "rentalPrice"],
+      left: unitsLeft(p, stock, mode) ?? 10,
+    })),
+    { query: search, category, available, sort },
+    { categoryName: (key) => shopCategories[key], locale },
+  ).map((item) => item.product);
   const categories = [...new Set(eligible.map((p) => p.category))];
   let quote;
   try {
@@ -330,20 +337,47 @@ export default function DiveShop({
               </div>
               <div className="shop-filter-row">
                 <p>{t.count(products.length, mode === "sale")}</p>
-                <label>
-                  <span className="sr-only">{t.category}</span>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                <div className="shop-filter-controls">
+                  <label>
+                    <span className="sr-only">{t.category}</span>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                    >
+                      <option value="all">{t.allCategories}</option>
+                      {categories.map((key) => (
+                        <option key={key} value={key}>
+                          {shopCategories[key]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span className="sr-only">{t.teaser.sort}</span>
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value)}
+                    >
+                      {sortOrders.map((key) => (
+                        <option key={key} value={key}>
+                          {t.teaser.sorts[key]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label
+                    className={
+                      "shop-filter-toggle" + (available ? " is-on" : "")
+                    }
                   >
-                    <option value="all">{t.allCategories}</option>
-                    {categories.map((key) => (
-                      <option key={key} value={key}>
-                        {shopCategories[key]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    <input
+                      type="checkbox"
+                      checked={available}
+                      onChange={(e) => setAvailable(e.target.checked)}
+                    />
+                    {t.teaser.available}
+                  </label>
+                </div>
               </div>
               <p className="shop-add-notice" role="status">
                 {notice || t.pick}

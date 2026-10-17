@@ -22,12 +22,34 @@ import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import CartIcon from "../components/CartIcon.jsx";
+import { filterItems, matchesSearch, sortOrders } from "./shop-filter.js";
 import { LockedBadge } from "../components/Locked.jsx";
 import { noLocks, itemLocked, pageLocked } from "../developer.js";
 
 // The cart key of a product in one way and size.
 const keyOf = (mode, productId, size = "") =>
   (mode === "sale" ? "buy:" : "rent:") + productId + (size ? ":" + size : "");
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle
+        cx="11"
+        cy="11"
+        r="6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="m16 16 4.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 // Small line icons for the service list.
 function TabIcon({ name }) {
@@ -156,6 +178,15 @@ export default function ShopTeaser({
   const p = dictionary(locale).payment;
   const f = dictionary(locale).fare;
   const [active, setActive] = useState("buy");
+  // Search and filters of the tab shown; the words stay across tabs.
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState("default");
+  const [available, setAvailable] = useState(false);
+  function showTab(key) {
+    setActive(key);
+    setCategory("all");
+  }
   // Standard, Comfort or Flexi for the rentals.
   const [fare, setFare] = useState("standard");
   const [cart, setCart] = useState([]);
@@ -190,24 +221,56 @@ export default function ShopTeaser({
   const [title, text] = s.groups[active];
   const buying = active === "buy";
   const mode = buying ? "sale" : "rental";
-  const items = shop.products
-    .filter((p) => (buying ? p.enabled && p.saleEnabled : renting(p, active)))
-    .map((p) => ({
-      key: keyOf(mode, p.id),
-      name: p.name,
-      info: p.specification,
-      price: buying ? p.salePrice : p.rentalPrice,
-      unit: buying ? "" : s.message.perDay,
-      mode,
-      // The photos of the units for sale, or of the units for rent.
-      visual: productAs(p, mode),
-      product: p,
-      productId: p.id,
-      size: "",
-      locked: itemLocked(locks, "product", p.id),
-      // Gear that follows the warehouse stops at the units left.
-      left: unitsLeft(p, stock, mode) ?? 10,
-    }));
+  const inTab = (tab) =>
+    shop.products.filter((p) =>
+      tab === "buy" ? p.enabled && p.saleEnabled : renting(p, tab),
+    );
+  const categoryName = (key) => dictionary(locale).shopCategories[key] ?? key;
+  const items = inTab(active).map((p) => ({
+    key: keyOf(mode, p.id),
+    name: p.name,
+    info: p.specification,
+    price: buying ? p.salePrice : p.rentalPrice,
+    unit: buying ? "" : s.message.perDay,
+    mode,
+    // The photos of the units for sale, or of the units for rent.
+    visual: productAs(p, mode),
+    product: p,
+    productId: p.id,
+    size: "",
+    locked: itemLocked(locks, "product", p.id),
+    // Gear that follows the warehouse stops at the units left.
+    left: unitsLeft(p, stock, mode) ?? 10,
+  }));
+  const categories = [...new Set(items.map((item) => item.product.category))];
+  const shown = filterItems(
+    items,
+    { query, category, available, sort },
+    { categoryName, locale },
+  );
+  const filtered =
+    Boolean(query.trim()) ||
+    category !== "all" ||
+    available ||
+    sort !== "default";
+  function resetFilters() {
+    setQuery("");
+    setCategory("all");
+    setAvailable(false);
+    setSort("default");
+  }
+  // The other tabs that have gear for the words searched.
+  const elsewhere = query.trim()
+    ? tabs
+        .filter((tab) => tab !== active)
+        .map((tab) => [
+          tab,
+          inTab(tab).filter((p) =>
+            matchesSearch(p, query, categoryName(p.category)),
+          ).length,
+        ])
+        .filter(([, n]) => n > 0)
+    : [];
   const totals = cartTotals(cart, form.days || 1);
   // The fare's increase applies to the rentals, not the purchases.
   const offered = fareChoices(fares).length > 1 && totals.rental > 0;
@@ -302,7 +365,7 @@ export default function ShopTeaser({
     event.preventDefault();
     const next =
       tabs[(tabs.indexOf(active) + step + tabs.length) % tabs.length];
-    setActive(next);
+    showTab(next);
     tabRefs.current[next]?.focus();
   }
   const today = () =>
@@ -378,7 +441,7 @@ export default function ShopTeaser({
                 aria-selected={active === key}
                 aria-controls={`${id}-panel`}
                 tabIndex={active === key ? 0 : -1}
-                onClick={() => setActive(key)}
+                onClick={() => showTab(key)}
                 onKeyDown={onKeyDown}
               >
                 <TabIcon name={key} />
@@ -396,9 +459,91 @@ export default function ShopTeaser({
         >
           <h3>{title}</h3>
           <p className="shop-service-text">{text}</p>
-          {items.length ? (
+          {items.length > 0 && (
+            <div className="shop-finder" role="search" aria-label={s.filters}>
+              <label className="shop-finder-search">
+                <span className="sr-only">{s.search}</span>
+                <SearchIcon />
+                <input
+                  type="search"
+                  placeholder={s.searchPlaceholder}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    aria-label={s.clearSearch}
+                    onClick={() => setQuery("")}
+                  >
+                    ×
+                  </button>
+                )}
+              </label>
+              {categories.length > 1 && (
+                <label className="shop-finder-select">
+                  <span className="sr-only">{s.category}</span>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                  >
+                    <option value="all">{s.allCategories}</option>
+                    {categories.map((key) => (
+                      <option key={key} value={key}>
+                        {categoryName(key)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label className="shop-finder-select">
+                <span className="sr-only">{s.sort}</span>
+                <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                  {sortOrders.map((key) => (
+                    <option key={key} value={key}>
+                      {s.sorts[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label
+                className={"shop-finder-toggle" + (available ? " is-on" : "")}
+              >
+                <input
+                  type="checkbox"
+                  checked={available}
+                  onChange={(e) => setAvailable(e.target.checked)}
+                />
+                {s.available}
+              </label>
+            </div>
+          )}
+          {items.length > 0 && (
+            <div className="shop-finder-status">
+              <p aria-live="polite">{s.count(shown.length, items.length)}</p>
+              {filtered && (
+                <button type="button" onClick={resetFilters}>
+                  {s.reset}
+                </button>
+              )}
+            </div>
+          )}
+          {elsewhere.length > 0 && (
+            <div className="shop-finder-elsewhere">
+              <span>{s.elsewhere}</span>
+              {elsewhere.map(([tab, n]) => (
+                <button type="button" key={tab} onClick={() => showTab(tab)}>
+                  {s.groups[tab][0]} <span>{n}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {items.length > 0 && !shown.length ? (
+            <p className="shop-finder-empty">{s.noMatch}</p>
+          ) : items.length ? (
             <ul className="shop-item-grid">
-              {items.map((item) => {
+              {shown.map((item) => {
                 const count = quantity(item.key);
                 return (
                   <li
