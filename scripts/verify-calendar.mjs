@@ -174,9 +174,18 @@ try {
     ["Daftar sekarang →"],
   );
   assert.equal(await shown.locator('a[href*="wa.me"]').count(), 0);
-  // Wider than the section, nearly the whole screen.
+  // As wide as the section: lined up with its title and the cards below.
   const wide = await shown.boundingBox();
-  assert.ok(wide.width >= 1400, "the banner is nearly as wide as the screen");
+  const row = await page.locator(".experience-row").boundingBox();
+  const heading = await page
+    .locator("#experiences .section-heading")
+    .boundingBox();
+  assert.ok(
+    Math.abs(wide.x - row.x) <= 1 &&
+      Math.abs(wide.x + wide.width - (row.x + row.width)) <= 1,
+    "the banner lines up with the cards",
+  );
+  assert.ok(Math.abs(wide.x - heading.x) <= 1, "and with the section title");
   assert.ok(wide.height >= 340 && wide.height <= 440, "a proper banner");
   assert.ok(
     await page.evaluate(
@@ -371,7 +380,12 @@ try {
   await phone.scrollIntoViewIfNeeded();
   const small = await phone.boundingBox();
   assert.ok(small.height <= 620, "not too tall on a phone");
-  assert.ok(small.width >= 360, "nearly as wide as the phone");
+  const phoneRow = await page.locator(".experience-row").boundingBox();
+  assert.ok(
+    Math.abs(small.x - phoneRow.x) <= 1 &&
+      Math.abs(small.width - phoneRow.width) <= 1,
+    "as wide as the cards on a phone too",
+  );
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

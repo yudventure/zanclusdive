@@ -1,13 +1,11 @@
 /* Event banners above the experience cards, only while an event is on.
-   Each is a wide photo banner, wider than the section (up to 1560px): the
-   owner's photo fills it with its subject on the right, the event, its
-   facts, the price and one button on the left. */
+   Each is a photo banner as wide as the section, lined up with its title
+   and cards: the owner's photo fills it with its subject on the right, the
+   event, its facts, the price and one button on the left. */
 .event-banners {
-  --event-width: min(calc(100vw - 32px), 1560px);
   display: grid;
   gap: 16px;
-  width: var(--event-width);
-  margin: 4px 0 40px calc((100% - var(--event-width)) / 2);
+  margin: 4px 0 40px;
 }
 .event-banner {
   position: relative;
@@ -240,7 +238,6 @@
 /* Tablets and phones: the photo on top, the words below on deep blue. */
 @media (max-width: 760px) {
   .event-banners {
-    --event-width: calc(100vw - 24px);
     margin-bottom: 30px;
   }
   .event-banner {

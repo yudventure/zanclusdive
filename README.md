@@ -155,7 +155,7 @@ Uji dengan `node scripts/verify-shop-market.mjs` pada server demo yang dijalanka
 
 ## Banner event di beranda
 
-Banner promosi foto yang lebar tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner melebar melewati kolom halaman, hampir selebar layar (sampai 1560 px). Fotonya mengisi seluruh banner dan bergerak pelan. Di kirinya tampil label, tanggal, judul besar, lokasi, fakta trip, harga per orang, dan satu tombol. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
+Banner promosi foto yang lebar tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner selebar seksi lain, sejajar dengan judul dan kartu di bawahnya. Fotonya mengisi seluruh banner dan bergerak pelan. Di kirinya tampil label, tanggal, judul besar, lokasi, fakta trip, harga per orang, dan satu tombol. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
 
 **Cara mengatur.** Buka `/admin/events` → tab **Banner event**. Isi setiap banner:
 - **Foto banner**: mengisi seluruh banner, terbaik 2400 × 1200 px dengan objek utama di sisi kanan karena tulisannya di kiri. Di-upload dari PC atau HP, langsung terpasang dan tersimpan. Tanpa foto, banner memakai latar laut biru.
