@@ -153,9 +153,9 @@ try {
     "available",
   );
 
-  // A walk-in guest rents two masks, booked by the team. The form says
-  // what is left on those dates.
-  await page.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
+  // A walk-in guest rents two masks, booked by the team in the full form
+  // of Reservasi. The form says what is left on those dates.
+  await page.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
   const form = page.locator("#booking-editor");
   await form.getByLabel("Pengalaman").selectOption("shop");
   await form.getByLabel("Status").selectOption("confirmed");

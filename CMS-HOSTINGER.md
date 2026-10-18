@@ -282,7 +282,7 @@ Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyi
 
 ## Kalender reservasi
 
-Di **Kalender reservasi**, ketuk tanggal mana saja untuk membuka **Agenda** di sebelah kanan (di HP, di bawah kalender). Agenda menunjukkan siapa saja yang diving, snorkeling, trip, menyewa alat, atau berkegiatan lain pada hari itu, dengan jumlah orang, status, dan tombol WhatsApp. Tombol **+ Catat booking tanggal ini** membuka formulir singkat untuk booking dari WhatsApp atau tamu yang datang langsung. Untuk email tamu, nilai, alat sewa, dan tagihan, pakai **Formulir lengkap**. Notifikasi dan menu akun di pojok kanan atas tertutup saat mengetuk di mana saja di luarnya.
+Di **Kalender reservasi**, ketuk tanggal mana saja untuk membuka **Agenda** di sebelah kanan (di HP, di bawah kalender). Agenda menunjukkan siapa saja yang diving, snorkeling, trip, menyewa alat, atau berkegiatan lain pada hari itu, dengan jumlah orang, status, dan tombol WhatsApp. Tombol **+ Catat booking tanggal ini** membuka formulir singkat untuk booking dari WhatsApp atau tamu yang datang langsung. Untuk email tamu, nilai, alat sewa, dan tagihan, pakai **Formulir lengkap**, yang membawa isian formulir singkat. Untuk menutup tanggal, pakai **Tutup tanggal ini**. Formulir lengkap hanya muncul di bawah kalender saat diminta atau saat nama tamu diketuk, dan hilang lagi setelah disimpan atau ditutup. Halaman **Reservasi** tetap punya formulir lengkap di bawah daftarnya. Notifikasi dan menu akun di pojok kanan atas tertutup saat mengetuk di mana saja di luarnya.
 
 ## Mode developer
 

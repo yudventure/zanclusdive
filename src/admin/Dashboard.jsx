@@ -147,6 +147,7 @@ function BookingEditor({
   canSettings,
   onMailSent,
   onRefunded,
+  onClose,
 }) {
   function change(key, v) {
     setValue({
@@ -163,9 +164,9 @@ function BookingEditor({
           : "Tambah reservasi / tutup tanggal"}
       </h2>
       <p className="admin-subtle">
-        Formulir lengkap untuk hasil konfirmasi dari WhatsApp atau sumber lain,
-        dengan email tamu, nilai, alat sewa, dan tagihan. Untuk booking cepat,
-        klik tanggalnya di kalender.
+        {onClose
+          ? "Untuk email tamu, nilai, alat sewa, tagihan, atau menutup tanggal. Booking biasa cukup dicatat dari Agenda di samping kalender."
+          : "Formulir lengkap untuk hasil konfirmasi dari WhatsApp atau sumber lain, dengan email tamu, nilai, alat sewa, dan tagihan. Untuk booking cepat, klik tanggalnya di kalender."}
       </p>
       <form className="admin-form" onSubmit={onSave}>
         <fieldset className="admin-form-group">
@@ -322,14 +323,24 @@ function BookingEditor({
                 ? "Simpan perubahan"
                 : "Simpan reservasi"}
           </button>
-          {editing && (
+          {onClose ? (
             <button
               type="button"
               className="admin-button secondary"
-              onClick={onCancel}
+              onClick={onClose}
             >
-              Batal edit
+              Tutup
             </button>
+          ) : (
+            editing && (
+              <button
+                type="button"
+                className="admin-button secondary"
+                onClick={onCancel}
+              >
+                Batal edit
+              </button>
+            )
           )}
         </div>
       </form>
@@ -355,6 +366,9 @@ export default function Dashboard({ section, account, today }) {
     [month, setMonth] = useState(today.slice(0, 7)),
     [booking, setBooking] = useState(blankBooking(today)),
     [editing, setEditing] = useState(null),
+    // The calendar page shows the full booking form only when it is asked
+    // for; a booking is noted from the day's agenda.
+    [calendarForm, setCalendarForm] = useState(false),
     [editLocale, setEditLocale] = useState("id"),
     [openGroups, setOpenGroups] = useState(() => new Set([groupOf(section)])),
     [autoSave, setAutoSave] = useState(0),
@@ -427,6 +441,7 @@ export default function Dashboard({ section, account, today }) {
     setOpenGroups((open) => new Set([...open, groupOf(section)]));
     setNotification(false);
     setNotice("");
+    setCalendarForm(false);
   }, [section]);
   function mutateContent(group, key, value) {
     setContent((current) => {
@@ -533,6 +548,7 @@ export default function Dashboard({ section, account, today }) {
       await refresh();
       setBooking(blankBooking(today));
       setEditing(null);
+      closeCalendarForm();
       const mail = saved.mail;
       if (mail && !mail.ok) setError("Reservasi tersimpan. " + mail.error);
       setNotice(
@@ -555,6 +571,25 @@ export default function Dashboard({ section, account, today }) {
     setNotice(`Booking ${saved.guestName} tersimpan.`);
     return saved;
   }
+  // The full form on the calendar page: opened under the month, scrolled
+  // into view, and closed back to the month and its agenda.
+  function openCalendarForm() {
+    setCalendarForm(true);
+    setTimeout(
+      () =>
+        document
+          .getElementById("booking-editor")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      50,
+    );
+  }
+  function closeCalendarForm() {
+    if (section !== "calendar") return;
+    setCalendarForm(false);
+    document
+      .querySelector(".admin-calendar-layout")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   function editReservation(item) {
     setNotice("");
     setBooking({
@@ -564,13 +599,15 @@ export default function Dashboard({ section, account, today }) {
       billing: billingFrom(item.payment, today),
     });
     setEditing(item.id);
-    setTimeout(
-      () =>
-        document
-          .getElementById("booking-editor")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-      50,
-    );
+    if (section === "calendar") openCalendarForm();
+    else
+      setTimeout(
+        () =>
+          document
+            .getElementById("booking-editor")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        50,
+      );
   }
   async function removeReservation(item) {
     if (
@@ -587,6 +624,7 @@ export default function Dashboard({ section, account, today }) {
       if (editing === item.id) {
         setEditing(null);
         setBooking(blankBooking(today));
+        closeCalendarForm();
       }
       setNotice("Reservasi dihapus.");
     } catch (e) {
@@ -795,6 +833,15 @@ export default function Dashboard({ section, account, today }) {
         setNotice("Refund ditandai sudah dikirim dan masuk Buku kas.");
         await refresh();
       }}
+      onClose={
+        section === "calendar"
+          ? () => {
+              setEditing(null);
+              setBooking(blankBooking(today));
+              closeCalendarForm();
+            }
+          : undefined
+      }
     />
   );
   return (
@@ -1082,16 +1129,18 @@ export default function Dashboard({ section, account, today }) {
                     gear={gear}
                     onMove={moveMonth}
                     onToday={() => setMonth(today.slice(0, 7))}
-                    onPick={(date, experience) => {
+                    onPick={(date, experience, draft) => {
                       setEditing(null);
-                      setBooking(blankBooking(date, experience));
-                      document
-                        .getElementById("booking-editor")
-                        ?.scrollIntoView({ behavior: "smooth" });
+                      setBooking({
+                        ...blankBooking(date, experience),
+                        ...draft,
+                      });
+                      openCalendarForm();
                     }}
                     onEdit={editReservation}
                     onQuickSave={quickReservation}
                   />
+                  {calendarForm && editor}
                   <SchedulePaste
                     bookings={bookings}
                     content={content}
@@ -1102,7 +1151,6 @@ export default function Dashboard({ section, account, today }) {
                       setNotice(`${count} reservasi dari jadwal tersimpan.`);
                     }}
                   />
-                  {editor}
                 </>
               )}
               {section === "reservations" && (

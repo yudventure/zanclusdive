@@ -467,16 +467,32 @@ function DayAgenda({
             setAdding(false);
           }}
           onCancel={() => setAdding(false)}
-          onFull={() => onPick(date)}
+          onFull={(draft) => {
+            setAdding(false);
+            onPick(date, draft.experience, draft);
+          }}
         />
       ) : (
-        <button
-          type="button"
-          className="admin-button admin-day-add"
-          onClick={() => setAdding(true)}
-        >
-          + Catat booking tanggal ini
-        </button>
+        <div className="admin-day-actions">
+          <button
+            type="button"
+            className="admin-button admin-day-add"
+            onClick={() => setAdding(true)}
+          >
+            + Catat booking tanggal ini
+          </button>
+          <button
+            type="button"
+            className="admin-inline"
+            onClick={() =>
+              onPick(date, program !== "all" ? program : "diving", {
+                status: "closed",
+              })
+            }
+          >
+            Tutup tanggal ini
+          </button>
+        </div>
       )}
       {day.programs.map((group) => (
         <section
@@ -725,7 +741,19 @@ function QuickBooking({ date, content, program, onSave, onCancel, onFull }) {
         >
           Batal
         </button>
-        <button type="button" className="admin-inline" onClick={onFull}>
+        <button
+          type="button"
+          className="admin-inline"
+          onClick={() =>
+            onFull({
+              ...form,
+              guestName: form.guestName.trim(),
+              participants: Number(form.participants) || 1,
+              startDate: date,
+              endDate: form.endDate < date ? date : form.endDate,
+            })
+          }
+        >
           Formulir lengkap
         </button>
       </div>

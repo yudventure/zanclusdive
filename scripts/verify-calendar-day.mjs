@@ -104,8 +104,11 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await popover.count(), 0);
 
-  // The panel opens on today; a tap on another day opens that one.
+  // The panel opens on today; a tap on another day opens that one. The
+  // full form waits until it is asked for.
   const side = page.locator(".admin-day-side");
+  const form = page.locator("#booking-editor");
+  assert.equal(await form.count(), 0, "no full form under the calendar");
   assert.match(await side.textContent(), /^Agenda/);
   await toMonth();
   const cell = page.locator(`.admin-month-day[data-date="${day}"]`);
@@ -198,11 +201,45 @@ try {
       "Dari telepon",
     ],
   );
+  // The full form takes over what was typed, and closes again.
+  await side
+    .getByRole("button", { name: "+ Catat booking tanggal ini" })
+    .click();
+  await side.getByLabel("Nama tamu atau grup").fill("Bu Rina");
+  await side.getByLabel("Kegiatan").selectOption("snorkeling");
+  await side.getByLabel("Jumlah orang").fill("2");
+  await side.getByLabel("WhatsApp (opsional)").fill("081255554444");
+  await side.getByRole("button", { name: "Formulir lengkap" }).click();
+  assert.equal(await side.locator(".admin-quick-booking").count(), 0);
+  assert.equal(
+    await form.locator("h2").textContent(),
+    "Tambah reservasi / tutup tanggal",
+  );
+  assert.deepEqual(
+    [
+      await form.getByLabel("Pengalaman").inputValue(),
+      await form.getByLabel("Status").inputValue(),
+      await form.getByLabel("Tanggal mulai").inputValue(),
+      await form.getByLabel("Jumlah peserta").inputValue(),
+      await form.getByLabel("Nama tamu").inputValue(),
+      await form.getByLabel("Telepon / WhatsApp").inputValue(),
+    ],
+    ["snorkeling", "confirmed", day, "2", "Bu Rina", "081255554444"],
+  );
+  shots &&
+    (await form.screenshot({ path: `${shots}/95-formulir-lengkap.png` }));
+  await form.getByRole("button", { name: "Tutup", exact: true }).click();
+  assert.equal(await form.count(), 0);
+  // Closing a date opens the form with the status Ditutup.
+  await side.getByRole("button", { name: "Tutup tanggal ini" }).click();
+  assert.equal(await form.getByLabel("Status").inputValue(), "closed");
+  await form.getByRole("button", { name: "Tutup", exact: true }).click();
+  assert.equal(await form.count(), 0);
+
   // A tap on a person opens the reservation in the full form.
   await group("Snorkeling")
     .getByRole("button", { name: "Keluarga Budi" })
     .click();
-  const form = page.locator("#booking-editor");
   assert.equal(
     await form.locator("h2").textContent(),
     "Ubah reservasi Keluarga Budi",
@@ -214,6 +251,17 @@ try {
     "Nilai dan catatan",
     "Pembayaran & email tamu",
   ]);
+  // Saving closes it.
+  await form.getByLabel("Jumlah peserta").fill("5");
+  await form.getByRole("button", { name: "Simpan perubahan" }).click();
+  await page
+    .locator(".admin-success", { hasText: "Reservasi tersimpan." })
+    .waitFor();
+  assert.equal(await form.count(), 0);
+  assert.match(
+    await group("Snorkeling").textContent(),
+    /Keluarga Budi.*5 orang/,
+  );
 
   // Phones: the panel sits under the month and comes into view.
   await page.setViewportSize({ width: 390, height: 844 });

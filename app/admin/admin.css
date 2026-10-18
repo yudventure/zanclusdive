@@ -3453,9 +3453,14 @@ strong.admin-overdue {
 .admin-day-head p {
   margin: 0;
 }
+.admin-day-actions {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 16px 0 4px;
+}
 .admin-day-add {
   width: 100%;
-  margin: 16px 0 4px;
 }
 .admin-day-group {
   --kind: #1f6fa8;

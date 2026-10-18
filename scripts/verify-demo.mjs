@@ -237,11 +237,21 @@ try {
     month,
   );
   await page.getByRole("button", { name: "Bulan ini", exact: true }).click();
+  // The calendar has no full form until it is asked for: the booking is
+  // started in the agenda and finished in the full form for its value.
+  assert.equal(await page.locator("#booking-editor").count(), 0);
   await page
-    .getByLabel("Nama tamu", { exact: true })
-    .fill("Tamu Uji Demo Baru");
+    .getByRole("button", { name: "+ Catat booking tanggal ini" })
+    .click();
+  await page.getByLabel("Nama tamu atau grup").fill("Tamu Uji Demo Baru");
+  await page.getByLabel("Jumlah orang").fill("2");
+  await page.getByRole("button", { name: "Formulir lengkap" }).click();
+  assert.equal(
+    await page.getByLabel("Nama tamu", { exact: true }).inputValue(),
+    "Tamu Uji Demo Baru",
+  );
+  assert.equal(await page.getByLabel("Jumlah peserta").inputValue(), "2");
   await page.getByLabel("Status", { exact: true }).selectOption("confirmed");
-  await page.getByLabel("Jumlah peserta").fill("2");
   await page.getByLabel("Nilai reservasi (Rp)").fill("1500000");
   await page
     .getByRole("button", { name: "Simpan reservasi", exact: true })
