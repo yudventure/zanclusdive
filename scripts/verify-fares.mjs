@@ -288,7 +288,7 @@ try {
   assert.equal(booking.payment.refund.status, "requested");
   assert.equal(booking.payment.refund.amount, 1200000);
   // The team marks the refund as sent; it goes out in the cash book.
-  await a.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
+  await a.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
   const row = a.locator("tr", { hasText: "Tamu Flexi" });
   assert.match(await row.textContent(), /Tarif Flexi[\s\S]*Refund diminta/);
   await row.getByRole("button", { name: "Edit" }).click();

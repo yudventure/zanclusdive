@@ -202,7 +202,7 @@ try {
   await hp.screenshot({ path: shots + "/admin-role-hrd.png" });
   await hp.goto(base + "/admin/employees", { waitUntil: "networkidle" });
   await hp.getByRole("heading", { name: "Pegawai" }).first().waitFor();
-  await hp.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
+  await hp.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
   await hp.getByText("Bagian ini tidak tersedia untuk peran HRD").waitFor();
   const hrdState = await (await state(hrd)).json();
   assert.deepEqual(
@@ -296,7 +296,7 @@ try {
   await pp.getByRole("button", { name: "PR & mitra", exact: true }).click();
   const prLinks = await links(pp);
   for (const name of [
-    "Reservasi",
+    "Kalender reservasi",
     "Agen & kalender",
     "Kalender konten",
     "Kalender kegiatan",

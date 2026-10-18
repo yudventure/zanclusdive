@@ -154,8 +154,12 @@ try {
   );
 
   // A walk-in guest rents two masks, booked by the team in the full form
-  // of Reservasi. The form says what is left on those dates.
-  await page.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
+  // opened from the agenda. The form says what is left on those dates.
+  await page.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "+ Catat booking tanggal ini" })
+    .click();
+  await page.getByRole("button", { name: "Formulir lengkap" }).click();
   const form = page.locator("#booking-editor");
   await form.getByLabel("Pengalaman").selectOption("shop");
   await form.getByLabel("Status").selectOption("confirmed");

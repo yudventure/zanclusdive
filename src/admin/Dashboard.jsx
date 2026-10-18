@@ -378,8 +378,7 @@ export default function Dashboard({ section, account, today }) {
   const bellRef = useOutsideClose(notification, () => setNotification(false));
   const ownerRef = useOutsideClose(ownerMenu, () => setOwnerMenu(false));
   useEffect(() => {
-    if (!can("bookings") || !["calendar", "reservations"].includes(section))
-      return;
+    if (!can("bookings") || section !== "calendar") return;
     request("/api/admin/rental-gear")
       .then((result) => setGear(result.gear))
       .catch(() => setGear([]));
@@ -435,6 +434,26 @@ export default function Dashboard({ section, account, today }) {
   useEffect(() => {
     refresh();
   }, []);
+  // Links into the calendar from other pages: ?ubah=<id> opens that
+  // reservation in the full form, #daftar-reservasi goes to the list.
+  const loaded = Boolean(data);
+  useEffect(() => {
+    if (section !== "calendar" || !loaded) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("ubah");
+    const found = id && data.bookings.find((b) => b.id === id);
+    if (found) {
+      editReservation(found);
+      window.history.replaceState(null, "", "/admin/calendar");
+    } else if (url.hash === "#daftar-reservasi")
+      setTimeout(
+        () =>
+          document
+            .getElementById("daftar-reservasi")
+            ?.scrollIntoView({ block: "start" }),
+        50,
+      );
+  }, [section, loaded]);
   useEffect(() => {
     setMobileMenu(false);
     setOwnerMenu(false);
@@ -599,15 +618,7 @@ export default function Dashboard({ section, account, today }) {
       billing: billingFrom(item.payment, today),
     });
     setEditing(item.id);
-    if (section === "calendar") openCalendarForm();
-    else
-      setTimeout(
-        () =>
-          document
-            .getElementById("booking-editor")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-        50,
-      );
+    openCalendarForm();
   }
   async function removeReservation(item) {
     if (
@@ -891,8 +902,13 @@ export default function Dashboard({ section, account, today }) {
                       pending.slice(0, 5).map((b) => (
                         <Link
                           key={b.id}
-                          href="/admin/reservations"
-                          onClick={() => setNotification(false)}
+                          href={"/admin/calendar?ubah=" + b.id}
+                          onClick={(event) => {
+                            setNotification(false);
+                            if (section !== "calendar") return;
+                            event.preventDefault();
+                            editReservation(b);
+                          }}
                         >
                           {b.guestName} · {dateLabel(b.startDate)}
                         </Link>
@@ -1141,6 +1157,39 @@ export default function Dashboard({ section, account, today }) {
                     onQuickSave={quickReservation}
                   />
                   {calendarForm && editor}
+                  <section
+                    className="admin-card admin-booking-list"
+                    id="daftar-reservasi"
+                  >
+                    <h2>Daftar reservasi</h2>
+                    <p className="admin-subtle">
+                      Semua reservasi dari WhatsApp, website, agen, dan
+                      pembayaran online. Cari nama, telepon, atau kegiatan, dan
+                      saring statusnya. Edit membuka formulir lengkap di bawah
+                      kalender.
+                    </p>
+                    <div className="admin-toolbar">
+                      <input
+                        aria-label="Cari reservasi"
+                        placeholder="Cari nama, telepon, pengalaman…"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                      />
+                      <select
+                        aria-label="Filter status"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
+                        <option value="all">Semua status</option>
+                        {Object.entries(statuses).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {bookingTable(filtered)}
+                  </section>
                   <SchedulePaste
                     bookings={bookings}
                     content={content}
@@ -1151,34 +1200,6 @@ export default function Dashboard({ section, account, today }) {
                       setNotice(`${count} reservasi dari jadwal tersimpan.`);
                     }}
                   />
-                </>
-              )}
-              {section === "reservations" && (
-                <>
-                  <div className="admin-toolbar">
-                    <input
-                      aria-label="Cari reservasi"
-                      placeholder="Cari nama, telepon, pengalaman…"
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                    />
-                    <select
-                      aria-label="Filter status"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                      <option value="all">Semua status</option>
-                      {Object.entries(statuses).map(([k, v]) => (
-                        <option key={k} value={k}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <section className="admin-card">
-                    {bookingTable(filtered)}
-                  </section>
-                  {editor}
                 </>
               )}
               {section === "customers" && (

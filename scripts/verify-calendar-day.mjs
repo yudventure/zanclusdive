@@ -263,6 +263,38 @@ try {
     /Keluarga Budi.*5 orang/,
   );
 
+  // The list of every reservation sits under the calendar; Edit opens the
+  // same full form, and the bell opens a reservation waiting for an answer.
+  const list = page.locator("#daftar-reservasi");
+  await list.getByLabel("Cari reservasi").fill("Rombongan Sorong");
+  await list.getByLabel("Filter status").selectOption("pending");
+  assert.equal(await list.locator("tbody tr").count(), 1);
+  await list.getByRole("button", { name: "Edit" }).click();
+  assert.equal(
+    await form.locator("h2").textContent(),
+    "Ubah reservasi Rombongan Sorong",
+  );
+  await form.getByRole("button", { name: "Tutup", exact: true }).click();
+  await page.goto(base + "/admin/customers", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Notifikasi reservasi" }).click();
+  await page
+    .locator(".admin-popover")
+    .getByRole("link", { name: /Rombongan Sorong/ })
+    .click();
+  await page.waitForURL(/\/admin\/calendar$/);
+  await form.waitFor();
+  assert.equal(
+    await form.locator("h2").textContent(),
+    "Ubah reservasi Rombongan Sorong",
+  );
+  assert.ok(
+    !(await page
+      .locator(".admin-sidebar")
+      .getByRole("link", { name: "Reservasi", exact: true })
+      .count()),
+    "no Reservasi menu",
+  );
+
   // Phones: the panel sits under the month and comes into view.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/admin/calendar", { waitUntil: "networkidle" });

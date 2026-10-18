@@ -145,10 +145,10 @@ export default function CalendarEditor({
             bersamaan. Banner selebar hampir seluruh layar, dengan{" "}
             <b>Foto banner</b> sebagai latarnya. Seluruh banner bisa diklik.
             Harga ditulis dalam rupiah per orang. Banner punya satu tombol yang
-            membuka formulir pendaftaran event. Pendaftaran masuk ke Reservasi
-            sebagai Trip laut yang menunggu konfirmasi. Bila link diisi,
-            tombolnya membuka link itu. Kolom English yang kosong memakai teks
-            Indonesia.
+            membuka formulir pendaftaran event. Pendaftaran masuk ke Kalender
+            reservasi sebagai Trip laut yang menunggu konfirmasi. Bila link
+            diisi, tombolnya membuka link itu. Kolom English yang kosong memakai
+            teks Indonesia.
           </p>
         ) : (
           <p className="admin-subtle">

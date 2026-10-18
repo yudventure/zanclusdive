@@ -282,7 +282,7 @@ export default function Overview({
       label: "Menunggu konfirmasi",
       value: pending.length,
       note: pending.length ? "Balas lewat WhatsApp" : "Semua sudah dijawab",
-      href: "/admin/reservations",
+      href: "/admin/calendar#daftar-reservasi",
       tone: pending.length ? "warn" : "ok",
     },
     {

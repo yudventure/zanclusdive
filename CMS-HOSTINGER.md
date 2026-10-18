@@ -138,7 +138,7 @@ Admin dibagi per kategori, dan setiap akun punya satu peran yang menentukan menu
 | **HRD** | Urusan pegawai | **HRD**: Pegawai, Absensi, Slip gaji (lihat Modul HRD) |
 | **Finance** | Keuangan | **Keuangan**: Pembayaran online, Buku kas, Laba rugi & pajak (lihat Modul Keuangan) |
 | **Gudang** | Stok | **Gudang**: Barang & stok, Keluar masuk (lihat Modul Gudang) |
-| **PR** | Media sosial dan website | Kalender reservasi, Reservasi, Tamu, **Situs web**, **PR & mitra** (Kalender konten, Agen & kalender) |
+| **PR** | Media sosial dan website | Kalender reservasi, Tamu, **Situs web**, **PR & mitra** (Kalender konten, Agen & kalender) |
 
 Setiap peran juga bisa mengganti password sendiri lewat **Ubah password**.
 
@@ -271,7 +271,7 @@ Pengaturan ada di **Keuangan → Pembayaran online → Email tamu & invoice** (s
 - **Pratinjau** dan **Kirim ke email saya** menampilkan contoh setiap email dengan pengaturan yang sudah disimpan.
 - Sakelar di kanan atas mematikan email otomatis dari website dan Midtrans.
 
-Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Reservasi**. Isi **Email tamu** dan **Bahasa email**, lalu pilih **Pembayaran**:
+Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Kalender reservasi**, lewat Agenda lalu **Formulir lengkap**, atau lewat **Edit** di **Daftar reservasi** untuk reservasi yang sudah ada. Isi **Email tamu** dan **Bahasa email**, lalu pilih **Pembayaran**:
 
 - **Tanpa tagihan**: hanya dicatat.
 - **Tagih lewat transfer bank**: tamu menerima rekening dan batas bayar. Setelah bukti transfer masuk, ubah ke **Sudah lunas**.
@@ -282,7 +282,7 @@ Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyi
 
 ## Kalender reservasi
 
-Di **Kalender reservasi**, ketuk tanggal mana saja untuk membuka **Agenda** di sebelah kanan (di HP, di bawah kalender). Agenda menunjukkan siapa saja yang diving, snorkeling, trip, menyewa alat, atau berkegiatan lain pada hari itu, dengan jumlah orang, status, dan tombol WhatsApp. Tombol **+ Catat booking tanggal ini** membuka formulir singkat untuk booking dari WhatsApp atau tamu yang datang langsung. Untuk email tamu, nilai, alat sewa, dan tagihan, pakai **Formulir lengkap**, yang membawa isian formulir singkat. Untuk menutup tanggal, pakai **Tutup tanggal ini**. Formulir lengkap hanya muncul di bawah kalender saat diminta atau saat nama tamu diketuk, dan hilang lagi setelah disimpan atau ditutup. Halaman **Reservasi** tetap punya formulir lengkap di bawah daftarnya. Notifikasi dan menu akun di pojok kanan atas tertutup saat mengetuk di mana saja di luarnya.
+Di **Kalender reservasi**, ketuk tanggal mana saja untuk membuka **Agenda** di sebelah kanan (di HP, di bawah kalender). Agenda menunjukkan siapa saja yang diving, snorkeling, trip, menyewa alat, atau berkegiatan lain pada hari itu, dengan jumlah orang, status, dan tombol WhatsApp. Tombol **+ Catat booking tanggal ini** membuka formulir singkat untuk booking dari WhatsApp atau tamu yang datang langsung. Untuk email tamu, nilai, alat sewa, dan tagihan, pakai **Formulir lengkap**, yang membawa isian formulir singkat. Untuk menutup tanggal, pakai **Tutup tanggal ini**. Formulir lengkap hanya muncul di bawah kalender saat diminta atau saat nama tamu diketuk, dan hilang lagi setelah disimpan atau ditutup. Halaman Reservasi digabung ke sini. **Daftar reservasi** dengan pencarian, filter status, **Edit**, dan **Hapus** ada di bawah kalender, dan alamat lama `/admin/reservations` membuka daftar itu. Reservasi di lonceng notifikasi langsung terbuka di formulir lengkap. Notifikasi dan menu akun di pojok kanan atas tertutup saat mengetuk di mana saja di luarnya.
 
 ## Mode developer
 

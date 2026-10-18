@@ -249,10 +249,14 @@ try {
   );
   assert.equal((await byName("Tamu Telat")).status, "cancelled");
 
-  // WhatsApp booking entered in the admin, billed by bank transfer.
-  await a.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
+  // WhatsApp booking entered in the admin, billed by bank transfer: the
+  // full form opens from the calendar's agenda.
+  await a.goto(base + "/admin/calendar", { waitUntil: "networkidle" });
+  await a.getByRole("button", { name: "+ Catat booking tanggal ini" }).click();
+  await a.getByRole("button", { name: "Formulir lengkap" }).click();
   const form = a.locator("#booking-editor");
   await form.getByLabel("Pengalaman").selectOption("snorkeling");
+  await form.getByLabel("Status").selectOption("pending");
   await form.getByLabel("Tanggal mulai").fill(later(12));
   await form.getByLabel("Nama tamu").fill("Sarah Lee");
   await form.getByLabel("Telepon / WhatsApp").fill("+61 412 345 678");
@@ -331,7 +335,7 @@ try {
     path: shots + "/admin-booking-mail.png",
     fullPage: true,
   });
-  await form.getByRole("button", { name: "Batal edit" }).click();
+  await form.getByRole("button", { name: "Tutup", exact: true }).click();
 
   // Billed with a Midtrans link from the admin: paying sends the invoice.
   mark = smtp.messages.length;
@@ -453,7 +457,7 @@ try {
   assert.equal((await byName("Tamu Senyap")).mails, undefined);
 
   // Phones.
-  for (const path of ["/admin/payments", "/admin/reservations"]) {
+  for (const path of ["/admin/payments", "/admin/calendar"]) {
     await a.setViewportSize({ width: 390, height: 844 });
     await a.goto(base + path, { waitUntil: "networkidle" });
     assert.ok(

@@ -268,9 +268,11 @@ try {
   assert.match((await download).suggestedFilename(), /^zanclus-rencana-/);
   await page.locator("#booking-dialog .close-modal").click();
 
+  // The old Reservasi address leads to the list under the calendar.
   await page.goto(base + "/admin/reservations", { waitUntil: "networkidle" });
+  assert.equal(new URL(page.url()).pathname, "/admin/calendar");
   await page
-    .locator(".admin-table")
+    .locator("#daftar-reservasi .admin-table")
     .getByText(reference, { exact: true })
     .waitFor();
   await page.screenshot({

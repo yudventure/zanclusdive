@@ -33,13 +33,15 @@ test("sections belong to a known area; the shared ones are open to all", () => {
   }
   assert.ok(sectionAllowed("superadmin", "users"));
   assert.ok(!sectionAllowed("pr", "users"));
-  assert.ok(!sectionAllowed("hrd", "reservations"));
+  assert.ok(!sectionAllowed("hrd", "calendar"));
   assert.ok(sectionAllowed("hrd", "payroll"));
   assert.ok(!sectionAllowed("gudang", "payroll"));
   assert.ok(sectionAllowed("gudang", "movements"));
   assert.ok(sectionAllowed("finance", "reports"));
   assert.ok(!sectionAllowed("finance", "stock"));
-  assert.ok(sectionAllowed("pr", "reservations"));
+  assert.ok(sectionAllowed("pr", "calendar"));
+  // Reservasi is the list under the reservation calendar now.
+  assert.ok(!sectionAllowed("pr", "reservations"));
   assert.ok(sectionAllowed("finance", "payments"));
   assert.ok(!sectionAllowed("pr", "payments"));
   assert.ok(!sectionAllowed("pr", "missing"));
@@ -65,12 +67,7 @@ test("the menu shows each role its own groups only", () => {
   assert.deepEqual(finance[1].items, ["payments", "cashbook", "reports"]);
   assert.deepEqual(finance[2].items, ["security"]);
   const pr = visibleMenu("pr");
-  assert.deepEqual(pr[0].items, [
-    "overview",
-    "calendar",
-    "reservations",
-    "customers",
-  ]);
+  assert.deepEqual(pr[0].items, ["overview", "calendar", "customers"]);
   assert.equal(pr[1].key, "website");
   assert.equal(pr[1].items.length, 12);
   assert.equal(pr[1].items.at(-1), "seo");

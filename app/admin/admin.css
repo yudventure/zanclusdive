@@ -3385,6 +3385,7 @@ strong.admin-overdue {
   grid-template-columns: minmax(0, 1fr) minmax(300px, 370px);
   gap: 22px;
   align-items: start;
+  margin-bottom: 24px;
 }
 .admin-calendar-layout .admin-month-card {
   min-width: 0;

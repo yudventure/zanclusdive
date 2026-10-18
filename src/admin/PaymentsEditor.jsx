@@ -327,7 +327,7 @@ export default function PaymentsEditor({
         ) : (
           <p className="admin-subtle">
             Belum ada pembayaran online. Pembayaran yang lunas juga tampil di{" "}
-            <Link href="/admin/reservations">Reservasi</Link> dan kalender.
+            <Link href="/admin/calendar">Kalender reservasi</Link>.
           </p>
         )}
       </section>

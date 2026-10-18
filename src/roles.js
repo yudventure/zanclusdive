@@ -54,13 +54,7 @@ export const sections = {
     title: "Kalender reservasi",
     area: "bookings",
     intro:
-      "Reservasi, tanggal tutup, kalender agen, dan alat sewa dalam satu bulan. Klik tanggalnya untuk melihat rinciannya, atau buka Sewa alat untuk melihat sisa alat per hari.",
-  },
-  reservations: {
-    title: "Reservasi",
-    area: "bookings",
-    intro:
-      "Catat dan ubah reservasi dari WhatsApp, website, dan pembayaran online.",
+      "Reservasi, tanggal tutup, kalender agen, dan alat sewa dalam satu bulan. Klik tanggalnya untuk melihat rinciannya, atau buka Sewa alat untuk melihat sisa alat per hari. Daftar semua reservasi ada di bawah kalender.",
   },
   customers: {
     title: "Tamu",
@@ -212,7 +206,7 @@ export const sectionAllowed = (role, key) =>
 // group without one is a run of top-level links (the daily desk, and the
 // users page at the end).
 export const menuGroups = [
-  { key: "desk", items: ["overview", "calendar", "reservations", "customers"] },
+  { key: "desk", items: ["overview", "calendar", "customers"] },
   {
     key: "website",
     title: "Situs web",

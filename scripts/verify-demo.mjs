@@ -318,7 +318,9 @@ try {
     ),
   );
   await page.getByRole("button", { name: "Menu admin", exact: true }).click();
-  await page.getByRole("link", { name: "Reservasi", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Kalender reservasi", exact: true })
+    .click();
   await page.getByLabel("Cari reservasi").fill("Tamu Demo");
   await page.screenshot({ path: "artifacts/demo-mobile.png", fullPage: true });
   const finalState = await state();

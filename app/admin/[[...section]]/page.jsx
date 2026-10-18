@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { currentAdmin, demoLoginEnabled } from "../../../src/server/auth.js";
 import { configurationIssues } from "../../../src/cms-config.js";
 import { isDemo } from "../../../src/cms-mode.js";
@@ -15,6 +15,9 @@ export const metadata = {
 export default async function AdminPage({ params }) {
   const { section } = await params;
   const active = section?.[0] || "overview";
+  // Reservasi is now the list under the reservation calendar.
+  if (active === "reservations" && section.length === 1)
+    redirect("/admin/calendar#daftar-reservasi");
   if (section?.length > 1 || !sectionKeys.includes(active)) notFound();
   const admin = await currentAdmin();
   if (!admin) {
