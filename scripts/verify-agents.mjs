@@ -270,7 +270,7 @@ try {
   // The day panel lists it too.
   assert.match(
     await a.locator(".admin-day-side").textContent(),
-    /Papua Travel[\s\S]*Grup Budi 8 orang[\s\S]*Agen/,
+    /Agen & OTA[\s\S]*Papua Travel[\s\S]*Agen[\s\S]*Grup Budi 8 orang/,
   );
   if (process.env.SHOT_DIR)
     await a.locator(".admin-month").screenshot({

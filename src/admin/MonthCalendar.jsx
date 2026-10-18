@@ -538,8 +538,9 @@ function DayAgenda({
                 <strong className="admin-day-name">{agent.name}</strong>
                 <span className="admin-status agent">Agen</span>
                 <span className="admin-day-detail">
-                  {event.summary}, {shortDate(event.start)} sampai{" "}
-                  {shortDate(event.end)}
+                  {event.summary}, {shortDate(event.start)}
+                  {event.end !== event.start &&
+                    ` sampai ${shortDate(event.end)}`}
                 </span>
               </li>
             ))}
