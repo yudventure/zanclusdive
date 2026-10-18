@@ -282,6 +282,17 @@ Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan
 
 API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan bukti pengajuan tanpa identitas tamu. Pengiriman ulang memakai ID permintaan yang sama untuk mencegah duplikasi. Formulir membatasi peserta, memvalidasi nomor kontak dan tanggal di server, serta membatasi percobaan pengajuan. Di mode demo data tersimpan pada penyimpanan demo yang sama dengan CMS (gunakan data contoh); di mode MySQL data masuk ke tabel CMS yang sudah ada. Tidak perlu environment variable tambahan atau mengimpor ulang SQL.
 
+### Tempel jadwal dari WhatsApp
+
+Di **Kalender reservasi**, panel **Tempel jadwal** mengubah jadwal yang ditempel dari WhatsApp atau catatan menjadi reservasi, satu trip per baris (`src/schedule-paste.js`, `src/admin/SchedulePaste.jsx`). Contoh yang terbaca: `29 Okt sd 01 Nov (12 Divers)`, `15-19 Nov (2 Divers)`, `30 nov - 05 des (2 Divers) Keluarga Budi`, `3 Nov s/d 5 Nov 2026 4 pax`, `12 November (5 divers)`.
+
+- **Tanggal.** Nama bulan Indonesia atau Inggris, lengkap atau singkat (Okt, Agu, Des, Oct, Dec). Pemisah sd, s/d, s.d., sampai, hingga, to, atau tanda hubung. Tanggal selesai ikut dihitung sebagai hari trip. Tanpa tahun, dipakai tahun ini, kecuali tanggalnya sudah lewat lebih dari sebulan (berarti tahun depan). 30 Des sd 3 Jan menyeberang ke tahun berikutnya. Kalau tanggal selesai lebih awal dari tanggal mulai di bulan yang sama (27 Des sd 01 Des), dibaca sampai bulan berikutnya dan diberi peringatan untuk diperiksa.
+- **Peserta dan nama.** Angka sebelum divers, penyelam, pax, orang, tamu, atau peserta menjadi jumlah peserta (1–100). Sisa teks menjadi nama grup, atau "Grup 12 penyelam" kalau kosong. Kata snorkel, trip atau pulau, dan kursus atau open water memilih pengalamannya, selain itu Diving.
+- **Periksa dulu.** Setiap baris tampil dengan tanggal, lama hari, dan isian Mulai, Selesai, Pengalaman, Peserta, dan Nama grup yang bisa diubah, plus centang untuk melewatinya. Status (bawaan Dikonfirmasi) dan sumber (bawaan WhatsApp) berlaku untuk semua. Baris yang tidak terbaca ditandai dan dilewati.
+- **Simpan sekaligus.** **Simpan N reservasi** menyimpan semuanya dengan catatan "Dari jadwal yang ditempel." dan baris aslinya, tanpa email ke tamu. Trip yang tanggal dan jumlah pesertanya sudah ada di kalender tidak dicentang, jadi menempel dua kali tidak menggandakan. Reservasi Dikonfirmasi langsung memakai kuota harian di halaman aktivitas.
+
+Uji dengan `node scripts/verify-schedule-paste.mjs` pada server demo.
+
 Pengujian alur booking: `BASE_URL=http://127.0.0.1:3202 node scripts/verify-booking.mjs`. Jalankan hanya pada server lokal dengan data uji; mode MySQL memerlukan database khusus berakhiran `_test`.
 
 ## Pembayaran online (Midtrans)

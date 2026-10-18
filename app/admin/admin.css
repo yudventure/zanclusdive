@@ -3172,7 +3172,10 @@ strong.admin-overdue {
 }
 .admin-gear-line {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(90px, 120px) minmax(0, 1.4fr) auto;
+  grid-template-columns: minmax(0, 2fr) minmax(90px, 120px) minmax(
+      0,
+      1.4fr
+    ) auto;
   gap: 10px;
   align-items: end;
 }
@@ -3275,4 +3278,98 @@ strong.admin-overdue {
   border: 1px solid #d6e3ec;
   border-radius: 16px;
   background: #fff;
+}
+/* Kalender reservasi: a schedule pasted from WhatsApp, read into
+   reservations and checked line by line before saving. */
+.admin-paste {
+  display: grid;
+  gap: 14px;
+}
+.admin-paste > h2,
+.admin-paste > p {
+  margin: 0;
+}
+.admin-paste textarea {
+  width: 100%;
+  min-height: 140px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+.admin-paste .admin-form-grid {
+  margin: 0;
+}
+.admin-paste-rows {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-paste-rows li {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f4f8fa;
+}
+.admin-paste-rows li.is-off {
+  opacity: 0.6;
+}
+.admin-paste-rows li.is-error {
+  background: #fdf1ee;
+  color: #8a3b2b;
+}
+.admin-paste-rows li > small,
+.admin-paste-rows li.is-error small {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-paste-rows .is-warn {
+  color: #9a5b12;
+}
+.admin-paste-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+.admin-paste-check input {
+  margin-top: 3px;
+  accent-color: #254961;
+}
+.admin-paste-check span {
+  display: grid;
+  gap: 2px;
+}
+.admin-paste-check strong {
+  font-size: 14px;
+  color: #254961;
+}
+.admin-paste-check small {
+  font-size: 12px;
+  color: #718394;
+}
+.admin-paste-fields {
+  display: grid;
+  grid-template-columns:
+    minmax(130px, 1fr) minmax(130px, 1fr) minmax(140px, 1.2fr)
+    minmax(80px, 0.6fr) minmax(160px, 1.6fr);
+  gap: 10px;
+}
+.admin-paste-fields .admin-field {
+  margin: 0;
+}
+.admin-paste-fields label {
+  font-size: 11px;
+}
+.admin-paste > .admin-button {
+  justify-self: start;
+}
+@media (max-width: 900px) {
+  .admin-paste-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-paste-fields .admin-field:last-child {
+    grid-column: 1 / -1;
+  }
 }

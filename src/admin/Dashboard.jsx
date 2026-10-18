@@ -41,6 +41,7 @@ import MovementsEditor from "./inventory/MovementsEditor.jsx";
 import SocialEditor from "./social/SocialEditor.jsx";
 import MonthCalendar from "./MonthCalendar.jsx";
 import BookingGear from "./BookingGear.jsx";
+import SchedulePaste from "./SchedulePaste.jsx";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
 import PayrollEditor from "./hr/PayrollEditor.jsx";
@@ -1052,6 +1053,16 @@ export default function Dashboard({ section, account, today }) {
                         ?.scrollIntoView({ behavior: "smooth" });
                     }}
                     onEdit={editReservation}
+                  />
+                  <SchedulePaste
+                    bookings={bookings}
+                    content={content}
+                    today={today}
+                    request={request}
+                    onSaved={async (count) => {
+                      await refresh();
+                      setNotice(`${count} reservasi dari jadwal tersimpan.`);
+                    }}
                   />
                   {editor}
                 </>
