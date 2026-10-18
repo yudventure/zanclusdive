@@ -3,7 +3,7 @@
   background: #e8f4f8;
   color: #244c68;
   border-bottom: 1px solid #d6e3ec;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-shop-layout {
   display: grid;
@@ -42,12 +42,12 @@
   min-width: 0;
 }
 .admin-shop-item strong {
-  font-size: 12px;
+  font-size: 14px;
   display: block;
   overflow-wrap: anywhere;
 }
 .admin-shop-item small {
-  font-size: 10px;
+  font-size: 12px;
   color: #718394;
   margin-top: 6px;
   display: block;
@@ -88,11 +88,11 @@
   box-shadow: 0 5px 18px #25496110;
 }
 .admin-shop-save p {
-  font-size: 11px;
+  font-size: 13px;
   color: #718394;
 }
 .admin-shop-price-preview {
-  font-size: 12px;
+  font-size: 14px;
   padding: 15px 0;
 }
 @media (max-width: 1100px) {
@@ -150,7 +150,7 @@
 .admin-db-diagnostic pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.6;
   margin: 12px 0;
 }
@@ -162,7 +162,7 @@
   font-weight: 600;
 }
 .admin-db-password-test p {
-  font-size: 12px;
+  font-size: 14px;
   margin: 12px 0;
 }
 .admin-root {
@@ -172,7 +172,7 @@
   background: #fff;
   color: #254961;
   font:
-    14px Inter,
+    16px Inter,
     Arial,
     sans-serif;
   line-height: 1.5;
@@ -192,7 +192,7 @@
   margin-bottom: 16px;
 }
 .admin-root h3 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
 }
 .admin-root button,
@@ -261,7 +261,7 @@
 .admin-logo > span {
   border-left: 1px solid #dce7ee;
   padding-left: 18px;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 2px;
   color: #3f7b93;
 }
@@ -281,7 +281,7 @@
   min-height: 44px;
   border: 1px solid transparent;
   border-radius: 24px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s;
@@ -321,7 +321,7 @@
   background: #e4826a;
   border-radius: 50%;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   min-width: 20px;
   height: 20px;
   display: grid;
@@ -364,7 +364,7 @@
 .admin-popover p,
 .admin-popover a {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   overflow-wrap: anywhere;
   margin: 10px 0;
 }
@@ -382,7 +382,7 @@
   align-self: start;
 }
 .admin-eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 2px;
   color: #3a7894;
@@ -421,7 +421,7 @@
   background: #f5f9fb;
   border-radius: 14px;
   padding: 18px;
-  font-size: 11px;
+  font-size: 13px;
   color: #718394;
 }
 .admin-sidebar-note strong {
@@ -466,7 +466,7 @@
 }
 .admin-subtle {
   color: #718394;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
   margin: 0 0 20px;
 }
@@ -493,7 +493,7 @@
   text-align: left;
 }
 .admin-table th {
-  font-size: 11px;
+  font-size: 13px;
   color: #7990a1;
   font-weight: 600;
   padding: 12px;
@@ -503,13 +503,13 @@
 .admin-table td {
   padding: 16px 12px;
   border-bottom: 1px solid #eef3f6;
-  font-size: 12px;
+  font-size: 14px;
   vertical-align: middle;
   white-space: nowrap;
 }
 .admin-table td small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: #8294a2;
   margin-top: 3px;
 }
@@ -529,7 +529,7 @@
   padding: 5px 9px;
   display: inline-block;
   border-radius: 7px;
-  font-size: 10px;
+  font-size: 12px;
   background: #244c68;
   color: white;
   white-space: nowrap;
@@ -563,7 +563,7 @@
 .admin-field {
   display: grid;
   gap: 7px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: #3b617c;
   min-width: 0;
@@ -597,7 +597,7 @@
   background: linear-gradient(150deg, #fff, #f7fbfd);
 }
 .admin-stat > span {
-  font-size: 11px;
+  font-size: 13px;
   color: #718394;
 }
 .admin-stat > strong {
@@ -611,13 +611,13 @@
 }
 .admin-stat small,
 .admin-stat a {
-  font-size: 10px;
+  font-size: 12px;
   color: #7893a5;
 }
 .admin-inline {
   background: transparent;
   color: #3c7b96;
-  font-size: 12px;
+  font-size: 14px;
   padding: 6px;
   cursor: pointer;
 }
@@ -631,7 +631,7 @@
   padding: 28px 12px;
   text-align: center;
   color: #8295a2;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-booking-summary {
   display: flex;
@@ -644,13 +644,13 @@
   width: 100%;
   padding: 15px 0;
   color: #244c68;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 .admin-booking-summary > span:not(.admin-status),
 .admin-booking-summary > small {
   color: #7890a1;
-  font-size: 11px;
+  font-size: 13px;
 }
 .admin-booking-summary .admin-status {
   align-self: start;
@@ -661,7 +661,7 @@
   padding: 15px 18px;
   border-radius: 12px;
   margin: 0 0 20px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
@@ -679,7 +679,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .admin-image-grid {
   display: grid;
@@ -728,7 +728,7 @@
 .admin-media-grid small,
 .admin-media-grid code {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   overflow-wrap: anywhere;
   margin: 6px 0;
 }
@@ -779,7 +779,7 @@
   max-width: 460px;
 }
 .admin-login-kicker {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 2.4px;
   color: #bef4a5;
 }
@@ -793,7 +793,7 @@
   color: white;
 }
 .admin-login-message > p:not(.admin-login-kicker) {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.7;
   color: #d5e6ea;
 }
@@ -810,11 +810,11 @@
   border: 1px solid #ffffff40;
   border-radius: 999px;
   background: #ffffff14;
-  font-size: 12px;
+  font-size: 14px;
   backdrop-filter: blur(6px);
 }
 .admin-login-place {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 1px;
   color: #a9c6cc;
 }
@@ -853,7 +853,7 @@
 }
 .admin-login-card > p:not(.admin-eyebrow) {
   color: #5d7770;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
   margin-bottom: 26px;
 }
@@ -869,7 +869,7 @@
   align-items: center;
   gap: 8px;
   margin-top: -4px;
-  font-size: 12px;
+  font-size: 14px;
   color: #5d7770;
   cursor: pointer;
 }
@@ -882,7 +882,7 @@
   min-height: 52px;
   border-radius: 999px;
   background: #062b3b;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-login-card .admin-button:not(.secondary):hover {
   background: #0d6f73;
@@ -891,14 +891,14 @@
   display: block;
   margin-top: 22px;
   color: #7d948f;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .admin-back {
   position: absolute;
   top: 28px;
   right: 32px;
-  font-size: 12px;
+  font-size: 14px;
   color: #0d6f73;
 }
 @media (max-width: 900px) {
@@ -929,7 +929,7 @@
   background: #f1f7fa;
   border-radius: 12px;
   padding: 20px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.8;
 }
 .admin-setup h2 {
@@ -970,7 +970,7 @@
     height: auto;
   }
   .admin-logo > span {
-    font-size: 8px;
+    font-size: 10px;
     padding-left: 9px;
   }
   .admin-logo {
@@ -985,7 +985,7 @@
     border: 0;
   }
   .admin-owner > span {
-    font-size: 12px;
+    font-size: 14px;
   }
   .admin-icon-button {
     width: 34px;
@@ -1025,7 +1025,7 @@
     flex-wrap: wrap;
   }
   .admin-title-row > span {
-    font-size: 14px;
+    font-size: 16px;
   }
   .admin-card {
     padding: 20px 16px;
@@ -1048,7 +1048,7 @@
     flex-wrap: wrap;
   }
   .admin-button {
-    font-size: 11px;
+    font-size: 13px;
     padding: 10px 14px;
   }
   .admin-toolbar {
@@ -1076,7 +1076,7 @@
     width: 250px;
   }
   .admin-toggle {
-    font-size: 10px;
+    font-size: 12px;
   }
   .admin-form input {
     max-width: 100%;
@@ -1121,7 +1121,7 @@
   background: none;
   color: #1f6f8b;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   padding: 2px 6px;
   cursor: pointer;
 }
@@ -1154,7 +1154,7 @@
   border-radius: 10px;
   background: #e8eef1;
   color: #7b8f96;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-gallery-item .admin-video-preview img {
   width: 100%;
@@ -1165,7 +1165,7 @@
   display: grid;
   justify-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 .admin-video-platform svg {
@@ -1205,7 +1205,7 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1250,7 +1250,7 @@
   padding: 12px 16px;
   border-radius: 12px;
   background: #eef3f4;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-dev-master.is-on .admin-dev-status {
   background: #e3f4e8;
@@ -1269,7 +1269,7 @@
 }
 .admin-dev-choices legend {
   margin-bottom: 4px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 .admin-dev-grid {
@@ -1302,13 +1302,13 @@
 }
 .admin-dev-choice strong {
   display: block;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 .admin-dev-choice small {
   display: block;
   margin-top: 3px;
-  font-size: 11px;
+  font-size: 13px;
   color: #6b7f86;
 }
 .admin-dev-site {
@@ -1335,7 +1335,7 @@
   padding: 12px 14px;
   border: 1px solid #dbe4e7;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-dev-links a:hover {
   border-color: #0d6f73;
@@ -1350,7 +1350,7 @@
   border-radius: 8px;
   background: #062b3b;
   color: #bef4a5;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-align: center;
 }
@@ -1360,7 +1360,7 @@
   border-radius: 10px;
   background: #fff1ec;
   color: #a04c41;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 @media (max-width: 700px) {
@@ -1378,7 +1378,7 @@
   border-radius: 999px;
   background: #eef3f4;
   color: #4b6168;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 .admin-pay-badge.paid {
@@ -1402,7 +1402,7 @@
   margin: 14px 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-pay-checks li {
   padding: 10px 14px;
@@ -1436,12 +1436,12 @@
   border-radius: 12px;
 }
 .admin-pay-copy small {
-  font-size: 11px;
+  font-size: 13px;
   color: #6b7f86;
 }
 .admin-pay-copy code {
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-pay-head {
   display: flex;
@@ -1491,7 +1491,7 @@
 }
 .admin-agent-block h4 {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: #0d6f73;
 }
 .admin-agent-block p {
@@ -1505,7 +1505,7 @@
   padding: 10px 14px;
   border-radius: 12px;
   background: #eef3f4;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-agent-sync.ok {
   background: #e3f4e8;
@@ -1521,7 +1521,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-agent-events time {
   display: inline-block;
@@ -1559,7 +1559,7 @@
   margin: 0;
   padding: 10px 14px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
 }
 .admin-pay-test-result.ok {
@@ -1585,7 +1585,7 @@
   border-radius: 999px;
   background: #e8f1f6;
   color: #244c68;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   vertical-align: middle;
@@ -1619,7 +1619,7 @@
   border-radius: 999px;
   background: #eef3f4;
   color: #5d7770;
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 600;
 }
@@ -1646,7 +1646,7 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 .admin-user-state.is-on {
@@ -1703,16 +1703,16 @@
   color: var(--admin-blue);
 }
 .admin-role-card strong {
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-role-card span {
-  font-size: 13px;
+  font-size: 15px;
   color: #5b7382;
 }
 .admin-role-card ul {
   margin: 6px 0 0;
   padding-left: 18px;
-  font-size: 13px;
+  font-size: 15px;
   color: #3e5b70;
   line-height: 1.5;
 }
@@ -1723,7 +1723,7 @@
   border-radius: 999px;
   background: #fff6ec;
   color: #a35a12;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1786,7 +1786,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   padding: 12px 8px 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1825,7 +1825,7 @@
   border-radius: 50%;
   background: transparent;
   color: inherit;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1848,7 +1848,7 @@
   border-radius: 7px;
   background: #e7f0f7;
   color: #1f425c;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.3;
   text-align: left;
   cursor: pointer;
@@ -1907,13 +1907,13 @@
   border: 0;
   background: transparent;
   color: #4f7a84;
-  font-size: 11px;
+  font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
 .admin-month-legend {
   margin: 16px 0 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #3e5b70;
 }
 .admin-month-legend span {
@@ -1935,7 +1935,7 @@
 }
 .admin-intro {
   margin: 6px 0 0;
-  font-size: 15px;
+  font-size: 16px;
   color: #6c8193;
 }
 @media (max-width: 760px) {
@@ -1954,12 +1954,12 @@
   .admin-month-date {
     width: 24px;
     height: 24px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .calendar-booking,
   .calendar-agent {
     padding: 2px 4px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .calendar-booking > i,
   .calendar-agent > i {
@@ -1996,7 +1996,7 @@
   margin: 10px 0 0;
   padding-top: 16px;
   border-top: 1px solid var(--admin-line);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2019,7 +2019,7 @@
 }
 .admin-hr-lines-title {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: #3b617c;
 }
@@ -2040,7 +2040,7 @@
 .admin-hr-table td input {
   min-width: 110px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-hr-table td input[type="time"] {
   min-width: 96px;
@@ -2064,7 +2064,7 @@
   gap: 16px;
   padding: 9px 0;
   border-bottom: 1px solid #edf2f5;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-payslip-lines dt {
   color: #3e5b70;
@@ -2111,7 +2111,7 @@
 }
 .admin-stat-strip small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2179,7 +2179,7 @@
   border-radius: 6px;
   background: #e6f4f4;
   color: #0d5f63;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -2197,7 +2197,7 @@
 }
 .admin-shop-stock h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-shop-stock p {
   margin: 0;
@@ -2228,7 +2228,7 @@
   background: white;
   border: 1px solid #cfe3e3;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-size-chips button {
   width: 22px;
@@ -2254,7 +2254,7 @@
 .admin-stock-unit {
   padding-bottom: 12px;
   color: #5f7480;
-  font-size: 12px;
+  font-size: 14px;
 }
 @media (max-width: 560px) {
   .admin-stock-row {
@@ -2282,7 +2282,7 @@
   padding: 3px 7px;
   border: 0;
   border-radius: 7px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.3;
   text-align: left;
   cursor: pointer;
@@ -2359,11 +2359,11 @@
   flex-wrap: wrap;
   gap: 8px 14px;
   margin: -6px 0 14px;
-  font-size: 13px;
+  font-size: 15px;
   color: #3e5b70;
 }
 .admin-plan-count strong {
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-metric-grid {
   display: grid;
@@ -2376,7 +2376,7 @@
   }
   .plan-chip {
     padding: 2px 4px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .plan-chip > i {
     display: none;
@@ -2398,7 +2398,7 @@
   align-items: baseline;
   padding: 12px 0;
   border-bottom: 1px solid #edf2f5;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-seo-list li:last-child {
   border-bottom: 0;
@@ -2478,7 +2478,7 @@
   align-items: center;
   gap: 8px;
   color: #23495b;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-check input {
   width: 18px;
@@ -2501,7 +2501,7 @@ strong.admin-overdue {
 .admin-mail-flag {
   display: block;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-mail-flag.ok {
   color: #17695f;
@@ -2517,7 +2517,7 @@ strong.admin-overdue {
 }
 .admin-mail-log h3 {
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: 16px;
   color: #062b3b;
 }
 .admin-mail-log ul {
@@ -2526,7 +2526,7 @@ strong.admin-overdue {
   list-style: none;
   display: grid;
   gap: 6px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-mail-log li.ok {
   color: #23495b;
@@ -2596,7 +2596,7 @@ strong.admin-overdue {
 .admin-mail-actions .admin-inline,
 .admin-mail-samples .admin-inline {
   padding: 6px 0;
-  font-size: 14px;
+  font-size: 16px;
   text-decoration: none;
 }
 
@@ -2613,7 +2613,7 @@ strong.admin-overdue {
   margin-bottom: 8px;
   padding: 0;
   color: #23495b;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 .admin-addons .admin-check {
@@ -2631,7 +2631,7 @@ strong.admin-overdue {
   display: block;
   margin-top: 2px;
   color: #5b7480;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-addons > .admin-button {
   margin-top: 18px;
@@ -2660,7 +2660,7 @@ strong.admin-overdue {
 .admin-fare-preview li {
   display: grid;
   gap: 2px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   color: #33525a;
 }
@@ -2677,7 +2677,7 @@ strong.admin-overdue {
 }
 .admin-fare-box h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   color: #0f5d58;
 }
 .admin-fare-box .admin-subtle {
@@ -2685,7 +2685,7 @@ strong.admin-overdue {
 }
 .admin-fare-label {
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -2696,7 +2696,7 @@ strong.admin-overdue {
   gap: 4px;
   margin: 0;
   padding-left: 18px;
-  font-size: 13px;
+  font-size: 15px;
   color: #254961;
 }
 .admin-refund {
@@ -2714,19 +2714,19 @@ strong.admin-overdue {
   display: grid;
   gap: 4px;
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   color: #33525a;
 }
 .admin-refund strong {
-  font-size: 14px;
+  font-size: 16px;
   color: #062b3b;
 }
 .admin-refund .admin-field {
   display: grid;
   gap: 6px;
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 .admin-refund .admin-button {
@@ -2735,7 +2735,7 @@ strong.admin-overdue {
 .admin-fare-tag {
   display: block;
   margin-top: 4px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #0f5d58;
 }
@@ -2747,7 +2747,7 @@ strong.admin-overdue {
   display: block;
   margin-top: 2px;
   color: #0d6f73;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 /* Dive Shop product: photos, videos and spec rows. */
@@ -2767,7 +2767,7 @@ strong.admin-overdue {
 .admin-shop-specs h3,
 .admin-shop-delivery h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-shop-photos h3 small,
 .admin-shop-videos h3 small {
@@ -2820,7 +2820,7 @@ strong.admin-overdue {
   border-radius: 8px;
   background: white;
   color: #0d5f63;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 .admin-shop-photo-list button:disabled {
@@ -2838,7 +2838,7 @@ strong.admin-overdue {
   border-radius: 999px;
   background: #0d6f73;
   color: white;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
 }
 .admin-shop-videos ul {
@@ -2856,7 +2856,7 @@ strong.admin-overdue {
   padding: 8px 12px;
   border-radius: 10px;
   background: white;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-shop-videos li span {
   overflow: hidden;
@@ -2929,12 +2929,12 @@ strong.admin-overdue {
   padding: 2px 9px;
   border-radius: 99px;
   background: #edf2f6;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
 }
 .admin-shop-kinds small {
   color: #607486;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .admin-shop-kinds .is-sale.is-active {
@@ -2963,7 +2963,7 @@ strong.admin-overdue {
     padding: 14px;
   }
   .admin-shop-kinds strong {
-    font-size: 15px;
+    font-size: 16px;
   }
   .admin-shop-kinds small {
     display: none;
@@ -2981,14 +2981,14 @@ strong.admin-overdue {
 }
 .admin-shop-pair p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
   color: #4d6477;
 }
 .admin-shop-pair strong {
   display: block;
   color: #254961;
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 2px;
 }
 /* The price, stock and photos of a product for sale or of rental gear. */
@@ -3046,7 +3046,7 @@ strong.admin-overdue {
   border-radius: 999px;
   background: transparent;
   color: #3e5b70;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -3067,7 +3067,7 @@ strong.admin-overdue {
   border-radius: 7px;
   background: #e4f5f2;
   color: #135f58;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.3;
   text-align: left;
   cursor: pointer;
@@ -3133,7 +3133,7 @@ strong.admin-overdue {
 }
 .admin-gear-list span {
   color: #3e5b70;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-gear-list div {
   display: flex;
@@ -3155,7 +3155,7 @@ strong.admin-overdue {
   padding: 8px 12px;
   border-radius: 10px;
   background: #f4f8fa;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-gear-left li.is-full b {
   color: #a1302a;
@@ -3171,7 +3171,7 @@ strong.admin-overdue {
 }
 .admin-booking-gear h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-booking-gear p {
   margin: 0;
@@ -3190,7 +3190,7 @@ strong.admin-overdue {
 .admin-gear-line small {
   padding-bottom: 12px;
   color: #3e6b62;
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-gear-line small.is-warn {
   color: #a1302a;
@@ -3205,7 +3205,7 @@ strong.admin-overdue {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-gear-online small {
   margin-left: 8px;
@@ -3221,7 +3221,7 @@ strong.admin-overdue {
   }
   .calendar-gear {
     padding: 2px 4px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .admin-month-views {
     width: 100%;
@@ -3326,7 +3326,7 @@ strong.admin-overdue {
 }
 .admin-paste-rows li > small,
 .admin-paste-rows li.is-error small {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
 }
 .admin-paste-rows .is-warn {
@@ -3347,11 +3347,11 @@ strong.admin-overdue {
   gap: 2px;
 }
 .admin-paste-check strong {
-  font-size: 14px;
+  font-size: 16px;
   color: #254961;
 }
 .admin-paste-check small {
-  font-size: 12px;
+  font-size: 14px;
   color: #718394;
 }
 .admin-paste-fields {
@@ -3365,7 +3365,7 @@ strong.admin-overdue {
   margin: 0;
 }
 .admin-paste-fields label {
-  font-size: 11px;
+  font-size: 13px;
 }
 .admin-paste > .admin-button {
   justify-self: start;
@@ -3415,7 +3415,7 @@ strong.admin-overdue {
   border-radius: 999px;
   background: #e9f2f7;
   color: #2b5a73;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -3442,7 +3442,7 @@ strong.admin-overdue {
 .admin-day-eyebrow {
   margin: 0;
   color: #4f7a84;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -3496,7 +3496,7 @@ strong.admin-overdue {
   align-items: center;
   gap: 8px;
   margin: 0 0 8px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-day-group h3 i {
   flex: none;
@@ -3508,7 +3508,7 @@ strong.admin-overdue {
 .admin-day-group h3 small {
   margin-left: auto;
   color: #718394;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 .admin-day-group ul {
@@ -3546,7 +3546,7 @@ strong.admin-overdue {
   background: none;
   color: inherit;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   text-align: left;
   overflow-wrap: anywhere;
@@ -3554,7 +3554,7 @@ strong.admin-overdue {
 }
 .admin-day-detail {
   color: #5d7385;
-  font-size: 11.5px;
+  font-size: 13.5px;
   line-height: 1.45;
 }
 .admin-day-wa {
@@ -3563,7 +3563,7 @@ strong.admin-overdue {
   border-radius: 999px;
   background: #e3f6ea;
   color: #1d6b3f;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   text-decoration: none;
 }
@@ -3576,7 +3576,7 @@ strong.admin-overdue {
   border-radius: 12px;
   background: #f4f8fa;
   color: #5d7385;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.6;
 }
 .admin-quick-booking {
@@ -3589,7 +3589,7 @@ strong.admin-overdue {
 }
 .admin-quick-booking h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-quick-booking .admin-field {
   margin: 0;
@@ -3623,7 +3623,7 @@ strong.admin-overdue {
   margin: 0 0 12px;
   padding: 0;
   color: #254961;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
 }
 .admin-form-group legend + * {
@@ -3642,12 +3642,80 @@ strong.admin-overdue {
 @media (max-width: 760px) {
   .admin-month-people {
     padding: 1px 4px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .admin-day-side {
     padding: 18px 14px;
   }
   .admin-form-group {
     padding: 14px 12px 2px;
+  }
+}
+
+/* The value of a reservation from the website's prices. */
+.admin-packages {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.admin-package-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.admin-package-lines li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px minmax(120px, auto) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e0eaf0;
+}
+.admin-package-name {
+  display: grid;
+  min-width: 0;
+}
+.admin-package-name strong {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.admin-package-name small {
+  color: #718394;
+  font-size: 14px;
+}
+.admin-package-lines input {
+  min-height: 40px;
+  padding: 6px 10px;
+  text-align: center;
+}
+.admin-package-lines b {
+  text-align: right;
+  font-weight: 600;
+}
+.admin-package-total {
+  margin: 0;
+  text-align: right;
+  font-size: 17px;
+}
+.admin-package-total b {
+  margin-left: 8px;
+}
+.admin-package-auto {
+  align-self: end;
+  min-height: 44px;
+}
+.admin-package-hint {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .admin-package-lines li {
+    grid-template-columns: minmax(0, 1fr) 80px;
+  }
+  .admin-package-lines b {
+    text-align: left;
   }
 }

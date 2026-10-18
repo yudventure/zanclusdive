@@ -295,6 +295,86 @@ try {
     "no Reservasi menu",
   );
 
+  // The value from the website's prices: 12 divers for 4 days.
+  await list.getByLabel("Cari reservasi").fill("Grup Jakarta");
+  await list.getByLabel("Filter status").selectOption("all");
+  await list.getByRole("button", { name: "Edit" }).click();
+  const pick = form.getByLabel("Paket dari daftar harga");
+  assert.equal(
+    await pick.locator("optgroup").first().getAttribute("label"),
+    "Diving",
+    "a diving reservation lists the diving prices first",
+  );
+  await pick.selectOption("price:diving-discovery-dive");
+  await pick.selectOption("price:diving-pemandu-selam");
+  assert.equal(
+    await form.getByLabel("Jumlah Discovery Dive").inputValue(),
+    "12",
+  );
+  assert.equal(await form.getByLabel("Jumlah Pemandu selam").inputValue(), "4");
+  const amount = form.getByLabel("Nilai reservasi (Rp)");
+  assert.equal(await amount.inputValue(), "17.400.000");
+  assert.equal(await amount.getAttribute("readonly"), "");
+  await form.getByLabel("Jumlah Pemandu selam").fill("3");
+  assert.equal(await amount.inputValue(), "16.650.000");
+  // A discount typed by hand, as written in a chat.
+  await form.getByLabel("Hitung dari paket").uncheck();
+  await amount.fill("Rp 16.000.000");
+  assert.equal(await amount.inputValue(), "16.000.000");
+  shots &&
+    (await form
+      .locator("fieldset", { hasText: "Nilai dan catatan" })
+      .screenshot({ path: `${shots}/96-nilai-dari-paket.png` }));
+  const jakarta = async () =>
+    (await (await api("/api/admin/state")).json()).bookings.find(
+      (b) => b.guestName === "Grup Jakarta",
+    );
+  await form.getByRole("button", { name: "Simpan perubahan" }).click();
+  await form.waitFor({ state: "detached" });
+  let group12 = await jakarta();
+  assert.deepEqual(
+    [
+      group12.amount,
+      group12.amountManual,
+      group12.packages.map((p) => [p.key, p.price, p.quantity]),
+    ],
+    [
+      16000000,
+      true,
+      [
+        ["price:diving-discovery-dive", 1200000, 12],
+        ["price:diving-pemandu-selam", 750000, 3],
+      ],
+    ],
+  );
+  // Opened again, the lines are there; back to the package total.
+  await list.getByRole("button", { name: "Edit" }).click();
+  assert.equal(await amount.inputValue(), "16.000.000");
+  await form.getByLabel("Hitung dari paket").check();
+  assert.equal(await amount.inputValue(), "16.650.000");
+  await form.getByRole("button", { name: "Hapus Pemandu selam" }).click();
+  assert.equal(await amount.inputValue(), "14.400.000");
+  await form.getByRole("button", { name: "Simpan perubahan" }).click();
+  await form.waitFor({ state: "detached" });
+  group12 = await jakarta();
+  assert.deepEqual(
+    [group12.amount, group12.amountManual, group12.packages.length],
+    [14400000, undefined, 1],
+  );
+  // A value typed with dots, without any package.
+  await list.getByLabel("Cari reservasi").fill("Rombongan Sorong");
+  await list.getByRole("button", { name: "Edit" }).click();
+  assert.equal(await form.getByLabel("Hitung dari paket").count(), 0);
+  await amount.fill("2.500.000");
+  await form.getByRole("button", { name: "Simpan perubahan" }).click();
+  await form.waitFor({ state: "detached" });
+  assert.equal(
+    (await (await api("/api/admin/state")).json()).bookings.find(
+      (b) => b.guestName === "Rombongan Sorong",
+    ).amount,
+    2500000,
+  );
+
   // Phones: the panel sits under the month and comes into view.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/admin/calendar", { waitUntil: "networkidle" });

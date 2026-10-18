@@ -60,7 +60,7 @@ export function demoSeed(now = new Date(), { sampleBookings = true } = {}) {
           participants: index + 1,
           amount: content.experiences[experience].price * (index + 1),
           notes:
-            "Reservasi contoh untuk mencoba CMS; bukan pemesanan sungguhan.",
+            "Reservasi contoh untuk mencoba CMS, bukan pemesanan sungguhan.",
           updatedAt: now.toISOString(),
         };
       },

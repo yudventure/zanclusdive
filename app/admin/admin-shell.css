@@ -42,7 +42,7 @@
 }
 .admin-button.back-site {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 16px;
   gap: 6px;
   padding-inline: 18px;
 }
@@ -59,13 +59,13 @@
   padding: 6px 14px 6px 6px;
   gap: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
 }
 .admin-owner > span {
   background: var(--admin-blue);
   width: 34px;
   height: 34px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -115,7 +115,7 @@
   padding: 11px 14px;
   border-radius: 12px;
   color: #3e5b70;
-  font-size: 15px;
+  font-size: 16px;
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -164,7 +164,7 @@
   border-left: 1px solid var(--admin-line);
 }
 .admin-sublinks > a {
-  font-size: 14px;
+  font-size: 16px;
   padding: 9px 12px;
 }
 .admin-sidebar-note {
@@ -172,11 +172,11 @@
   background: var(--admin-teal-soft);
   border: 1px solid #cfeae6;
   padding: 18px 20px;
-  font-size: 13px;
+  font-size: 15px;
   color: #3d6670;
 }
 .admin-sidebar-note strong {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.16em;
   color: #17695f;
 }
@@ -216,7 +216,7 @@
   background: radial-gradient(closest-side, #1f9e9440, transparent);
 }
 .admin-hero p {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.16em;
   color: #6fe0d2;
@@ -228,7 +228,7 @@
 }
 .admin-hero span {
   color: #d3e2ec;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-hero-clock {
   text-align: right;
@@ -247,7 +247,7 @@
   display: block;
   margin-top: 10px;
   color: #b7c9d6;
-  font-size: 13px;
+  font-size: 15px;
 }
 
 /* KPI cards */
@@ -274,7 +274,7 @@ a.admin-stat:hover {
   transform: translateY(-2px);
 }
 .admin-kpi-grid .admin-stat > span {
-  font-size: 13px;
+  font-size: 15px;
   color: #4d6779;
   padding-right: 24px;
 }
@@ -290,7 +290,7 @@ a.admin-stat:hover {
   line-height: 1.5;
 }
 .admin-kpi-grid .admin-stat small {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--admin-muted);
 }
 .admin-kpi-grid .admin-stat small.ok {
@@ -324,7 +324,7 @@ a.admin-stat:hover {
 }
 .admin-insight-head .admin-subtle {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-live {
   display: inline-flex;
@@ -334,7 +334,7 @@ a.admin-stat:hover {
   border-radius: 99px;
   background: var(--admin-teal-soft);
   color: #17695f;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -365,11 +365,11 @@ a.admin-stat:hover {
 }
 .admin-chart-top strong {
   display: block;
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-chart-top small {
   color: var(--admin-muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-segment {
   display: flex;
@@ -381,7 +381,7 @@ a.admin-stat:hover {
 .admin-segment button {
   padding: 7px 13px;
   border-radius: 9px;
-  font-size: 13px;
+  font-size: 15px;
   color: #3e5b70;
   background: transparent;
   cursor: pointer;
@@ -399,7 +399,7 @@ a.admin-stat:hover {
 }
 .admin-chart-axis {
   position: relative;
-  font-size: 11px;
+  font-size: 13px;
   color: #8a9daa;
   text-align: right;
 }
@@ -461,7 +461,7 @@ a.admin-stat:hover {
   bottom: calc(100% + 6px);
   left: 50%;
   translate: -50% 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--admin-ink);
 }
@@ -471,7 +471,7 @@ a.admin-stat:hover {
   left: 0;
   right: 0;
   padding-top: 8px;
-  font-size: 11px;
+  font-size: 13px;
   color: #6c8193;
   text-align: center;
   line-height: 1.2;
@@ -504,7 +504,7 @@ a.admin-stat:hover {
   border-radius: 8px;
   background: var(--admin-navy);
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
@@ -533,14 +533,14 @@ a.admin-stat:hover {
   background: var(--admin-teal-soft);
 }
 .admin-day-card > strong {
-  font-size: 15px;
+  font-size: 16px;
   margin-bottom: 8px;
 }
 .admin-day-card > select {
   margin-bottom: 14px;
 }
 .admin-day-card > span {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--admin-muted);
 }
 .admin-day-card > b {
@@ -552,7 +552,7 @@ a.admin-stat:hover {
 }
 .admin-day-card > small {
   color: var(--admin-muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-day-card ul {
   display: grid;
@@ -567,14 +567,14 @@ a.admin-stat:hover {
   padding: 10px 12px;
   background: white;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
 }
 .admin-day-card li small {
   display: block;
   font-weight: 400;
   color: var(--admin-muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .admin-day-card li em {
   font-style: normal;
@@ -582,7 +582,7 @@ a.admin-stat:hover {
 }
 .admin-day-card > p {
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 15px;
   color: #3d6670;
 }
 
@@ -620,10 +620,10 @@ a.admin-stat:hover {
   margin-bottom: 10px;
 }
 .admin-shortcut strong {
-  font-size: 15px;
+  font-size: 16px;
 }
 .admin-shortcut small {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--admin-muted);
 }
 
@@ -673,13 +673,13 @@ a.admin-stat:hover {
       #0d2840;
   }
   .admin-hero p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .admin-root .admin-hero h1 {
     font-size: 26px;
   }
   .admin-hero span {
-    font-size: 14px;
+    font-size: 16px;
   }
   .admin-hero-clock {
     text-align: left;
@@ -698,7 +698,7 @@ a.admin-stat:hover {
   }
   .admin-kpi-grid .admin-stat > span,
   .admin-kpi-grid .admin-stat small {
-    font-size: 12px;
+    font-size: 14px;
   }
   .admin-kpi-grid .admin-stat > strong {
     font-size: 28px;
@@ -725,7 +725,7 @@ a.admin-stat:hover {
     grid-template-columns: 20px minmax(0, 1fr);
   }
   .admin-chart.dense .admin-bar > small {
-    font-size: 9px;
+    font-size: 11px;
   }
   .admin-shortcuts {
     gap: 10px;
@@ -791,12 +791,12 @@ a.admin-stat:hover {
 }
 .admin-upload-drop strong {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 .admin-upload-drop small {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--admin-muted);
 }
 .admin-upload-drop.compact {
@@ -832,7 +832,7 @@ a.admin-stat:hover {
 }
 .admin-image-slot > strong {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 10px;
 }
 .admin-image-slot.wide img {
@@ -840,7 +840,7 @@ a.admin-stat:hover {
 }
 .admin-more summary {
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   color: #3c7b96;
   padding: 2px 0;
 }
@@ -888,12 +888,12 @@ a.admin-stat:hover {
   margin: 8px 0 0;
   padding: 0;
   border: 0;
-  font-size: 13px;
+  font-size: 15px;
 }
 .admin-partner-style legend {
   padding: 0;
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #5d7770;
 }
@@ -955,7 +955,7 @@ a.admin-stat:hover {
   border-radius: 50%;
   background: #e3edf2;
   color: #244c68;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
 }
 .admin-password-steps > li.current::before {
@@ -968,7 +968,7 @@ a.admin-stat:hover {
   color: #fff;
 }
 .admin-password-steps > li > span {
-  font-size: 13px;
+  font-size: 15px;
   color: #5d7770;
 }
 .admin-password-steps .admin-success,
@@ -995,7 +995,7 @@ a.admin-stat:hover {
 }
 .admin-forgot > p {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   color: #5d7770;
 }
 .admin-forgot .admin-password-steps > li {
@@ -1003,7 +1003,7 @@ a.admin-stat:hover {
 }
 .admin-forgot-link {
   margin: 14px 0 4px;
-  font-size: 13px;
+  font-size: 15px;
 }
 @media (max-width: 600px) {
   .admin-password-steps > li {

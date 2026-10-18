@@ -250,11 +250,18 @@ export async function jsonBody(request, limit = 64000) {
 export function apiFailure(error) {
   if (isDemo()) {
     const limit = error?.message === "DEMO_MEDIA_LIMIT";
+    // Any failure lands here, not only the storage, so the runtime log
+    // keeps the real one and the answer names its kind.
+    if (!limit) console.error("CMS demo failure:", error);
+    const kind = String(error?.code || error?.name || "").replace(
+      /[^A-Za-z0-9_]/g,
+      "",
+    );
     return Response.json(
       {
         error: limit
           ? "Ruang foto penuh (maksimal 400 MB)."
-          : "Penyimpanan belum dapat diakses. Coba lagi sebentar lagi.",
+          : `Penyimpanan belum dapat diakses${kind ? ` (${kind})` : ""}. Coba lagi sebentar lagi.`,
       },
       { status: limit ? 413 : 503 },
     );

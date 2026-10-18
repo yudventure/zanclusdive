@@ -1,4 +1,5 @@
 import { experiences } from "./domain.js";
+import { packagesTotal, validatePackages } from "./booking-price.js";
 import { validateSeo, defaultSeo } from "./seo.js";
 import {
   defaultGallery,
@@ -646,8 +647,15 @@ export function validateBooking(input) {
     (new Date(input.endDate) - new Date(input.startDate)) / 86400000 > 366
   )
     throw new Error("Rentang tanggal harus valid, maksimal 366 hari.");
+  // Packages from the website's prices set the value, unless the team typed
+  // it by hand.
+  const packages = validatePackages(input.packages);
+  const amountManual = input.amountManual === true;
   const participants = Number(input.participants),
-    amount = Number(input.amount);
+    amount =
+      packages.length && !amountManual
+        ? packagesTotal(packages)
+        : Number(input.amount);
   if (
     !Number.isInteger(participants) ||
     participants < 1 ||
@@ -684,5 +692,7 @@ export function validateBooking(input) {
     // The language of the emails to the guest.
     ...(input.lang === "en" || input.lang === "id" ? { lang: input.lang } : {}),
     ...(gear.length ? { gear } : {}),
+    ...(packages.length ? { packages } : {}),
+    ...(packages.length && amountManual ? { amountManual } : {}),
   };
 }

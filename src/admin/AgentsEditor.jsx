@@ -275,6 +275,17 @@ function AgentCard({ agent, origin, busy, run }) {
             kalender → Alamat rahasia dalam format iCal.
           </p>
         )}
+        {agent.importUrl &&
+          agent.syncedAt &&
+          !agent.syncError &&
+          !agent.events?.length && (
+            <p className="admin-subtle admin-agent-empty">
+              Link terbaca, tetapi belum berisi acara. Pastikan sistem asalnya
+              mengirim semua pesanan, bukan hanya hari yang penuh. Di DAMPIER,
+              buka sambungan Zanclus di Sambungkan website dan kalender, lalu
+              pilih Jumlah tamu per hari.
+            </p>
+          )}
         {upcoming.length > 0 && (
           <ul className="admin-agent-events">
             {upcoming.map((event) => (

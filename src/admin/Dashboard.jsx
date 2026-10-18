@@ -42,6 +42,7 @@ import SocialEditor from "./social/SocialEditor.jsx";
 import MonthCalendar from "./MonthCalendar.jsx";
 import BookingGear from "./BookingGear.jsx";
 import SchedulePaste from "./SchedulePaste.jsx";
+import BookingPackages from "./BookingPackages.jsx";
 import { useOutsideClose } from "./useOutsideClose.js";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
@@ -110,12 +111,23 @@ async function request(url, method = "GET", body) {
     options.headers = { "Content-Type": "application/json" };
     options.body = JSON.stringify(body);
   }
-  const response = await fetch(url, options);
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    throw new Error(
+      "Koneksi ke server terputus. Periksa internet, muat ulang halaman, lalu periksa apakah perubahan sudah tersimpan sebelum mencoba lagi.",
+    );
+  }
   let result;
   try {
     result = await response.json();
   } catch {
-    throw new Error("Server belum dapat merespons.");
+    // Not an answer from the website itself, such as the hosting's own
+    // error page while the app restarts or takes too long.
+    throw new Error(
+      `Server belum dapat merespons (kode ${response.status}). Muat ulang halaman, lalu periksa apakah perubahan sudah tersimpan sebelum mencoba lagi.`,
+    );
   }
   if (response.status === 401) {
     window.location.assign("/admin");
@@ -278,18 +290,11 @@ function BookingEditor({
         </fieldset>
         <fieldset className="admin-form-group">
           <legend>Nilai dan catatan</legend>
-          <div className="admin-form-grid">
-            <Field label="Nilai reservasi (Rp)">
-              <input
-                type="number"
-                required
-                min="0"
-                max="1000000000"
-                value={value.amount}
-                onChange={(e) => change("amount", e.target.value)}
-              />
-            </Field>
-          </div>
+          <BookingPackages
+            value={value}
+            setValue={setValue}
+            content={content}
+          />
           <Field label="Catatan">
             <textarea
               rows="3"
