@@ -19,7 +19,11 @@ import { dictionary, htmlLang } from "../src/i18n.js";
 import { requestLocale, languageAlternates } from "../src/server/locale.js";
 import { currentAdmin } from "../src/server/auth.js";
 import { publicContent } from "../src/server/store.js";
-import { DeveloperBar } from "../src/server/developer-gate.jsx";
+import {
+  DeveloperBar,
+  VisitorPreviewBar,
+} from "../src/server/developer-gate.jsx";
+import { visitorHeader } from "../src/developer.js";
 import ConnectionNotice from "../src/components/ConnectionNotice.jsx";
 import { siteUrl } from "../src/seo.js";
 // The Google Search Console code from the CMS (SEO & Search Console), or
@@ -78,21 +82,28 @@ export const viewport = {
   initialScale: 1,
   themeColor: "#062B3B",
 };
-// Developer mode settings when a signed-in admin views the public website.
-async function adminDeveloper() {
-  const path = (await headers()).get("x-zanclus-path") || "";
+// What a signed-in admin sees on the public website: the developer mode
+// bar, or the bar of a visitor preview.
+async function adminView() {
+  const all = await headers();
+  const path = all.get("x-zanclus-path") || "/";
   if (path.startsWith("/admin") || !(await currentAdmin())) return null;
+  if (all.get(visitorHeader) === "1") return { preview: true, path };
   const developer = (await publicContent()).developer;
-  return developer?.enabled ? developer : null;
+  return developer?.enabled ? { developer, path } : null;
 }
 export default async function RootLayout({ children }) {
   const locale = await requestLocale();
-  const developer = await adminDeveloper();
+  const view = await adminView();
   return (
     <html lang={htmlLang[locale]}>
       <body>
         {children}
-        {developer && <DeveloperBar developer={developer} />}
+        {view?.preview ? (
+          <VisitorPreviewBar path={view.path} />
+        ) : (
+          view && <DeveloperBar developer={view.developer} path={view.path} />
+        )}
         <ConnectionNotice locale={locale} />
       </body>
     </html>

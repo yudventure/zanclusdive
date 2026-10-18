@@ -1,6 +1,6 @@
 import { publicContent } from "../../src/server/store.js";
 import { statusDocument } from "../../src/status-pages.js";
-import { retryAfter } from "../../src/developer.js";
+import { adminCookie, retryAfter, visitorHeader } from "../../src/developer.js";
 
 // The maintenance page with a 503 status, so search engines come back
 // later instead of dropping the pages. proxy.js shows it in place of a
@@ -38,6 +38,13 @@ export async function GET(request) {
       message: developer.message?.[locale] || developer.message?.id || "",
       until: developer.until || "",
       switchHref: switchPath.startsWith("/") ? switchPath : "/",
+      // A signed-in admin looking as a visitor (proxy.js) can go back.
+      ...(request.headers.get(visitorHeader) === "1" &&
+      (request.headers.get("cookie") ?? "").includes(adminCookie + "=")
+        ? {
+            previewExit: `${path.startsWith("/") ? path : "/"}?pratinjau=admin`,
+          }
+        : {}),
     }),
     {
       status: 503,

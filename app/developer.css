@@ -39,6 +39,21 @@
   color: #062b3b;
   font-weight: 600;
 }
+.dev-bar a.is-quiet {
+  background: #ffffff1a;
+  color: #e8f5f5;
+}
+/* An admin looking at the website as a visitor. */
+.dev-bar.is-preview {
+  border-color: #ffd28a66;
+}
+.dev-bar.is-preview strong {
+  color: #ffd28a;
+}
+.dev-bar.is-preview .dev-bar-dot {
+  background: #ffd28a;
+  box-shadow: 0 0 0 4px #ffd28a33;
+}
 
 /* Connection lost / back notice. */
 .connection-notice {
@@ -81,6 +96,7 @@
 }
 @media (max-width: 640px) {
   .dev-bar {
+    flex-wrap: wrap;
     border-radius: 18px;
     align-items: flex-start;
   }

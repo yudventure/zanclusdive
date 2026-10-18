@@ -280,6 +280,14 @@ Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Reservasi**. Isi **Emai
 
 Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyimpan. Saat mengedit, kotak **Email ke tamu** menampilkan riwayat kirim, **Pratinjau**, dan **Kirim ulang**. Tagihan transfer yang lewat batas ditandai **Lewat batas bayar**; tagihan transfer tidak dibatalkan otomatis. Pembayaran Midtrans yang masih berjalan atau sudah lunas hanya berubah lewat Midtrans. Pembayaran tunai dan transfer tidak otomatis masuk Buku kas; tim keuangan mencatatnya di sana. Logo dan foto email diambil dari `https://zanclusdivecenter.com/assets/email/`, jadi tampil setelah versi ini di-deploy.
 
+## Kalender reservasi
+
+Di **Kalender reservasi**, ketuk tanggal mana saja untuk membuka **Agenda** di sebelah kanan (di HP, di bawah kalender). Agenda menunjukkan siapa saja yang diving, snorkeling, trip, menyewa alat, atau berkegiatan lain pada hari itu, dengan jumlah orang, status, dan tombol WhatsApp. Tombol **+ Catat booking tanggal ini** membuka formulir singkat untuk booking dari WhatsApp atau tamu yang datang langsung. Untuk email tamu, nilai, alat sewa, dan tagihan, pakai **Formulir lengkap**. Notifikasi dan menu akun di pojok kanan atas tertutup saat mengetuk di mana saja di luarnya.
+
+## Mode developer
+
+Saklar **Mode developer** dan **Tutup seluruh website untuk pengunjung** langsung tersimpan saat diklik. Menutup seluruh website juga menyalakan saklarnya. Karena admin yang sedang masuk selalu melihat website lengkap, website yang tertutup tetap tampak terbuka di browser admin. Untuk memeriksa yang dilihat pengunjung, tekan **Lihat seperti pengunjung**, lalu **Kembali ke tampilan admin** setelah selesai (atau tunggu 30 menit).
+
 ## Data dan reservasi
 
 Pesan WhatsApp **tidak otomatis menjadi reservasi**. Admin mencatat hasil konfirmasi tamu di formulir reservasi, atau sekaligus lewat **Kalender reservasi → Tempel jadwal**: tempel jadwal dari WhatsApp, satu trip per baris (misalnya `29 Okt sd 01 Nov (12 Divers)`), periksa tanggal, peserta, dan nama grup yang terbaca, lalu tekan **Simpan N reservasi**. Baris dengan tanggal yang meragukan diberi peringatan oranye, dan trip yang sudah ada di kalender tidak disimpan dua kali. Kalender di halaman aktivitas menampilkan sisa slot per hari dari reservasi yang dikonfirmasi dan pembayaran online yang sedang menunggu. Kuotanya diatur di **Aktivitas → Kuota peserta per hari**; diving bawaannya 30 orang per hari, dipakai bersama program diving dan kursus. Tanggal penuh atau ditutup tidak bisa dipilih dan pembayarannya ditolak server. Pesan WhatsApp tetap perlu dicatat manual.

@@ -42,6 +42,7 @@ import SocialEditor from "./social/SocialEditor.jsx";
 import MonthCalendar from "./MonthCalendar.jsx";
 import BookingGear from "./BookingGear.jsx";
 import SchedulePaste from "./SchedulePaste.jsx";
+import { useOutsideClose } from "./useOutsideClose.js";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
 import PayrollEditor from "./hr/PayrollEditor.jsx";
@@ -156,128 +157,147 @@ function BookingEditor({
   }
   return (
     <section className="admin-card" id="booking-editor">
-      <h2>{editing ? "Ubah reservasi" : "Tambah reservasi / tutup tanggal"}</h2>
+      <h2>
+        {editing
+          ? `Ubah reservasi ${value.guestName || ""}`.trim()
+          : "Tambah reservasi / tutup tanggal"}
+      </h2>
       <p className="admin-subtle">
-        Catat hasil konfirmasi dari WhatsApp atau sumber lain.
+        Formulir lengkap untuk hasil konfirmasi dari WhatsApp atau sumber lain,
+        dengan email tamu, nilai, alat sewa, dan tagihan. Untuk booking cepat,
+        klik tanggalnya di kalender.
       </p>
       <form className="admin-form" onSubmit={onSave}>
-        <div className="admin-form-grid">
-          <Field label="Pengalaman">
-            <select
-              value={value.experience}
-              onChange={(e) => change("experience", e.target.value)}
-            >
-              {bookingPrograms.map((k) => (
-                <option key={k} value={k}>
-                  {programTitle(content, k)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Status">
-            <select
-              value={value.status}
-              onChange={(e) => change("status", e.target.value)}
-            >
-              {Object.entries(statuses).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Tanggal mulai">
-            <input
-              type="date"
-              required
-              value={value.startDate}
-              onChange={(e) => change("startDate", e.target.value)}
+        <fieldset className="admin-form-group">
+          <legend>Kegiatan dan tanggal</legend>
+          <div className="admin-form-grid">
+            <Field label="Pengalaman">
+              <select
+                value={value.experience}
+                onChange={(e) => change("experience", e.target.value)}
+              >
+                {bookingPrograms.map((k) => (
+                  <option key={k} value={k}>
+                    {programTitle(content, k)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Status">
+              <select
+                value={value.status}
+                onChange={(e) => change("status", e.target.value)}
+              >
+                {Object.entries(statuses).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Tanggal mulai">
+              <input
+                type="date"
+                required
+                value={value.startDate}
+                onChange={(e) => change("startDate", e.target.value)}
+              />
+            </Field>
+            <Field label="Tanggal selesai (termasuk hari ini)">
+              <input
+                type="date"
+                required
+                min={value.startDate}
+                value={value.endDate}
+                onChange={(e) => change("endDate", e.target.value)}
+              />
+            </Field>
+            <Field label="Jumlah peserta">
+              <input
+                type="number"
+                required
+                min="1"
+                max="100"
+                value={value.participants}
+                onChange={(e) => change("participants", e.target.value)}
+              />
+            </Field>
+            <Field label="Sumber reservasi">
+              <select
+                value={value.source}
+                onChange={(e) => change("source", e.target.value)}
+              >
+                {Object.entries(sources).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </fieldset>
+        <fieldset className="admin-form-group">
+          <legend>Tamu</legend>
+          <div className="admin-form-grid">
+            <Field label="Nama tamu">
+              <input
+                required={value.status !== "closed"}
+                maxLength={120}
+                value={value.guestName}
+                onChange={(e) => change("guestName", e.target.value)}
+              />
+            </Field>
+            <Field label="Telepon / WhatsApp">
+              <input
+                type="tel"
+                maxLength={30}
+                value={value.phone}
+                onChange={(e) => change("phone", e.target.value)}
+              />
+            </Field>
+            <Field label="Email tamu">
+              <input
+                type="email"
+                maxLength={200}
+                placeholder="untuk tagihan dan invoice"
+                value={value.email ?? ""}
+                onChange={(e) => change("email", e.target.value)}
+              />
+            </Field>
+            <Field label="Bahasa email">
+              <select
+                value={value.lang ?? "id"}
+                onChange={(e) => change("lang", e.target.value)}
+              >
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </Field>
+          </div>
+        </fieldset>
+        <fieldset className="admin-form-group">
+          <legend>Nilai dan catatan</legend>
+          <div className="admin-form-grid">
+            <Field label="Nilai reservasi (Rp)">
+              <input
+                type="number"
+                required
+                min="0"
+                max="1000000000"
+                value={value.amount}
+                onChange={(e) => change("amount", e.target.value)}
+              />
+            </Field>
+          </div>
+          <Field label="Catatan">
+            <textarea
+              rows="3"
+              maxLength="2000"
+              value={value.notes}
+              onChange={(e) => change("notes", e.target.value)}
             />
           </Field>
-          <Field label="Tanggal selesai (termasuk hari ini)">
-            <input
-              type="date"
-              required
-              min={value.startDate}
-              value={value.endDate}
-              onChange={(e) => change("endDate", e.target.value)}
-            />
-          </Field>
-          <Field label="Sumber reservasi">
-            <select
-              value={value.source}
-              onChange={(e) => change("source", e.target.value)}
-            >
-              {Object.entries(sources).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Nama tamu">
-            <input
-              required={value.status !== "closed"}
-              maxLength={120}
-              value={value.guestName}
-              onChange={(e) => change("guestName", e.target.value)}
-            />
-          </Field>
-          <Field label="Telepon / WhatsApp">
-            <input
-              type="tel"
-              maxLength={30}
-              value={value.phone}
-              onChange={(e) => change("phone", e.target.value)}
-            />
-          </Field>
-          <Field label="Email tamu">
-            <input
-              type="email"
-              maxLength={200}
-              placeholder="untuk tagihan dan invoice"
-              value={value.email ?? ""}
-              onChange={(e) => change("email", e.target.value)}
-            />
-          </Field>
-          <Field label="Bahasa email">
-            <select
-              value={value.lang ?? "id"}
-              onChange={(e) => change("lang", e.target.value)}
-            >
-              <option value="id">Bahasa Indonesia</option>
-              <option value="en">English</option>
-            </select>
-          </Field>
-          <Field label="Jumlah peserta">
-            <input
-              type="number"
-              required
-              min="1"
-              max="100"
-              value={value.participants}
-              onChange={(e) => change("participants", e.target.value)}
-            />
-          </Field>
-          <Field label="Nilai reservasi (Rp)">
-            <input
-              type="number"
-              required
-              min="0"
-              max="1000000000"
-              value={value.amount}
-              onChange={(e) => change("amount", e.target.value)}
-            />
-          </Field>
-        </div>
-        <Field label="Catatan">
-          <textarea
-            rows="3"
-            maxLength="2000"
-            value={value.notes}
-            onChange={(e) => change("notes", e.target.value)}
-          />
-        </Field>
+        </fieldset>
         {value.status !== "closed" && (
           <BookingGear
             value={value}
@@ -340,6 +360,9 @@ export default function Dashboard({ section, account, today }) {
     [autoSave, setAutoSave] = useState(0),
     // The rental gear and its stock, for the calendar and the booking form.
     [gear, setGear] = useState(null);
+  // The bell and the account menu close on a tap anywhere else.
+  const bellRef = useOutsideClose(notification, () => setNotification(false));
+  const ownerRef = useOutsideClose(ownerMenu, () => setOwnerMenu(false));
   useEffect(() => {
     if (!can("bookings") || !["calendar", "reservations"].includes(section))
       return;
@@ -476,6 +499,7 @@ export default function Dashboard({ section, account, today }) {
   async function saveSettings(
     event,
     message = "Perubahan sudah tersimpan dan tampil di website.",
+    next = content,
   ) {
     event?.preventDefault();
     setBusy(true);
@@ -483,7 +507,7 @@ export default function Dashboard({ section, account, today }) {
     setError("");
     try {
       const result = await request("/api/admin/settings", "PUT", {
-        content,
+        content: next,
         version: data.version,
       });
       setData((current) => ({ ...current, ...result }));
@@ -521,6 +545,15 @@ export default function Dashboard({ section, account, today }) {
     } finally {
       setBusy(false);
     }
+  }
+  // A booking noted from the calendar's day panel. Errors go back to the
+  // panel's form.
+  async function quickReservation(payload) {
+    const saved = await request("/api/admin/bookings", "POST", payload);
+    await refresh();
+    setError("");
+    setNotice(`Booking ${saved.guestName} tersimpan.`);
+    return saved;
   }
   function editReservation(item) {
     setNotice("");
@@ -787,7 +820,7 @@ export default function Dashboard({ section, account, today }) {
               Kembali ke situs <AdminIcon name="arrow" size={15} />
             </a>
             {can("bookings") && (
-              <div className="admin-menu-anchor">
+              <div className="admin-menu-anchor" ref={bellRef}>
                 <button
                   className="admin-icon-button"
                   aria-label="Notifikasi reservasi"
@@ -809,7 +842,11 @@ export default function Dashboard({ section, account, today }) {
                     <h3>Perlu konfirmasi</h3>
                     {pending.length ? (
                       pending.slice(0, 5).map((b) => (
-                        <Link key={b.id} href="/admin/reservations">
+                        <Link
+                          key={b.id}
+                          href="/admin/reservations"
+                          onClick={() => setNotification(false)}
+                        >
                           {b.guestName} · {dateLabel(b.startDate)}
                         </Link>
                       ))
@@ -820,7 +857,7 @@ export default function Dashboard({ section, account, today }) {
                 )}
               </div>
             )}
-            <div className="admin-menu-anchor">
+            <div className="admin-menu-anchor" ref={ownerRef}>
               <button
                 className="admin-owner"
                 aria-label="Akun"
@@ -1053,6 +1090,7 @@ export default function Dashboard({ section, account, today }) {
                         ?.scrollIntoView({ behavior: "smooth" });
                     }}
                     onEdit={editReservation}
+                    onQuickSave={quickReservation}
                   />
                   <SchedulePaste
                     bookings={bookings}
@@ -1456,6 +1494,19 @@ export default function Dashboard({ section, account, today }) {
                       "Mode developer tersimpan dan langsung berlaku.",
                     )
                   }
+                  // The main switch and the whole-site lock save at once.
+                  saveNow={(patch, message) => {
+                    const next = {
+                      ...content,
+                      developer: {
+                        ...defaultDeveloper,
+                        ...content.developer,
+                        ...patch,
+                      },
+                    };
+                    setContent(next);
+                    saveSettings(null, message, next);
+                  }}
                   busy={busy}
                 />
               )}

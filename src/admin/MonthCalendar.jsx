@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   statuses,
   sources,
@@ -9,6 +9,7 @@ import {
 import { paymentStatusLabels } from "../payment-model.js";
 import { monthDays } from "../month-grid.js";
 import { rentalCalendar, gearLeft } from "../shop-stock.js";
+import { dayAgenda, whatsappNumber } from "../calendar-day.js";
 
 const weekdays = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 const longDate = (date) =>
@@ -67,10 +68,26 @@ export default function MonthCalendar({
   onToday,
   onPick,
   onEdit,
+  onQuickSave,
 }) {
   const [program, setProgram] = useState("all");
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("bookings");
+  // The reservation picked on the grid, lit in the day panel.
+  const [focus, setFocus] = useState(null);
+  const side = useRef(null);
+  // A date picked on the grid opens its panel; on a narrow screen the panel
+  // sits under the grid, so it comes into view.
+  function pick(date, id = null) {
+    setSelected(date);
+    setFocus(id);
+    if (window.matchMedia("(max-width: 1180px)").matches)
+      setTimeout(
+        () =>
+          side.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        30,
+      );
+  }
   const days = monthDays(month);
   const list = bookings.filter(
     (b) =>
@@ -102,13 +119,13 @@ export default function MonthCalendar({
       : {};
   const byId = new Map(bookings.map((b) => [b.id, b]));
   const pickedGear = picked ? (rentals[picked] ?? []) : [];
-  const pickedBookings = picked ? onDay(picked) : [];
-  const pickedAgents = picked ? agentsOn(picked) : [];
-  const guests = pickedBookings
-    .filter((b) => b.status !== "closed")
-    .reduce((sum, b) => sum + (Number(b.participants) || 0), 0);
+  // People out on a day, for the count on its cell.
+  const peopleOn = (date) =>
+    onDay(date)
+      .filter((b) => b.status !== "closed")
+      .reduce((sum, b) => sum + (Number(b.participants) || 0), 0);
   return (
-    <>
+    <div className="admin-calendar-layout">
       <section className="admin-card admin-month-card">
         <div className="admin-month-nav">
           <button
@@ -198,6 +215,7 @@ export default function MonthCalendar({
                 (rentals[date] ?? []).some((e) =>
                   ["full", "over"].includes(gearState(e)),
                 );
+              const count = view === "bookings" ? peopleOn(date) : 0;
               return (
                 <div
                   key={date}
@@ -207,17 +225,38 @@ export default function MonthCalendar({
                     (date.slice(0, 7) === month ? "" : " is-outside") +
                     (date === today ? " is-today" : "") +
                     (date === picked ? " is-selected" : "") +
-                    (full ? " has-full" : "")
+                    (full ? " has-full" : "") +
+                    (chips.length ? " has-items" : "")
                   }
+                  // A tap anywhere on the day opens it; the date button is
+                  // the way in by keyboard.
+                  onClick={(event) => {
+                    if (!event.target.closest("button")) pick(date);
+                  }}
                 >
-                  <button
-                    type="button"
-                    className="admin-month-date"
-                    aria-label={`Lihat ${longDate(date)}`}
-                    onClick={() => setSelected(date)}
-                  >
-                    {Number(date.slice(8))}
-                  </button>
+                  <div className="admin-month-day-top">
+                    <button
+                      type="button"
+                      className="admin-month-date"
+                      aria-label={`Lihat ${longDate(date)}`}
+                      aria-pressed={date === picked}
+                      onClick={() => pick(date)}
+                    >
+                      {Number(date.slice(8))}
+                    </button>
+                    {count > 0 && (
+                      <span
+                        className="admin-month-people"
+                        title={`${count} orang`}
+                        aria-label={`${count} orang`}
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0" />
+                        </svg>
+                        {count}
+                      </span>
+                    )}
+                  </div>
                   {shown.map((chip) =>
                     chip.kind === "gear" ? (
                       <button
@@ -225,7 +264,7 @@ export default function MonthCalendar({
                         type="button"
                         className={"calendar-gear is-" + gearState(chip.entry)}
                         title={`${chip.entry.name}. ${gearText(chip.entry)}`}
-                        onClick={() => setSelected(date)}
+                        onClick={() => pick(date)}
                       >
                         <span>
                           {chip.entry.name}{" "}
@@ -242,14 +281,13 @@ export default function MonthCalendar({
                         type="button"
                         className={chipClass(chip.b)}
                         title={chipTitle(chip.b, content)}
-                        onClick={() => onEdit(chip.b)}
+                        onClick={() => pick(date, chip.b.id)}
                       >
                         <i aria-hidden="true" />
                         <span>
                           {chip.b.status === "closed"
-                            ? "Tutup"
-                            : chip.b.guestName}{" "}
-                          · {programTitle(content, chip.b.experience)}
+                            ? `Tutup ${programTitle(content, chip.b.experience)}`
+                            : chip.b.guestName}
                         </span>
                       </button>
                     ) : (
@@ -269,7 +307,7 @@ export default function MonthCalendar({
                     <button
                       type="button"
                       className="admin-month-more"
-                      onClick={() => setSelected(date)}
+                      onClick={() => pick(date)}
                     >
                       +{extra} lainnya
                     </button>
@@ -314,74 +352,383 @@ export default function MonthCalendar({
           </div>
         )}
       </section>
-      {picked && view === "gear" && (
-        <GearDay
-          date={picked}
-          entries={pickedGear}
-          gear={gear}
-          bookings={byId}
-          content={content}
-          onPick={onPick}
-          onEdit={onEdit}
-        />
-      )}
-      {picked && view === "bookings" && (
-        <section className="admin-card admin-day-card">
-          <div className="admin-card-heading">
-            <div>
-              <h2>{longDate(picked)}</h2>
-              <p className="admin-subtle">
-                {pickedBookings.length
-                  ? `${pickedBookings.length} catatan · ${guests} peserta`
-                  : "Belum ada reservasi pada tanggal ini."}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="admin-button secondary"
-              onClick={() => onPick(picked)}
-            >
-              Tambah reservasi tanggal ini
-            </button>
+      <aside
+        ref={side}
+        className="admin-card admin-day-side"
+        aria-label="Agenda tanggal"
+      >
+        {!picked ? (
+          <div className="admin-day-empty">
+            <h2>Agenda</h2>
+            <p className="admin-subtle">
+              Klik tanggal di kalender untuk melihat siapa saja yang diving,
+              snorkeling, menyewa alat, atau berkegiatan lain pada hari itu, dan
+              untuk mencatat booking baru.
+            </p>
           </div>
-          {pickedBookings.map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              className="admin-booking-summary"
-              onClick={() => onEdit(b)}
-            >
-              <strong>{b.guestName || "Penutupan tanggal"}</strong>
-              <span>
-                {programTitle(content, b.experience)}
-                {b.status !== "closed" && ` · ${b.participants} peserta`} ·{" "}
-                {sources[b.source]}
-                {b.payment?.status === "paid" && " · Lunas"}
-              </span>
-              <small>
-                {shortDate(b.startDate)}–{shortDate(b.endDate)}
-              </small>
-              <span className={"admin-status " + b.status}>
-                {statuses[b.status]}
-              </span>
-            </button>
-          ))}
-          {pickedAgents.map(({ agent, event }) => (
-            <div
-              key={agent.id + event.uid}
-              className="admin-booking-summary is-agent"
-            >
-              <strong>{agent.name}</strong>
-              <span>{event.summary}</span>
-              <small>
-                {shortDate(event.start)}–{shortDate(event.end)}
-              </small>
-              <span className="admin-status agent">Agen</span>
-            </div>
-          ))}
+        ) : view === "gear" ? (
+          <GearDay
+            date={picked}
+            entries={pickedGear}
+            gear={gear}
+            bookings={byId}
+            content={content}
+            onPick={onPick}
+            onEdit={onEdit}
+          />
+        ) : (
+          <DayAgenda
+            key={picked}
+            date={picked}
+            bookings={bookings}
+            agents={agents}
+            gear={gear ?? []}
+            content={content}
+            program={program}
+            focus={focus}
+            onPick={onPick}
+            onEdit={onEdit}
+            onQuickSave={onQuickSave}
+          />
+        )}
+      </aside>
+    </div>
+  );
+}
+
+// The day picked: everyone out that day by activity, the rental gear and
+// who rents it, the agents' trips and the programs closed, with a short
+// form to note a booking on that date.
+function DayAgenda({
+  date,
+  bookings,
+  agents,
+  gear,
+  content,
+  program,
+  focus,
+  onPick,
+  onEdit,
+  onQuickSave,
+}) {
+  const day = dayAgenda(date, bookings, { agents, gear });
+  const [adding, setAdding] = useState(false);
+  const empty = !day.count && !day.agents.length && !day.closed.length;
+  // One person on the day: a tap opens the reservation in the full form;
+  // the WhatsApp link opens the chat.
+  const person = (b, extra) => (
+    <li
+      key={b.id}
+      className={"admin-day-person" + (focus === b.id ? " is-focus" : "")}
+      onClick={(event) => {
+        if (!event.target.closest("a, button")) onEdit(b);
+      }}
+    >
+      <button
+        type="button"
+        className="admin-day-name"
+        onClick={() => onEdit(b)}
+      >
+        {b.guestName || "Tanpa nama"}
+      </button>
+      <span className={"admin-status " + b.status}>{statuses[b.status]}</span>
+      <span className="admin-day-detail">{extra}</span>
+      {whatsappNumber(b.phone) && (
+        <a
+          className="admin-day-wa"
+          href={`https://wa.me/${whatsappNumber(b.phone)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`WhatsApp ${b.guestName}`}
+        >
+          WhatsApp
+        </a>
+      )}
+    </li>
+  );
+  return (
+    <div className="admin-day-agenda">
+      <div className="admin-day-head">
+        <p className="admin-day-eyebrow">Agenda</p>
+        <h2>{longDate(date)}</h2>
+        <p className="admin-subtle">
+          {day.count
+            ? `${day.count} reservasi, ${day.people} orang`
+            : "Belum ada reservasi pada tanggal ini."}
+        </p>
+      </div>
+      {adding ? (
+        <QuickBooking
+          date={date}
+          content={content}
+          program={program}
+          onSave={async (payload) => {
+            await onQuickSave(payload);
+            setAdding(false);
+          }}
+          onCancel={() => setAdding(false)}
+          onFull={() => onPick(date)}
+        />
+      ) : (
+        <button
+          type="button"
+          className="admin-button admin-day-add"
+          onClick={() => setAdding(true)}
+        >
+          + Catat booking tanggal ini
+        </button>
+      )}
+      {day.programs.map((group) => (
+        <section
+          key={group.key}
+          className={"admin-day-group is-" + group.key}
+          aria-label={programTitle(content, group.key)}
+        >
+          <h3>
+            <i aria-hidden="true" />
+            {programTitle(content, group.key)}
+            <small>
+              {group.entries.length} reservasi, {group.people} orang
+            </small>
+          </h3>
+          <ul>
+            {group.entries.map(({ booking: b, day: n, days }) =>
+              person(
+                b,
+                `${b.participants} orang` +
+                  (days > 1 ? `, hari ${n} dari ${days}` : "") +
+                  `, ${sources[b.source]}` +
+                  (b.payment?.status === "paid" ? ", lunas" : ""),
+              ),
+            )}
+          </ul>
+        </section>
+      ))}
+      {day.rentals.length > 0 && (
+        <section className="admin-day-group is-gear" aria-label="Sewa alat">
+          <h3>
+            <i aria-hidden="true" />
+            Sewa alat
+            <small>{day.rentals.length} penyewa</small>
+          </h3>
+          <ul>
+            {day.rentals.map(({ booking: b, items }) =>
+              person(
+                b,
+                items
+                  .map((item) => `${item.name} × ${item.quantity}`)
+                  .join(", "),
+              ),
+            )}
+          </ul>
         </section>
       )}
-    </>
+      {day.agents.length > 0 && (
+        <section className="admin-day-group is-agent" aria-label="Agen dan OTA">
+          <h3>
+            <i aria-hidden="true" />
+            Agen & OTA
+          </h3>
+          <ul>
+            {day.agents.map(({ agent, event }) => (
+              <li
+                key={agent.id + event.uid}
+                className="admin-day-person is-static"
+              >
+                <strong className="admin-day-name">{agent.name}</strong>
+                <span className="admin-status agent">Agen</span>
+                <span className="admin-day-detail">
+                  {event.summary}, {shortDate(event.start)} sampai{" "}
+                  {shortDate(event.end)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {day.closed.length > 0 && (
+        <section className="admin-day-group is-closed" aria-label="Ditutup">
+          <h3>
+            <i aria-hidden="true" />
+            Ditutup
+          </h3>
+          <ul>
+            {day.closed.map((b) =>
+              person(
+                b,
+                `${programTitle(content, b.experience)} tidak menerima booking`,
+              ),
+            )}
+          </ul>
+        </section>
+      )}
+      {empty && !adding && (
+        <p className="admin-day-none">
+          Hari ini masih kosong. Catat booking dari WhatsApp atau tamu yang
+          datang langsung dengan tombol di atas.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// A booking noted straight from the day panel: who, what, how many and
+// until when. Everything else (email, value, rental gear, billing) is in
+// the full form below the calendar.
+function QuickBooking({ date, content, program, onSave, onCancel, onFull }) {
+  const [form, setForm] = useState({
+    guestName: "",
+    experience: program !== "all" ? program : "diving",
+    participants: 1,
+    endDate: date,
+    phone: "",
+    status: "confirmed",
+    source: "whatsapp",
+    notes: "",
+  });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const first = useRef(null);
+  useEffect(() => first.current?.focus(), []);
+  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await onSave({
+        ...form,
+        guestName: form.guestName.trim(),
+        participants: Number(form.participants),
+        startDate: date,
+        amount: 0,
+        email: "",
+        lang: "id",
+      });
+    } catch (e) {
+      setError(e.message);
+      setBusy(false);
+    }
+  }
+  return (
+    <form className="admin-quick-booking" onSubmit={submit}>
+      <h3>Catat booking {shortDate(date)}</h3>
+      <div className="admin-field">
+        <label htmlFor="quick-name">Nama tamu atau grup</label>
+        <input
+          id="quick-name"
+          ref={first}
+          required
+          maxLength={120}
+          value={form.guestName}
+          onChange={set("guestName")}
+        />
+      </div>
+      <div className="admin-quick-grid">
+        <div className="admin-field">
+          <label htmlFor="quick-kind">Kegiatan</label>
+          <select
+            id="quick-kind"
+            value={form.experience}
+            onChange={set("experience")}
+          >
+            {bookingPrograms.map((key) => (
+              <option key={key} value={key}>
+                {programTitle(content, key)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="admin-field">
+          <label htmlFor="quick-people">Jumlah orang</label>
+          <input
+            id="quick-people"
+            type="number"
+            required
+            min={1}
+            max={100}
+            value={form.participants}
+            onChange={set("participants")}
+          />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="quick-end">Sampai tanggal</label>
+          <input
+            id="quick-end"
+            type="date"
+            required
+            min={date}
+            value={form.endDate}
+            onChange={set("endDate")}
+          />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="quick-phone">WhatsApp (opsional)</label>
+          <input
+            id="quick-phone"
+            type="tel"
+            maxLength={30}
+            value={form.phone}
+            onChange={set("phone")}
+          />
+        </div>
+        <div className="admin-field">
+          <label htmlFor="quick-status">Status</label>
+          <select
+            id="quick-status"
+            value={form.status}
+            onChange={set("status")}
+          >
+            <option value="confirmed">{statuses.confirmed}</option>
+            <option value="pending">{statuses.pending}</option>
+          </select>
+        </div>
+        <div className="admin-field">
+          <label htmlFor="quick-source">Sumber</label>
+          <select
+            id="quick-source"
+            value={form.source}
+            onChange={set("source")}
+          >
+            {Object.entries(sources).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="admin-field">
+        <label htmlFor="quick-notes">Catatan (opsional)</label>
+        <textarea
+          id="quick-notes"
+          rows={2}
+          maxLength={2000}
+          value={form.notes}
+          onChange={set("notes")}
+        />
+      </div>
+      {error && (
+        <p className="admin-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="admin-quick-actions">
+        <button className="admin-button" disabled={busy}>
+          {busy ? "Menyimpan…" : "Simpan booking"}
+        </button>
+        <button
+          type="button"
+          className="admin-button secondary"
+          onClick={onCancel}
+        >
+          Batal
+        </button>
+        <button type="button" className="admin-inline" onClick={onFull}>
+          Formulir lengkap
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -394,7 +741,7 @@ function GearDay({ date, entries, gear, bookings, content, onPick, onEdit }) {
   ).length;
   const counted = (gear ?? []).filter((g) => g.follows);
   return (
-    <section className="admin-card admin-day-card admin-gear-day">
+    <section className="admin-gear-day">
       <div className="admin-card-heading">
         <div>
           <h2>{longDate(date)}</h2>

@@ -62,10 +62,26 @@ export default function DeveloperEditor({
   services,
   update,
   onSave,
+  saveNow,
   busy,
 }) {
   const count = lockCount(developer);
-  const set = (key) => (value) => update(key, value);
+  // Locking anything turns developer mode on, or the lock would do nothing.
+  const set = (key) => (value) => {
+    update(key, value);
+    if (value.length > developer[key].length && !developer.enabled)
+      update("enabled", true);
+  };
+  const preview = (
+    <a
+      className="admin-button secondary"
+      href="/?pratinjau=pengunjung"
+      target="_blank"
+      rel="noopener"
+    >
+      Lihat seperti pengunjung ↗
+    </a>
+  );
   const save = (
     <button className="admin-button" disabled={busy}>
       {busy ? "Menyimpan…" : "Simpan mode developer"}
@@ -94,7 +110,17 @@ export default function DeveloperEditor({
               type="checkbox"
               role="switch"
               checked={developer.enabled}
-              onChange={(e) => update("enabled", e.target.checked)}
+              disabled={busy}
+              onChange={(e) =>
+                saveNow(
+                  { enabled: e.target.checked },
+                  !e.target.checked
+                    ? "Mode developer mati. Website terbuka untuk semua pengunjung."
+                    : developer.site
+                      ? "Mode developer aktif. Seluruh website tertutup untuk pengunjung."
+                      : "Mode developer aktif. Kunci yang dipilih berlaku untuk pengunjung.",
+                )
+              }
             />
             <span aria-hidden="true" />
             {developer.enabled ? "Aktif" : "Mati"}
@@ -102,14 +128,24 @@ export default function DeveloperEditor({
         </div>
         <p className="admin-dev-status" role="status">
           {!developer.enabled
-            ? "Mode developer mati: website terbuka untuk semua pengunjung."
+            ? "Mode developer mati. Website terbuka untuk semua pengunjung."
             : developer.site
-              ? "Seluruh website terkunci. Pengunjung melihat halaman perawatan (kode 503)."
+              ? "Seluruh website tertutup. Pengunjung melihat halaman perawatan (kode 503)."
               : count
                 ? `${count} kunci aktif untuk pengunjung.`
                 : "Mode developer aktif, tapi belum ada yang dikunci."}
         </p>
-        {save}
+        <p className="admin-subtle">
+          Saklar ini dan Tutup seluruh website langsung tersimpan saat diklik.
+          Karena kamu masuk sebagai admin, website tetap terlihat lengkap di
+          browser ini. Tekan Lihat seperti pengunjung untuk memeriksa yang
+          dilihat pengunjung, selama 30 menit atau sampai kamu menekan Kembali
+          ke tampilan admin.
+        </p>
+        <div className="admin-dev-actions">
+          {save}
+          {preview}
+        </div>
       </section>
 
       <section className="admin-card">
@@ -117,8 +153,19 @@ export default function DeveloperEditor({
         <label className="admin-dev-choice admin-dev-site">
           <input
             type="checkbox"
-            checked={developer.site}
-            onChange={(e) => update("site", e.target.checked)}
+            checked={developer.enabled && developer.site}
+            disabled={busy}
+            onChange={(e) =>
+              saveNow(
+                {
+                  site: e.target.checked,
+                  ...(e.target.checked ? { enabled: true } : {}),
+                },
+                e.target.checked
+                  ? "Seluruh website tertutup untuk pengunjung. Tekan Lihat seperti pengunjung untuk memeriksanya."
+                  : "Website dibuka lagi untuk pengunjung.",
+              )
+            }
           />
           <span>
             <strong>Tutup seluruh website untuk pengunjung</strong>

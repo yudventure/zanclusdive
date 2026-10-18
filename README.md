@@ -65,7 +65,10 @@ Buka `/admin/developer` (**Mode developer** di menu admin). Saat mode developer 
 - **Per bagian beranda**: pengalaman & harga, panel kursus, peta titik selam, galeri laut, video YouTube, Dive Shop, cara menuju ke sini, dan toko & kontak. Bagian terkunci diganti kartu "Sedang diperbarui" dengan tombol WhatsApp.
 - **Per item**: produk Dive Shop dan servis alat selam. Item tetap terlihat dengan tanda "Sedang diperbarui", tapi tidak bisa dimasukkan ke keranjang atau dipilih di formulir.
 
-Pesan untuk pengunjung (ID/EN) dan perkiraan selesai (WIT) tampil di halaman perawatan. Admin yang sedang masuk tetap melihat website lengkap, dengan bar "Mode developer aktif" di bawah layar. Mematikan mode developer membuka semuanya sekaligus, dan pilihan kunci tetap tersimpan untuk lain kali.
+Pesan untuk pengunjung (ID/EN) dan perkiraan selesai (WIT) tampil di halaman perawatan. Mematikan mode developer membuka semuanya sekaligus, dan pilihan kunci tetap tersimpan untuk lain kali.
+
+- **Langsung tersimpan.** Saklar **Mode developer** dan centang **Tutup seluruh website untuk pengunjung** tersimpan begitu diklik, dengan pemberitahuan. Menutup seluruh website atau mencentang kunci apa pun saat saklar masih Mati ikut menyalakan saklarnya, karena kunci tanpa mode developer tidak berlaku. Kunci per halaman, bagian, dan item tetap disimpan dengan **Simpan mode developer**.
+- **Admin melihat website lengkap.** Admin yang sedang masuk tetap melihat website, dengan bar "Mode developer aktif" di bawah layar, jadi website yang tertutup tampak terbuka di browser admin. Tombol **Lihat seperti pengunjung** (di halaman Mode developer dan di bar itu) membuka website seperti pengunjung yang tidak masuk, lengkap dengan halaman perawatan, selama 30 menit (`/?pratinjau=pengunjung`, cookie `zanclus_pratinjau`). Bar oranye **Pratinjau pengunjung** atau tombol di halaman perawatan, **Kembali ke tampilan admin** (`?pratinjau=admin`), mengakhirinya. Halaman admin tetap terbuka selama pratinjau.
 
 Cara kerjanya: setiap halaman memeriksa kunci dan sesi admin. `proxy.js` juga menjawab halaman terkunci dengan 503 dari status kunci yang diingat proses server setiap kali konten dibaca atau disimpan. Setelah server baru menyala, permintaan pertama tetap mendapat halaman perawatan dari halaman itu sendiri.
 
@@ -281,6 +284,18 @@ Pengunjung membuka formulir booking dari tombol hero atau bagian kontak, memilih
 Tanggal menggunakan WIT (Asia/Jayapura), mulai hari ini sampai 365 hari ke depan. Penutupan tanggal di kalender admin berlaku pada program dan rentang tanggal terkait; permintaan pada tanggal tertutup ditolak dengan pesan yang jelas. Pengajuan masih perlu konfirmasi jadwal, biaya, dan kondisi laut oleh tim. Kuota harian (diving 30 orang) diperiksa saat pengajuan dan pembayaran; lihat **Kalender & slot harian**. Pembayaran langsung tersedia di formulir halaman aktivitas bila diaktifkan (lihat di bawah). Nilai reservasi awal Rp0 adalah nilai pencatatan yang belum diisi, bukan penawaran gratis.
 
 API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan bukti pengajuan tanpa identitas tamu. Pengiriman ulang memakai ID permintaan yang sama untuk mencegah duplikasi. Formulir membatasi peserta, memvalidasi nomor kontak dan tanggal di server, serta membatasi percobaan pengajuan. Di mode demo data tersimpan pada penyimpanan demo yang sama dengan CMS (gunakan data contoh); di mode MySQL data masuk ke tabel CMS yang sudah ada. Tidak perlu environment variable tambahan atau mengimpor ulang SQL.
+
+### Kalender reservasi dan booking manual
+
+`/admin/calendar` menampilkan bulan di kiri dan **Agenda** tanggal yang dipilih di kanan (`src/admin/MonthCalendar.jsx`, `src/calendar-day.js`). Di HP, agenda ada di bawah kalender dan digulir ke layar saat tanggal diketuk.
+
+- **Kalender.** Setiap tanggal menunjukkan jumlah orang yang berkegiatan dan nama tamunya, berwarna menurut status (Dikonfirmasi, Belum dikonfirmasi, Lunas, Agen, Tutup). Ketuk di mana saja pada tanggal untuk membukanya di Agenda. Mengetuk nama di kalender juga menandai orang itu di Agenda.
+- **Agenda.** Siapa saja yang berkegiatan pada hari itu, dikelompokkan per kegiatan (Diving, Snorkeling, Trip laut, Kursus, Dive Shop, Servis). Ada jumlah orang, hari ke berapa dari trip yang lebih dari sehari, sumber, status, dan tombol WhatsApp kalau nomornya ada. Ada juga kelompok **Sewa alat** (siapa menyewa apa, dari pesanan online, add-on aktivitas, atau alat yang dicatat tim), **Agen & OTA**, dan **Ditutup**. Mengetuk nama membuka reservasinya di formulir lengkap. Reservasi yang dibatalkan tidak tampil. Tampilan **Sewa alat** tetap menampilkan sisa alat sewa per hari di panel yang sama.
+- **Catat booking tanggal ini.** Formulir singkat di Agenda untuk booking dari WhatsApp atau tamu yang datang langsung. Isinya nama tamu atau grup, kegiatan, jumlah orang, sampai tanggal, WhatsApp, status (bawaan Dikonfirmasi), sumber (bawaan WhatsApp), dan catatan. Booking langsung tersimpan dan tampil di Agenda. **Formulir lengkap** membuka formulir di bawah kalender pada tanggal itu, untuk email tamu, nilai, alat sewa, dan tagihan.
+- **Formulir lengkap.** Dikelompokkan menjadi Kegiatan dan tanggal, Tamu, Nilai dan catatan, Alat sewa, lalu Pembayaran & email tamu.
+- **Menu di pojok kanan atas.** Notifikasi dan menu akun tertutup saat mengetuk di mana saja di luarnya, atau dengan tombol Esc (`src/admin/useOutsideClose.js`).
+
+Uji dengan `node scripts/verify-calendar-day.mjs` pada server demo.
 
 ### Tempel jadwal dari WhatsApp
 

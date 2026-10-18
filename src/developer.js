@@ -8,6 +8,12 @@
 // The admin session cookie (set in src/server/auth.js). proxy.js lets a
 // request carrying it through; the page then checks the session itself.
 export const adminCookie = "zanclus_admin_session";
+// A signed-in admin can look at the website as a visitor does, locks and
+// all: /?pratinjau=pengunjung sets this cookie for half an hour, and
+// ?pratinjau=admin ends it. proxy.js passes it on in the visitor header.
+export const previewCookie = "zanclus_pratinjau";
+export const visitorHeader = "x-zanclus-visitor";
+export const previewMinutes = 30;
 
 export const lockablePages = [
   ["home", "Beranda", "/"],

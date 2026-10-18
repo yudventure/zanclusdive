@@ -353,6 +353,12 @@ export function statusDocument(options) {
 </head>
 <body>
 ${statusMarkup({ ...options, styles: false })}
+${
+  // An admin looking at the website as a visitor, with the way back.
+  options.previewExit
+    ? `<a href="${escape(options.previewExit)}" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:#bef4a5;color:#062b3b;font:600 13px 'Plus Jakarta Sans',sans-serif;text-decoration:none;box-shadow:0 14px 40px #0000004d">Pratinjau pengunjung. Kembali ke tampilan admin</a>`
+    : ""
+}
 <script>
 document.querySelectorAll("[data-retry]").forEach(function (a) {
   a.addEventListener("click", function (e) { e.preventDefault(); location.reload(); });

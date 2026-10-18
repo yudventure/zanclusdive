@@ -75,10 +75,17 @@ try {
       await a.locator(".admin-dev-switch").click();
     assert.equal(await a.getByRole("switch").isChecked(), on);
   };
+  const notice = (text) =>
+    a.locator(".admin-success", { hasText: text }).waitFor();
   await a.goto(base + "/admin/developer", { waitUntil: "networkidle" });
   await a.getByRole("heading", { name: "Kunci sebagian" }).waitFor();
-  await setSwitch(true);
+  // Closing the website with the main switch still off turns it on and
+  // saves at once.
+  assert.equal(await a.getByRole("switch").isChecked(), false);
   await a.getByLabel("Tutup seluruh website untuk pengunjung").check();
+  await notice("Seluruh website tertutup untuk pengunjung.");
+  assert.equal(await a.getByRole("switch").isChecked(), true);
+  assert.equal((await visitor.page.goto(base + "/")).status(), 503);
   await a
     .getByLabel("Pesan untuk pengunjung (Indonesia)")
     .fill("Katalog alat selam baru sedang disiapkan.");
@@ -95,7 +102,7 @@ try {
   await a.getByText("Mode developer tersimpan").waitFor();
   assert.match(
     await a.locator(".admin-dev-status").textContent(),
-    /Seluruh website terkunci/,
+    /Seluruh website tertutup/,
   );
 
   // Visitors get the maintenance page with a 503; the admin keeps the site.
@@ -125,12 +132,26 @@ try {
   assert.equal(await a.locator(".hero").count(), 1);
   assert.match(
     await a.locator(".dev-bar").textContent(),
-    /Seluruh website terkunci/,
+    /Seluruh website tertutup untuk pengunjung/,
   );
+  // The admin can look as a visitor does, and come back.
+  await a.getByRole("link", { name: "Lihat seperti pengunjung" }).click();
+  await a.waitForURL(/pratinjau=pengunjung/);
+  assert.equal(
+    await a.locator("h1").textContent(),
+    "We're giving the website a quick service.",
+  );
+  assert.equal((await a.goto(base + "/id/dive-shop")).status(), 503);
+  await a.getByRole("link", { name: /Kembali ke tampilan admin/ }).click();
+  await a.waitForURL(/pratinjau=admin/);
+  assert.equal(await a.locator("[data-status]").count(), 0);
+  assert.equal((await a.goto(base + "/")).status(), 200);
+  assert.equal(await a.locator(".hero").count(), 1);
 
   // Lock one page, two sections, a product and a service instead.
   await a.goto(base + "/admin/developer", { waitUntil: "networkidle" });
   await a.getByLabel("Tutup seluruh website untuk pengunjung").uncheck();
+  await notice("Website dibuka lagi untuk pengunjung.");
   for (const label of [
     "Snorkeling/snorkeling",
     "Dive Shop/dive-shop",
@@ -187,11 +208,7 @@ try {
   // Switching developer mode off opens everything and keeps the choices.
   await a.goto(base + "/admin/developer", { waitUntil: "networkidle" });
   await setSwitch(false);
-  await a
-    .getByRole("button", { name: "Simpan mode developer" })
-    .first()
-    .click();
-  await a.getByText("Mode developer tersimpan").waitFor();
+  await notice("Mode developer mati. Website terbuka untuk semua pengunjung.");
   assert.ok(
     await a
       .locator(".admin-dev-choice", { hasText: "Servis BCD" })

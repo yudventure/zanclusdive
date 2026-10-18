@@ -1256,6 +1256,12 @@
   background: #e3f4e8;
   color: #285a3d;
 }
+.admin-dev-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
 .admin-dev-choices {
   margin: 0 0 24px;
   padding: 0;
@@ -3172,10 +3178,9 @@ strong.admin-overdue {
 }
 .admin-gear-line {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(90px, 120px) minmax(
-      0,
-      1.4fr
-    ) auto;
+  grid-template-columns:
+    minmax(0, 2fr) minmax(90px, 120px) minmax(0, 1.4fr)
+    auto;
   gap: 10px;
   align-items: end;
 }
@@ -3371,5 +3376,272 @@ strong.admin-overdue {
   }
   .admin-paste-fields .admin-field:last-child {
     grid-column: 1 / -1;
+  }
+}
+/* Kalender reservasi: the month on the left, the day picked on the right
+   with everyone out that day and a short form to note a booking. */
+.admin-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 370px);
+  gap: 22px;
+  align-items: start;
+}
+.admin-calendar-layout .admin-month-card {
+  min-width: 0;
+  margin: 0;
+}
+.admin-calendar-layout .admin-month-day {
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.admin-calendar-layout .admin-month-day:hover {
+  border-color: #b9d6e2;
+}
+.admin-month-day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+}
+.admin-month-people {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px 2px 5px;
+  border-radius: 999px;
+  background: #e9f2f7;
+  color: #2b5a73;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-month-people svg {
+  width: 11px;
+  height: 11px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.admin-day-side {
+  position: sticky;
+  top: 104px;
+  max-height: calc(100vh - 124px);
+  overflow: auto;
+  margin: 0;
+  padding: 22px;
+  overscroll-behavior: contain;
+}
+.admin-day-empty h2 {
+  margin: 0 0 8px;
+}
+.admin-day-eyebrow {
+  margin: 0;
+  color: #4f7a84;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.admin-day-head h2 {
+  margin: 4px 0;
+  font-size: 19px;
+}
+.admin-day-head p {
+  margin: 0;
+}
+.admin-day-add {
+  width: 100%;
+  margin: 16px 0 4px;
+}
+.admin-day-group {
+  --kind: #1f6fa8;
+  margin-top: 18px;
+}
+.admin-day-group.is-snorkeling {
+  --kind: #1f9e94;
+}
+.admin-day-group.is-trip {
+  --kind: #e3a230;
+}
+.admin-day-group.is-course {
+  --kind: #c2569b;
+}
+.admin-day-group.is-shop {
+  --kind: #3c8d5a;
+}
+.admin-day-group.is-service {
+  --kind: #8a6d3b;
+}
+.admin-day-group.is-gear {
+  --kind: #0d6f73;
+}
+.admin-day-group.is-agent {
+  --kind: #7c5cd6;
+}
+.admin-day-group.is-closed {
+  --kind: #8a9aa7;
+}
+.admin-day-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.admin-day-group h3 i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--kind);
+}
+.admin-day-group h3 small {
+  margin-left: auto;
+  color: #718394;
+  font-size: 11px;
+  font-weight: 500;
+}
+.admin-day-group ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-day-person {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f4f8fa;
+  color: #1f425c;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-day-person:hover {
+  background: #e9f2f7;
+}
+.admin-day-person.is-static {
+  cursor: default;
+}
+.admin-day-person.is-focus {
+  box-shadow: inset 0 0 0 2px var(--admin-blue);
+}
+.admin-day-name {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.admin-day-detail {
+  color: #5d7385;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.admin-day-wa {
+  justify-self: end;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e3f6ea;
+  color: #1d6b3f;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.admin-day-wa:hover {
+  background: #cdeed9;
+}
+.admin-day-none {
+  margin: 14px 0 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f4f8fa;
+  color: #5d7385;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.admin-quick-booking {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 4px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #eef6fb;
+}
+.admin-quick-booking h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.admin-quick-booking .admin-field {
+  margin: 0;
+}
+.admin-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.admin-day-side .admin-gear-day .admin-card-heading {
+  flex-direction: column;
+  align-items: stretch;
+}
+/* The full booking form in groups. */
+.admin-form-group {
+  margin: 0 0 16px;
+  padding: 16px 18px 4px;
+  border: 0;
+  border-radius: 14px;
+  background: #f6f9fb;
+}
+.admin-form-group legend {
+  float: left;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0;
+  color: #254961;
+  font-size: 14px;
+  font-weight: 700;
+}
+.admin-form-group legend + * {
+  clear: both;
+}
+@media (max-width: 1180px) {
+  .admin-calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-day-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+@media (max-width: 760px) {
+  .admin-month-people {
+    padding: 1px 4px;
+    font-size: 9px;
+  }
+  .admin-day-side {
+    padding: 18px 14px;
+  }
+  .admin-form-group {
+    padding: 14px 12px 2px;
   }
 }
