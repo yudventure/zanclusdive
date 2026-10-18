@@ -99,10 +99,8 @@ export default function DeveloperEditor({
             <h2>Mode developer</h2>
             <p className="admin-subtle">
               Saat aktif, apa pun yang kamu kunci di halaman ini tertutup untuk
-              pengunjung dan diganti tampilan perawatan. Selama masuk sebagai
-              admin, kamu tetap melihat website lengkap dengan bar penanda di
-              bawah layar. Matikan untuk membuka semuanya sekaligus; pilihan
-              kunci tetap tersimpan untuk lain kali.
+              pengunjung dan diganti tampilan perawatan. Matikan untuk membuka
+              semuanya sekaligus. Pilihan kunci tetap tersimpan untuk lain kali.
             </p>
           </div>
           <label className="admin-dev-switch">
