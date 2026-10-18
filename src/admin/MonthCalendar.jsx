@@ -69,8 +69,20 @@ export default function MonthCalendar({
   onPick,
   onEdit,
   onQuickSave,
+  onSyncAgents,
 }) {
   const [program, setProgram] = useState("all");
+  const [syncing, setSyncing] = useState(false);
+  // Travel agents and OTAs whose calendars are read into this one.
+  const linked = agents.filter((agent) => agent.enabled && agent.importUrl);
+  async function syncAgents() {
+    setSyncing(true);
+    try {
+      await onSyncAgents();
+    } finally {
+      setSyncing(false);
+    }
+  }
   const [selected, setSelected] = useState(null);
   const [view, setView] = useState("bookings");
   // The reservation picked on the grid, lit in the day panel.
@@ -181,6 +193,19 @@ export default function MonthCalendar({
                 </option>
               ))}
             </select>
+          )}
+          {linked.length > 0 && onSyncAgents && (
+            <button
+              type="button"
+              className="admin-button secondary admin-month-sync"
+              disabled={syncing}
+              aria-busy={syncing}
+              title={`Baca ulang ${linked.length} kalender agen dan OTA sekarang`}
+              onClick={syncAgents}
+            >
+              <span aria-hidden="true">↻</span>
+              {syncing ? "Membaca kalender…" : "Perbarui kalender agen & OTA"}
+            </button>
           )}
         </div>
         {view === "gear" && (

@@ -3719,3 +3719,27 @@ strong.admin-overdue {
     text-align: left;
   }
 }
+
+/* Reads every travel agent and OTA calendar again. */
+.admin-month-sync {
+  min-height: 40px;
+  padding: 8px 16px;
+}
+.admin-month-sync span {
+  font-size: 18px;
+  line-height: 1;
+}
+/* On a phone a day is about 42px wide: the people count sits under the
+   date, without its icon. */
+@media (max-width: 480px) {
+  .admin-month-day-top {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .admin-month-people {
+    padding: 0 4px;
+  }
+  .admin-month-people svg {
+    display: none;
+  }
+}

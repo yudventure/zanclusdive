@@ -276,6 +276,34 @@ try {
     await a.locator(".admin-month").screenshot({
       path: process.env.SHOT_DIR + "/agents-calendar-row.png",
     });
+  // One button on the calendar reads every agent and OTA calendar again.
+  calendars["/papua.ics"] = ics([
+    ["trip-1@google.com", today, today, "Grup Budi 8 orang"],
+    ["trip-3@google.com", today, today, "Snorkel keluarga 4 orang"],
+  ]);
+  await a.getByRole("button", { name: "Perbarui kalender agen & OTA" }).click();
+  await a
+    .locator(".admin-success", {
+      hasText: "Kalender agen dan OTA dibaca ulang. 1 kalender, 2 acara.",
+    })
+    .waitFor();
+  assert.match(
+    await a.locator(".admin-day-side").textContent(),
+    /Papua Travel[\s\S]*Snorkel keluarga 4 orang/,
+  );
+  assert.equal((await agent("Papua Travel")).events.length, 2);
+  // Only the reservation desk may ask for it, and only from this site.
+  assert.equal(
+    (
+      await guest.request.post(`${base}/api/admin/agents/sync`, {
+        headers: { Origin: base },
+      })
+    ).status(),
+    401,
+  );
+  calendars["/papua.ics"] = ics([
+    ["trip-1@google.com", today, today, "Grup Budi 8 orang"],
+  ]);
 
   // Papua stops sharing: Sorong no longer sees their busy day.
   await a.goto(base + "/admin/agents", { waitUntil: "networkidle" });

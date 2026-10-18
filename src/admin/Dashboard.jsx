@@ -586,6 +586,28 @@ export default function Dashboard({ section, account, today }) {
       setBusy(false);
     }
   }
+  // Every travel agent and OTA calendar read again from the reservation
+  // calendar, then the page with what came in.
+  async function syncAgentCalendars() {
+    setNotice("");
+    setError("");
+    try {
+      const result = await request("/api/admin/agents/sync", "POST");
+      await refresh();
+      if (result.read)
+        setNotice(
+          `Kalender agen dan OTA dibaca ulang. ${result.read} kalender, ${result.events} acara.`,
+        );
+      if (result.failed.length)
+        setError(
+          result.failed
+            .map((f) => `${f.name} belum terbaca, ${f.error}`)
+            .join(" "),
+        );
+    } catch (e) {
+      setError(e.message);
+    }
+  }
   // A booking noted from the calendar's day panel. Errors go back to the
   // panel's form.
   async function quickReservation(payload) {
@@ -1160,6 +1182,7 @@ export default function Dashboard({ section, account, today }) {
                     }}
                     onEdit={editReservation}
                     onQuickSave={quickReservation}
+                    onSyncAgents={syncAgentCalendars}
                   />
                   {calendarForm && editor}
                   <section
