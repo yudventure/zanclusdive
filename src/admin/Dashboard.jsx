@@ -22,6 +22,12 @@ import { mailKindLabels } from "../booking-mail.js";
 import { fareNames, fareSettings } from "../fare-model.js";
 import BookingFare from "./BookingFare.jsx";
 import AgentsEditor from "./AgentsEditor.jsx";
+import PaymentMethodSettings from "./PaymentMethodSettings.jsx";
+import {
+  useBookingAlerts,
+  BookingAlertToast,
+  AlertSoundSetting,
+} from "./BookingAlerts.jsx";
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
@@ -379,6 +385,14 @@ export default function Dashboard({ section, account, today }) {
     [autoSave, setAutoSave] = useState(0),
     // The rental gear and its stock, for the calendar and the booking form.
     [gear, setGear] = useState(null);
+  // A booking from the website or a payment rings and shows in the corner,
+  // on every page of the admin.
+  const alerts = useBookingAlerts({
+    active: can("bookings") && Boolean(data),
+    bookings: data?.bookings,
+    setBookings: (bookings) =>
+      setData((current) => (current ? { ...current, bookings } : current)),
+  });
   // The bell and the account menu close on a tap anywhere else.
   const bellRef = useOutsideClose(notification, () => setNotification(false));
   const ownerRef = useOutsideClose(ownerMenu, () => setOwnerMenu(false));
@@ -569,6 +583,7 @@ export default function Dashboard({ section, account, today }) {
         editing ? "PUT" : "POST",
         booking,
       );
+      alerts.markSeen(saved);
       await refresh();
       setBooking(blankBooking(today));
       setEditing(null);
@@ -612,6 +627,7 @@ export default function Dashboard({ section, account, today }) {
   // panel's form.
   async function quickReservation(payload) {
     const saved = await request("/api/admin/bookings", "POST", payload);
+    alerts.markSeen(saved);
     await refresh();
     setError("");
     setNotice(`Booking ${saved.guestName} tersimpan.`);
@@ -943,6 +959,10 @@ export default function Dashboard({ section, account, today }) {
                     ) : (
                       <p>Tidak ada reservasi menunggu.</p>
                     )}
+                    <AlertSoundSetting
+                      sound={alerts.sound}
+                      setSound={alerts.setSound}
+                    />
                   </div>
                 )}
               </div>
@@ -1544,7 +1564,7 @@ export default function Dashboard({ section, account, today }) {
                         orderId,
                       });
                       await refresh();
-                      setNotice("Status pembayaran diperbarui dari Midtrans.");
+                      setNotice("Status pembayaran diperbarui.");
                     } catch (e) {
                       setError(e.message);
                     } finally {
@@ -1553,6 +1573,22 @@ export default function Dashboard({ section, account, today }) {
                   }}
                   busy={busy}
                 >
+                  <PaymentMethodSettings
+                    settings={content.payments ?? {}}
+                    status={data.payments}
+                    mail={data.mail}
+                    contactEmail={content.contact?.email}
+                    busy={busy}
+                    onChange={(patch) =>
+                      setContent((current) => ({
+                        ...current,
+                        payments: { ...current.payments, ...patch },
+                      }))
+                    }
+                    onSave={(event) =>
+                      saveSettings(event, "Pengaturan pembayaran tersimpan.")
+                    }
+                  />
                   <GuestMailSettings
                     settings={content.payments ?? {}}
                     mail={data.mail}
@@ -1905,6 +1941,19 @@ export default function Dashboard({ section, account, today }) {
           )}
         </main>
       </div>
+      <BookingAlertToast
+        alerts={alerts.alerts}
+        onClose={alerts.dismiss}
+        label={(b) =>
+          `${b.guestName} · ${programTitle(content, b.experience)} · ${dateLabel(b.startDate)}`
+        }
+        onOpen={(event, b) => {
+          alerts.drop(b);
+          if (section !== "calendar") return;
+          event.preventDefault();
+          editReservation(b);
+        }}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { bookingReference } from "../../../src/booking-model.js";
 import { paymentItemLabel } from "../../../src/payment-model.js";
 import { dictionary, formatIDR, localeHref } from "../../../src/i18n.js";
 import { fareNames } from "../../../src/fare-model.js";
+import { witDateTime } from "../../../src/booking-mail.js";
 
 // Midtrans sends the guest back here with ?order_id=. The status is
 // checked with Midtrans right away, so a completed payment already shows
@@ -32,12 +33,19 @@ export default async function Page({ searchParams }) {
   const t = dictionary(locale);
   const payment = booking.payment;
   const reference = bookingReference(booking.id);
+  // A bank transfer ordered on the website waits for the transfer.
+  const transfer =
+    payment.provider === "manual" &&
+    payment.method === "transfer" &&
+    payment.status === "unpaid";
   const kind =
     payment.status === "paid"
       ? "paid"
-      : ["created", "pending"].includes(payment.status)
-        ? "paymentPending"
-        : "paymentFailed";
+      : transfer
+        ? "transferPending"
+        : ["created", "pending"].includes(payment.status)
+          ? "paymentPending"
+          : "paymentFailed";
   const date = new Date(booking.startDate + "T12:00:00").toLocaleDateString(
     locale === "id" ? "id-ID" : "en-GB",
     { weekday: "long", day: "numeric", month: "long", year: "numeric" },
@@ -48,7 +56,12 @@ export default async function Page({ searchParams }) {
       kind={kind}
       locale={locale}
       whatsapp={whatsapp}
-      whatsappText={p.whatsappAfter(reference)}
+      whatsappText={
+        transfer
+          ? p.transferProof(reference, formatIDR(payment.amount, locale))
+          : p.whatsappAfter(reference)
+      }
+      accounts={transfer ? (content.payments?.accounts ?? []) : []}
       // A paid booking links to the guest's own page, where the fare's
       // date change or refund is made.
       links={
@@ -88,7 +101,13 @@ export default async function Page({ searchParams }) {
               ],
             ]
           : []),
-        [p.totalPaid, formatIDR(payment.amount, locale)],
+        [
+          transfer ? p.totalTransfer : p.totalPaid,
+          formatIDR(payment.amount, locale),
+        ],
+        ...(transfer && payment.dueAt
+          ? [[p.transferDue, witDateTime(payment.dueAt, locale)]]
+          : []),
       ]}
     />
   );

@@ -121,8 +121,8 @@ export default function GuestMailSettings({
 
       <h3 className="admin-guest-mail-title">Rekening untuk transfer bank</h3>
       <p className="admin-subtle">
-        Tampil di email tagihan reservasi yang ditagih lewat transfer. Isi
-        sampai {accountLimit} rekening.
+        Tampil di email tagihan transfer dan di halaman transfer setelah tamu
+        memesan di website. Isi sampai {accountLimit} rekening.
       </p>
       <div className="admin-account-rows">
         {rows.map((row, i) => (

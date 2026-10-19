@@ -78,6 +78,7 @@ const methods = {
   cstore: ["Indomaret / Alfamart", "Indomaret / Alfamart"],
   akulaku: ["Akulaku", "Akulaku"],
   kredivo: ["Kredivo", "Kredivo"],
+  paypal: ["PayPal", "PayPal"],
   transfer: ["Transfer bank", "Bank transfer"],
   cash: ["Tunai", "Cash"],
   card: ["Kartu di lokasi (EDC)", "Card at the dive center"],

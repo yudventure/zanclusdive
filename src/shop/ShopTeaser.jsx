@@ -836,7 +836,7 @@ export default function ShopTeaser({
               total={totals.total + markup + fee}
               message={message}
               whatsapp={whatsapp}
-              sandbox={payments.sandbox}
+              payments={payments}
               locale={locale}
               showTotal={false}
             />

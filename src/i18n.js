@@ -450,6 +450,34 @@ const id = {
     totalPaid: "Total",
     whatsappAfter: (ref) =>
       `Halo Zanclus! Saya baru membayar booking ${ref} lewat website.`,
+    methodTitle: "Pilih cara bayar",
+    methods: {
+      midtrans: [
+        "Bayar online",
+        "QRIS, e-wallet, virtual account, atau kartu lewat Midtrans. Tanggalnya langsung terkonfirmasi.",
+      ],
+      transfer: [
+        "Transfer bank",
+        "Nomor rekening tampil setelah ini. Kirim bukti transfer lewat WhatsApp, lalu tanggalnya kami konfirmasi.",
+      ],
+      paypal: [
+        "PayPal",
+        "Dibayar dalam dolar AS lewat akun PayPal atau kartu.",
+      ],
+    },
+    paypalAmount: (usd) => `Sekitar USD ${usd} di PayPal`,
+    transferHold:
+      "Website tidak menarik uang. Tanggalmu kami tahan sampai batas waktu transfer.",
+    submitTransfer: "Lanjut ke transfer bank",
+    submitPaypal: (usd) => `Bayar USD ${usd} dengan PayPal`,
+    savingTransfer: "Menyimpan pesanan…",
+    openingPaypal: "Membuka PayPal…",
+    paypalSandbox:
+      "Mode uji coba PayPal, tidak ada uang sungguhan yang ditarik.",
+    transferProof: (ref, total) =>
+      `Halo Zanclus! Saya sudah transfer ${total} untuk pesanan ${ref}. Ini bukti transfernya.`,
+    totalTransfer: "Total transfer",
+    transferDue: "Batas transfer",
   },
   locked: {
     eyebrow: "SEDANG DIPERBARUI",
@@ -1751,6 +1779,30 @@ const en = {
     totalPaid: "Total",
     whatsappAfter: (ref) =>
       `Hi Zanclus! I've just paid for booking ${ref} on the website.`,
+    methodTitle: "Choose how to pay",
+    methods: {
+      midtrans: [
+        "Pay online",
+        "QRIS, e-wallets, virtual account or cards through Midtrans. Your date is confirmed right away.",
+      ],
+      transfer: [
+        "Bank transfer",
+        "The account numbers show next. Send the transfer receipt on WhatsApp and we confirm your date.",
+      ],
+      paypal: ["PayPal", "Paid in US dollars with a PayPal account or a card."],
+    },
+    paypalAmount: (usd) => `About USD ${usd} on PayPal`,
+    transferHold:
+      "Nothing is charged on the website. We hold your date until the transfer deadline.",
+    submitTransfer: "Continue to bank transfer",
+    submitPaypal: (usd) => `Pay USD ${usd} with PayPal`,
+    savingTransfer: "Saving your order…",
+    openingPaypal: "Opening PayPal…",
+    paypalSandbox: "PayPal test mode, no real money is charged.",
+    transferProof: (ref, total) =>
+      `Hi Zanclus! I've transferred ${total} for order ${ref}. Here is the receipt.`,
+    totalTransfer: "Transfer total",
+    transferDue: "Transfer by",
   },
   locked: {
     eyebrow: "BEING UPDATED",

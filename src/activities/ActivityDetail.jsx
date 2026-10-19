@@ -19,6 +19,12 @@ import CartIcon from "../components/CartIcon.jsx";
 import SlotCalendar, { SlotMonth, slotState } from "./SlotCalendar.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import {
+  usePayMethod,
+  payButtonText,
+  PayMethodChoice,
+  PayNotes,
+} from "../components/PayMethods.jsx";
+import {
   fareChoices,
   fareFor,
   fareMarkup,
@@ -67,6 +73,7 @@ function Inquiry({
   const [step, setStep] = useState("form");
   const [intent, setIntent] = useState(ready ? "pay" : "ask");
   const [paying, setPaying] = useState(false);
+  const [method, setMethod, methods] = usePayMethod(payments);
   // Standard, Comfort or Flexi; the increase applies to the packages.
   const [fare, setFare] = useState("standard");
   const [today, setToday] = useState("");
@@ -215,6 +222,7 @@ function Inquiry({
           })),
           fare: fareChoice.tier,
           ...details,
+          method,
         }),
       });
       const result = await response.json().catch(() => ({}));
@@ -608,21 +616,28 @@ function Inquiry({
           )}
           {intent === "pay" ? (
             <>
+              <PayMethodChoice
+                p={p}
+                methods={methods}
+                method={method}
+                onChange={setMethod}
+                disabled={paying}
+              />
               <button
                 className="button dark pay-submit"
                 type="button"
                 disabled={paying}
                 onClick={pay}
               >
-                {paying ? p.redirecting : p.submit(formatIDR(total, locale))}{" "}
+                {payButtonText(p, method, { total, locale, payments, paying })}{" "}
                 <span aria-hidden="true">↗</span>
               </button>
-              <div className="pay-notes">
-                <p>{p.secure}</p>
-                {payments?.sandbox && (
-                  <p className="pay-sandbox">{p.sandbox}</p>
-                )}
-              </div>
+              <PayNotes
+                p={p}
+                method={method}
+                payments={payments}
+                total={total}
+              />
             </>
           ) : (
             message && (

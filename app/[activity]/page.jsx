@@ -15,8 +15,7 @@ import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary, localeHref } from "../../src/i18n.js";
 import { withCalendar } from "../../src/calendar-model.js";
 import { developerGate } from "../../src/server/developer-gate.jsx";
-import { paymentsReady } from "../../src/server/payments.js";
-import { midtransProduction } from "../../src/server/midtrans.js";
+import { paymentOptions } from "../../src/server/payments.js";
 
 export const dynamic = "force-dynamic";
 const readContent = cache(publicContent);
@@ -74,10 +73,7 @@ export default async function Page({ params }) {
       locale={locale}
       slots={slotCalendar(content, held, key, window)}
       lastDate={window.last}
-      payments={{
-        ready: paymentsReady(content),
-        sandbox: !midtransProduction(),
-      }}
+      payments={paymentOptions(content)}
       today={window.today}
     />
   );

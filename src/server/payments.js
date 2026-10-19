@@ -14,7 +14,18 @@ import {
   transactionStatus,
   validSignature,
 } from "./midtrans.js";
-import { paymentOutcome, withPaymentStatus } from "../payment-model.js";
+import {
+  paymentOutcome,
+  paypalAmount,
+  withPaymentStatus,
+} from "../payment-model.js";
+import {
+  paypalConfigured,
+  paypalLive,
+  createPaypalOrder,
+  capturePaypalOrder,
+} from "./paypal.js";
+import { notifyTeam } from "./team-mail.js";
 import { priceOrder, PricingError, orderLabel } from "../order-pricing.js";
 import {
   BookingError,
@@ -42,15 +53,41 @@ export const paymentsBlockedByDemo = () =>
   midtransProduction() &&
   isDemo() &&
   temporaryFolder(demoStorageDirectory(), tmpdir());
-export const paymentsReady = (content) =>
+export const midtransReady = (content) =>
   content.payments?.enabled === true &&
   midtransConfigured() &&
   !paymentsBlockedByDemo();
+// Bank transfer to the accounts set in the admin, paid outside the
+// website and marked paid by the team.
+export const transferReady = (content) =>
+  content.payments?.transfer === true &&
+  (content.payments?.accounts ?? []).length > 0;
+// PayPal, once its keys are in the hosting environment and it is on.
+export const paypalReady = (content) =>
+  content.payments?.paypal?.enabled === true &&
+  paypalConfigured() &&
+  !(
+    paypalLive() &&
+    isDemo() &&
+    temporaryFolder(demoStorageDirectory(), tmpdir())
+  );
+// The ways a guest can pay at the checkout, in the order they are offered.
+export const payMethods = (content) =>
+  [
+    midtransReady(content) && "midtrans",
+    transferReady(content) && "transfer",
+    paypalReady(content) && "paypal",
+  ].filter(Boolean);
+export const paymentsReady = (content) => payMethods(content).length > 0;
 
-// What the forms need to know: whether to offer payment, and test mode.
+// What the forms need to know: whether to offer payment, how, and test
+// modes.
 export const paymentOptions = (content) => ({
   ready: paymentsReady(content),
+  methods: payMethods(content),
   sandbox: !midtransProduction(),
+  paypalSandbox: !paypalLive(),
+  paypalRate: content.payments?.paypal?.rate ?? 16000,
 });
 
 // The public address of the website, for the page Midtrans returns to.
@@ -78,9 +115,18 @@ export async function startPayment(input, { origin, locale = "id" }) {
   // Courses and services saved before those parts existed use defaults,
   // as on their pages.
   const content = withService(withCourses((await getContent()).content));
-  if (!paymentsReady(content))
+  const methods = payMethods(content);
+  if (!methods.length)
     throw fail(
       "Pembayaran online belum tersedia. Silakan chat tim kami lewat WhatsApp.",
+      409,
+    );
+  // Earlier pages send no method: Midtrans, or the only one offered.
+  const method =
+    input.method ?? (methods.includes("midtrans") ? "midtrans" : methods[0]);
+  if (!methods.includes(method))
+    throw fail(
+      "Cara bayar ini belum tersedia. Pilih cara bayar lain atau chat tim kami lewat WhatsApp.",
       409,
     );
   let order;
@@ -140,7 +186,7 @@ export async function startPayment(input, { origin, locale = "id" }) {
       amount,
       lang: locale,
       notes: [
-        `Bayar online: ${orderLabel(lines, "id")}`,
+        `${method === "transfer" ? "Transfer bank" : method === "paypal" ? "PayPal" : "Bayar online"} · ${orderLabel(lines, "id")}`,
         order.fare && `Tarif ${fareNames[order.fare.tier]}`,
         order.delivery &&
           (order.delivery.method === "delivery"
@@ -158,8 +204,10 @@ export async function startPayment(input, { origin, locale = "id" }) {
   }
   const orderId = newOrderId();
   // The guest has the hours set in the admin to pay; then the Midtrans
-  // link expires and the booking is cancelled.
+  // link expires and the booking is cancelled. An unpaid transfer or
+  // PayPal order stops holding its places then.
   const dueHours = content.payments?.dueHours ?? 24;
+  const paypalRate = content.payments?.paypal?.rate ?? 16000;
   const createdAt = new Date().toISOString();
   // Dive Shop gear that follows the warehouse is checked against its stock
   // as the booking is saved.
@@ -167,9 +215,18 @@ export async function startPayment(input, { origin, locale = "id" }) {
     createPaymentBooking({
       ...payload,
       payment: {
-        provider: "midtrans",
+        ...(method === "transfer"
+          ? { provider: "manual", method: "transfer", status: "unpaid" }
+          : method === "paypal"
+            ? {
+                provider: "paypal",
+                status: "created",
+                currency: "USD",
+                rate: paypalRate,
+                usd: paypalAmount(amount, paypalRate),
+              }
+            : { provider: "midtrans", status: "created" }),
         orderId,
-        status: "created",
         amount,
         // One line keeps the item, quantity and unit fields of earlier
         // payments; every payment also lists its lines.
@@ -211,6 +268,20 @@ export async function startPayment(input, { origin, locale = "id" }) {
   // Dive Shop gear, bought or rented (also as an activity's add-on), must
   // still be in stock.
   const booking = await reserveShopStock(order, create);
+  const finish = `${origin}/payment/finish?order_id=${encodeURIComponent(orderId)}&lang=${locale}`;
+  // Bank transfer: the booking waits for the transfer; the guest sees the
+  // accounts on the result page and in the order email.
+  if (method === "transfer") {
+    if (booking.email) later(() => autoMail(booking, "order"));
+    notifyTeam(booking, "new");
+    return {
+      redirectUrl: finish,
+      orderId,
+      reference: bookingReference(booking.id),
+    };
+  }
+  if (method === "paypal")
+    return startPaypal(booking, { origin, locale, lines });
   try {
     const snap = await createTransaction({
       transaction_details: { order_id: orderId, gross_amount: amount },
@@ -243,6 +314,7 @@ export async function startPayment(input, { origin, locale = "id" }) {
     // The order and its payment deadline, to the guest's inbox.
     if (saved?.email && saved.payment.status === "pending")
       later(() => autoMail(saved, "order"));
+    notifyTeam(saved, "new");
     return {
       redirectUrl: snap.redirect_url,
       orderId,
@@ -291,6 +363,7 @@ async function apply(booking, status) {
   });
   if (changed === "paid") {
     later(() => autoMail(updated, "invoice"));
+    notifyTeam(updated, "paid");
     // Purchases from the Dive Shop leave the warehouse.
     later(() =>
       recordShopSales(updated).catch((error) =>
@@ -328,7 +401,16 @@ export async function recordNotification(notification) {
 export async function syncPayment(orderId) {
   const booking = await findOrder(orderId);
   if (!booking) return null;
-  if (!midtransConfigured()) return booking;
+  // An approved PayPal order is taken now, when the guest came back some
+  // other way or the team checks it.
+  if (
+    booking.payment?.provider === "paypal" &&
+    booking.payment.status === "pending" &&
+    paypalConfigured()
+  )
+    return completePaypal(orderId);
+  if (booking.payment?.provider !== "midtrans" || !midtransConfigured())
+    return booking;
   try {
     const status = await transactionStatus(orderId);
     return status && status.order_id === orderId
@@ -338,4 +420,111 @@ export async function syncPayment(orderId) {
     console.error("Midtrans status check failed:", error.message);
     return booking;
   }
+}
+
+// PayPal: the order is created at PayPal and the guest approves it there.
+// PayPal sends the guest back to /api/payments/paypal/return, where the
+// money is taken; a guest who leaves without paying comes back through
+// /api/payments/paypal/cancel.
+async function startPaypal(booking, { origin, locale, lines }) {
+  const orderId = booking.payment.orderId;
+  const back = (path) =>
+    `${origin}/api/payments/paypal/${path}?order_id=${encodeURIComponent(orderId)}&lang=${locale}`;
+  try {
+    const order = await createPaypalOrder({
+      orderId,
+      usd: booking.payment.usd,
+      description: `Zanclus Dive Center ${orderLabel(lines, "en")}`,
+      returnUrl: back("return"),
+      cancelUrl: back("cancel"),
+      locale,
+    });
+    const saved = await updateBooking(booking.id, (current) => ({
+      ...current,
+      payment: {
+        ...current.payment,
+        status: "pending",
+        paypalId: order.id,
+        redirectUrl: order.approveUrl,
+      },
+    }));
+    notifyTeam(saved, "new");
+    return {
+      redirectUrl: order.approveUrl,
+      orderId,
+      reference: bookingReference(booking.id),
+    };
+  } catch (error) {
+    console.error("PayPal order failed:", error.message);
+    await updateBooking(booking.id, (current) => ({
+      ...current,
+      status: "cancelled",
+      payment: { ...current.payment, status: "failed" },
+    })).catch(() => {});
+    throw fail(
+      "Pembayaran PayPal belum bisa dibuat. Coba cara bayar lain, atau chat tim kami lewat WhatsApp.",
+      502,
+    );
+  }
+}
+
+// The guest approved the order on PayPal: the money is taken, checked
+// against the order, and the booking confirmed with its invoice.
+export async function completePaypal(orderId) {
+  const booking = await findOrder(orderId);
+  if (!booking || booking.payment?.provider !== "paypal") return null;
+  if (booking.payment.status === "paid" || !booking.payment.paypalId)
+    return booking;
+  let result;
+  try {
+    result = await capturePaypalOrder(booking.payment.paypalId);
+  } catch (error) {
+    console.error("PayPal capture failed:", error.message);
+    return booking;
+  }
+  const done =
+    result.status === "COMPLETED" &&
+    result.captureStatus === "COMPLETED" &&
+    result.currency === "USD" &&
+    Number(result.usd) >= Number(booking.payment.usd);
+  if (!done) {
+    if (result.status === "COMPLETED" || result.captureStatus === "DECLINED")
+      console.error("PayPal capture does not match the order:", orderId);
+    return booking;
+  }
+  let changed = false;
+  const updated = await updateBooking(booking.id, (current) => {
+    if (current.payment?.status === "paid") return current;
+    const next = withPaymentStatus(current, "paid", {
+      method: "paypal",
+      transactionId: result.captureId,
+    });
+    if (!next) return current;
+    changed = true;
+    next.payment.invoiceNumber = invoiceNumber(next, next.payment.paidAt);
+    return next;
+  });
+  if (changed) {
+    later(() => autoMail(updated, "invoice"));
+    notifyTeam(updated, "paid");
+    later(() =>
+      recordShopSales(updated).catch((error) =>
+        console.error("Dive Shop stock not recorded:", error?.message),
+      ),
+    );
+  }
+  return updated ?? booking;
+}
+
+// The guest left PayPal without paying: the order no longer holds places.
+export async function cancelPaypal(orderId) {
+  const booking = await findOrder(orderId);
+  if (!booking || booking.payment?.provider !== "paypal") return null;
+  if (booking.payment.status === "paid") return booking;
+  return (
+    (await updateBooking(
+      booking.id,
+      (current) => withPaymentStatus(current, "failed") ?? current,
+    )) ?? booking
+  );
 }

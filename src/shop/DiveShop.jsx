@@ -837,7 +837,7 @@ export default function DiveShop({
                         total={quote.total + markup + fee}
                         message={message}
                         whatsapp={contact.whatsapp}
-                        sandbox={payments.sandbox}
+                        payments={payments}
                         locale={locale}
                       />
                     </div>

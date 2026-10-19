@@ -1,6 +1,6 @@
 import "server-only";
 import { createTransaction } from "./midtrans.js";
-import { paymentsReady, newOrderId } from "./payments.js";
+import { midtransReady, newOrderId } from "./payments.js";
 import { isManual, midtransLocked, validateBilling } from "../payment-model.js";
 import { dueAt, programName } from "../booking-mail.js";
 import { bookingDates } from "../booking-model.js";
@@ -113,7 +113,7 @@ export async function withBilling({
   }
 
   // A Midtrans payment link for this booking, sent to the guest.
-  if (!paymentsReady(content))
+  if (!midtransReady(content))
     throw fail(
       "Link Midtrans belum bisa dibuat. Aktifkan pembayaran Midtrans dan pastikan server key terpasang.",
       409,

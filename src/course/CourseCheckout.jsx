@@ -505,7 +505,7 @@ export default function CourseCheckout({
               breakdown={breakdown}
               message={message}
               whatsapp={contact.whatsapp}
-              sandbox={payments.sandbox}
+              payments={payments}
               locale={locale}
               submitText={c.payFull(formatIDR(total, locale))}
               unsureText={c.askFirst}

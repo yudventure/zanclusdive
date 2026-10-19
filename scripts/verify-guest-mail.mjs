@@ -443,7 +443,8 @@ try {
     [["order", false]],
   );
 
-  // Switched off: website orders send no email.
+  // Switched off: website orders send the guest no email. The team's
+  // notice (to the contact email) has its own switch and still goes.
   s = await state();
   s.content.payments = { ...s.content.payments, guestEmails: false };
   await admin.request.put(base + "/api/admin/settings", {
@@ -453,7 +454,12 @@ try {
   mark = smtp.messages.length;
   await order("Tamu Senyap", "203.0.113.23");
   await new Promise((r) => setTimeout(r, 1200));
-  assert.equal(smtp.messages.length, mark);
+  const team = (m) => m.to.includes(s.content.contact.email);
+  assert.equal(smtp.messages.slice(mark).filter((m) => !team(m)).length, 0);
+  assert.match(
+    read(smtp.messages.slice(mark).find(team)).subject,
+    /^Booking baru · Tamu Senyap · /,
+  );
   assert.equal((await byName("Tamu Senyap")).mails, undefined);
 
   // Phones.

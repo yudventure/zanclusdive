@@ -9,6 +9,7 @@ import {
   bookingFingerprint,
 } from "../../../src/server/public-booking.js";
 import { validateEventSignup } from "../../../src/event-signup.js";
+import { notifyTeam } from "../../../src/server/team-mail.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +46,8 @@ export async function POST(request) {
       requestId,
       bookingFingerprint(booking),
     );
+    if (result.created)
+      notifyTeam({ ...booking, reference: result.receipt.reference }, "new");
     return Response.json(
       {
         ...result.receipt,

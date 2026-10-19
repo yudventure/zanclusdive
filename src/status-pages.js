@@ -147,6 +147,20 @@ Object.assign(statusPages, {
     ),
     actions: ["retry", "whatsapp"],
   },
+  // A website order paid by bank transfer, waiting for the transfer.
+  transferPending: {
+    art: "waiting",
+    eyebrow: t("Menunggu transfer", "Waiting for your transfer"),
+    title: t(
+      "Pesananmu tercatat. Tinggal transfer.",
+      "Your order is in. Now make the transfer.",
+    ),
+    text: t(
+      "Transfer jumlah di bawah ke salah satu rekening Zanclus sebelum batas waktunya, lalu kirim bukti transfer lewat WhatsApp. Tanggalnya kami konfirmasi begitu transfer diterima.",
+      "Transfer the amount below to one of the Zanclus accounts before the deadline, then send the transfer receipt on WhatsApp. We confirm your date as soon as the transfer arrives.",
+    ),
+    actions: ["whatsapp", "home"],
+  },
   paymentFailed: {
     art: "snapped",
     eyebrow: t("Pembayaran belum berhasil", "Payment didn't go through"),
@@ -164,6 +178,7 @@ Object.assign(statusPages, {
 export const statusNames = Object.keys(statusPages);
 
 const labels = {
+  holder: t("a.n.", "Account name"),
   whatsapp: t("Chat WhatsApp", "Chat on WhatsApp"),
   retry: t("Coba lagi", "Try again"),
   home: t("Kembali ke beranda", "Back to home"),
@@ -235,6 +250,11 @@ export const statusStyles = `
 .zs-until{display:inline-block;margin:18px 0 0;padding:10px 14px;border-radius:14px;background:#ffffff0f;font-size:13px;line-height:1.6;color:#cfe3e6}
 .zs-until strong{color:#fff;font-weight:600}
 .zs-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.zs-accounts{display:grid;gap:10px;margin:24px 0 0;max-width:480px}
+.zs-account{display:grid;gap:4px;padding:14px 18px;border:1px solid #bef4a566;border-radius:16px;background:#0a3a4d}
+.zs-account small{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#85b7bf}
+.zs-account strong{font-size:24px;letter-spacing:1px;color:#fff;user-select:all}
+.zs-account span{font-size:14px;color:#d8eef0}
 .zs-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;margin:24px 0 0;max-width:480px;overflow:hidden;border:1px solid #ffffff1f;border-radius:16px;background:#ffffff1f}
 .zs-details div{padding:12px 16px;background:#062b3b}
 .zs-details dt{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#85b7bf}
@@ -278,6 +298,7 @@ export function statusMarkup({
   details = [],
   whatsappText = "",
   links = [],
+  accounts = [],
   styles = true,
 }) {
   const page = statusPages[kind] ?? statusPages[500];
@@ -312,6 +333,7 @@ export function statusMarkup({
       <p class="zs-text">${page.text[lang]}</p>
       ${message ? `<div class="zs-note"><small>${labels.note[lang]}</small><p>${escape(message)}</p></div>` : ""}
       ${when ? `<p class="zs-until">${labels.until[lang]}: <strong>${escape(when)}</strong></p>` : ""}
+      ${accounts.length ? `<div class="zs-accounts">${accounts.map((a) => `<div class="zs-account"><small>${escape(a.bank)}</small><strong>${escape(a.number)}</strong><span>${labels.holder[lang]} ${escape(a.holder)}</span></div>`).join("")}</div>` : ""}
       ${details.length ? `<dl class="zs-details">${details.map(([label, value]) => `<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>` : ""}
       <div class="zs-actions">${links
         .map(

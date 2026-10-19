@@ -35,6 +35,7 @@ export const paymentMethods = {
   transfer: "Transfer bank",
   qris: "QRIS",
   midtrans: "Midtrans",
+  paypal: "PayPal",
   lainnya: "Lainnya",
 };
 export const categoriesOf = (kind) =>
@@ -107,7 +108,8 @@ export function midtransIncome(bookings) {
   return (
     bookings
       // Payments recorded by hand (transfer, cash) are entered in the
-      // cashbook by the finance team, so only Midtrans is added here.
+      // cashbook by the finance team, so only Midtrans and PayPal are
+      // added here.
       .filter(
         (b) => b.payment?.status === "paid" && b.payment.provider !== "manual",
       )
@@ -124,7 +126,7 @@ export function midtransIncome(bookings) {
         category: programCategory[b.experience] ?? "other",
         amount: Number(b.payment.amount ?? b.amount) || 0,
         description: `${b.guestName || "Tamu"} · pembayaran online`,
-        method: "midtrans",
+        method: b.payment.provider === "paypal" ? "paypal" : "midtrans",
         reference: b.payment.orderId ?? "",
         note: "",
         source: "midtrans",

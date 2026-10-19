@@ -1,8 +1,9 @@
 import "server-only";
 import { getContent, listBookings, saveBooking } from "./store.js";
 import { withBilling, BillingError } from "./billing.js";
-import { sendBookingMail } from "./booking-mail.js";
+import { sendBookingMail, later } from "./booking-mail.js";
 import { siteOrigin } from "./payments.js";
+import { recordShopSales } from "./shop-stock.js";
 
 // Saves a booking from the admin with its payment, then emails the guest
 // when asked: the order with its deadline for a new bill, the invoice when
@@ -37,6 +38,14 @@ export async function saveWithBilling({ request, payload, body, id }) {
     return Response.json(
       { error: "Reservasi tidak ditemukan." },
       { status: 404 },
+    );
+  // A website order the team marks paid (a bank transfer that arrived):
+  // its Dive Shop purchases leave the warehouse.
+  if (saved.payment?.status === "paid" && current?.payment?.status !== "paid")
+    later(() =>
+      recordShopSales(saved).catch((error) =>
+        console.error("Dive Shop stock not recorded:", error?.message),
+      ),
     );
   let mail = null;
   if (result.mail) {

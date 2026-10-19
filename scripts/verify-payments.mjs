@@ -33,6 +33,12 @@ await context.route("**/api/weather", (r) =>
 const page = await context.newPage();
 const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
+// The Midtrans card of the payments page; transfer, PayPal and the booking
+// notice have their own cards under it.
+const midtransCard = (p) =>
+  p.locator("form", {
+    has: p.getByRole("heading", { name: "Bayar langsung dengan Midtrans" }),
+  });
 const admin = await browser.newContext({
   viewport: { width: 1440, height: 900 },
 });
@@ -85,14 +91,14 @@ try {
     .getByRole("heading", { name: "Bayar langsung dengan Midtrans" })
     .waitFor();
   assert.match(
-    await a.locator(".admin-dev-master .admin-pay-checks").textContent(),
+    await midtransCard(a).locator(".admin-pay-checks").textContent(),
     /Server key Midtrans terpasang[\s\S]*Mode sandbox/,
   );
   assert.match(
     await a.locator(".admin-pay-urls").textContent(),
     /\/api\/payments\/midtrans/,
   );
-  await a.locator(".admin-dev-master .admin-dev-switch").click();
+  await midtransCard(a).locator(".admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   // The admin checks that Midtrans accepts the server key.
@@ -305,7 +311,7 @@ try {
     .locator("tr", { hasText: checkId })
     .getByRole("button", { name: "Cek status" })
     .click();
-  await a.getByText("Status pembayaran diperbarui dari Midtrans.").waitFor();
+  await a.getByText("Status pembayaran diperbarui.").waitFor();
   assert.equal((await order(checkId)).payment.status, "paid");
   // An add-on alone, or one renamed since the page loaded, is refused.
   for (const [lines, status, error] of [
@@ -671,7 +677,7 @@ try {
 
   // Switched off again: no pay option.
   await a.goto(base + "/admin/payments", { waitUntil: "networkidle" });
-  await a.locator(".admin-dev-master .admin-dev-switch").click();
+  await midtransCard(a).locator(".admin-dev-switch").click();
   await a.getByRole("button", { name: "Simpan pengaturan pembayaran" }).click();
   await a.getByText("Pengaturan pembayaran tersimpan.").waitFor();
   await page.goto(base + "/diving", { waitUntil: "networkidle" });

@@ -56,6 +56,7 @@ export function BookingBilling({ value, setBilling, info, canSettings }) {
   const billing = value.billing;
   const payment = value.payment;
   const locked = midtransLocked(payment);
+  const provider = payment?.provider === "paypal" ? "PayPal" : "Midtrans";
   const set = (patch) => setBilling({ ...billing, ...patch });
   const accounts = info?.accounts ?? 0;
   const openTransfer =
@@ -84,14 +85,15 @@ export function BookingBilling({ value, setBilling, info, canSettings }) {
             <span className={"admin-pay-badge " + payment.status}>
               {paymentStatusLabels[payment.status]}
             </span>{" "}
-            Pembayaran Midtrans {payment.orderId}
+            Pembayaran {provider} {payment.orderId}
             {payment.dueAt && payment.status !== "paid"
               ? ` · batas bayar ${wit(payment.dueAt)}`
               : ""}
           </p>
           <small className="admin-subtle">
-            Status berubah sendiri saat Midtrans melaporkan pembayaran. Invoice
-            otomatis terkirim ke tamu begitu lunas.
+            {payment.provider === "paypal"
+              ? "Status berubah sendiri saat tamu kembali dari PayPal. Bila tamu menutup halaman sebelum kembali, tekan Cek status di Pembayaran online. Invoice otomatis terkirim ke tamu begitu lunas."
+              : "Status berubah sendiri saat Midtrans melaporkan pembayaran. Invoice otomatis terkirim ke tamu begitu lunas."}
           </small>
         </div>
       ) : (
@@ -103,8 +105,8 @@ export function BookingBilling({ value, setBilling, info, canSettings }) {
             >
               {payment && !isManual(payment) && (
                 <option value="keep">
-                  Biarkan ({paymentStatusLabels[payment?.status] ?? "tanpa"} di
-                  Midtrans)
+                  Biarkan ({paymentStatusLabels[payment?.status] ?? "tanpa"} di{" "}
+                  {provider})
                 </option>
               )}
               <option value="none">Tanpa tagihan (catat saja)</option>

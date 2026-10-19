@@ -1013,3 +1013,126 @@ a.admin-stat:hover {
     padding: 52px 14px 16px;
   }
 }
+
+/* A booking or payment from the website: a note in the corner that stays
+   until it is closed, and the chime switch in the bell's menu. */
+.admin-alert-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #062b3b;
+  color: #fff;
+  box-shadow: 0 18px 50px #062b3b59;
+  animation: admin-alert-in 0.35s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-alert-toast {
+    animation: none;
+  }
+}
+@keyframes admin-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.admin-alert-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bef4a5;
+}
+.admin-alert-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+.admin-alert-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff1a;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.admin-alert-toast ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-alert-toast li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #ffffff12;
+}
+.admin-alert-toast li a {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.admin-alert-kind {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #85d3ff;
+}
+.admin-alert-kind.paid {
+  color: #bef4a5;
+}
+.admin-alert-toast .admin-subtle {
+  margin: 0;
+  color: #cfe3e6;
+}
+.admin-alert-sound {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f1f6f9;
+}
+.admin-alert-sound label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.admin-alert-sound input {
+  width: 18px;
+  height: 18px;
+  accent-color: #1f8f8a;
+}
+.admin-alert-sound .admin-inline {
+  justify-self: start;
+}
+.admin-alert-sound small {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #5d7484;
+}
+@media (max-width: 560px) {
+  .admin-alert-toast {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+  }
+}

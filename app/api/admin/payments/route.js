@@ -8,15 +8,18 @@ import {
   midtransConfigured,
   testConnection,
 } from "../../../../src/server/midtrans.js";
+import { testPaypal } from "../../../../src/server/paypal.js";
 
 // "Cek status" in the admin asks Midtrans for an order's latest status;
-// { action: "test" } checks that Midtrans accepts the server key.
+// { action: "test" } checks that Midtrans accepts the server key, and
+// { action: "paypal-test" } that PayPal accepts the Client ID and Secret.
 export const dynamic = "force-dynamic";
 export async function POST(request) {
   const denied = await requireAdmin(request, "payments");
   if (denied) return denied;
   try {
     const { orderId, action } = await jsonBody(request, 2000);
+    if (action === "paypal-test") return Response.json(await testPaypal());
     if (action === "test")
       return Response.json(
         midtransConfigured()

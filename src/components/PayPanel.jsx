@@ -1,17 +1,24 @@
 "use client";
 import { useState } from "react";
 import { dictionary, formatIDR } from "../i18n.js";
+import {
+  usePayMethod,
+  payButtonText,
+  PayMethodChoice,
+  PayNotes,
+} from "./PayMethods.jsx";
 
-// The last step of a form when online payment is on: the total, the button
-// to the Midtrans payment page and, for guests who are still unsure, the
-// same summary on WhatsApp. order is the body for /api/payments.
+// The last step of a form when payment is on: the total, the ways to pay
+// (Midtrans, bank transfer, PayPal), the button and, for guests who are
+// still unsure, the same summary on WhatsApp. order is the body for
+// /api/payments. payments comes from paymentOptions() on the server.
 export default function PayPanel({
   order,
   total,
   breakdown,
   message,
   whatsapp,
-  sandbox,
+  payments,
   locale,
   showTotal = true,
   submitText,
@@ -20,6 +27,7 @@ export default function PayPanel({
   const p = dictionary(locale).payment;
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+  const [method, setMethod, methods] = usePayMethod(payments);
   async function pay() {
     setError("");
     setPaying(true);
@@ -27,7 +35,7 @@ export default function PayPanel({
       const response = await fetch(`/api/payments?locale=${locale}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(order),
+        body: JSON.stringify({ ...order, method }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.redirectUrl)
@@ -49,6 +57,13 @@ export default function PayPanel({
           <strong>{formatIDR(total, locale)}</strong>
         </p>
       )}
+      <PayMethodChoice
+        p={p}
+        methods={methods}
+        method={method}
+        onChange={setMethod}
+        disabled={paying}
+      />
       {error && (
         <p className="activity-error" role="alert">
           {error}
@@ -60,15 +75,11 @@ export default function PayPanel({
         disabled={paying}
         onClick={pay}
       >
-        {paying
-          ? p.redirecting
-          : submitText || p.submit(formatIDR(total, locale))}{" "}
+        {(!paying && method === "midtrans" && submitText) ||
+          payButtonText(p, method, { total, locale, payments, paying })}{" "}
         <span aria-hidden="true">↗</span>
       </button>
-      <div className="pay-notes">
-        <p>{p.secure}</p>
-        {sandbox && <p className="pay-sandbox">{p.sandbox}</p>}
-      </div>
+      <PayNotes p={p} method={method} payments={payments} total={total} />
       {message && (
         <details className="plan-message">
           <summary>{p.viewMessage}</summary>

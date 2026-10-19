@@ -121,10 +121,23 @@ export function capacityOf(content, pool) {
     ? value
     : (defaultCapacity[pool] ?? 0);
 }
-export const holdsPlaces = (b) =>
-  b.status === "confirmed" ||
-  (b.status === "pending" &&
-    ["created", "pending"].includes(b.payment?.status));
+// A booking holds its places once confirmed, and while its payment is open:
+// a Midtrans payment until Midtrans ends it, a PayPal payment or a bank
+// transfer ordered on the website until its deadline.
+export const holdsPlaces = (b, now = Date.now()) => {
+  if (b.status === "confirmed") return true;
+  if (b.status !== "pending" || !b.payment) return false;
+  const p = b.payment;
+  const due = !p.dueAt || Date.parse(p.dueAt) > now;
+  if (["created", "pending"].includes(p.status))
+    return p.provider !== "paypal" || due;
+  return (
+    p.status === "unpaid" &&
+    p.method === "transfer" &&
+    Boolean(p.orderId) &&
+    due
+  );
+};
 const nextDay = (date) =>
   new Date(Date.parse(date + "T00:00:00Z") + 86400000)
     .toISOString()

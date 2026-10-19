@@ -265,7 +265,7 @@ Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia a
 Pengaturan ada di **Keuangan → Pembayaran online → Email tamu & invoice** (superadmin dan keuangan):
 
 - **Batas waktu pembayaran**: 1 jam sampai 3 hari, bawaan 24 jam. Link Midtrans kedaluwarsa pada batas ini.
-- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer.
+- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer dan di halaman transfer setelah tamu memesan di website.
 - **Catatan di invoice**: mis. ketentuan pembatalan, dalam bahasa Indonesia dan Inggris.
 - **Salinan setiap email ke**: email kantor yang menerima salinan (BCC) untuk arsip.
 - **Pratinjau** dan **Kirim ke email saya** menampilkan contoh setiap email dengan pengaturan yang sudah disimpan.
@@ -279,6 +279,23 @@ Reservasi dari WhatsApp, agen, atau walk-in dicatat di **Kalender reservasi**, l
 - **Sudah lunas** (transfer, tunai, kartu, QRIS): reservasi menjadi Dikonfirmasi dan invoice terkirim.
 
 Centang **Kirim email ke tamu setelah disimpan** untuk mengirim email saat menyimpan. Saat mengedit, kotak **Email ke tamu** menampilkan riwayat kirim, **Pratinjau**, dan **Kirim ulang**. Tagihan transfer yang lewat batas ditandai **Lewat batas bayar**; tagihan transfer tidak dibatalkan otomatis. Pembayaran Midtrans yang masih berjalan atau sudah lunas hanya berubah lewat Midtrans. Pembayaran tunai dan transfer tidak otomatis masuk Buku kas; tim keuangan mencatatnya di sana. Logo dan foto email diambil dari `https://zanclusdivecenter.com/assets/email/`, jadi tampil setelah versi ini di-deploy.
+
+## Transfer bank, PayPal, dan pemberitahuan booking
+
+Di **Keuangan → Pembayaran online**, di bawah kartu Midtrans, ada tiga kartu baru. Masing-masing punya sakelar dan tombol simpan sendiri.
+
+- **Transfer bank di checkout**: tamu bisa memilih transfer bank saat memesan di website. Perlu minimal satu rekening di **Rekening untuk transfer bank**. Setelah memesan, tamu melihat rekening, total, dan batas transfer, lalu mengirim bukti lewat WhatsApp. Saat uang masuk, buka reservasinya dan pilih **Pembayaran → Sudah lunas**.
+- **PayPal**: isi environment berikut di hPanel, lalu deploy ulang dan tekan **Tes koneksi PayPal**. Atur **Kurs, rupiah per 1 USD**, karena PayPal menagih dalam dolar AS.
+
+| Variabel | Isi |
+| --- | --- |
+| `PAYPAL_CLIENT_ID` | Client ID aplikasi di developer.paypal.com → Apps & Credentials. Mulai dari tab Sandbox untuk uji coba. |
+| `PAYPAL_CLIENT_SECRET` | Secret dari aplikasi yang sama. Jangan dibagikan atau ditulis di kode. |
+| `PAYPAL_MODE` | `live` hanya saat memakai Client ID dan Secret dari tab Live. Kosongkan untuk sandbox. |
+
+- **Pemberitahuan booking masuk**: email ke tim untuk setiap booking dari website, sampai 3 alamat (kosong berarti email di menu Kontak), dan pilihan email saat pesanan lunas. Panel admin yang terbuka juga berbunyi. Bunyinya diatur per perangkat di lonceng kanan atas.
+
+Pembayaran PayPal sungguhan (`PAYPAL_MODE=live`) ditawarkan dengan `CMS_MODE=mysql` atau penyimpanan demo di folder akun hosting, sama seperti Midtrans.
 
 ## Kalender reservasi
 

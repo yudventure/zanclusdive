@@ -225,7 +225,7 @@ function Request({ items, chosen, onToggle, contact, payments, locale }) {
             total={estimate}
             message={message}
             whatsapp={contact.whatsapp}
-            sandbox={payments.sandbox}
+            payments={payments}
             locale={locale}
           />
         </div>

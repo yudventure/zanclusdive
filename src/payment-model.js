@@ -17,7 +17,17 @@ export const defaultPayments = {
   copyTo: "",
   accounts: [],
   invoiceNote: { id: "", en: "" },
+  // Bank transfer offered at the website's checkout, to the accounts above.
+  transfer: false,
+  // PayPal, charged in US dollars at the team's rate (rupiah per dollar).
+  paypal: { enabled: false, rate: 16000 },
+  // An email to the team for each booking that comes in from the website,
+  // and when one is paid. Without addresses, the contact email gets it.
+  notify: { enabled: true, emails: [], paid: true },
 };
+export const paypalRateLimits = [1000, 100000];
+export const notifyEmailLimit = 3;
+const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const text = (value, label, max) => {
   const clean = typeof value === "string" ? value.trim() : "";
   if (clean.length > max) throw new Error(`${label} maksimal ${max} karakter.`);
@@ -52,6 +62,25 @@ export function validatePayments(input) {
     if (!/^[\d\s.-]{5,30}$/.test(a.number))
       throw new Error("Nomor rekening hanya angka, spasi, titik, atau strip.");
   }
+  const rate =
+    input.paypal?.rate === undefined
+      ? defaultPayments.paypal.rate
+      : Number(input.paypal.rate);
+  if (
+    !Number.isInteger(rate) ||
+    rate < paypalRateLimits[0] ||
+    rate > paypalRateLimits[1]
+  )
+    throw new Error("Kurs PayPal harus Rp 1.000 sampai Rp 100.000 per USD.");
+  const emails = (
+    Array.isArray(input.notify?.emails) ? input.notify.emails : []
+  )
+    .map((e) => text(e, "Email pemberitahuan", 200))
+    .filter(Boolean);
+  if (emails.length > notifyEmailLimit)
+    throw new Error(`Email pemberitahuan maksimal ${notifyEmailLimit}.`);
+  if (emails.some((e) => !validEmail(e)))
+    throw new Error("Email pemberitahuan booking tidak valid.");
   return {
     enabled: input.enabled === true,
     dueHours,
@@ -62,8 +91,20 @@ export function validatePayments(input) {
       id: text(input.invoiceNote?.id, "Catatan invoice", 600),
       en: text(input.invoiceNote?.en, "Catatan invoice (English)", 600),
     },
+    transfer: input.transfer === true,
+    paypal: { enabled: input.paypal?.enabled === true, rate },
+    notify: {
+      enabled: input.notify?.enabled !== false,
+      emails: [...new Set(emails)],
+      paid: input.notify?.paid !== false,
+    },
   };
 }
+
+// The US dollars PayPal charges for an amount in rupiah, rounded up to the
+// cent.
+export const paypalAmount = (amount, rate) =>
+  (Math.ceil((amount / rate) * 100) / 100).toFixed(2);
 
 // Packages of an activity that have a price, with their place in the list.
 export function payableItems(priceList, activity) {

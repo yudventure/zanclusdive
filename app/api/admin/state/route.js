@@ -21,8 +21,14 @@ import {
 } from "../../../../src/server/midtrans.js";
 import {
   paymentsBlockedByDemo,
-  paymentsReady,
+  midtransReady,
 } from "../../../../src/server/payments.js";
+import {
+  paypalConfigured,
+  paypalLive,
+  paypalKeyEnding,
+  lastPaypalError,
+} from "../../../../src/server/paypal.js";
 import { mailConfigured, mailSender } from "../../../../src/server/mailer.js";
 import { demoStorageDirectory } from "../../../../src/server/demo-store.js";
 export const dynamic = "force-dynamic";
@@ -66,7 +72,7 @@ export async function GET(request) {
             : null,
         // Whether the reservation form can bill by Midtrans link.
         billing: can("bookings")
-          ? { midtrans: paymentsReady(site.content) }
+          ? { midtrans: midtransReady(site.content) }
           : null,
         payments: can("payments")
           ? {
@@ -78,6 +84,13 @@ export async function GET(request) {
               issues: keyIssues(),
               keyEnding: midtransKeyEnding(),
               lastError: lastMidtransError(),
+              // PayPal keys from the hosting, without the secret.
+              paypal: {
+                configured: paypalConfigured(),
+                live: paypalLive(),
+                keyEnding: paypalKeyEnding(),
+                lastError: lastPaypalError(),
+              },
             }
           : null,
       },

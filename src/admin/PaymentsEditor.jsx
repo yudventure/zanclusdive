@@ -156,13 +156,14 @@ export default function PaymentsEditor({
           <div>
             <h2>Bayar langsung dengan Midtrans</h2>
             <p className="admin-subtle">
-              Saat aktif, semua pemesanan dibayar lewat Midtrans: paket Diving,
-              Snorkeling, dan Trip laut, belanja dan sewa alat di Dive Shop,
-              kursus selam, dan servis alat. Tamu melihat ringkasan, lalu
-              membayar lunas. Begitu Midtrans melaporkan pembayaran berhasil,
-              pesanan otomatis berstatus Dikonfirmasi pada tanggalnya dan tampil
-              di kalender. Tamu yang masih ragu tetap bisa mengirim ringkasannya
-              lewat WhatsApp.
+              Saat aktif, semua pemesanan bisa dibayar lewat Midtrans, yaitu
+              paket Diving, Snorkeling, dan Trip laut, belanja dan sewa alat di
+              Dive Shop, kursus selam, dan servis alat. Tamu melihat ringkasan,
+              lalu membayar lunas. Begitu Midtrans melaporkan pembayaran
+              berhasil, pesanan otomatis berstatus Dikonfirmasi pada tanggalnya
+              dan tampil di kalender. Tamu yang masih ragu tetap bisa mengirim
+              ringkasannya lewat WhatsApp. Transfer bank dan PayPal diatur di
+              bawah. Bila lebih dari satu cara aktif, tamu memilih sendiri.
             </p>
           </div>
           <label className="admin-dev-switch">
@@ -291,9 +292,18 @@ export default function PaymentsEditor({
                     <td>
                       <PaymentBadge payment={b.payment} />
                       {isManual(b.payment) ? (
-                        <small>Dicatat admin</small>
+                        <small>
+                          {b.payment.orderId
+                            ? "Transfer dari website · " + b.payment.orderId
+                            : "Dicatat admin"}
+                        </small>
                       ) : (
-                        <small>{b.payment.orderId}</small>
+                        <small>
+                          {b.payment.provider === "paypal"
+                            ? `PayPal · USD ${b.payment.usd} · `
+                            : ""}
+                          {b.payment.orderId}
+                        </small>
                       )}
                       {b.payment.method && (
                         <small>
@@ -312,7 +322,12 @@ export default function PaymentsEditor({
                         <button
                           type="button"
                           className="admin-inline"
-                          disabled={busy || !configured}
+                          disabled={
+                            busy ||
+                            (b.payment.provider === "paypal"
+                              ? !status?.paypal?.configured
+                              : !configured)
+                          }
                           onClick={() => onSync(b.payment.orderId)}
                         >
                           Cek status
@@ -326,8 +341,8 @@ export default function PaymentsEditor({
           </div>
         ) : (
           <p className="admin-subtle">
-            Belum ada pembayaran online. Pembayaran yang lunas juga tampil di{" "}
-            <Link href="/admin/calendar">Kalender reservasi</Link>.
+            Belum ada pembayaran dari website. Pembayaran yang lunas juga tampil
+            di <Link href="/admin/calendar">Kalender reservasi</Link>.
           </p>
         )}
       </section>
