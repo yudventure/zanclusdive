@@ -62,6 +62,10 @@ Jika halaman menunjukkan **CMS perlu dikonfigurasi**, lengkapi variabel yang diw
 
 Halaman admin kini menampilkan nama variabel yang belum terbaca dan syarat panjang yang belum terpenuhi, tanpa menampilkan nilai kredensial. Jika masih muncul **Konfigurasi CMS belum lengkap** setelah redeploy, periksa hanya nama yang tercantum: gunakan nama variabel persis seperti tabel di atas, isi nilai tanpa tanda kutip pembungkus, pastikan variabel dipasang pada aplikasi `zanclusdive.com` yang sedang dijalankan, lalu simpan dan deploy ulang. File `.env` lokal atau `.env.example` di GitHub tidak otomatis mengisi variabel runtime Hostinger. Pesan konfigurasi tersebut belum merupakan hasil pengecekan koneksi database; error koneksi baru diperiksa ketika konfigurasi lengkap dan aplikasi mengakses MySQL.
 
+## Jika build gagal dengan "OS can't spawn worker thread"
+
+Server build Hostinger melaporkan banyak CPU tetapi membatasi jumlah thread per akun. Tanpa batas, Next.js menyalakan satu worker per CPU untuk mengumpulkan data halaman ("Collecting page data using 63 workers"), lalu build berhenti dengan `Resource temporarily unavailable (os error 11)` dan `SIGABRT`. `next.config.mjs` membatasinya ke satu worker (`experimental.cpus: 1`, `workerThreads: false`), jadi log build menulis "using 1 worker". Bila error yang sama masih muncul, deploy ulang sekali, karena batas thread di server build bersama bisa sedang penuh.
+
 ## Jika login menampilkan error database
 
 Isi email/password admin pada `/admin`, lalu tekan **Periksa koneksi database**. Pemeriksaan dijalankan pada proses aplikasi yang sedang berjalan di Hostinger, memakai konfigurasi yang sama dengan CMS, tanpa membuat/menghapus tabel atau mengubah data. Kredensial admin diverifikasi sebelum informasi koneksi ditampilkan; pemeriksaan tetap dapat digunakan saat MySQL menolak koneksi. Tidak ada sesi login yang diterbitkan melalui pemeriksaan ini.
