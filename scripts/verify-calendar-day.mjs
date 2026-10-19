@@ -104,6 +104,17 @@ try {
   await page.keyboard.press("Escape");
   assert.equal(await popover.count(), 0);
 
+  // The calendar's refresh button shows before any agent calendar is
+  // linked, and says what to do.
+  await page
+    .getByRole("button", { name: "Perbarui kalender agen & OTA" })
+    .click();
+  await page
+    .locator(".admin-success", {
+      hasText: "Belum ada kalender agen atau OTA yang tersambung.",
+    })
+    .waitFor();
+
   // The panel opens on today; a tap on another day opens that one. The
   // full form waits until it is asked for.
   const side = page.locator(".admin-day-side");

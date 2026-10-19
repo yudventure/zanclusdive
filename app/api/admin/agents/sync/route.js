@@ -13,6 +13,7 @@ export async function POST(request) {
       (agent) => agent.enabled && agent.importUrl,
     );
     return Response.json({
+      linked: linked.length,
       read: linked.filter((agent) => !agent.syncError).length,
       events: linked.reduce(
         (sum, agent) => sum + (agent.events?.length ?? 0),

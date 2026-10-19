@@ -73,7 +73,9 @@ export default function MonthCalendar({
 }) {
   const [program, setProgram] = useState("all");
   const [syncing, setSyncing] = useState(false);
-  // Travel agents and OTAs whose calendars are read into this one.
+  // Travel agents and OTAs whose calendars are read into this one. The
+  // button shows for every reservation desk, also when the list of agents
+  // is not theirs to see; the server reads them all.
   const linked = agents.filter((agent) => agent.enabled && agent.importUrl);
   async function syncAgents() {
     setSyncing(true);
@@ -194,13 +196,17 @@ export default function MonthCalendar({
               ))}
             </select>
           )}
-          {linked.length > 0 && onSyncAgents && (
+          {onSyncAgents && (
             <button
               type="button"
               className="admin-button secondary admin-month-sync"
               disabled={syncing}
               aria-busy={syncing}
-              title={`Baca ulang ${linked.length} kalender agen dan OTA sekarang`}
+              title={
+                linked.length
+                  ? `Baca ulang ${linked.length} kalender agen dan OTA sekarang`
+                  : "Baca ulang kalender agen dan OTA yang tersambung"
+              }
               onClick={syncAgents}
             >
               <span aria-hidden="true">↻</span>

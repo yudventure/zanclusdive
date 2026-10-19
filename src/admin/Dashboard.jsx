@@ -609,6 +609,10 @@ export default function Dashboard({ section, account, today }) {
     try {
       const result = await request("/api/admin/agents/sync", "POST");
       await refresh();
+      if (!result.linked)
+        setNotice(
+          "Belum ada kalender agen atau OTA yang tersambung. Tempel alamat kalender (iCal) mereka di PR & mitra, Agen & kalender, lalu tekan tombol ini lagi.",
+        );
       if (result.read)
         setNotice(
           `Kalender agen dan OTA dibaca ulang. ${result.read} kalender, ${result.events} acara.`,
