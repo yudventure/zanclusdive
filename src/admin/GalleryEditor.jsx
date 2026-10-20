@@ -4,6 +4,7 @@ import { builtInPhotos } from "../photography.js";
 import {
   defaultGallery,
   galleryLimit,
+  videoCover,
   videoLimit,
   videoPlatforms,
   videoSource,
@@ -34,7 +35,7 @@ const platformNotes = {
 // Video links (YouTube, TikTok, Instagram, Facebook) for the 9:16 videos
 // above the gallery button. Share links from the TikTok and Facebook apps
 // are opened on the server and replaced by the full video link.
-function VideoList({ videos, update, busy }) {
+function VideoList({ videos, update, busy, placePhoto }) {
   const [opening, setOpening] = useState({});
   const latest = useRef(videos);
   const tried = useRef(new Set());
@@ -43,6 +44,16 @@ function VideoList({ videos, update, busy }) {
     update(
       videos.map((video, i) => (i === index ? { ...video, ...patch } : video)),
     );
+  // A cover picked after a slow upload goes into the list as it is then.
+  const setCover = (index, poster) =>
+    update(
+      latest.current.map((video, i) =>
+        i === index ? { ...video, poster } : video,
+      ),
+    );
+  // Covers that could not be loaded (a TikTok cover the server could not
+  // fetch) show the platform instead.
+  const [broken, setBroken] = useState({});
   function move(index, delta) {
     const next = [...videos];
     const [video] = next.splice(index, 1);
@@ -150,10 +161,18 @@ function VideoList({ videos, update, busy }) {
                   className="admin-video-preview"
                   data-platform={source?.platform}
                 >
-                  {ready && source.platform === "youtube" ? (
+                  {ready &&
+                  videoCover(video, source) &&
+                  !broken[videoCover(video, source)] ? (
                     <img
-                      src={`https://i.ytimg.com/vi/${source.id}/hqdefault.jpg`}
-                      alt={"Preview video " + (index + 1)}
+                      src={videoCover(video, source)}
+                      alt={"Sampul video " + (index + 1)}
+                      onError={() =>
+                        setBroken((current) => ({
+                          ...current,
+                          [videoCover(video, source)]: true,
+                        }))
+                      }
                     />
                   ) : source ? (
                     <span className="admin-video-platform">
@@ -210,6 +229,34 @@ function VideoList({ videos, update, busy }) {
                       }
                     />
                   </Field>
+                  <div className="admin-video-cover">
+                    <p className="admin-subtle">
+                      {video.poster
+                        ? "Sampul sendiri tampil sampai videonya berputar."
+                        : source?.platform === "tiktok"
+                          ? "Sampul diambil otomatis dari TikTok dan tampil sampai videonya berputar. Bisa diganti foto sendiri."
+                          : source?.platform === "youtube"
+                            ? "Sampul diambil otomatis dari YouTube. Bisa diganti foto sendiri."
+                            : "Instagram dan Facebook tidak memberi sampul. Unggah foto sampul supaya kotaknya tidak kosong saat video dimuat."}
+                    </p>
+                    <ImageUpload
+                      compact
+                      guide="video"
+                      label={video.poster ? "Ganti sampul" : "Upload sampul"}
+                      onFile={(file) =>
+                        placePhoto(file, (url) => setCover(index, url))
+                      }
+                    />
+                    {video.poster && (
+                      <button
+                        type="button"
+                        className="admin-inline"
+                        onClick={() => change(index, { poster: "" })}
+                      >
+                        Pakai sampul otomatis
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </fieldset>
@@ -399,7 +446,12 @@ export default function GalleryEditor({
           {busy ? "Menyimpan…" : "Simpan galeri"}
         </button>
       </section>
-      <VideoList videos={videos} update={updateVideos} busy={busy} />
+      <VideoList
+        videos={videos}
+        update={updateVideos}
+        busy={busy}
+        placePhoto={placePhoto}
+      />
     </form>
   );
 }

@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { dictionary } from "../i18n.js";
 import { defaultGallery, galleryCaption } from "../gallery.js";
+import { photoSrcSet } from "../photography.js";
 
 // The Zanclus dive gallery. It stays rolled up under the ocean cards until
 // the visitor opens it; a photo opens larger in a lightbox.
@@ -75,6 +76,8 @@ export default function DiveGallery({ gallery, locale }) {
                 >
                   <img
                     src={photo.src}
+                    srcSet={photoSrcSet(photo.src)}
+                    sizes="(max-width: 900px) 50vw, 25vw"
                     alt=""
                     loading="lazy"
                     width="900"
@@ -100,7 +103,12 @@ export default function DiveGallery({ gallery, locale }) {
       >
         {item && (
           <figure>
-            <img src={item.src} alt={galleryCaption(item, locale)} />
+            <img
+              src={item.src}
+              srcSet={photoSrcSet(item.src)}
+              sizes="100vw"
+              alt={galleryCaption(item, locale)}
+            />
             <figcaption>
               <span>{galleryCaption(item, locale)}</span>
               <small>{t.position(current + 1, items.length)}</small>

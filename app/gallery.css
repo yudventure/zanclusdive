@@ -40,6 +40,30 @@
   border: 0;
   object-fit: cover;
 }
+/* The cover shows at once and stays over the player until the video
+   really plays, then fades; taps go through to the player. */
+.dive-video-cover {
+  z-index: 1;
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
+}
+.dive-video-frame.is-playing .dive-video-cover {
+  opacity: 0;
+  visibility: hidden;
+}
+.dive-video-play {
+  z-index: 2;
+}
+.dive-video-caption {
+  z-index: 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dive-video-cover {
+    transition: none;
+  }
+}
 /* Plays like a looping clip; the link below opens it on YouTube. */
 .dive-video-frame iframe {
   pointer-events: none;
@@ -48,7 +72,7 @@
 .dive-video-frame.is-own-player iframe {
   pointer-events: auto;
 }
-/* Shown until a TikTok, Instagram or Facebook player has loaded. */
+/* Shown until a player plays when the video has no cover picture. */
 .dive-video-poster {
   position: absolute;
   inset: 0;

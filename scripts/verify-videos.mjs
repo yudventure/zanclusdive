@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
 
@@ -7,6 +8,8 @@ import { demoAccount } from "../src/demo-data.js";
 // Facebook. Run against a local demo server with demo login:
 // CMS_MODE=demo CMS_DEMO_LOGIN=true npm start
 // The players are replaced by stand-ins, so nothing is fetched from them.
+// TikTok covers come from a stand-in oEmbed server: start the demo server
+// with TIKTOK_OEMBED_URL=http://127.0.0.1:3497/oembed.
 const base = process.env.BASE_URL || "http://127.0.0.1:3210";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(base).hostname));
 const headers = { Origin: new URL(base).origin };
@@ -20,9 +23,36 @@ addEventListener("message", (e) => commands.push(JSON.parse(e.data).func));
 // TikTok's player says it is ready, then records what the page asks.
 const tiktokPlayer = `<!doctype html><body style="margin:0;height:100vh;background:#111;color:#fff;display:grid;place-items:center">tiktok<script>
 window.messages = [];
-addEventListener("message", (e) => messages.push(e.data.type));
+addEventListener("message", (e) => {
+  messages.push(e.data.type);
+  // Asked to play, it reports playing, as TikTok's player does.
+  if (e.data.type === "play")
+    parent.postMessage({ "x-tiktok-player": true, type: "onStateChange", value: 1 }, "*");
+});
 parent.postMessage({ "x-tiktok-player": true, type: "onPlayerReady" }, "*");
 </script>`;
+// TikTok's oEmbed answer and cover picture, for the server's cover fetch.
+const oembedPort = Number(process.env.TIKTOK_OEMBED_PORT || 3497);
+const oembedAsked = [];
+const oembed = createServer((req, res) => {
+  const url = new URL(req.url, "http://mock");
+  if (url.pathname === "/oembed") {
+    oembedAsked.push(url.searchParams.get("url"));
+    res.writeHead(200, { "Content-Type": "application/json" });
+    return res.end(
+      JSON.stringify({
+        thumbnail_url: `http://127.0.0.1:${oembedPort}/cover.webp`,
+      }),
+    );
+  }
+  if (url.pathname === "/cover.webp") {
+    res.writeHead(200, { "Content-Type": "image/webp" });
+    return res.end(thumbnail);
+  }
+  res.writeHead(404);
+  res.end();
+});
+await new Promise((resolve) => oembed.listen(oembedPort, "127.0.0.1", resolve));
 const stand = (label) =>
   `<!doctype html><body style="margin:0;height:100vh;background:#fff;display:grid;place-items:center">${label}</body>`;
 const browser = await chromium.launch({
@@ -124,6 +154,32 @@ try {
   await videoCards.nth(0).getByLabel("Caption (English)").fill("Manta ray");
   await page.getByRole("button", { name: "Simpan video" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
+  // Facebook gives no cover, so the owner uploads one; it is placed and
+  // saved in one step.
+  await videoCards
+    .nth(3)
+    .locator('.admin-video-cover input[type="file"]')
+    .setInputFiles({
+      name: "sampul-reel.webp",
+      mimeType: "image/webp",
+      buffer: thumbnail,
+    });
+  await page
+    .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
+    .waitFor({ timeout: 30000 });
+  const savedVideos = (
+    await (await context.request.get(base + "/api/admin/state")).json()
+  ).content.gallery.videos;
+  const facebookCover = savedVideos[3].poster;
+  assert.match(facebookCover, /^\/api\/media\/[0-9a-f-]{36}$/);
+  assert.equal(savedVideos[2].poster, undefined);
+  assert.equal(
+    await videoCards
+      .nth(3)
+      .locator(".admin-video-preview img")
+      .getAttribute("src"),
+    facebookCover,
+  );
 
   // Homepage: between the ocean cards and the gallery button, 9:16, and the
   // players load only once the row comes near the screen.
@@ -170,6 +226,62 @@ try {
     description: "0",
   }))
     assert.equal(tik.searchParams.get(key), value, "tiktok " + key);
+  // Covers: TikTok's comes through our server and stays over the player
+  // until the player says it plays; Instagram without a cover keeps the
+  // plain background; YouTube shows its thumbnail.
+  const coverOf = (platform) =>
+    row
+      .locator(`.dive-video[data-platform="${platform}"] .dive-video-cover`)
+      .first();
+  assert.equal(
+    await coverOf("tiktok").getAttribute("src"),
+    `/api/video-poster/tiktok/${tiktok}`,
+  );
+  await page.waitForFunction(
+    (id) =>
+      document.querySelector(`img[src="/api/video-poster/tiktok/${id}"]`)
+        ?.naturalWidth > 0,
+    tiktok,
+  );
+  assert.equal(
+    await coverOf("youtube").getAttribute("src"),
+    "https://i.ytimg.com/vi/aaaaaaaaaa1/hqdefault.jpg",
+  );
+  assert.equal(
+    await coverOf("instagram").evaluate((el) =>
+      el.classList.contains("dive-video-poster"),
+    ),
+    true,
+  );
+  assert.equal(await coverOf("facebook").getAttribute("src"), facebookCover);
+  await row
+    .locator('.dive-video[data-platform="tiktok"] .dive-video-frame.is-playing')
+    .waitFor();
+  await page.waitForTimeout(600);
+  assert.equal(
+    await coverOf("tiktok").evaluate((el) => getComputedStyle(el).visibility),
+    "hidden",
+  );
+  const poster = await context.request.get(
+    base + `/api/video-poster/tiktok/${tiktok}`,
+  );
+  assert.equal(poster.status(), 200);
+  assert.equal(poster.headers()["content-type"], "image/webp");
+  assert.match(poster.headers()["cache-control"], /max-age=604800/);
+  assert.equal(oembedAsked.length, 1, "the cover is fetched once");
+  assert.equal(
+    oembedAsked[0],
+    `https://www.tiktok.com/@zanclus.dive/video/${tiktok}`,
+  );
+  // Only videos on the website get a cover.
+  assert.equal(
+    (
+      await context.request.get(
+        base + "/api/video-poster/tiktok/7000000000000000001",
+      )
+    ).status(),
+    404,
+  );
   // Instagram and Facebook: their own players, played by tapping them.
   assert.equal(
     await frameOf("instagram").getAttribute("src"),
@@ -307,8 +419,9 @@ try {
   assert.equal(await page.locator(".dive-videos").count(), 0);
   assert.deepEqual(page.errors, []);
   console.log(
-    "PASS videos: none by default, admin recognises YouTube, TikTok, Instagram and Facebook links and rejects others, share links that cannot be opened explain what to do and are not saved, 9:16 row between the ocean cards and the gallery button, lazy players (YouTube and TikTok muted on a loop, Instagram and Facebook in their own tappable players), more videos load when swiped to, pause out of view and play back in view for YouTube and TikTok, links to each platform, captions in both languages, YouTube links, 390px without sideways scroll, tap to play with reduced motion, straight load without IntersectionObserver. Nothing fetched from the platforms.",
+    "PASS videos: none by default, admin recognises YouTube, TikTok, Instagram and Facebook links and rejects others, share links that cannot be opened explain what to do and are not saved, 9:16 row between the ocean cards and the gallery button, lazy players (YouTube and TikTok muted on a loop, Instagram and Facebook in their own tappable players), covers shown at once (TikTok's fetched once through the server and kept, YouTube's thumbnail, the owner's upload for Facebook) and hidden once the player plays, more videos load when swiped to, pause out of view and play back in view for YouTube and TikTok, links to each platform, captions in both languages, YouTube links, 390px without sideways scroll, tap to play with reduced motion, straight load without IntersectionObserver. Nothing fetched from the platforms.",
   );
 } finally {
   await browser.close();
+  oembed.close();
 }

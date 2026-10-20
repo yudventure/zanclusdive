@@ -29,6 +29,11 @@ export const photoGuides = {
   },
   service: { size: "1600 × 1067", ratio: "3:2" },
   about: { size: "1600 × 1067", ratio: "3:2" },
+  video: {
+    size: "1080 × 1920",
+    ratio: "9:16",
+    tip: "potongan dari videonya, tampil saat video dimuat",
+  },
   product: {
     size: "1200 × 1200",
     ratio: "1:1",

@@ -1,8 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { preconnect } from "react-dom";
 import { dictionary } from "../i18n.js";
-import { galleryCaption, videoPlatforms, videoSource } from "../gallery.js";
+import {
+  galleryCaption,
+  videoCover,
+  videoPlatforms,
+  videoSource,
+} from "../gallery.js";
 import ContactIcon from "./ContactIcon.jsx";
+import { parsePlayerMessage, playerRunning } from "../video-player.js";
 
 const youtubeOrigin = "https://www.youtube-nocookie.com";
 const tiktokOrigin = "https://www.tiktok.com";
@@ -66,16 +73,20 @@ function playerSrc(source, { tapped, still, width }) {
   );
 }
 
-// One 9:16 video. The player loads only when the frame comes near the
-// screen; YouTube and TikTok then play muted on a loop and pause again once
-// they scroll away. With reduced motion they wait for a tap instead.
-export function Video({ source, name, caption, t }) {
+// One 9:16 video. Its cover shows at once; the player loads a screen ahead
+// of the row, after the page itself, and the cover fades out only once
+// the video really plays, so no black frame shows while it loads.
+// YouTube and TikTok play muted on a loop and pause again once they scroll
+// away. With reduced motion they wait for a tap instead.
+export function Video({ source, cover, name, caption, t }) {
   const box = useRef(null);
   const frame = useRef(null);
   const [active, setActive] = useState(false);
   const [tapped, setTapped] = useState(false);
   const [still, setStill] = useState(false);
   const [width, setWidth] = useState(270);
+  const [playing, setPlaying] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
   // Instagram and Facebook are always played by tapping their own player.
   const own = ["instagram", "facebook"].includes(source.platform);
   useEffect(() => {
@@ -100,53 +111,78 @@ export function Video({ source, name, caption, t }) {
           tiktokOrigin,
         );
     };
-    // TikTok starts muted once its player says it is ready.
+    // TikTok starts muted once its player says it is ready. Either player
+    // saying it plays takes the cover away.
     const ready = (event) => {
       if (
-        source.platform !== "tiktok" ||
-        event.origin !== tiktokOrigin ||
-        event.source !== frame.current?.contentWindow
+        !frame.current ||
+        event.source !== frame.current.contentWindow ||
+        ![tiktokOrigin, youtubeOrigin].includes(event.origin)
       )
         return;
-      const data =
-        typeof event.data === "string"
-          ? (() => {
-              try {
-                return JSON.parse(event.data);
-              } catch {
-                return {};
-              }
-            })()
-          : event.data;
-      if (data?.type !== "onPlayerReady") return;
+      const data = parsePlayerMessage(event.data);
+      if (playerRunning(source.platform, data)) setPlaying(true);
+      if (source.platform !== "tiktok" || data?.type !== "onPlayerReady")
+        return;
       event.source.postMessage(
         { "x-tiktok-player": true, type: "mute" },
         tiktokOrigin,
       );
+      // A player loaded ahead of the row waits until it is in view.
       event.source.postMessage(
-        { "x-tiktok-player": true, type: "play" },
+        { "x-tiktok-player": true, type: inView ? "play" : "pause" },
         tiktokOrigin,
       );
     };
+    // Without IntersectionObserver every player counts as in view.
+    let inView = typeof window.IntersectionObserver !== "function";
     window.addEventListener("message", ready);
     if (typeof window.IntersectionObserver !== "function") {
       if (!calm || own) setActive(true);
       return () => window.removeEventListener("message", ready);
     }
-    const observer = new IntersectionObserver(
+    // Players start a screen before the row reaches the screen, once the
+    // page's own photos have loaded; they play only when in view.
+    let observer = null;
+    const near = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return send(false);
-        if (!calm || own) setActive(true);
-        send(true);
+        if (entry.isIntersecting && (!calm || own)) setActive(true);
       },
-      { rootMargin: "200px 0px" },
+      { rootMargin: "100% 0px" },
     );
-    observer.observe(box.current);
+    const watch = () => {
+      near.observe(box.current);
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          inView = entry.isIntersecting;
+          if (!entry.isIntersecting) return send(false);
+          if (!calm || own) setActive(true);
+          send(true);
+        },
+        { rootMargin: "0px" },
+      );
+      observer.observe(box.current);
+    };
+    if (document.readyState === "complete") watch();
+    else window.addEventListener("load", watch, { once: true });
     return () => {
-      observer.disconnect();
+      near.disconnect();
+      observer?.disconnect();
+      window.removeEventListener("load", watch);
       window.removeEventListener("message", ready);
     };
   }, [source.platform, own]);
+  // Once the player page is in, YouTube is asked to report its state, and
+  // the cover goes after a while even without word from the player.
+  function loaded() {
+    const target = frame.current?.contentWindow;
+    if (source.platform === "youtube" && target)
+      target.postMessage(
+        JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
+        youtubeOrigin,
+      );
+    setTimeout(() => setPlaying(true), own ? 400 : 8000);
+  }
   const platform = videoPlatforms[source.platform];
   return (
     <li className="dive-video" ref={box} data-platform={source.platform}>
@@ -154,22 +190,10 @@ export function Video({ source, name, caption, t }) {
         className={
           "dive-video-frame" +
           (tapped ? " is-tapped" : "") +
-          (own ? " is-own-player" : "")
+          (own ? " is-own-player" : "") +
+          (playing ? " is-playing" : "")
         }
       >
-        {source.platform === "youtube" ? (
-          <img
-            src={`https://i.ytimg.com/vi/${source.id}/hqdefault.jpg`}
-            alt=""
-            loading="lazy"
-            width="480"
-            height="360"
-          />
-        ) : (
-          <span className="dive-video-poster" aria-hidden="true">
-            <ContactIcon name={source.platform} />
-          </span>
-        )}
         {active && (
           <iframe
             ref={frame}
@@ -179,7 +203,27 @@ export function Video({ source, name, caption, t }) {
             referrerPolicy="strict-origin-when-cross-origin"
             scrolling="no"
             tabIndex={tapped || own ? 0 : -1}
+            onLoad={loaded}
           />
+        )}
+        {cover && !coverFailed ? (
+          <img
+            className="dive-video-cover"
+            src={cover}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            width="540"
+            height="960"
+            onError={() => setCoverFailed(true)}
+          />
+        ) : (
+          <span
+            className="dive-video-poster dive-video-cover"
+            aria-hidden="true"
+          >
+            <ContactIcon name={source.platform} />
+          </span>
         )}
         {still && !active && (
           <button
@@ -223,6 +267,13 @@ export default function DiveVideos({ videos, locale }) {
     }))
     .filter((video) => video.source && !video.source.short);
   if (!list.length) return null;
+  // The players' sites are greeted while the page loads.
+  if (list.some((video) => video.source.platform === "tiktok"))
+    preconnect(tiktokOrigin);
+  if (list.some((video) => video.source.platform === "youtube")) {
+    preconnect(youtubeOrigin);
+    preconnect("https://i.ytimg.com");
+  }
   return (
     <ul className="dive-videos" aria-label={t.videos} data-reveal>
       {list.map((video, index) => {
@@ -231,6 +282,7 @@ export default function DiveVideos({ videos, locale }) {
           <Video
             key={video.source.platform + video.source.id + index}
             source={video.source}
+            cover={videoCover(video, video.source)}
             caption={caption}
             name={t.video(index + 1, caption)}
             t={t}

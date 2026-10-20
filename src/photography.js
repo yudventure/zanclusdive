@@ -71,7 +71,14 @@ const responsivePhotos = [
   defaultSiteImages.course,
   ...Object.values(bannerPhotos),
 ];
+// Uploaded photos (/api/media/<id>) also come smaller, from ?w=, so a
+// phone loads a photo the size of its screen.
+export const mediaWidths = [480, 828, 1280, 1920];
+export const isMediaPath = (url) =>
+  /^\/api\/media\/[a-f0-9-]{36}$/.test(url ?? "");
 export function photoSrcSet(url) {
+  if (isMediaPath(url))
+    return mediaWidths.map((width) => `${url}?w=${width} ${width}w`).join(", ");
   if (!responsivePhotos.includes(url)) return undefined;
   const width = url.includes("-cover.")
     ? 1536

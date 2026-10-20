@@ -265,6 +265,8 @@ export default function HomePage({
             <img
               className="hero-photo"
               src={content.images.hero}
+              srcSet={photoSrcSet(content.images.hero)}
+              sizes="100vw"
               alt={h.heroAlt}
               width="1672"
               height="941"
@@ -434,6 +436,8 @@ export default function HomePage({
                     >
                       <img
                         src={content.images[key]}
+                        srcSet={photoSrcSet(content.images[key])}
+                        sizes="(max-width: 700px) 30vw, 22vw"
                         alt=""
                         width="640"
                         height="426"
@@ -484,6 +488,8 @@ export default function HomePage({
                     className="ocean-photo"
                     data-depth
                     src={content.images.reef}
+                    srcSet={photoSrcSet(content.images.reef)}
+                    sizes="(max-width: 700px) 90vw, 45vw"
                     alt={h.reefAlt}
                     width="1200"
                     height="800"

@@ -100,6 +100,18 @@ const tiktokId = /^\d{15,21}$/;
 const facebookId = /^\d{6,25}$/;
 const instagramCode = /^[A-Za-z0-9_-]{5,40}$/;
 
+// The picture shown while a video's player loads: the owner's own cover,
+// YouTube's thumbnail, or TikTok's cover through our server. Instagram and
+// Facebook have none without the owner's cover.
+export function videoCover(video, source = videoSource(video?.url)) {
+  if (video?.poster) return video.poster;
+  if (source?.platform === "youtube")
+    return `https://i.ytimg.com/vi/${source.id}/hqdefault.jpg`;
+  if (source?.platform === "tiktok" && source.id)
+    return `/api/video-poster/tiktok/${source.id}`;
+  return "";
+}
+
 // What a video link points to: { platform, id, url } where url is the
 // address to open the video, or { platform, short: true } for share links
 // that have to be opened first to find the video (vt.tiktok.com,

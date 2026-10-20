@@ -103,7 +103,13 @@ function EventSignup({
       <h2 id="event-signup-title">{f.title(title)}</h2>
       <div className="event-signup-offer">
         {banner.background && (
-          <img src={banner.background} alt="" loading="lazy" />
+          <img
+            src={banner.background}
+            srcSet={photoSrcSet(banner.background)}
+            sizes="(max-width: 700px) 100vw, 480px"
+            alt=""
+            loading="lazy"
+          />
         )}
         <dl>
           <div>

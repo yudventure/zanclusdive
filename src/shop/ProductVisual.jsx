@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { dictionary } from "../i18n.js";
+import { photoSrcSet } from "../photography.js";
 
 // Lightweight illustrations are placeholders until the owner uploads product photos.
 export default function ProductVisual({ product, locale = "id" }) {
@@ -10,6 +11,8 @@ export default function ProductVisual({ product, locale = "id" }) {
       <img
         className="shop-product-photo"
         src={product.image}
+        srcSet={photoSrcSet(product.image)}
+        sizes="(max-width: 700px) 50vw, 340px"
         alt={product.name}
         loading="lazy"
         onError={() => setFailedURL(product.image)}

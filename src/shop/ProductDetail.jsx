@@ -5,7 +5,8 @@ import { rupiah, unitsLeft, stockBadge, productImages } from "../shop-model.js";
 import { storyBlocks } from "../product-story.js";
 import ProductStory from "./ProductStory.jsx";
 import { dictionary } from "../i18n.js";
-import { videoSource } from "../gallery.js";
+import { videoCover, videoSource } from "../gallery.js";
+import { photoSrcSet } from "../photography.js";
 import { Video } from "../components/DiveVideos.jsx";
 
 // One Dive Shop product in a window, like a marketplace listing, opened
@@ -124,6 +125,8 @@ export default function ProductDetail({
             {images.length ? (
               <img
                 src={images[photo]}
+                srcSet={photoSrcSet(images[photo])}
+                sizes="(max-width: 900px) 100vw, 50vw"
                 alt={`${product.name}, ${t.photo(photo + 1, images.length)}`}
                 draggable={false}
               />
@@ -168,7 +171,13 @@ export default function ProductDetail({
                   aria-pressed={index === photo}
                   onClick={() => setPhoto(index)}
                 >
-                  <img src={src} alt="" loading="lazy" />
+                  <img
+                    src={src}
+                    srcSet={photoSrcSet(src)}
+                    sizes="96px"
+                    alt=""
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
@@ -320,6 +329,7 @@ export default function ProductDetail({
                   <Video
                     key={source.platform + source.id}
                     source={source}
+                    cover={videoCover(null, source)}
                     name={t.video(product.name, index + 1)}
                     t={dict.gallery}
                   />

@@ -220,7 +220,16 @@ export function validateVideos(input) {
       throw new Error(
         `Link video ${index + 1} masih link pendek. Buka link itu di browser, lalu salin alamat lengkap dari kolom alamat.`,
       );
-    return { url, caption: galleryCaptionText(video?.caption) };
+    // A cover picture of the owner's choice, shown while the player loads.
+    const poster =
+      typeof video?.poster === "string" && video.poster.trim()
+        ? imageURL(video.poster)
+        : "";
+    return {
+      url,
+      caption: galleryCaptionText(video?.caption),
+      ...(poster ? { poster } : {}),
+    };
   });
 }
 

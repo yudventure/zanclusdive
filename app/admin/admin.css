@@ -1161,6 +1161,15 @@
   height: 100%;
   border-radius: 0;
 }
+.admin-video-cover {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: start;
+  gap: 8px;
+}
+.admin-video-cover p {
+  margin: 0;
+}
 .admin-video-platform {
   display: grid;
   justify-items: center;
