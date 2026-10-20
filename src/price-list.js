@@ -1,23 +1,28 @@
 // Package prices shown beside the experience cards, from the Zanclus Dive
 // Center 2025 price list. Editable in the CMS; each text has both languages.
+import { dictionary } from "./i18n.js";
+import { rentalAddOn, rentalTabOf, shopAddOn } from "./shop-model.js";
+
 export const priceGroups = ["diving", "snorkeling", "trip"];
-// Gear rental lists shown in the homepage Dive Shop section.
-export const rentalGroups = [
+// Gear rental lists of the homepage before rental gear became Dive Shop
+// products with their own stock. Content saved with them moves every item
+// to a rental product (withRentalProducts) and keeps no rental lists.
+export const legacyRentalGroups = [
   "rentalBasics",
   "rentalScuba",
   "rentalTank",
   "rentalTools",
   "rentalCamera",
 ];
-export const allPriceGroups = [...priceGroups, ...rentalGroups];
-// Admin labels for the rental lists.
-export const rentalLabels = {
-  rentalBasics: "Sewa masker, snorkel & fin",
-  rentalScuba: "Sewa BCD, regulator & wetsuit",
-  rentalTank: "Tabung & isi ulang",
-  rentalTools: "Dive computer, senter & pelampung",
-  rentalCamera: "Sewa kamera bawah air",
-};
+// Services that are neither gear nor an activity of their own (photo and
+// video, transport, meals). They show only as add-ons on activity pages.
+export const extraGroups = ["extras"];
+export const allPriceGroups = [...priceGroups, ...extraGroups];
+export const extraLabels = { extras: "Layanan tambahan" };
+// An add-on that is Dive Shop rental gear: "shop:" and the product id.
+export { shopAddOn };
+// Add-ons offered on one activity page, picked from the other lists.
+export const addOnLimit = 16;
 
 const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
   name: { id: nameId, en: nameEn },
@@ -26,7 +31,7 @@ const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
   unit: { id: unitId, en: unitEn },
 });
 const day = ["/ hari", "/ day"];
-export const defaultPriceList = {
+const defaultItems = {
   diving: [
     item(
       "Discovery Dive",
@@ -43,39 +48,6 @@ export const defaultPriceList = {
       "2x selam, satu hari",
       "2 dives, one day",
       750000,
-      ...day,
-    ),
-    item(
-      "Perlengkapan scuba",
-      "Scuba equipment",
-      "Mask, fins, BCD, regulator, wetsuit",
-      "Mask, fins, BCD, regulator, wetsuit",
-      600000,
-      ...day,
-    ),
-    item(
-      "Tabung + isi ulang",
-      "Tank + refill",
-      "Satu tabung penuh (200 bar)",
-      "One full tank (200 bar)",
-      100000,
-      "/ tabung",
-      "/ tank",
-    ),
-    item(
-      "Dive computer D4i",
-      "Dive computer D4i",
-      "Sewa satu hari",
-      "One-day rental",
-      500000,
-      ...day,
-    ),
-    item(
-      "Dokumentasi",
-      "Documentation",
-      "Foto & video bawah air",
-      "Underwater photo & video",
-      500000,
       ...day,
     ),
   ],
@@ -191,6 +163,14 @@ export const defaultPriceList = {
     item("Booties", "Booties", "", "", 50000, ...day),
   ],
   rentalScuba: [
+    item(
+      "Perlengkapan scuba",
+      "Scuba equipment",
+      "Mask, fins, BCD, regulator, wetsuit",
+      "Mask, fins, BCD, regulator, wetsuit",
+      600000,
+      ...day,
+    ),
     item("BCD", "BCD", "", "", 150000, ...day),
     item("Regulator", "Regulator", "", "", 150000, ...day),
     item("Wetsuit", "Wetsuit", "", "", 100000, ...day),
@@ -254,27 +234,268 @@ export const defaultPriceList = {
       ...day,
     ),
   ],
+  extras: [
+    item(
+      "Dokumentasi",
+      "Documentation",
+      "Foto & video bawah air",
+      "Underwater photo & video",
+      500000,
+      ...day,
+    ),
+  ],
 };
 
-// Older CMS documents gain the default price list, and lists added later,
-// without losing saved prices.
+// Every item has an id, so an add-on keeps pointing at its item after a
+// list is sorted or the item renamed. Items saved without one get it from
+// their list and Indonesian name; ids already given win.
+const idPattern = /^[a-z0-9][a-z0-9-]{0,59}$/;
+const slug = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+const idGroups = [...allPriceGroups, ...legacyRentalGroups];
+function hasIds(list) {
+  const seen = new Set();
+  return idGroups.every((group) =>
+    (list[group] ?? []).every((entry) => {
+      if (!idPattern.test(entry?.id ?? "") || seen.has(entry.id)) return false;
+      seen.add(entry.id);
+      return true;
+    }),
+  );
+}
+function withIds(list) {
+  // Ids already given are reserved; the first item holding one keeps it.
+  const taken = new Set(
+    idGroups.flatMap((group) =>
+      Array.isArray(list[group])
+        ? list[group]
+            .map((entry) => entry?.id)
+            .filter((id) => idPattern.test(id ?? ""))
+        : [],
+    ),
+  );
+  const used = new Set();
+  const out = { ...list };
+  for (const group of idGroups) {
+    if (!Array.isArray(list[group])) continue;
+    out[group] = list[group].map((entry) => {
+      if (idPattern.test(entry?.id ?? "") && !used.has(entry.id)) {
+        used.add(entry.id);
+        return entry;
+      }
+      const base = `${group.toLowerCase()}-${slug(entry?.name?.id) || "item"}`;
+      let id = base;
+      for (let n = 2; used.has(id) || taken.has(id); n++) id = `${base}-${n}`;
+      used.add(id);
+      return { ...entry, id };
+    });
+  }
+  return out;
+}
+
+// Beside the dives, the diving page offers its gear, the cameras and the
+// photo and video service as add-ons. Snorkeling and trips start without.
+const defaultAddOnNames = {
+  diving: [
+    ["rentalScuba", "Perlengkapan scuba"],
+    ["rentalTank", "Tabung + isi ulang"],
+    ["rentalTools", "Dive computer D4i"],
+    ["rentalCamera", "Kamera bawah air TG-5"],
+    ["rentalCamera", "Kamera TG-5 + perlengkapan"],
+    ["rentalCamera", "GoPro Hero 11 + housing"],
+    ["extras", "Dokumentasi"],
+  ],
+};
+const namedAddOns = (list) =>
+  Object.fromEntries(
+    priceGroups.map((activity) => [
+      activity,
+      (defaultAddOnNames[activity] ?? [])
+        .map(
+          ([group, name]) =>
+            list[group]?.find((entry) => entry?.name?.id === name)?.id,
+        )
+        .filter(Boolean),
+    ]),
+  );
+
+// The price list as it was before rental gear moved to the Dive Shop: new
+// and old content start from it and move its rental lists.
+export const legacyPriceList = (() => {
+  const list = withIds(defaultItems);
+  return { ...list, addOns: namedAddOns(list) };
+})();
+
+// The diving list held its gear and documentation beside the dives before
+// add-ons. Content saved then moves each to the list it belongs to, or uses
+// the same item already there, and diving offers them as add-ons.
+const movedFromDiving = {
+  "Perlengkapan scuba": "rentalScuba",
+  "Tabung + isi ulang": "rentalTank",
+  "Dive computer D4i": "rentalTools",
+  Dokumentasi: "extras",
+};
+
+// Older CMS documents gain the default price list, lists added later, item
+// ids and add-ons, without losing saved prices. Documents from before rental
+// gear moved to the Dive Shop show the rental lists they showed then, and
+// move them to rental products.
 export function withPriceList(content) {
-  const saved = content.priceList || {};
-  const missing = allPriceGroups.filter((group) => !saved[group]);
-  if (!missing.length) return content;
+  const saved = content.priceList;
+  if (!saved)
+    return withRentalProducts({
+      ...content,
+      priceList: structuredClone(legacyPriceList),
+    });
+  const moved = saved.rentals === "shop";
+  const missing = (moved ? allPriceGroups : idGroups).filter(
+    (group) => !Array.isArray(saved[group]),
+  );
+  const legacy = !saved.addOns;
+  if (moved && !missing.length && !legacy && hasIds(saved)) return content;
+  let list = { ...saved };
+  for (const group of missing)
+    list[group] =
+      legacy && group === "extras" ? [] : structuredClone(defaultItems[group]);
+  if (legacy)
+    list.diving = list.diving.filter((entry) => {
+      const target = movedFromDiving[entry?.name?.id];
+      if (!target) return true;
+      if (list[target].some((other) => other?.name?.id === entry.name.id))
+        return false;
+      if (list[target].length >= 8) return true;
+      list[target] = [...list[target], entry];
+      return false;
+    });
+  list = withIds(list);
+  const priceList = {
+    ...list,
+    addOns: legacy ? namedAddOns(list) : saved.addOns,
+  };
+  return moved
+    ? { ...content, priceList }
+    : withRentalProducts({ ...content, priceList });
+}
+
+// Every item of the old rental lists becomes a Dive Shop product for rent
+// only, with its price per day, its own stock in Gudang (0 until the team
+// fills it in) and its English name. Add-ons that pointed at an item now
+// point at its product. A product moved before (an older admin page that
+// saved the lists again) is used, not copied.
+const rentalKinds = [
+  [/masker|mask|snorkel/i, "mask"],
+  [/fin|booties/i, "fins"],
+  [/wetsuit/i, "suit"],
+  [/weight|pemberat/i, "weight"],
+  [/pelampung|life ?jacket/i, "vest"],
+  [/scuba|bcd/i, "bcd"],
+  [/regulator/i, "regulator"],
+  [/tabung|isi ulang|tank|refill/i, "cylinder"],
+  [/computer/i, "computer"],
+  [/senter|torch|lampu/i, "light"],
+  [/kamera|camera|gopro/i, "camera"],
+];
+const kindOfGroup = {
+  rentalBasics: "mask",
+  rentalScuba: "bcd",
+  rentalTank: "cylinder",
+  rentalTools: "computer",
+  rentalCamera: "camera",
+};
+// The kind of gear from its name, kept in the tab it was listed under.
+function rentalKind(name, group) {
+  const kind = rentalKinds.find(([rule]) => rule.test(name))?.[1];
+  return kind && rentalTabOf[kind] === group ? kind : kindOfGroup[group];
+}
+export function withRentalProducts(content) {
+  const list = content.priceList ?? {};
+  const shop = content.shop ?? { products: [] };
+  const products = [...(shop.products ?? [])];
+  const before = new Set(products.map((p) => p.id));
+  const en = content.en ? structuredClone(content.en) : null;
+  const ids = new Map();
+  for (const group of legacyRentalGroups)
+    for (const entry of Array.isArray(list[group]) ? list[group] : []) {
+      const name = String(entry?.name?.id ?? "")
+        .trim()
+        .slice(0, 100);
+      if (!name) continue;
+      const base = `sewa-${slug(name) || "alat"}`;
+      let id = base;
+      for (let n = 2; !before.has(id) && products.some((p) => p.id === id); n++)
+        id = `${base}-${n}`;
+      if (!before.has(id)) {
+        const price = Number(entry.price);
+        products.push({
+          id,
+          name,
+          category: rentalKind(name, group),
+          description: dictionary("id").shop.teaser.groups[group][1],
+          specification: String(entry.info?.id ?? "").slice(0, 300),
+          image: "",
+          images: [],
+          rentalImages: [],
+          videos: [],
+          details: "",
+          specs: [],
+          sizes: [],
+          saleEnabled: false,
+          rentalEnabled: true,
+          salePrice: null,
+          rentalPrice:
+            Number.isSafeInteger(price) && price > 0 && price <= 1e9
+              ? price
+              : null,
+          enabled: true,
+          // Orderable as before until the team fills in the stock.
+          availability: "available",
+        });
+        if (en)
+          en.shop = {
+            ...en.shop,
+            products: {
+              ...en.shop?.products,
+              [id]: {
+                name: String(entry.name?.en || name).slice(0, 100),
+                description: dictionary("en").shop.teaser.groups[group][1],
+                specification: String(entry.info?.en ?? "").slice(0, 300),
+              },
+            },
+          };
+      }
+      if (entry.id) ids.set(entry.id, id);
+    }
+  const priceList = Object.fromEntries(
+    Object.entries(list).filter(([key]) => !legacyRentalGroups.includes(key)),
+  );
+  priceList.addOns = Object.fromEntries(
+    Object.entries(list.addOns ?? {}).map(([activity, chosen]) => [
+      activity,
+      Array.isArray(chosen)
+        ? chosen.map((id) => (ids.has(id) ? shopAddOn + ids.get(id) : id))
+        : chosen,
+    ]),
+  );
+  priceList.rentals = "shop";
   return {
     ...content,
-    priceList: {
-      ...saved,
-      ...Object.fromEntries(
-        missing.map((group) => [
-          group,
-          structuredClone(defaultPriceList[group]),
-        ]),
-      ),
-    },
+    priceList,
+    shop: { ...shop, products },
+    ...(en ? { en } : {}),
   };
 }
+
+// The default price list: packages, services and add-ons, with the rental
+// gear as Dive Shop products.
+export const defaultPriceList = withRentalProducts({
+  priceList: structuredClone(legacyPriceList),
+}).priceList;
 
 function text(value, label, max, required) {
   const out = {};
@@ -291,10 +512,12 @@ function text(value, label, max, required) {
   return out;
 }
 
-export function validatePriceList(input) {
-  return Object.fromEntries(
+// "products" are the saved catalog, for add-ons that are rental gear.
+export function validatePriceList(input, products = []) {
+  const ided = withIds(input ?? {});
+  const list = Object.fromEntries(
     allPriceGroups.map((group) => {
-      const items = input?.[group];
+      const items = ided[group];
       if (!Array.isArray(items) || items.length > 8)
         throw new Error("Daftar harga berisi maksimal 8 item per daftar.");
       return [
@@ -306,6 +529,7 @@ export function validatePriceList(input) {
               "Harga pada daftar harga harus berupa rupiah positif.",
             );
           return {
+            id: entry.id,
             name: text(entry.name, "Nama item", 80, true),
             info: text(entry.info, "Keterangan", 160, false),
             price,
@@ -315,6 +539,65 @@ export function validatePriceList(input) {
       ];
     }),
   );
+  // Add-ons point at items of the other lists, or at Dive Shop rental
+  // gear. An item or product deleted drops out of the add-ons.
+  const home = new Map(
+    allPriceGroups.flatMap((group) =>
+      list[group].map((entry) => [entry.id, group]),
+    ),
+  );
+  const gear = new Set(products.map((p) => shopAddOn + p.id));
+  const addOns = Object.fromEntries(
+    priceGroups.map((activity) => {
+      const chosen = input?.addOns?.[activity] ?? [];
+      if (!Array.isArray(chosen) || chosen.length > addOnLimit)
+        throw new Error(
+          `Add-on berisi maksimal ${addOnLimit} item per aktivitas.`,
+        );
+      return [
+        activity,
+        [...new Set(chosen)].filter(
+          (id) => gear.has(id) || (home.has(id) && home.get(id) !== activity),
+        ),
+      ];
+    }),
+  );
+  return { ...list, addOns, rentals: "shop" };
+}
+
+// The add-ons of an activity page, in the order they were picked, each with
+// the list it comes from. Rental gear from "products" (the Dive Shop
+// catalog) is rented for the activity's day, under its homepage tab.
+export function addOnItems(priceList, activity, products = []) {
+  const items = [];
+  for (const id of priceList?.addOns?.[activity] ?? []) {
+    if (String(id).startsWith(shopAddOn)) {
+      const product = products.find((p) => shopAddOn + p.id === id);
+      if (rentalAddOn(product))
+        items.push({
+          id,
+          name: { id: product.name, en: product.name },
+          info: {
+            id: product.specification ?? "",
+            en: product.specification ?? "",
+          },
+          price: product.rentalPrice,
+          unit: { id: "/ hari", en: "/ day" },
+          group: rentalTabOf[product.category] ?? "rentalTools",
+          product,
+        });
+      continue;
+    }
+    for (const group of allPriceGroups) {
+      if (group === activity) continue;
+      const entry = (priceList[group] ?? []).find((e) => e?.id === id);
+      if (!entry) continue;
+      if (Number.isSafeInteger(entry.price) && entry.price > 0)
+        items.push({ ...entry, group });
+      break;
+    }
+  }
+  return items;
 }
 
 // A text in the visitor's language, falling back to Indonesian.

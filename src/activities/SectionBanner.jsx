@@ -568,6 +568,34 @@ const scenes = {
         {fish(232, 118, sand)}
       </>
     ),
+    company: (
+      <>
+        {waves()}
+        {/* The office in the city and the dive flag at sea */}
+        <g stroke={ink} strokeWidth="2.4" strokeLinejoin="round">
+          <rect x="84" y="28" width="56" height="76" rx="4" fill="#fff" />
+          <path d="M104 104V88h16v16" fill={ice} />
+        </g>
+        {[40, 56, 72].map((y) =>
+          [94, 118].map((x) => (
+            <rect
+              key={x + "-" + y}
+              x={x}
+              y={y}
+              width="12"
+              height="9"
+              rx="2"
+              fill={ice}
+            />
+          )),
+        )}
+        <path d="M196 104V26" stroke={ink} strokeWidth="3" />
+        <rect x="196" y="28" width="48" height="30" rx="3" fill={coral} />
+        <path d="M198 30l44 26" stroke="#fff" strokeWidth="7" />
+        {fish(262, 92, sand)}
+        {bubbles}
+      </>
+    ),
     values: (
       <>
         {waves()}
@@ -835,6 +863,7 @@ export const bannerTones = {
   },
   about: {
     story: "#e3f1f6",
+    company: "#e6edf8",
     values: "#e9f5ea",
     services: "#fbf1dc",
   },

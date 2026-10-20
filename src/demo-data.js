@@ -22,7 +22,12 @@ export function withDemoEnglish(content) {
 export function demoSeed(now = new Date(), { sampleBookings = true } = {}) {
   const today = now.toLocaleDateString("en-CA", { timeZone: "Asia/Jayapura" });
   const content = structuredClone(defaultContent);
-  content.shop = demoShop();
+  // The demo gear for sale and rent, then the rental gear of the price list.
+  const demo = demoShop();
+  content.shop = {
+    ...demo,
+    products: [...demo.products, ...content.shop.products],
+  };
   Object.assign(content.contact, demoSocials);
   content.contact.email = "halo@zanclusdive.com";
   content.contact.location = "Waisai, Raja Ampat, Papua Barat Daya";
@@ -55,7 +60,7 @@ export function demoSeed(now = new Date(), { sampleBookings = true } = {}) {
           participants: index + 1,
           amount: content.experiences[experience].price * (index + 1),
           notes:
-            "Reservasi contoh untuk mencoba CMS; bukan pemesanan sungguhan.",
+            "Reservasi contoh untuk mencoba CMS, bukan pemesanan sungguhan.",
           updatedAt: now.toISOString(),
         };
       },

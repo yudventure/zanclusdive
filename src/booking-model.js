@@ -24,6 +24,14 @@ const englishErrors = {
     "This program isn't taking bookings yet. Please choose another program.",
   "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.":
     "This date is closed for the selected program. Please choose another date.",
+  "Pilih cara pengambilan pesanan.": "Choose how to receive your order.",
+  "Pilih wilayah antar.": "Choose a delivery area.",
+  "Isi alamat antar, 5–300 karakter.":
+    "Enter the delivery address, 5 to 300 characters.",
+  "Pilih ukuran untuk setiap alat sebelum membayar.":
+    "Choose a size for each item before paying.",
+  "Alat sewa pesanan ini sudah penuh dipesan pada tanggal itu. Pilih tanggal lain.":
+    "The rental gear in this booking is fully booked on that date. Please choose another date.",
   "Program atau bulan kalender tidak valid.":
     "Invalid program or calendar month.",
   "Bulan berada di luar rentang booking.":
@@ -36,10 +44,133 @@ const englishErrors = {
     "Booking data is invalid or too large.",
   "Booking belum dapat disimpan. Coba lagi atau hubungi tim melalui WhatsApp.":
     "The booking couldn't be saved. Try again or contact our team on WhatsApp.",
+  "Data pembayaran tidak valid.": "Invalid payment details.",
+  "Pembayaran online belum tersedia. Silakan chat tim kami lewat WhatsApp.":
+    "Online payment isn't available yet. Please chat with our team on WhatsApp.",
+  "Aktivitas ini belum bisa dibayar online.":
+    "This activity can't be paid online yet.",
+  "Daftar harga baru saja diperbarui. Muat ulang halaman.":
+    "The price list was just updated. Please reload the page.",
+  "Jumlah paket dan peserta harus 1–30.":
+    "Quantity and participants must be between 1 and 30.",
+  "Isi nama, maksimal 80 karakter.": "Enter your name, up to 80 characters.",
+  "Format email belum benar.": "That email doesn't look right.",
+  "Catatan maksimal 1.000 karakter.": "Notes can be up to 1,000 characters.",
+  "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.":
+    "This date is fully booked. Please choose another date.",
+  "Pilih minimal satu paket dari daftar harga.":
+    "Choose at least one package from the price list.",
+  "Event ini sudah tidak menerima pendaftaran. Muat ulang halaman.":
+    "This event is no longer taking sign-ups. Please reload the page.",
+  "Add-on dipesan bersama minimal satu paket utama.":
+    "Add-ons come with at least one main package.",
+  "Pilih alat terlebih dahulu.": "Choose your gear first.",
+  "Lama sewa harus 1–30 hari.": "Rental days must be between 1 and 30.",
+  "Jumlah setiap alat harus 1–10.": "Each item can be 1 to 10 units.",
+  "Ada alat yang belum tersedia. Muat ulang halaman.":
+    "Some gear isn't available. Please reload the page.",
+  "Ada alat yang harganya dikonfirmasi tim. Kirim pesanan lewat WhatsApp.":
+    "Some gear is priced by our team. Please send the order on WhatsApp.",
+  "Kursus ini belum bisa dibayar online.":
+    "This course can't be paid online yet.",
+  "Jumlah peserta kursus harus 1–20.":
+    "Course participants must be between 1 and 20.",
+  "Pilih servis terlebih dahulu.": "Choose a service first.",
+  "Servis ini belum bisa dibayar online.":
+    "This service can't be paid online yet.",
+  "Pembayaran belum bisa dibuat. Coba lagi sebentar, atau chat tim kami lewat WhatsApp.":
+    "The payment couldn't be created. Try again shortly, or chat with our team on WhatsApp.",
 };
 export function bookingErrorMessage(message, locale) {
   if (locale !== "en") return message;
+  const least = /^Event ini untuk minimal (\d+) peserta/.exec(message);
+  if (least) return `This event is for groups of at least ${least[1]}.`;
+  const left = /^Slot tanggal ini tinggal (\d+) orang/.exec(message);
+  if (left)
+    return `Only ${left[1]} ${left[1] === "1" ? "place is" : "places are"} left on this date. Choose fewer participants or another date.`;
+  // Dive Shop gear that follows the warehouse stock.
+  const sized = (name) => name.replace(/ ukuran (\S+)$/, " size $1");
+  const stock = /^Stok (.+) tinggal (\d+)( untuk tanggal itu)?\./.exec(message);
+  if (stock)
+    return stock[3]
+      ? `Only ${stock[2]} left of ${sized(stock[1])} for those dates. Choose fewer or other dates.`
+      : `Only ${stock[2]} left of ${sized(stock[1])}. Choose fewer.`;
+  const gone = /^(.+) sedang habis\./.exec(message);
+  if (gone)
+    return `${sized(gone[1])} is out of stock. Remove it from your order or chat with our team on WhatsApp.`;
   return englishErrors[message] ?? "Please check your booking details.";
+}
+
+// Daily places: the dive center takes a set number of people a day for an
+// activity (diving: 30). Diving programs, dive courses and the diving page
+// share the diving places. A booking holds places once it is confirmed, or
+// while its online payment is open.
+export const capacityPools = {
+  diving: ["diving", ...experienceKeys, "course"],
+  snorkeling: ["snorkeling"],
+  trip: ["trip"],
+};
+export const defaultCapacity = { diving: 30, snorkeling: 0, trip: 0 };
+export const poolOf = (program) =>
+  Object.keys(capacityPools).find((pool) =>
+    capacityPools[pool].includes(program),
+  ) ?? null;
+export function capacityOf(content, pool) {
+  const value = content?.activities?.[pool]?.capacity;
+  return Number.isInteger(value) && value >= 0
+    ? value
+    : (defaultCapacity[pool] ?? 0);
+}
+// A booking holds its places once confirmed, and while its payment is open:
+// a Midtrans payment until Midtrans ends it, a PayPal payment or a bank
+// transfer ordered on the website until its deadline.
+export const holdsPlaces = (b, now = Date.now()) => {
+  if (b.status === "confirmed") return true;
+  if (b.status !== "pending" || !b.payment) return false;
+  const p = b.payment;
+  const due = !p.dueAt || Date.parse(p.dueAt) > now;
+  if (["created", "pending"].includes(p.status))
+    return p.provider !== "paypal" || due;
+  return (
+    p.status === "unpaid" &&
+    p.method === "transfer" &&
+    Boolean(p.orderId) &&
+    due
+  );
+};
+const nextDay = (date) =>
+  new Date(Date.parse(date + "T00:00:00Z") + 86400000)
+    .toISOString()
+    .slice(0, 10);
+// People already holding places in a pool, per day from..to.
+export function placesUsed(bookings, pool, from, to) {
+  const programs = capacityPools[pool] ?? [];
+  const used = {};
+  for (const b of bookings) {
+    if (!programs.includes(b.experience) || !holdsPlaces(b)) continue;
+    if (b.endDate < from || b.startDate > to) continue;
+    let day = b.startDate < from ? from : b.startDate;
+    const end = b.endDate > to ? to : b.endDate;
+    for (let n = 0; day <= end && n < 400; n++, day = nextDay(day))
+      used[day] = (used[day] ?? 0) + (Number(b.participants) || 0);
+  }
+  return used;
+}
+// What a public calendar shows for an activity: its daily places, the days
+// already taken and the closed days. No names or contacts.
+export function slotCalendar(content, bookings, activity, { today, last }) {
+  return {
+    capacity: capacityOf(content, activity),
+    used: placesUsed(bookings, activity, today, last),
+    closed: bookings
+      .filter(
+        (b) =>
+          b.experience === activity &&
+          b.status === "closed" &&
+          b.endDate >= today,
+      )
+      .map((b) => [b.startDate, b.endDate]),
+  };
 }
 
 // Booking dates follow the dive center's timezone, including for overseas guests.
@@ -117,7 +248,11 @@ export function validateBookingRequest(input, now) {
 }
 
 export function assertBookable(content, bookings, booking) {
-  if (!content.experiences?.[booking.experience]?.enabled)
+  const program = ["course", "shop", "service"].includes(booking.experience)
+    ? { enabled: true }
+    : (content.experiences?.[booking.experience] ??
+      content.activities?.[booking.experience]);
+  if (!program?.enabled)
     throw new BookingError(
       "Program ini belum menerima booking. Pilih program lain.",
       409,
@@ -135,6 +270,19 @@ export function assertBookable(content, bookings, booking) {
       "Tanggal ini sudah ditutup untuk program yang dipilih. Silakan pilih tanggal lain.",
       409,
     );
+  const pool = poolOf(booking.experience);
+  const capacity = pool ? capacityOf(content, pool) : 0;
+  if (capacity > 0) {
+    const used = placesUsed(bookings, pool, booking.startDate, booking.endDate);
+    const left = Math.max(0, capacity - Math.max(0, ...Object.values(used)));
+    if ((Number(booking.participants) || 0) > left)
+      throw new BookingError(
+        left > 0
+          ? `Slot tanggal ini tinggal ${left} orang. Kurangi peserta atau pilih tanggal lain.`
+          : "Slot tanggal ini sudah penuh. Silakan pilih tanggal lain.",
+        409,
+      );
+  }
 }
 
 export function bookingReference(id) {

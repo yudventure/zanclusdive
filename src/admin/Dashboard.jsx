@@ -9,13 +9,59 @@ import CalendarEditor from "./CalendarEditor.jsx";
 import CourseEditor from "./CourseEditor.jsx";
 import AboutEditor from "./AboutEditor.jsx";
 import ServiceEditor from "./ServiceEditor.jsx";
+import DeveloperEditor from "./DeveloperEditor.jsx";
+import PaymentsEditor, { PaymentBadge } from "./PaymentsEditor.jsx";
+import GuestMailSettings from "./GuestMailSettings.jsx";
+import {
+  BookingBilling,
+  GuestMailLog,
+  billingFrom,
+} from "./BookingBilling.jsx";
+import { overdue } from "../payment-model.js";
+import { mailKindLabels } from "../booking-mail.js";
+import { fareNames, fareSettings } from "../fare-model.js";
+import BookingFare from "./BookingFare.jsx";
+import AgentsEditor from "./AgentsEditor.jsx";
+import PaymentMethodSettings from "./PaymentMethodSettings.jsx";
+import {
+  useBookingAlerts,
+  BookingAlertToast,
+  AlertSoundSetting,
+} from "./BookingAlerts.jsx";
+import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
 import { defaultService } from "../service-model.js";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
 import ImageUpload from "./ImageUpload.jsx";
-import { prepareImage } from "./image-upload.js";
+import { prepareImage, prepareLogo } from "./image-upload.js";
+import PasswordEditor from "./PasswordEditor.jsx";
+import UsersEditor from "./UsersEditor.jsx";
+import { RoleHome } from "./RoleHome.jsx";
+import SeoEditor from "./SeoEditor.jsx";
+import CashbookEditor from "./finance/CashbookEditor.jsx";
+import ReportsEditor from "./finance/ReportsEditor.jsx";
+import StockEditor from "./inventory/StockEditor.jsx";
+import MovementsEditor from "./inventory/MovementsEditor.jsx";
+import SocialEditor from "./social/SocialEditor.jsx";
+import MonthCalendar from "./MonthCalendar.jsx";
+import BookingGear from "./BookingGear.jsx";
+import SchedulePaste from "./SchedulePaste.jsx";
+import BookingPackages from "./BookingPackages.jsx";
+import { useOutsideClose } from "./useOutsideClose.js";
+import EmployeesEditor from "./hr/EmployeesEditor.jsx";
+import AttendanceEditor from "./hr/AttendanceEditor.jsx";
+import PayrollEditor from "./hr/PayrollEditor.jsx";
+import {
+  sections as sectionInfo,
+  groupOf,
+  visibleMenu,
+  sectionAllowed,
+  hasArea,
+  roleLabel,
+} from "../roles.js";
+import { defaultCalendar } from "../calendar-model.js";
 import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
@@ -23,47 +69,18 @@ import { siteImageFields, builtInPhotos } from "../photography.js";
 import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
   experienceKeys,
+  bookingPrograms,
+  programTitle,
   textFields,
   statuses,
   sources,
   defaultContent,
 } from "../cms-model.js";
-const sections = {
-  overview: "Ringkasan cepat",
-  calendar: "Kalender reservasi",
-  reservations: "Reservasi",
-  customers: "Tamu",
-  website: "Teks website",
-  media: "Foto & media",
-  experiences: "Pengalaman & harga",
-  contact: "Kontak & sosial media",
-  shop: "Dive Shop",
-  activities: "Halaman aktivitas",
-  prices: "Daftar harga",
-  events: "Kalender kegiatan",
-  courses: "Kursus selam",
-  service: "Servis alat selam",
-  about: "Tentang kami",
-};
-const mainSections = [
-  "overview",
-  "calendar",
-  "reservations",
-  "customers",
-  "events",
-];
-const siteSections = [
-  "media",
-  "website",
-  "experiences",
-  "activities",
-  "courses",
-  "prices",
-  "shop",
-  "service",
-  "about",
-  "contact",
-];
+// Page titles come from the shared roles model, which also decides what
+// each role sees.
+const sections = Object.fromEntries(
+  Object.entries(sectionInfo).map(([key, info]) => [key, info.title]),
+);
 const money = (n) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -77,8 +94,8 @@ function dateLabel(value) {
     year: "numeric",
   });
 }
-const blankBooking = (today) => ({
-  experience: "beginner",
+const blankBooking = (today, experience = "beginner") => ({
+  experience,
   status: "pending",
   source: "whatsapp",
   startDate: today,
@@ -88,6 +105,10 @@ const blankBooking = (today) => ({
   participants: 1,
   amount: 0,
   notes: "",
+  email: "",
+  lang: "id",
+  gear: [],
+  billing: billingFrom(null, today),
 });
 async function request(url, method = "GET", body) {
   const options = { method, cache: "no-store" };
@@ -96,12 +117,23 @@ async function request(url, method = "GET", body) {
     options.headers = { "Content-Type": "application/json" };
     options.body = JSON.stringify(body);
   }
-  const response = await fetch(url, options);
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    throw new Error(
+      "Koneksi ke server terputus. Periksa internet, muat ulang halaman, lalu periksa apakah perubahan sudah tersimpan sebelum mencoba lagi.",
+    );
+  }
   let result;
   try {
     result = await response.json();
   } catch {
-    throw new Error("Server belum dapat merespons.");
+    // Not an answer from the website itself, such as the hosting's own
+    // error page while the app restarts or takes too long.
+    throw new Error(
+      `Server belum dapat merespons (kode ${response.status}). Muat ulang halaman, lalu periksa apakah perubahan sudah tersimpan sebelum mencoba lagi.`,
+    );
   }
   if (response.status === 401) {
     window.location.assign("/admin");
@@ -127,6 +159,13 @@ function BookingEditor({
   busy,
   editing,
   content,
+  gear,
+  bookings,
+  billingInfo,
+  canSettings,
+  onMailSent,
+  onRefunded,
+  onClose,
 }) {
   function change(key, v) {
     setValue({
@@ -137,110 +176,156 @@ function BookingEditor({
   }
   return (
     <section className="admin-card" id="booking-editor">
-      <h2>{editing ? "Ubah reservasi" : "Tambah reservasi / tutup tanggal"}</h2>
+      <h2>
+        {editing
+          ? `Ubah reservasi ${value.guestName || ""}`.trim()
+          : "Tambah reservasi / tutup tanggal"}
+      </h2>
       <p className="admin-subtle">
-        Catat hasil konfirmasi dari WhatsApp atau sumber lain.
+        {onClose
+          ? "Untuk email tamu, nilai, alat sewa, tagihan, atau menutup tanggal. Booking biasa cukup dicatat dari Agenda di samping kalender."
+          : "Formulir lengkap untuk hasil konfirmasi dari WhatsApp atau sumber lain, dengan email tamu, nilai, alat sewa, dan tagihan. Untuk booking cepat, klik tanggalnya di kalender."}
       </p>
       <form className="admin-form" onSubmit={onSave}>
-        <div className="admin-form-grid">
-          <Field label="Pengalaman">
-            <select
-              value={value.experience}
-              onChange={(e) => change("experience", e.target.value)}
-            >
-              {experienceKeys.map((k) => (
-                <option key={k} value={k}>
-                  {content.experiences[k].title}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Status">
-            <select
-              value={value.status}
-              onChange={(e) => change("status", e.target.value)}
-            >
-              {Object.entries(statuses).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Tanggal mulai">
-            <input
-              type="date"
-              required
-              value={value.startDate}
-              onChange={(e) => change("startDate", e.target.value)}
-            />
-          </Field>
-          <Field label="Tanggal selesai (termasuk hari ini)">
-            <input
-              type="date"
-              required
-              min={value.startDate}
-              value={value.endDate}
-              onChange={(e) => change("endDate", e.target.value)}
-            />
-          </Field>
-          <Field label="Sumber reservasi">
-            <select
-              value={value.source}
-              onChange={(e) => change("source", e.target.value)}
-            >
-              {Object.entries(sources).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Nama tamu">
-            <input
-              required={value.status !== "closed"}
-              maxLength={120}
-              value={value.guestName}
-              onChange={(e) => change("guestName", e.target.value)}
-            />
-          </Field>
-          <Field label="Telepon / WhatsApp">
-            <input
-              type="tel"
-              maxLength={30}
-              value={value.phone}
-              onChange={(e) => change("phone", e.target.value)}
-            />
-          </Field>
-          <Field label="Jumlah peserta">
-            <input
-              type="number"
-              required
-              min="1"
-              max="100"
-              value={value.participants}
-              onChange={(e) => change("participants", e.target.value)}
-            />
-          </Field>
-          <Field label="Nilai reservasi (Rp)">
-            <input
-              type="number"
-              required
-              min="0"
-              max="1000000000"
-              value={value.amount}
-              onChange={(e) => change("amount", e.target.value)}
-            />
-          </Field>
-        </div>
-        <Field label="Catatan">
-          <textarea
-            rows="3"
-            maxLength="2000"
-            value={value.notes}
-            onChange={(e) => change("notes", e.target.value)}
+        <fieldset className="admin-form-group">
+          <legend>Kegiatan dan tanggal</legend>
+          <div className="admin-form-grid">
+            <Field label="Pengalaman">
+              <select
+                value={value.experience}
+                onChange={(e) => change("experience", e.target.value)}
+              >
+                {bookingPrograms.map((k) => (
+                  <option key={k} value={k}>
+                    {programTitle(content, k)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Status">
+              <select
+                value={value.status}
+                onChange={(e) => change("status", e.target.value)}
+              >
+                {Object.entries(statuses).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Tanggal mulai">
+              <input
+                type="date"
+                required
+                value={value.startDate}
+                onChange={(e) => change("startDate", e.target.value)}
+              />
+            </Field>
+            <Field label="Tanggal selesai (termasuk hari ini)">
+              <input
+                type="date"
+                required
+                min={value.startDate}
+                value={value.endDate}
+                onChange={(e) => change("endDate", e.target.value)}
+              />
+            </Field>
+            <Field label="Jumlah peserta">
+              <input
+                type="number"
+                required
+                min="1"
+                max="100"
+                value={value.participants}
+                onChange={(e) => change("participants", e.target.value)}
+              />
+            </Field>
+            <Field label="Sumber reservasi">
+              <select
+                value={value.source}
+                onChange={(e) => change("source", e.target.value)}
+              >
+                {Object.entries(sources).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </fieldset>
+        <fieldset className="admin-form-group">
+          <legend>Tamu</legend>
+          <div className="admin-form-grid">
+            <Field label="Nama tamu">
+              <input
+                required={value.status !== "closed"}
+                maxLength={120}
+                value={value.guestName}
+                onChange={(e) => change("guestName", e.target.value)}
+              />
+            </Field>
+            <Field label="Telepon / WhatsApp">
+              <input
+                type="tel"
+                maxLength={30}
+                value={value.phone}
+                onChange={(e) => change("phone", e.target.value)}
+              />
+            </Field>
+            <Field label="Email tamu">
+              <input
+                type="email"
+                maxLength={200}
+                placeholder="untuk tagihan dan invoice"
+                value={value.email ?? ""}
+                onChange={(e) => change("email", e.target.value)}
+              />
+            </Field>
+            <Field label="Bahasa email">
+              <select
+                value={value.lang ?? "id"}
+                onChange={(e) => change("lang", e.target.value)}
+              >
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </Field>
+          </div>
+        </fieldset>
+        <fieldset className="admin-form-group">
+          <legend>Nilai dan catatan</legend>
+          <BookingPackages
+            value={value}
+            setValue={setValue}
+            content={content}
           />
-        </Field>
+          <Field label="Catatan">
+            <textarea
+              rows="3"
+              maxLength="2000"
+              value={value.notes}
+              onChange={(e) => change("notes", e.target.value)}
+            />
+          </Field>
+        </fieldset>
+        {value.status !== "closed" && (
+          <BookingGear
+            value={value}
+            setValue={setValue}
+            gear={gear}
+            bookings={bookings}
+          />
+        )}
+        <BookingBilling
+          value={value}
+          setBilling={(billing) => setValue({ ...value, billing })}
+          info={billingInfo}
+          canSettings={canSettings}
+        />
+        {editing && <BookingFare booking={value} onRefunded={onRefunded} />}
+        {editing && <GuestMailLog booking={value} onSent={onMailSent} />}
         <div className="admin-actions">
           <button className="admin-button" disabled={busy}>
             {busy
@@ -249,21 +334,36 @@ function BookingEditor({
                 ? "Simpan perubahan"
                 : "Simpan reservasi"}
           </button>
-          {editing && (
+          {onClose ? (
             <button
               type="button"
               className="admin-button secondary"
-              onClick={onCancel}
+              onClick={onClose}
             >
-              Batal edit
+              Tutup
             </button>
+          ) : (
+            editing && (
+              <button
+                type="button"
+                className="admin-button secondary"
+                onClick={onCancel}
+              >
+                Batal edit
+              </button>
+            )
           )}
         </div>
       </form>
     </section>
   );
 }
-export default function Dashboard({ section, email, today }) {
+export default function Dashboard({ section, account, today }) {
+  const email = account.email;
+  const role = account.role;
+  const can = (area) => hasArea(role, area);
+  const menu = visibleMenu(role);
+  const allowed = sectionAllowed(role, section);
   const [data, setData] = useState(null),
     [content, setContent] = useState(structuredClone(defaultContent)),
     [busy, setBusy] = useState(false),
@@ -277,9 +377,31 @@ export default function Dashboard({ section, email, today }) {
     [month, setMonth] = useState(today.slice(0, 7)),
     [booking, setBooking] = useState(blankBooking(today)),
     [editing, setEditing] = useState(null),
+    // The calendar page shows the full booking form only when it is asked
+    // for; a booking is noted from the day's agenda.
+    [calendarForm, setCalendarForm] = useState(false),
     [editLocale, setEditLocale] = useState("id"),
-    [siteOpen, setSiteOpen] = useState(siteSections.includes(section)),
-    [autoSave, setAutoSave] = useState(0);
+    [openGroups, setOpenGroups] = useState(() => new Set([groupOf(section)])),
+    [autoSave, setAutoSave] = useState(0),
+    // The rental gear and its stock, for the calendar and the booking form.
+    [gear, setGear] = useState(null);
+  // A booking from the website or a payment rings and shows in the corner,
+  // on every page of the admin.
+  const alerts = useBookingAlerts({
+    active: can("bookings") && Boolean(data),
+    bookings: data?.bookings,
+    setBookings: (bookings) =>
+      setData((current) => (current ? { ...current, bookings } : current)),
+  });
+  // The bell and the account menu close on a tap anywhere else.
+  const bellRef = useOutsideClose(notification, () => setNotification(false));
+  const ownerRef = useOutsideClose(ownerMenu, () => setOwnerMenu(false));
+  useEffect(() => {
+    if (!can("bookings") || section !== "calendar") return;
+    request("/api/admin/rental-gear")
+      .then((result) => setGear(result.gear))
+      .catch(() => setGear([]));
+  }, [section]);
   // Copy sections can be edited per language; prices, photos and visibility
   // are shared by both versions of the website.
   const bilingual = [
@@ -296,19 +418,27 @@ export default function Dashboard({ section, email, today }) {
     ? dailySchedule(data.bookings, today, 1)[0].guests
     : 0;
   const ownerName =
-    displayName(email) === "tim Zanclus" ? "Operator" : displayName(email);
+    account.name ||
+    (displayName(email) === "tim Zanclus" ? "Operator" : displayName(email));
   const initials = ownerName.slice(0, 2).toUpperCase();
-  const link = (key) => (
+  const link = (key, icon = key) => (
     <Link
       key={key}
       href={"/admin/" + key}
       aria-current={section === key ? "page" : undefined}
       className={section === key ? "active" : ""}
     >
-      <AdminIcon name={key} />
+      <AdminIcon name={icon} />
       {sections[key]}
     </Link>
   );
+  const toggleGroup = (key) =>
+    setOpenGroups((open) => {
+      const next = new Set(open);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   async function refresh() {
     try {
       const next = await request("/api/admin/state");
@@ -323,27 +453,106 @@ export default function Dashboard({ section, email, today }) {
   useEffect(() => {
     refresh();
   }, []);
+  // Links into the calendar from other pages: ?ubah=<id> opens that
+  // reservation in the full form, #daftar-reservasi goes to the list.
+  const loaded = Boolean(data);
+  useEffect(() => {
+    if (section !== "calendar" || !loaded) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("ubah");
+    const found = id && data.bookings.find((b) => b.id === id);
+    if (found) {
+      editReservation(found);
+      window.history.replaceState(null, "", "/admin/calendar");
+    } else if (url.hash === "#daftar-reservasi")
+      setTimeout(
+        () =>
+          document
+            .getElementById("daftar-reservasi")
+            ?.scrollIntoView({ block: "start" }),
+        50,
+      );
+  }, [section, loaded]);
   useEffect(() => {
     setMobileMenu(false);
     setOwnerMenu(false);
-    if (siteSections.includes(section)) setSiteOpen(true);
+    setOpenGroups((open) => new Set([...open, groupOf(section)]));
     setNotification(false);
     setNotice("");
+    setCalendarForm(false);
   }, [section]);
   function mutateContent(group, key, value) {
-    setContent((current) =>
-      editLocale === "en"
-        ? applyEnglishEdit(current, group, key, value)
+    setContent((current) => {
+      const english = editLocale === "en";
+      // A function gets the value as the editor shows it, so edits that
+      // land one after another (several photos at once) keep each other.
+      const next =
+        typeof value === "function"
+          ? value(
+              (english ? localizeContent(current, "en") : current)[group][key],
+            )
+          : value;
+      return english
+        ? applyEnglishEdit(current, group, key, next)
         : {
             ...current,
-            [group]: { ...current[group], [key]: value },
+            [group]: { ...current[group], [key]: next },
+          };
+    });
+    setNotice("");
+  }
+  // Gear for sale made into rental gear, or the other way, takes the
+  // English texts of the product it came from.
+  function copyProductTexts(from, to) {
+    setContent((current) => {
+      const english = current.en?.shop?.products?.[from];
+      if (!english) return current;
+      return {
+        ...current,
+        en: {
+          ...current.en,
+          shop: {
+            ...current.en.shop,
+            products: {
+              ...current.en.shop.products,
+              [to]: structuredClone(english),
+            },
           },
-    );
+        },
+      };
+    });
+  }
+  // A product file filled in from the admin: its texts per language
+  // ({ id, en }, each a set of product fields) and the fields both share.
+  function importProduct(id, texts, shared = {}) {
+    setContent((current) => {
+      const patch = (list, fields) =>
+        list.map((p) => (p.id === id ? { ...p, ...fields } : p));
+      let next = {
+        ...current,
+        shop: {
+          ...current.shop,
+          products: patch(current.shop.products, {
+            ...shared,
+            ...texts.id,
+          }),
+        },
+      };
+      if (texts.en)
+        next = applyEnglishEdit(
+          next,
+          "shop",
+          "products",
+          patch(localizeContent(next, "en").shop.products, texts.en),
+        );
+      return next;
+    });
     setNotice("");
   }
   async function saveSettings(
     event,
     message = "Perubahan sudah tersimpan dan tampil di website.",
+    next = content,
   ) {
     event?.preventDefault();
     setBusy(true);
@@ -351,7 +560,7 @@ export default function Dashboard({ section, email, today }) {
     setError("");
     try {
       const result = await request("/api/admin/settings", "PUT", {
-        content,
+        content: next,
         version: data.version,
       });
       setData((current) => ({ ...current, ...result }));
@@ -369,25 +578,69 @@ export default function Dashboard({ section, email, today }) {
     setNotice("");
     setError("");
     try {
-      await request(
+      const saved = await request(
         "/api/admin/bookings" + (editing ? "/" + editing : ""),
         editing ? "PUT" : "POST",
         booking,
       );
+      alerts.markSeen(saved);
       await refresh();
       setBooking(blankBooking(today));
       setEditing(null);
-      setNotice("Reservasi tersimpan.");
+      closeCalendarForm();
+      const mail = saved.mail;
+      if (mail && !mail.ok) setError("Reservasi tersimpan. " + mail.error);
+      setNotice(
+        mail?.ok
+          ? `Reservasi tersimpan. ${mailKindLabels[mail.kind]} terkirim ke ${mail.to}.`
+          : "Reservasi tersimpan.",
+      );
     } catch (e) {
       setError(e.message);
     } finally {
       setBusy(false);
     }
   }
-  function editReservation(item) {
+  // Every travel agent and OTA calendar read again from the reservation
+  // calendar, then the page with what came in.
+  async function syncAgentCalendars() {
     setNotice("");
-    setBooking({ ...item });
-    setEditing(item.id);
+    setError("");
+    try {
+      const result = await request("/api/admin/agents/sync", "POST");
+      await refresh();
+      if (!result.linked)
+        setNotice(
+          "Belum ada kalender agen atau OTA yang tersambung. Tempel alamat kalender (iCal) mereka di PR & mitra, Agen & kalender, lalu tekan tombol ini lagi.",
+        );
+      if (result.read)
+        setNotice(
+          `Kalender agen dan OTA dibaca ulang. ${result.read} kalender, ${result.events} acara.`,
+        );
+      if (result.failed.length)
+        setError(
+          result.failed
+            .map((f) => `${f.name} belum terbaca, ${f.error}`)
+            .join(" "),
+        );
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  // A booking noted from the calendar's day panel. Errors go back to the
+  // panel's form.
+  async function quickReservation(payload) {
+    const saved = await request("/api/admin/bookings", "POST", payload);
+    alerts.markSeen(saved);
+    await refresh();
+    setError("");
+    setNotice(`Booking ${saved.guestName} tersimpan.`);
+    return saved;
+  }
+  // The full form on the calendar page: opened under the month, scrolled
+  // into view, and closed back to the month and its agenda.
+  function openCalendarForm() {
+    setCalendarForm(true);
     setTimeout(
       () =>
         document
@@ -395,6 +648,24 @@ export default function Dashboard({ section, email, today }) {
           ?.scrollIntoView({ behavior: "smooth", block: "start" }),
       50,
     );
+  }
+  function closeCalendarForm() {
+    if (section !== "calendar") return;
+    setCalendarForm(false);
+    document
+      .querySelector(".admin-calendar-layout")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function editReservation(item) {
+    setNotice("");
+    setBooking({
+      ...item,
+      email: item.email ?? "",
+      lang: item.lang ?? "id",
+      billing: billingFrom(item.payment, today),
+    });
+    setEditing(item.id);
+    openCalendarForm();
   }
   async function removeReservation(item) {
     if (
@@ -411,6 +682,7 @@ export default function Dashboard({ section, email, today }) {
       if (editing === item.id) {
         setEditing(null);
         setBooking(blankBooking(today));
+        closeCalendarForm();
       }
       setNotice("Reservasi dihapus.");
     } catch (e) {
@@ -442,6 +714,20 @@ export default function Dashboard({ section, email, today }) {
     apply(url);
     setAutoSave((n) => n + 1);
   }
+  // Logos are trimmed and their colours checked before the upload; apply
+  // receives the URL and "color" or "white".
+  async function placeLogo(file, apply) {
+    let logo;
+    try {
+      logo = await prepareLogo(file);
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    }
+    const url = await uploadPhoto(logo.file);
+    apply(url, logo.style, logo.ratio);
+    setAutoSave((n) => n + 1);
+  }
   useEffect(() => {
     if (autoSave)
       saveSettings(null, "Foto terpasang dan sudah tampil di website.");
@@ -459,22 +745,11 @@ export default function Dashboard({ section, email, today }) {
     d.setMonth(d.getMonth() + delta);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
-  const monthCount = new Date(
-    Number(month.slice(0, 4)),
-    Number(month.slice(5, 7)),
-    0,
-  ).getDate();
   const bookings = data?.bookings || [];
-  const thisMonth = bookings.filter(
-    (b) =>
-      b.startDate.slice(0, 7) <= month &&
-      b.endDate.slice(0, 7) >= month &&
-      b.status !== "cancelled",
-  );
   const filtered = bookings.filter(
     (b) =>
       (statusFilter === "all" || b.status === statusFilter) &&
-      `${b.guestName} ${b.phone} ${content.experiences[b.experience].title}`
+      `${b.guestName} ${b.phone} ${programTitle(content, b.experience)} ${b.payment?.orderId ?? ""}`
         .toLowerCase()
         .includes(filter.toLowerCase()),
   );
@@ -516,7 +791,7 @@ export default function Dashboard({ section, email, today }) {
                   <small>{bookingReference(b.id)}</small>
                 )}
               </td>
-              <td>{content.experiences[b.experience].title}</td>
+              <td>{programTitle(content, b.experience)}</td>
               <td>
                 {dateLabel(b.startDate)}
                 <small>s/d {dateLabel(b.endDate)}</small>
@@ -525,6 +800,37 @@ export default function Dashboard({ section, email, today }) {
                 <span className={"admin-status " + b.status}>
                   {statuses[b.status]}
                 </span>
+                {b.payment && <PaymentBadge payment={b.payment} />}
+                {b.payment?.fare && b.payment.fare.tier !== "standard" && (
+                  <small className="admin-fare-tag">
+                    Tarif {fareNames[b.payment.fare.tier]}
+                  </small>
+                )}
+                {b.payment?.refund && (
+                  <small
+                    className={
+                      "admin-fare-tag " +
+                      (b.payment.refund.status === "done" ? "ok" : "warn")
+                    }
+                  >
+                    {b.payment.refund.status === "done"
+                      ? "Refund terkirim"
+                      : `Refund diminta ${money(b.payment.refund.amount)}`}
+                  </small>
+                )}
+                {overdue(b.payment) && (
+                  <small className="admin-overdue">Lewat batas bayar</small>
+                )}
+                {b.mails?.length > 0 && (
+                  <small
+                    className={
+                      "admin-mail-flag " + (b.mails.at(-1).ok ? "ok" : "warn")
+                    }
+                  >
+                    {b.mails.at(-1).ok ? "Email " : "Email gagal: "}
+                    {mailKindLabels[b.mails.at(-1).kind]?.toLowerCase()}
+                  </small>
+                )}
               </td>
               <td>{b.participants}</td>
               <td>{money(b.amount)}</td>
@@ -564,6 +870,36 @@ export default function Dashboard({ section, email, today }) {
       busy={busy}
       editing={editing}
       content={content}
+      gear={gear}
+      bookings={data?.bookings ?? []}
+      billingInfo={{
+        ...data?.billing,
+        accounts: (content.payments?.accounts ?? []).filter(
+          (a) => a.bank && a.number,
+        ).length,
+        dueHours: content.payments?.dueHours ?? 24,
+      }}
+      canSettings={can("payments")}
+      onMailSent={async () => {
+        const next = await refresh();
+        const fresh = next?.bookings.find((b) => b.id === editing);
+        if (fresh)
+          setBooking((current) => ({ ...current, mails: fresh.mails }));
+      }}
+      onRefunded={async (saved) => {
+        setBooking((current) => ({ ...current, payment: saved.payment }));
+        setNotice("Refund ditandai sudah dikirim dan masuk Buku kas.");
+        await refresh();
+      }}
+      onClose={
+        section === "calendar"
+          ? () => {
+              setEditing(null);
+              setBooking(blankBooking(today));
+              closeCalendarForm();
+            }
+          : undefined
+      }
     />
   );
   return (
@@ -588,39 +924,54 @@ export default function Dashboard({ section, email, today }) {
             >
               Kembali ke situs <AdminIcon name="arrow" size={15} />
             </a>
-            <div className="admin-menu-anchor">
-              <button
-                className="admin-icon-button"
-                aria-label="Notifikasi reservasi"
-                aria-expanded={notification}
-                onClick={() => {
-                  setNotification(!notification);
-                  setOwnerMenu(false);
-                }}
-              >
-                <AdminIcon name="bell" />
-                {pending.length > 0 && (
-                  <span className="admin-notification-count">
-                    {pending.length}
-                  </span>
-                )}
-              </button>
-              {notification && (
-                <div className="admin-popover">
-                  <h3>Perlu konfirmasi</h3>
-                  {pending.length ? (
-                    pending.slice(0, 5).map((b) => (
-                      <Link key={b.id} href="/admin/reservations">
-                        {b.guestName} · {dateLabel(b.startDate)}
-                      </Link>
-                    ))
-                  ) : (
-                    <p>Tidak ada reservasi menunggu.</p>
+            {can("bookings") && (
+              <div className="admin-menu-anchor" ref={bellRef}>
+                <button
+                  className="admin-icon-button"
+                  aria-label="Notifikasi reservasi"
+                  aria-expanded={notification}
+                  onClick={() => {
+                    setNotification(!notification);
+                    setOwnerMenu(false);
+                  }}
+                >
+                  <AdminIcon name="bell" />
+                  {pending.length > 0 && (
+                    <span className="admin-notification-count">
+                      {pending.length}
+                    </span>
                   )}
-                </div>
-              )}
-            </div>
-            <div className="admin-menu-anchor">
+                </button>
+                {notification && (
+                  <div className="admin-popover">
+                    <h3>Perlu konfirmasi</h3>
+                    {pending.length ? (
+                      pending.slice(0, 5).map((b) => (
+                        <Link
+                          key={b.id}
+                          href={"/admin/calendar?ubah=" + b.id}
+                          onClick={(event) => {
+                            setNotification(false);
+                            if (section !== "calendar") return;
+                            event.preventDefault();
+                            editReservation(b);
+                          }}
+                        >
+                          {b.guestName} · {dateLabel(b.startDate)}
+                        </Link>
+                      ))
+                    ) : (
+                      <p>Tidak ada reservasi menunggu.</p>
+                    )}
+                    <AlertSoundSetting
+                      sound={alerts.sound}
+                      setSound={alerts.setSound}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="admin-menu-anchor" ref={ownerRef}>
               <button
                 className="admin-owner"
                 aria-label="Akun"
@@ -636,7 +987,18 @@ export default function Dashboard({ section, email, today }) {
               </button>
               {ownerMenu && (
                 <div className="admin-popover">
-                  <p>{email}</p>
+                  <p>
+                    {email}
+                    <br />
+                    <small>Peran: {roleLabel(role)}</small>
+                  </p>
+                  <Link
+                    className="admin-inline"
+                    href="/admin/security"
+                    onClick={() => setOwnerMenu(false)}
+                  >
+                    <AdminIcon name="security" size={15} /> Ubah password
+                  </Link>
                   <button className="admin-inline" onClick={logout}>
                     <AdminIcon name="logout" size={15} /> Keluar dari admin
                   </button>
@@ -663,59 +1025,95 @@ export default function Dashboard({ section, email, today }) {
             role="navigation"
             aria-label="Menu admin"
           >
-            {mainSections.map(link)}
-            <button
-              type="button"
-              className={
-                "admin-group-toggle" +
-                (siteSections.includes(section) ? " current" : "")
-              }
-              aria-expanded={siteOpen}
-              onClick={() => setSiteOpen(!siteOpen)}
-            >
-              <AdminIcon name="settings" />
-              Pengaturan situs
-              <AdminIcon name="chevron" size={16} className="admin-chevron" />
-            </button>
-            {siteOpen && (
-              <div className="admin-sublinks">{siteSections.map(link)}</div>
+            {menu.map((group) => {
+              // A run of top-level links, a single page under the group's
+              // icon, or a folding group.
+              if (!group.title) return group.items.map((key) => link(key));
+              if (group.items.length === 1)
+                return link(group.items[0], group.icon);
+              const open = openGroups.has(group.key);
+              return (
+                <div key={group.key} className="admin-menu-group">
+                  <button
+                    type="button"
+                    className={
+                      "admin-group-toggle" +
+                      (group.items.includes(section) ? " current" : "")
+                    }
+                    aria-expanded={open}
+                    onClick={() => toggleGroup(group.key)}
+                  >
+                    <AdminIcon name={group.icon} />
+                    {group.title}
+                    <AdminIcon
+                      name="chevron"
+                      size={16}
+                      className="admin-chevron"
+                    />
+                  </button>
+                  {open && (
+                    <div className="admin-sublinks">
+                      {group.items.map((key) => link(key))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {can("settings") && lockCount(content?.developer) > 0 && (
+              <p className="admin-dev-flag">
+                Mode developer aktif · {lockCount(content.developer)} kunci
+              </p>
             )}
           </div>
-          <div
-            className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
-          >
-            <strong>STATUS HARI INI</strong>
-            <p>
-              {!data
-                ? "Memuat catatan…"
-                : pending.length
-                  ? `${pending.length} reservasi menunggu konfirmasi.`
-                  : "Semua reservasi sudah dikonfirmasi."}{" "}
-              {todayGuests
-                ? `${todayGuests} tamu ke laut hari ini.`
-                : data
-                  ? "Belum ada tamu ke laut hari ini."
-                  : ""}
-            </p>
-          </div>
+          {can("bookings") ? (
+            <div
+              className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
+            >
+              <strong>STATUS HARI INI</strong>
+              <p>
+                {!data
+                  ? "Memuat catatan…"
+                  : pending.length
+                    ? `${pending.length} reservasi menunggu konfirmasi.`
+                    : "Semua reservasi sudah dikonfirmasi."}{" "}
+                {todayGuests
+                  ? `${todayGuests} tamu ke laut hari ini.`
+                  : data
+                    ? "Belum ada tamu ke laut hari ini."
+                    : ""}
+              </p>
+            </div>
+          ) : (
+            <div className="admin-sidebar-note">
+              <strong>PERAN {roleLabel(role).toUpperCase()}</strong>
+              <p>Menu di atas adalah bagian yang bisa dibuka peran ini.</p>
+            </div>
+          )}
         </aside>
         <main className="admin-main">
           {section !== "overview" && (
-            <p className="admin-eyebrow">ZANCLUS / RUANG KERJA</p>
+            <p className="admin-eyebrow">
+              RUANG KERJA ·{" "}
+              {section === "calendar"
+                ? new Date(month + "-01T12:00:00")
+                    .toLocaleDateString("id-ID", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                    .toUpperCase()
+                : roleLabel(role).toUpperCase()}
+            </p>
           )}
           <div
             className="admin-title-row"
             hidden={section === "overview" && !!data}
           >
-            <h1>{sections[section]}</h1>
-            {section === "calendar" && (
-              <span>
-                {new Date(month + "-01T12:00:00").toLocaleDateString("id-ID", {
-                  month: "long",
-                  year: "numeric",
-                })}
-              </span>
-            )}
+            <div>
+              <h1>{sections[section]}</h1>
+              {sectionInfo[section]?.intro && (
+                <p className="admin-intro">{sectionInfo[section].intro}</p>
+              )}
+            </div>
           </div>
           {error && (
             <div className="admin-error" role="alert">
@@ -730,7 +1128,17 @@ export default function Dashboard({ section, email, today }) {
               {notice}
             </div>
           )}
-          {!data ? (
+          {!allowed ? (
+            <section className="admin-card admin-forbidden">
+              <h2>Bagian ini tidak tersedia untuk peran {roleLabel(role)}</h2>
+              <p className="admin-subtle">
+                Minta superadmin bila peran Anda perlu akses ke bagian ini.
+              </p>
+              <Link className="admin-button secondary" href="/admin">
+                Ke ringkasan
+              </Link>
+            </section>
+          ) : !data ? (
             <p className="admin-empty">
               {error
                 ? "Periksa konfigurasi MySQL pada hPanel."
@@ -738,210 +1146,112 @@ export default function Dashboard({ section, email, today }) {
             </p>
           ) : (
             <>
-              {section === "overview" && (
-                <Overview
-                  bookings={bookings}
-                  content={content}
-                  customers={customers}
-                  pending={pending}
-                  today={today}
-                  email={email}
-                  table={bookingTable(bookings.slice(0, 5))}
-                />
+              {section === "overview" &&
+                (can("bookings") ? (
+                  <Overview
+                    bookings={bookings}
+                    content={content}
+                    customers={customers}
+                    pending={pending}
+                    today={today}
+                    email={email}
+                    table={bookingTable(bookings.slice(0, 5))}
+                  />
+                ) : (
+                  <RoleHome account={account} menu={menu} />
+                ))}
+              {section === "users" && (
+                <UsersEditor request={request} account={account} />
+              )}
+              {section === "cashbook" && (
+                <CashbookEditor request={request} today={today} />
+              )}
+              {section === "reports" && (
+                <ReportsEditor request={request} today={today} />
+              )}
+              {section === "stock" && (
+                <StockEditor request={request} today={today} />
+              )}
+              {section === "movements" && (
+                <MovementsEditor request={request} today={today} />
+              )}
+              {section === "social" && (
+                <SocialEditor request={request} today={today} />
+              )}
+              {section === "employees" && <EmployeesEditor request={request} />}
+              {section === "attendance" && (
+                <AttendanceEditor request={request} today={today} />
+              )}
+              {section === "payroll" && (
+                <PayrollEditor request={request} today={today} />
               )}
               {section === "calendar" && (
                 <>
-                  <div className="admin-toolbar">
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => moveMonth(-1)}
-                    >
-                      ← Bulan lalu
-                    </button>
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => setMonth(today.slice(0, 7))}
-                    >
-                      Bulan ini
-                    </button>
-                    <button
-                      className="admin-button secondary"
-                      onClick={() => moveMonth(1)}
-                    >
-                      Bulan berikut →
-                    </button>
-                    <Link
-                      href="/admin/reservations"
-                      className="admin-button secondary"
-                    >
-                      Semua reservasi
-                    </Link>
-                  </div>
-                  <div className="admin-calendar-scroll">
-                    <table className="admin-calendar">
-                      <thead>
-                        <tr>
-                          <th>Pengalaman</th>
-                          {Array.from({ length: monthCount }, (_, i) => {
-                            const date =
-                              month + "-" + String(i + 1).padStart(2, "0");
-                            return (
-                              <th
-                                key={date}
-                                className={date === today ? "today" : ""}
-                              >
-                                <small>
-                                  {new Date(
-                                    date + "T12:00:00",
-                                  ).toLocaleDateString("id-ID", {
-                                    weekday: "short",
-                                  })}
-                                </small>
-                                {i + 1}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {experienceKeys.map((key) => (
-                          <tr key={key}>
-                            <th>
-                              {content.experiences[key].title}
-                              <small>
-                                {content.experiences[key].enabled
-                                  ? "Aktif"
-                                  : "Tidak ditampilkan"}
-                              </small>
-                            </th>
-                            {Array.from({ length: monthCount }, (_, i) => {
-                              const date =
-                                  month + "-" + String(i + 1).padStart(2, "0"),
-                                items = thisMonth.filter(
-                                  (b) =>
-                                    b.experience === key &&
-                                    date >= b.startDate &&
-                                    date <= b.endDate,
-                                );
-                              return (
-                                <td
-                                  key={date}
-                                  className={date === today ? "today" : ""}
-                                >
-                                  {items.length ? (
-                                    items.map((b) => (
-                                      <button
-                                        key={b.id}
-                                        className={
-                                          "calendar-booking " + b.status
-                                        }
-                                        title={`${b.guestName || "Ditutup"} · ${statuses[b.status]} · ${sources[b.source]}`}
-                                        onClick={() => editReservation(b)}
-                                      >
-                                        {b.status === "closed"
-                                          ? "Ditutup"
-                                          : b.guestName}
-                                      </button>
-                                    ))
-                                  ) : (
-                                    <button
-                                      className="calendar-day"
-                                      aria-label={`Tambah reservasi ${content.experiences[key].title}, ${date}`}
-                                      onClick={() => {
-                                        setEditing(null);
-                                        setBooking({
-                                          ...blankBooking(date),
-                                          experience: key,
-                                        });
-                                        document
-                                          .getElementById("booking-editor")
-                                          ?.scrollIntoView({
-                                            behavior: "smooth",
-                                          });
-                                      }}
-                                    >
-                                      +
-                                    </button>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
+                  <MonthCalendar
+                    month={month}
+                    today={today}
+                    bookings={bookings}
+                    agents={data.agents ?? []}
+                    content={content}
+                    gear={gear}
+                    onMove={moveMonth}
+                    onToday={() => setMonth(today.slice(0, 7))}
+                    onPick={(date, experience, draft) => {
+                      setEditing(null);
+                      setBooking({
+                        ...blankBooking(date, experience),
+                        ...draft,
+                      });
+                      openCalendarForm();
+                    }}
+                    onEdit={editReservation}
+                    onQuickSave={quickReservation}
+                    onSyncAgents={syncAgentCalendars}
+                  />
+                  {calendarForm && editor}
+                  <section
+                    className="admin-card admin-booking-list"
+                    id="daftar-reservasi"
+                  >
+                    <h2>Daftar reservasi</h2>
+                    <p className="admin-subtle">
+                      Semua reservasi dari WhatsApp, website, agen, dan
+                      pembayaran online. Cari nama, telepon, atau kegiatan, dan
+                      saring statusnya. Edit membuka formulir lengkap di bawah
+                      kalender.
+                    </p>
+                    <div className="admin-toolbar">
+                      <input
+                        aria-label="Cari reservasi"
+                        placeholder="Cari nama, telepon, pengalaman…"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                      />
+                      <select
+                        aria-label="Filter status"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
+                        <option value="all">Semua status</option>
+                        {Object.entries(statuses).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {v}
+                          </option>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="admin-legend">
-                    {Object.entries(statuses).map(([key, label]) => (
-                      <span key={key} className={"admin-status " + key}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="admin-two-column calendar-bottom">
-                    {editor}
-                    <section className="admin-card">
-                      <h2>Reservasi bulan ini</h2>
-                      <p className="admin-subtle">
-                        {thisMonth.length} catatan · tanggal selesai dihitung
-                        termasuk hari terakhir.
-                      </p>
-                      {thisMonth.length ? (
-                        thisMonth.map((b) => (
-                          <button
-                            className="admin-booking-summary"
-                            key={b.id}
-                            onClick={() => editReservation(b)}
-                          >
-                            <strong>
-                              {b.guestName || "Penutupan tanggal"}
-                            </strong>
-                            <span>
-                              {content.experiences[b.experience].title}
-                            </span>
-                            <small>
-                              {dateLabel(b.startDate)} — {dateLabel(b.endDate)}
-                            </small>
-                            <span className={"admin-status " + b.status}>
-                              {statuses[b.status]}
-                            </span>
-                          </button>
-                        ))
-                      ) : (
-                        <p className="admin-empty">
-                          Belum ada reservasi bulan ini.
-                        </p>
-                      )}
-                    </section>
-                  </div>
-                </>
-              )}
-              {section === "reservations" && (
-                <>
-                  <div className="admin-toolbar">
-                    <input
-                      aria-label="Cari reservasi"
-                      placeholder="Cari nama, telepon, pengalaman…"
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                    />
-                    <select
-                      aria-label="Filter status"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                      <option value="all">Semua status</option>
-                      {Object.entries(statuses).map(([k, v]) => (
-                        <option key={k} value={k}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <section className="admin-card">
+                      </select>
+                    </div>
                     {bookingTable(filtered)}
                   </section>
-                  {editor}
+                  <SchedulePaste
+                    bookings={bookings}
+                    content={content}
+                    today={today}
+                    request={request}
+                    onSaved={async (count) => {
+                      await refresh();
+                      setNotice(`${count} reservasi dari jadwal tersimpan.`);
+                    }}
+                  />
                 </>
               )}
               {section === "customers" && (
@@ -968,7 +1278,7 @@ export default function Dashboard({ section, email, today }) {
                           .map((c) => (
                             <tr key={c.phone || c.name}>
                               <td>{c.name}</td>
-                              <td>{c.phone || "—"}</td>
+                              <td>{c.phone || "–"}</td>
                               <td>{c.count}</td>
                               <td>{money(c.total)}</td>
                             </tr>
@@ -1040,6 +1350,19 @@ export default function Dashboard({ section, email, today }) {
                     </button>
                   </section>
                 </form>
+              )}
+              {section === "seo" && (
+                <SeoEditor
+                  seo={content.seo}
+                  site={data.site}
+                  busy={busy}
+                  onChange={(seo) =>
+                    setContent((current) => ({ ...current, seo }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(event, "Pengaturan SEO tersimpan.")
+                  }
+                />
               )}
               {section === "contact" && (
                 <form onSubmit={saveSettings}>
@@ -1139,6 +1462,7 @@ export default function Dashboard({ section, email, today }) {
                   onSave={saveSettings}
                   busy={busy}
                   placePhoto={placePhoto}
+                  placeLogo={placeLogo}
                   editPartners={(edit) =>
                     setContent((current) => ({
                       ...current,
@@ -1194,20 +1518,176 @@ export default function Dashboard({ section, email, today }) {
                   placePhoto={placePhoto}
                 />
               )}
+              {section === "agents" && (
+                <AgentsEditor
+                  agents={data.agents ?? []}
+                  busy={busy}
+                  run={async (url, method, body, message) => {
+                    setBusy(true);
+                    setError("");
+                    setNotice("");
+                    try {
+                      await request(url, method, body);
+                      await refresh();
+                      if (message) setNotice(message);
+                      return true;
+                    } catch (e) {
+                      setError(e.message);
+                      return false;
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  reload={async () => {
+                    try {
+                      await request("/api/admin/agents");
+                      await refresh();
+                    } catch {}
+                  }}
+                />
+              )}
+              {section === "payments" && (
+                <PaymentsEditor
+                  payments={content.payments ?? { enabled: false }}
+                  status={data.payments}
+                  bookings={bookings}
+                  content={content}
+                  update={(enabled) =>
+                    setContent((current) => ({
+                      ...current,
+                      payments: { ...current.payments, enabled },
+                    }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(event, "Pengaturan pembayaran tersimpan.")
+                  }
+                  onSync={async (orderId) => {
+                    setBusy(true);
+                    try {
+                      await request("/api/admin/payments", "POST", {
+                        orderId,
+                      });
+                      await refresh();
+                      setNotice("Status pembayaran diperbarui.");
+                    } catch (e) {
+                      setError(e.message);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  busy={busy}
+                >
+                  <PaymentMethodSettings
+                    settings={content.payments ?? {}}
+                    status={data.payments}
+                    mail={data.mail}
+                    contactEmail={content.contact?.email}
+                    busy={busy}
+                    onChange={(patch) =>
+                      setContent((current) => ({
+                        ...current,
+                        payments: { ...current.payments, ...patch },
+                      }))
+                    }
+                    onSave={(event) =>
+                      saveSettings(event, "Pengaturan pembayaran tersimpan.")
+                    }
+                  />
+                  <GuestMailSettings
+                    settings={content.payments ?? {}}
+                    mail={data.mail}
+                    busy={busy}
+                    onChange={(patch) =>
+                      setContent((current) => ({
+                        ...current,
+                        payments: { ...current.payments, ...patch },
+                      }))
+                    }
+                    onSave={(event) =>
+                      saveSettings(event, "Pengaturan email tamu tersimpan.")
+                    }
+                  />
+                </PaymentsEditor>
+              )}
+              {section === "security" && <PasswordEditor request={request} />}
+              {section === "developer" && (
+                <DeveloperEditor
+                  developer={{ ...defaultDeveloper, ...content.developer }}
+                  products={content.shop.products}
+                  services={(content.service ?? defaultService).items}
+                  update={(key, value) =>
+                    setContent((current) => ({
+                      ...current,
+                      developer: {
+                        ...defaultDeveloper,
+                        ...current.developer,
+                        [key]: value,
+                      },
+                    }))
+                  }
+                  onSave={(event) =>
+                    saveSettings(
+                      event,
+                      "Mode developer tersimpan dan langsung berlaku.",
+                    )
+                  }
+                  // The main switch and the whole-site lock save at once.
+                  saveNow={(patch, message) => {
+                    const next = {
+                      ...content,
+                      developer: {
+                        ...defaultDeveloper,
+                        ...content.developer,
+                        ...patch,
+                      },
+                    };
+                    setContent(next);
+                    saveSettings(null, message, next);
+                  }}
+                  busy={busy}
+                />
+              )}
               {section === "events" && (
                 <CalendarEditor
                   calendar={content.calendar}
                   update={(key, value) => mutateContent("calendar", key, value)}
                   onSave={saveSettings}
                   busy={busy}
+                  media={data.media}
+                  placePhoto={placePhoto}
+                  editBanners={(edit) =>
+                    setContent((current) => ({
+                      ...current,
+                      calendar: {
+                        ...defaultCalendar,
+                        ...current.calendar,
+                        banners: edit(
+                          current.calendar?.banners ?? defaultCalendar.banners,
+                        ),
+                      },
+                    }))
+                  }
                 />
               )}
               {section === "prices" && (
                 <PriceListEditor
                   priceList={content.priceList}
+                  products={content.shop?.products ?? []}
                   update={(group, items) =>
                     mutateContent("priceList", group, items)
                   }
+                  fares={content.fares}
+                  updateFares={(key, value) => {
+                    setContent((current) => ({
+                      ...current,
+                      fares: {
+                        ...fareSettings(current.fares),
+                        ...current.fares,
+                        [key]: value,
+                      },
+                    }));
+                    setNotice("");
+                  }}
                   onSave={saveSettings}
                   busy={busy}
                 />
@@ -1216,10 +1696,16 @@ export default function Dashboard({ section, email, today }) {
                 <ShopEditor
                   shop={view.shop}
                   update={(key, value) => mutateContent("shop", key, value)}
+                  locale={editLocale}
+                  onImport={importProduct}
                   onSave={saveSettings}
                   busy={busy}
                   media={data.media}
                   placePhoto={placePhoto}
+                  request={request}
+                  canStock={can("gudang")}
+                  canCalendar={can("bookings")}
+                  onCopyTexts={copyProductTexts}
                 />
               )}
               {section === "experiences" && (
@@ -1336,7 +1822,7 @@ export default function Dashboard({ section, email, today }) {
                         Foto langsung terpasang dan tampil di website.
                       </p>
                       <div className="admin-image-grid">
-                        {siteImageFields.map(([key, label]) => (
+                        {siteImageFields.map(([key, label, guide]) => (
                           <div key={key} className="admin-image-slot">
                             <img
                               src={content.images[key]}
@@ -1345,6 +1831,7 @@ export default function Dashboard({ section, email, today }) {
                             <strong>{label}</strong>
                             <ImageUpload
                               label="Ganti foto"
+                              guide={guide}
                               onFile={(file) =>
                                 placePhoto(file, (url) =>
                                   mutateContent("images", key, url),
@@ -1401,6 +1888,9 @@ export default function Dashboard({ section, email, today }) {
                     gallery={content.gallery}
                     media={data.media}
                     update={(items) => mutateContent("gallery", "items", items)}
+                    updateVideos={(videos) =>
+                      mutateContent("gallery", "videos", videos)
+                    }
                     onSave={saveSettings}
                     busy={busy}
                     placePhoto={placePhoto}
@@ -1426,6 +1916,7 @@ export default function Dashboard({ section, email, today }) {
                     </p>
                     <ImageUpload
                       multiple
+                      guide="collection"
                       label="Upload beberapa foto"
                       hint="Foto besar dari kamera otomatis dikecilkan"
                       onFile={async (file) => {
@@ -1454,6 +1945,19 @@ export default function Dashboard({ section, email, today }) {
           )}
         </main>
       </div>
+      <BookingAlertToast
+        alerts={alerts.alerts}
+        onClose={alerts.dismiss}
+        label={(b) =>
+          `${b.guestName} · ${programTitle(content, b.experience)} · ${dateLabel(b.startDate)}`
+        }
+        onOpen={(event, b) => {
+          alerts.drop(b);
+          if (section !== "calendar") return;
+          event.preventDefault();
+          editReservation(b);
+        }}
+      />
     </div>
   );
 }

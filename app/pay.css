@@ -1,0 +1,459 @@
+/* Shared by every form that pays online with Midtrans. */
+.pay-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f1f7f3;
+  font-size: 12px;
+  color: #57717a;
+}
+.pay-total > span {
+  display: grid;
+  gap: 2px;
+}
+.plan-breakdown {
+  font-size: 11.5px;
+  white-space: nowrap;
+  color: #7a8f95;
+}
+.pay-total strong {
+  font-size: 20px;
+  line-height: 1.2;
+  color: #062b3b;
+  white-space: nowrap;
+}
+.pay-submit[disabled] {
+  opacity: 0.7;
+  cursor: progress;
+}
+.pay-notes {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #57717a;
+}
+.pay-notes p {
+  margin: 0 0 6px;
+}
+.pay-sandbox {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #7a5a00;
+}
+.plan-message summary {
+  font-size: 12px;
+  font-weight: 600;
+  color: #087873;
+  cursor: pointer;
+}
+.plan-message .activity-message-preview {
+  margin-top: 8px;
+}
+.pay-unsure {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #087873;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.pay-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.pay-panel .pay-total {
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #f1f7f3;
+}
+.pay-panel .button {
+  width: 100%;
+  justify-content: center;
+  padding: 16px;
+  font-size: 13px;
+  white-space: normal;
+}
+.pay-panel .activity-error {
+  margin: 0;
+}
+.pay-panel .pay-unsure {
+  justify-self: start;
+}
+.pay-unsure:focus-visible {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Fare picker at checkout: Standard, Comfort and Flexi, one card each with
+   what it costs on top and what it allows. */
+.plan-fares {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+.plan-fares legend {
+  float: left;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.plan-fares-intro {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #57717a;
+}
+.plan-fare-list {
+  display: grid;
+  gap: 8px;
+}
+.plan-fare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 3px;
+  align-items: start;
+  padding: 11px 13px;
+  border: 1px solid #cfe3d6;
+  border-radius: 12px;
+  background: #fff;
+  color: #062b3b;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.plan-fare input {
+  grid-row: span 2;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #1f8f8a;
+}
+.plan-fare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+.plan-fare-head strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+.plan-fare-head em {
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 700;
+  color: #087873;
+}
+.plan-fare small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4d6870;
+}
+.plan-fare:hover {
+  border-color: #20b8b1;
+}
+.plan-fare.is-chosen {
+  border-color: #1f8f8a;
+  background: #eef8f4;
+  box-shadow: inset 0 0 0 1px #1f8f8a;
+}
+.plan-fare:has(input:focus-visible) {
+  outline: 3px solid #20b8b1;
+  outline-offset: 2px;
+}
+.shop-checkout .plan-fares {
+  margin: 0 0 16px;
+}
+.shop-order-form .plan-fares {
+  margin: 4px 0 2px;
+}
+.shop-fare-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: #57717a;
+}
+
+/* The guest's own booking page: one card on the light page, the booking,
+   its fare and what can still be changed. */
+.manage-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 40px 16px 56px;
+  background: #eef4f1;
+  color: #062b3b;
+}
+.manage-card {
+  display: grid;
+  gap: 18px;
+  width: min(640px, 100%);
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 24px 60px #062b3b14;
+}
+.manage-logo img {
+  display: block;
+  width: 168px;
+  height: auto;
+}
+.manage-card .eyebrow {
+  margin: 6px 0 -10px;
+  color: #1f8f8a;
+}
+.manage-card h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(26px, 5vw, 34px);
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+}
+.manage-card h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.manage-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.manage-details div {
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: #f4f8f6;
+}
+.manage-details dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.manage-details dd {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.manage-fare {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #eef8f4;
+}
+.manage-fare h2 span {
+  color: #087873;
+}
+.manage-fare p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #33525a;
+}
+.manage-fare ul {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f5d58;
+}
+.manage-state,
+.manage-notice {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #f4f8f6;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #33525a;
+}
+.manage-notice {
+  background: #e5f4ea;
+  color: #17543a;
+  font-weight: 600;
+}
+.manage-move,
+.manage-refund {
+  display: grid;
+  gap: 10px;
+}
+.manage-move > p,
+.manage-refund > p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #4d6870;
+}
+.manage-chosen {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f5d58;
+}
+.manage-move .button,
+.manage-refund .button {
+  justify-self: start;
+}
+.manage-refund {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #fff4f1;
+}
+.manage-cancel-ask,
+.manage-cancel {
+  background: #fff;
+  color: #a73428;
+  box-shadow: inset 0 0 0 1.5px #e6b3aa;
+}
+.manage-cancel {
+  background: #a73428;
+  color: #fff;
+  box-shadow: none;
+}
+.manage-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.manage-keep {
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: #33525a;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.manage-history ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  color: #33525a;
+}
+.manage-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  margin-top: 4px;
+}
+.manage-home {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #33525a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .manage-page {
+    padding: 16px 12px 40px;
+  }
+  .manage-card {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+  .manage-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .manage-move .button,
+  .manage-refund .button {
+    justify-self: stretch;
+  }
+}
+
+/* Picking up at the dive center or delivery, in the shop checkouts. */
+.delivery-choice {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+}
+.delivery-choice legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.delivery-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+.delivery-options label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 11px 13px;
+  border: 1px solid #cfe3d6;
+  border-radius: 12px;
+  background: #fff;
+  color: #062b3b;
+  cursor: pointer;
+}
+.delivery-options label.is-chosen {
+  border-color: #1f8f8a;
+  background: #f1faf6;
+}
+.delivery-options input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #1f8f8a;
+}
+.delivery-options strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.delivery-options small {
+  display: block;
+  margin-top: 2px;
+  color: #4d6b73;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.delivery-note {
+  margin: 0;
+  color: #4d6b73;
+  font-size: 12px;
+}

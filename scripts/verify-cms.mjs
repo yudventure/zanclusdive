@@ -310,7 +310,9 @@ assert.equal(
   false,
 );
 await page.getByRole("button", { name: "Menu admin", exact: true }).click();
-await page.getByRole("link", { name: "Reservasi", exact: true }).click();
+await page
+  .getByRole("link", { name: "Kalender reservasi", exact: true })
+  .click();
 await page.getByLabel("Cari reservasi").fill("Raka");
 assert.ok(
   await page

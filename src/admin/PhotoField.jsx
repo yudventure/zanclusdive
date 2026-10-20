@@ -11,6 +11,7 @@ export default function PhotoField({
   media,
   onChange,
   placePhoto,
+  guide = "",
 }) {
   const id = useId();
   return (
@@ -18,6 +19,7 @@ export default function PhotoField({
       {value && <img src={value} alt={"Preview " + label} />}
       <strong>{label}</strong>
       <ImageUpload
+        guide={guide}
         label={value ? "Ganti foto" : "Upload foto"}
         onFile={(file) => placePhoto(file, onChange)}
       />

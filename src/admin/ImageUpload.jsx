@@ -1,15 +1,18 @@
 "use client";
 import { useId, useRef, useState } from "react";
 import { AdminIcon } from "./icons.jsx";
+import { photoGuide } from "./photo-guide.js";
 
 // One-tap photo upload: pick or drop a photo from a computer or phone and it
 // is uploaded, placed and saved straight away by the parent's onFile.
+// "guide" names the slot in photo-guide.js, for its best size.
 export default function ImageUpload({
   onFile,
   label = "Upload dari PC / HP",
   hint = "JPG, PNG, WebP · langsung terpasang",
   multiple = false,
   compact = false,
+  guide = "",
 }) {
   const input = useRef(null);
   const id = useId();
@@ -74,6 +77,9 @@ export default function ImageUpload({
               : label}
         </strong>
         {!compact && <small>{hint}</small>}
+        {guide && (
+          <small className="admin-photo-guide">{photoGuide(guide)}</small>
+        )}
       </span>
     </label>
   );
