@@ -233,8 +233,14 @@ try {
         addOns.length - 1,
       );
     }
-    // A day picked in the calendar is the checkout date.
-    const day = slotCalendar.locator(".slot-day:not([disabled])").nth(8);
+    // A day picked in the calendar is the checkout date. Late in a month
+    // the ninth open day is in the next one.
+    const open = slotCalendar.locator(".slot-day:not([disabled])");
+    if ((await open.count()) < 9)
+      await slotCalendar
+        .getByRole("button", { name: "Bulan berikutnya" })
+        .click();
+    const day = open.nth(8);
     const date = await day.getAttribute("data-date");
     await day.click();
     assert.equal(await day.getAttribute("aria-pressed"), "true");
@@ -477,6 +483,21 @@ try {
     path: "artifacts/admin-activities.png",
     fullPage: true,
   });
+  // The year over the price lists: 2026 until the owner sets another.
+  const kicker = async (path) => {
+    await page.goto(base + path, { waitUntil: "networkidle" });
+    return page.locator(".experience-item.is-open .price-kicker").textContent();
+  };
+  assert.equal(await kicker("/id"), "DAFTAR HARGA 2026");
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  const yearField = page.getByLabel("Tahun di judul daftar harga");
+  assert.equal(await yearField.inputValue(), "2026");
+  await yearField.fill("2027");
+  await page.getByRole("button", { name: "Simpan tahun" }).click();
+  await page.getByText("Perubahan sudah tersimpan").waitFor();
+  assert.equal((await state()).content.priceList.year, 2027);
+  assert.equal(await kicker("/id"), "DAFTAR HARGA 2027");
+  assert.equal(await kicker("/"), "PRICE LIST 2027");
   // Price lists: a service offered only as an add-on, added in Layanan
   // tambahan and ticked for diving; a camera rental ticked for snorkeling.
   await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });

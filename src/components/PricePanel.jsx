@@ -1,5 +1,5 @@
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
-import { addOnItems, priceText } from "../price-list.js";
+import { addOnItems, priceText, priceYear } from "../price-list.js";
 
 // Package prices for one activity. Collapsed panels stay in the layout for
 // the width animation but are inert, so they are skipped by keyboard and
@@ -20,7 +20,7 @@ export default function PricePanel({
     <div className="price-card" inert={hidden} aria-hidden={hidden}>
       <div className="price-inner">
         <div className="price-body">
-          <p className="price-kicker">{p.kicker}</p>
+          <p className="price-kicker">{p.kicker(priceYear(priceList))}</p>
           <h3>{p.title(label)}</h3>
           <ul className="price-list">
             {priceList[group].map((item, index) => (

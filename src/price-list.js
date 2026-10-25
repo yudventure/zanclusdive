@@ -1,5 +1,5 @@
 // Package prices shown beside the experience cards, from the Zanclus Dive
-// Center 2025 price list. Editable in the CMS; each text has both languages.
+// Center price list (2026). Editable in the CMS; each text has both languages.
 import { dictionary } from "./i18n.js";
 import { rentalAddOn, rentalTabOf, shopAddOn } from "./shop-model.js";
 
@@ -493,6 +493,11 @@ export function withRentalProducts(content) {
 
 // The default price list: packages, services and add-ons, with the rental
 // gear as Dive Shop products.
+// The year in the title over every price list ("PRICE LIST 2026"), set in
+// the admin; a list without one shows this year.
+export const defaultPriceYear = 2026;
+export const priceYear = (priceList) =>
+  Number.isInteger(priceList?.year) ? priceList.year : defaultPriceYear;
 export const defaultPriceList = withRentalProducts({
   priceList: structuredClone(legacyPriceList),
 }).priceList;
@@ -562,7 +567,12 @@ export function validatePriceList(input, products = []) {
       ];
     }),
   );
-  return { ...list, addOns, rentals: "shop" };
+  // The year is kept only when the owner set one.
+  const set = ![undefined, null, ""].includes(input?.year);
+  const year = Number(input?.year);
+  if (set && (!Number.isInteger(year) || year < 2020 || year > 2100))
+    throw new Error("Tahun daftar harga harus antara 2020 dan 2100.");
+  return { ...list, addOns, rentals: "shop", ...(set ? { year } : {}) };
 }
 
 // The add-ons of an activity page, in the order they were picked, each with

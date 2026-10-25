@@ -3752,3 +3752,17 @@ strong.admin-overdue {
     display: none;
   }
 }
+
+/* The year in the price list titles, above the lists. */
+.admin-price-year {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 18px;
+}
+.admin-price-year .admin-field {
+  flex: 1 1 320px;
+}
+.admin-price-year input {
+  max-width: 160px;
+}

@@ -529,7 +529,7 @@ const id = {
     },
   },
   prices: {
-    kicker: "DAFTAR HARGA 2025",
+    kicker: (year) => `DAFTAR HARGA ${year}`,
     show: (label) => `Lihat harga ${label.toLowerCase()}`,
     title: (label) => `Harga paket ${label.toLowerCase()}`,
     cta: (label) => `Rencanakan ${label.toLowerCase()}`,
@@ -1854,7 +1854,7 @@ const en = {
     },
   },
   prices: {
-    kicker: "PRICE LIST 2025",
+    kicker: (year) => `PRICE LIST ${year}`,
     show: (label) => `See ${label.toLowerCase()} prices`,
     title: (label) => `${label} package prices`,
     cta: (label) => `Plan your ${label.toLowerCase()}`,

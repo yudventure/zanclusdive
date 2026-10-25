@@ -3,8 +3,10 @@ import { cloneElement, useId, useState } from "react";
 import {
   addOnLimit,
   allPriceGroups,
+  defaultPriceYear,
   extraLabels,
   priceGroups,
+  priceYear,
   shopAddOn,
 } from "../price-list.js";
 import { rentalAddOn } from "../shop-model.js";
@@ -12,12 +14,13 @@ import { activityLabels } from "../activity-model.js";
 import { dictionary, formatIDR } from "../i18n.js";
 import { fareSettings } from "../fare-model.js";
 
-function Field({ label, children }) {
+function Field({ label, hint, children }) {
   const id = useId();
   return (
     <div className="admin-field">
       <label htmlFor={id}>{label}</label>
       {cloneElement(children, { id })}
+      {hint && <small className="admin-subtle">{hint}</small>}
     </div>
   );
 }
@@ -234,6 +237,30 @@ export default function PriceListEditor({
   );
   return (
     <form onSubmit={onSave}>
+      <section className="admin-card admin-price-year">
+        <Field
+          label="Tahun di judul daftar harga"
+          hint={`Tampil di atas setiap daftar harga beranda sebagai DAFTAR HARGA ${priceYear(priceList)} dan PRICE LIST ${priceYear(priceList)}. Ganti saat harga tahun baru berlaku, lalu simpan.`}
+        >
+          <input
+            type="number"
+            inputMode="numeric"
+            min={2020}
+            max={2100}
+            step={1}
+            value={priceList.year ?? defaultPriceYear}
+            onChange={(e) =>
+              update(
+                "year",
+                e.target.value === "" ? "" : Number(e.target.value),
+              )
+            }
+          />
+        </Field>
+        <button className="admin-button" disabled={busy}>
+          {busy ? "Menyimpan…" : "Simpan tahun"}
+        </button>
+      </section>
       {updateFares && <FaresCard fares={fares} updateFares={updateFares} />}
       <div
         className="admin-activity-tabs"
