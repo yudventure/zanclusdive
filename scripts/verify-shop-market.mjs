@@ -445,6 +445,8 @@ Quick, precise strap adjustments.
   assert.equal(suit.specs.length, 2);
   // Both languages from one file: the example file.
   await a.locator(".admin-shop-item", { hasText: "BCD jacket" }).click();
+  // The example link belongs to the product just opened.
+  await a.locator('a[download="contoh-produk.md"]').waitFor();
   const exampleText = await a.evaluate(async () => {
     const link = document.querySelector('a[download="contoh-produk.md"]');
     return (await fetch(link.href)).text();
