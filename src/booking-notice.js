@@ -46,3 +46,11 @@ export const noticeTexts = {
     confirm: "",
   },
 };
+
+// The tag beside a booking in the bell's list, when it is more than a
+// plain request.
+export const noticeTags = {
+  transfer: "Transfer bank",
+  online: "Bayar online",
+  confirmed: "Lunas",
+};

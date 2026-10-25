@@ -1,8 +1,9 @@
 "use client";
+import Link from "next/link";
 import { programTitle } from "../cms-model.js";
 import { bookingReference } from "../booking-model.js";
 import { paymentText, teamDates } from "../team-mail.js";
-import { noticeKind, noticeTexts } from "../booking-notice.js";
+import { noticeKind, noticeTags, noticeTexts } from "../booking-notice.js";
 import { useOutsideClose } from "./useOutsideClose.js";
 
 const money = (n) =>
@@ -96,5 +97,78 @@ export default function BookingNotice({
         </div>
       </section>
     </div>
+  );
+}
+
+const day = (value) => new Date(value + "T12:00:00");
+const shortDate = (value) =>
+  day(value).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+
+// The bell's list: each booking waiting on its own tile, with the date
+// on the left, the guest and what they booked, and a tag when they pay by
+// transfer or online.
+export function PendingBookings({ bookings, content, onOpen, onMore }) {
+  const thisYear = new Date().getFullYear();
+  return (
+    <>
+      <div className="admin-bell-head">
+        <h3>Perlu konfirmasi</h3>
+        {bookings.length > 0 && <span>{bookings.length}</span>}
+      </div>
+      {bookings.length ? (
+        <ul className="admin-bell-list">
+          {bookings.slice(0, 5).map((b) => {
+            const start = day(b.startDate);
+            const kind = noticeKind(b);
+            const details = [
+              programTitle(content, b.experience),
+              `${b.participants} orang`,
+            ];
+            if (b.endDate && b.endDate !== b.startDate)
+              details.push("s/d " + shortDate(b.endDate));
+            return (
+              <li key={b.id}>
+                <Link
+                  href={"/admin/calendar?booking=" + b.id}
+                  className={"admin-bell-item is-" + kind}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onOpen(b);
+                  }}
+                >
+                  <span className="admin-bell-date">
+                    <b>{start.getDate()}</b>
+                    <small>
+                      {start.toLocaleDateString("id-ID", { month: "short" })}
+                    </small>
+                    {start.getFullYear() !== thisYear && (
+                      <i>{start.getFullYear()}</i>
+                    )}
+                  </span>
+                  <span className="admin-bell-body">
+                    <span className="admin-bell-name">
+                      <b>{b.guestName || "Tamu"}</b>
+                      {noticeTags[kind] && <em>{noticeTags[kind]}</em>}
+                    </span>
+                    <small>{details.filter(Boolean).join(" · ")}</small>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="admin-bell-empty">Tidak ada reservasi menunggu.</p>
+      )}
+      {bookings.length > 5 && (
+        <Link
+          href="/admin/calendar#daftar-reservasi"
+          className="admin-bell-more"
+          onClick={onMore}
+        >
+          Lihat {bookings.length - 5} lainnya di Kalender reservasi
+        </Link>
+      )}
+    </>
   );
 }

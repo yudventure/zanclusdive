@@ -1100,6 +1100,156 @@ a.admin-stat:hover {
   margin: 0;
   color: #cfe3e6;
 }
+/* The bell's list: one tile per booking, the date on the left. */
+.admin-popover.admin-bell-popover {
+  width: 340px;
+  padding: 16px;
+}
+.admin-bell-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.admin-bell-head h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.admin-bell-head span {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fde8e4;
+  color: #b4412d;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.admin-bell-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-popover a.admin-bell-item {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 12px 10px 10px;
+  border-radius: 12px;
+  background: #f1f6f9;
+  color: var(--admin-ink);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.admin-popover a.admin-bell-item:hover,
+.admin-popover a.admin-bell-item:focus-visible {
+  background: #e3eef4;
+}
+.admin-bell-date {
+  display: grid;
+  justify-items: center;
+  padding: 6px 2px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 4px #10304a14;
+  line-height: 1.1;
+}
+.admin-bell-date b {
+  font-family: "Plus Jakarta Sans", Inter, sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--admin-navy);
+}
+.admin-bell-date small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #2d7a92;
+  white-space: nowrap;
+}
+.admin-bell-date i {
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--admin-muted);
+}
+.admin-bell-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.admin-bell-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.admin-bell-name b {
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.admin-bell-name em {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #e3f0f7;
+  color: #2b6584;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 700;
+}
+.admin-bell-item.is-transfer .admin-bell-name em {
+  background: #fff1d6;
+  color: #8a5a00;
+}
+.admin-bell-item.is-confirmed .admin-bell-name em {
+  background: #e3f5e8;
+  color: #23733d;
+}
+.admin-bell-body small {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--admin-muted);
+  overflow-wrap: anywhere;
+}
+.admin-popover p.admin-bell-empty {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f1f6f9;
+  color: var(--admin-muted);
+}
+.admin-popover a.admin-bell-more {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2d7a92;
+}
+/* On a phone the list hangs from the header, the full width less the
+   margins, so it does not run off the left edge. */
+@media (max-width: 560px) {
+  .admin-menu-anchor.admin-bell-anchor {
+    position: static;
+  }
+  .admin-popover.admin-bell-popover {
+    top: calc(100% + 6px);
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  @supports (height: 1svh) {
+    .admin-popover.admin-bell-popover {
+      max-height: calc(100svh - 120px);
+    }
+  }
+}
 .admin-alert-sound {
   display: grid;
   gap: 6px;

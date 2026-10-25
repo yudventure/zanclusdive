@@ -290,6 +290,20 @@ try {
   // not the full form.
   await page.goto(base + "/admin/customers", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Notifikasi reservasi" }).click();
+  // Each booking waiting is a tile of its own: the date, then the guest
+  // and what they booked.
+  const tile = page
+    .locator(".admin-bell-item")
+    .filter({ hasText: "Rombongan Sorong" });
+  assert.equal(
+    await tile.locator(".admin-bell-date b").textContent(),
+    String(Number(day.slice(8))),
+  );
+  assert.match(await tile.locator(".admin-bell-body").textContent(), /9 orang/);
+  shots &&
+    (await page
+      .locator(".admin-bell-popover")
+      .screenshot({ path: shots + "/98-lonceng.png" }));
   await page
     .locator(".admin-popover")
     .getByRole("link", { name: /Rombongan Sorong/ })

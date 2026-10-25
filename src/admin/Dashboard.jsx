@@ -23,7 +23,7 @@ import { fareNames, fareSettings } from "../fare-model.js";
 import BookingFare from "./BookingFare.jsx";
 import AgentsEditor from "./AgentsEditor.jsx";
 import PaymentMethodSettings from "./PaymentMethodSettings.jsx";
-import BookingNotice from "./BookingNotice.jsx";
+import BookingNotice, { PendingBookings } from "./BookingNotice.jsx";
 import {
   useBookingAlerts,
   BookingAlertToast,
@@ -979,7 +979,10 @@ export default function Dashboard({ section, account, today }) {
               Kembali ke situs <AdminIcon name="arrow" size={15} />
             </a>
             {can("bookings") && (
-              <div className="admin-menu-anchor" ref={bellRef}>
+              <div
+                className="admin-menu-anchor admin-bell-anchor"
+                ref={bellRef}
+              >
                 <button
                   className="admin-icon-button"
                   aria-label="Notifikasi reservasi"
@@ -997,25 +1000,16 @@ export default function Dashboard({ section, account, today }) {
                   )}
                 </button>
                 {notification && (
-                  <div className="admin-popover">
-                    <h3>Perlu konfirmasi</h3>
-                    {pending.length ? (
-                      pending.slice(0, 5).map((b) => (
-                        <Link
-                          key={b.id}
-                          href={"/admin/calendar?booking=" + b.id}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            setNotification(false);
-                            openNotice(b);
-                          }}
-                        >
-                          {b.guestName} · {dateLabel(b.startDate)}
-                        </Link>
-                      ))
-                    ) : (
-                      <p>Tidak ada reservasi menunggu.</p>
-                    )}
+                  <div className="admin-popover admin-bell-popover">
+                    <PendingBookings
+                      bookings={pending}
+                      content={content}
+                      onOpen={(b) => {
+                        setNotification(false);
+                        openNotice(b);
+                      }}
+                      onMore={() => setNotification(false)}
+                    />
                     <AlertSoundSetting
                       sound={alerts.sound}
                       setSound={alerts.setSound}
