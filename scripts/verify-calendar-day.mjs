@@ -286,18 +286,55 @@ try {
     "Ubah reservasi Rombongan Sorong",
   );
   await form.getByRole("button", { name: "Tutup", exact: true }).click();
+  // The bell shows a short notice with one button to confirm, on any page,
+  // not the full form.
   await page.goto(base + "/admin/customers", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Notifikasi reservasi" }).click();
   await page
     .locator(".admin-popover")
     .getByRole("link", { name: /Rombongan Sorong/ })
     .click();
-  await page.waitForURL(/\/admin\/calendar$/);
-  await form.waitFor();
+  const notice = page.locator(".admin-notice");
+  await notice.waitFor();
+  assert.match(page.url(), /\/admin\/customers$/);
+  assert.equal(await page.locator("#booking-editor").count(), 0);
+  assert.equal(await notice.locator("h2").textContent(), "Rombongan Sorong");
   assert.equal(
-    await form.locator("h2").textContent(),
-    "Ubah reservasi Rombongan Sorong",
+    await notice.locator(".admin-notice-eyebrow").textContent(),
+    "Booking baru, perlu konfirmasi",
   );
+  assert.match(
+    await notice.locator(".admin-notice-rows").textContent(),
+    /^Kegiatan[\s\S]*Tanggal[\s\S]*Peserta[\s\S]*Pembayaran/,
+  );
+  assert.doesNotMatch(await notice.textContent(), /[:;—]/);
+  shots && (await notice.screenshot({ path: `${shots}/97-konfirmasi.png` }));
+  await notice.getByRole("button", { name: "Konfirmasi booking" }).click();
+  await page
+    .locator(".admin-success", {
+      hasText: "Booking Rombongan Sorong dikonfirmasi.",
+    })
+    .waitFor();
+  assert.equal(await notice.count(), 0);
+  const sorong = (await (await api("/api/admin/state")).json()).bookings.find(
+    (b) => b.guestName === "Rombongan Sorong",
+  );
+  assert.equal(sorong.status, "confirmed");
+  // The team's email opens the same notice; a confirmed booking only shows.
+  await page.goto(base + `/admin/calendar?booking=${sorong.id}`, {
+    waitUntil: "networkidle",
+  });
+  await notice.waitFor();
+  assert.equal(
+    await notice.locator(".admin-notice-eyebrow").textContent(),
+    "Sudah dikonfirmasi",
+  );
+  assert.equal(
+    await notice.getByRole("button", { name: /Konfirmasi/ }).count(),
+    0,
+  );
+  await page.keyboard.press("Escape");
+  assert.equal(await notice.count(), 0);
   assert.ok(
     !(await page
       .locator(".admin-sidebar")

@@ -23,6 +23,7 @@ import { fareNames, fareSettings } from "../fare-model.js";
 import BookingFare from "./BookingFare.jsx";
 import AgentsEditor from "./AgentsEditor.jsx";
 import PaymentMethodSettings from "./PaymentMethodSettings.jsx";
+import BookingNotice from "./BookingNotice.jsx";
 import {
   useBookingAlerts,
   BookingAlertToast,
@@ -393,6 +394,52 @@ export default function Dashboard({ section, account, today }) {
     setBookings: (bookings) =>
       setData((current) => (current ? { ...current, bookings } : current)),
   });
+  // A booking opened from the corner note or the bell, as a short notice
+  // with one button to confirm it.
+  const [noticeId, setNoticeId] = useState(null);
+  const [noticeError, setNoticeError] = useState("");
+  const noticeBooking = noticeId
+    ? data?.bookings.find((b) => b.id === noticeId)
+    : null;
+  function openNotice(booking) {
+    setNoticeError("");
+    setNoticeId(booking.id);
+  }
+  async function confirmNotice(booking, kind) {
+    setBusy(true);
+    setNoticeError("");
+    setNotice("");
+    try {
+      // A request is confirmed as it is; a bank transfer that arrived is
+      // recorded paid and the guest gets the invoice.
+      const billing =
+        kind === "transfer"
+          ? { action: "paid", method: "transfer", paidOn: today, notify: true }
+          : { ...billingFrom(booking.payment, today), notify: false };
+      const saved = await request("/api/admin/bookings/" + booking.id, "PUT", {
+        ...booking,
+        email: booking.email ?? "",
+        lang: booking.lang ?? "id",
+        status: "confirmed",
+        billing,
+      });
+      alerts.markSeen(saved);
+      await refresh();
+      setNoticeId(null);
+      const name = booking.guestName || "tamu";
+      if (saved.mail && !saved.mail.ok)
+        setError(`Booking ${name} dikonfirmasi. ${saved.mail.error}`);
+      setNotice(
+        saved.mail?.ok
+          ? `Booking ${name} dikonfirmasi dan lunas. Invoice terkirim ke ${saved.mail.to}.`
+          : `Booking ${name} dikonfirmasi.`,
+      );
+    } catch (e) {
+      setNoticeError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   // The bell and the account menu close on a tap anywhere else.
   const bellRef = useOutsideClose(notification, () => setNotification(false));
   const ownerRef = useOutsideClose(ownerMenu, () => setOwnerMenu(false));
@@ -453,7 +500,8 @@ export default function Dashboard({ section, account, today }) {
   useEffect(() => {
     refresh();
   }, []);
-  // Links into the calendar from other pages: ?ubah=<id> opens that
+  // Links into the calendar from other pages: ?booking=<id> opens the
+  // notice of that reservation, ?ubah=<id> opens that
   // reservation in the full form, #daftar-reservasi goes to the list.
   const loaded = Boolean(data);
   useEffect(() => {
@@ -461,7 +509,13 @@ export default function Dashboard({ section, account, today }) {
     const url = new URL(window.location.href);
     const id = url.searchParams.get("ubah");
     const found = id && data.bookings.find((b) => b.id === id);
-    if (found) {
+    // ?booking=<id>, from the team's email, opens the short notice.
+    const noticeFor = url.searchParams.get("booking");
+    const noted = noticeFor && data.bookings.find((b) => b.id === noticeFor);
+    if (noted) {
+      openNotice(noted);
+      window.history.replaceState(null, "", "/admin/calendar");
+    } else if (found) {
       editReservation(found);
       window.history.replaceState(null, "", "/admin/calendar");
     } else if (url.hash === "#daftar-reservasi")
@@ -949,12 +1003,11 @@ export default function Dashboard({ section, account, today }) {
                       pending.slice(0, 5).map((b) => (
                         <Link
                           key={b.id}
-                          href={"/admin/calendar?ubah=" + b.id}
+                          href={"/admin/calendar?booking=" + b.id}
                           onClick={(event) => {
-                            setNotification(false);
-                            if (section !== "calendar") return;
                             event.preventDefault();
-                            editReservation(b);
+                            setNotification(false);
+                            openNotice(b);
                           }}
                         >
                           {b.guestName} · {dateLabel(b.startDate)}
@@ -1952,12 +2005,21 @@ export default function Dashboard({ section, account, today }) {
           `${b.guestName} · ${programTitle(content, b.experience)} · ${dateLabel(b.startDate)}`
         }
         onOpen={(event, b) => {
-          alerts.drop(b);
-          if (section !== "calendar") return;
           event.preventDefault();
-          editReservation(b);
+          alerts.drop(b);
+          openNotice(b);
         }}
       />
+      {noticeBooking && (
+        <BookingNotice
+          booking={noticeBooking}
+          content={content}
+          busy={busy}
+          error={noticeError}
+          onConfirm={confirmNotice}
+          onClose={() => setNoticeId(null)}
+        />
+      )}
     </div>
   );
 }

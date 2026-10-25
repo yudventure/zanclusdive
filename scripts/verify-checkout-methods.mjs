@@ -302,7 +302,7 @@ try {
   const team = await nextMail("tim@zanclus.test", mark, /^Booking baru/);
   assert.match(team.subject, /^Booking baru · Tamu Transfer · /);
   assert.match(team.body, /Menunggu transfer bank, batas/);
-  assert.match(team.body, /admin\/calendar\?ubah=/);
+  assert.match(team.body, /admin\/calendar\?booking=/);
   assert.equal(team.replyTo, "tamu@example.com");
   const guestOrder = await nextMail("tamu@example.com", mark);
   assert.match(guestOrder.body, /123 456 7890/);
@@ -319,18 +319,35 @@ try {
   assert.match(await a.title(), /^\(1\) /);
   if (shots)
     await toast.screenshot({ path: shots + "/admin-booking-toast.png" });
-  // It opens in the form; the team marks the transfer paid without a ring.
+  // It opens as a short notice, not the full form; once the transfer is
+  // in, one button confirms it as paid, without a ring.
   await toast.getByRole("link", { name: /Tamu Transfer/ }).click();
-  await a.locator("#booking-editor").waitFor();
+  const notice = a.locator(".admin-notice");
+  await notice.waitFor();
+  assert.equal(await a.locator("#booking-editor").count(), 0);
   assert.equal(await toast.count(), 0);
   assert.doesNotMatch(await a.title(), /^\(\d+\) /);
+  assert.equal(
+    await notice.locator(".admin-notice-eyebrow").textContent(),
+    "Menunggu transfer bank",
+  );
+  assert.equal(await notice.locator("h2").textContent(), "Tamu Transfer");
+  assert.match(
+    await notice.locator(".admin-notice-rows").textContent(),
+    /Diving[\s\S]*2 orang[\s\S]*Rp\s?2\.400\.000[\s\S]*Menunggu transfer bank, batas/,
+  );
+  if (shots)
+    await notice.screenshot({ path: shots + "/admin-booking-notice.png" });
   mark = smtp.messages.length;
+  await notice
+    .getByRole("button", { name: "Transfer sudah masuk, konfirmasi" })
+    .click();
   await a
-    .locator("#booking-editor")
-    .getByLabel("Pembayaran", { exact: true })
-    .selectOption("paid");
-  await a.getByRole("button", { name: "Simpan perubahan" }).click();
-  await a.getByText(/^Reservasi tersimpan\./).waitFor();
+    .getByText(
+      "Booking Tamu Transfer dikonfirmasi dan lunas. Invoice terkirim ke tamu@example.com.",
+    )
+    .waitFor();
+  assert.equal(await notice.count(), 0);
   booking = await order(transferId);
   assert.deepEqual(
     [booking.status, booking.payment.status, booking.payment.provider],

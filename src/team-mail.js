@@ -57,7 +57,7 @@ export function teamMail(kind, booking, { content, base }) {
   const phone = String(booking.phone ?? "").replace(/\D/g, "");
   const wa = phone ? `https://wa.me/${phone}` : "";
   const link = booking.id
-    ? `${base}/admin/calendar?ubah=${encodeURIComponent(booking.id)}`
+    ? `${base}/admin/calendar?booking=${encodeURIComponent(booking.id)}`
     : `${base}/admin/calendar#daftar-reservasi`;
   const rows = [
     ["Kode", reference],

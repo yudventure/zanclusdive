@@ -124,7 +124,7 @@ test("the team email names the guest, date, value and payment", () => {
   assert.match(mail.text, /Butuh wetsuit ukuran S/);
   assert.match(
     mail.html,
-    /https:\/\/zanclusdivecenter\.com\/admin\/calendar\?ubah=3f9a2c1b/,
+    /https:\/\/zanclusdivecenter\.com\/admin\/calendar\?booking=3f9a2c1b/,
   );
   assert.match(mail.html, /https:\/\/wa\.me\/6281234567890/);
   // No colons in what the team reads, apart from times and addresses.
@@ -234,4 +234,31 @@ test("PayPal income reaches the cashbook as PayPal", async () => {
     ["paypal", 2400000, "2026-10-19"],
   );
   assert.equal(paymentMethods.paypal, "PayPal");
+});
+
+test("a booking opened from the alert asks only for what fits it", async () => {
+  const { noticeKind, noticeTexts } = await import("../src/booking-notice.js");
+  const kinds = [
+    { status: "pending" },
+    booking,
+    { ...booking, payment: { provider: "paypal", status: "pending" } },
+    { ...booking, status: "confirmed", payment: { status: "paid" } },
+    { ...booking, status: "cancelled" },
+  ].map(noticeKind);
+  assert.deepEqual(kinds, [
+    "request",
+    "transfer",
+    "online",
+    "confirmed",
+    "closed",
+  ]);
+  assert.equal(noticeTexts.request.confirm, "Konfirmasi booking");
+  assert.equal(
+    noticeTexts.transfer.confirm,
+    "Transfer sudah masuk, konfirmasi",
+  );
+  assert.equal(noticeTexts.online.confirm, "");
+  for (const texts of Object.values(noticeTexts))
+    for (const text of Object.values(texts))
+      assert.doesNotMatch(text, /[:;—]/, text);
 });

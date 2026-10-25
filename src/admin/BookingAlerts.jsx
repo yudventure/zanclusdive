@@ -173,7 +173,7 @@ export function BookingAlertToast({ alerts, onOpen, onClose, label }) {
           <li key={kind + booking.id}>
             <span className={"admin-alert-kind " + kind}>{kinds[kind]}</span>
             <Link
-              href={"/admin/calendar?ubah=" + booking.id}
+              href={"/admin/calendar?booking=" + booking.id}
               onClick={(event) => onOpen(event, booking)}
             >
               {label(booking)}
