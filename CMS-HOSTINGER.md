@@ -66,6 +66,10 @@ Halaman admin kini menampilkan nama variabel yang belum terbaca dan syarat panja
 
 Server build Hostinger melaporkan banyak CPU tetapi membatasi jumlah thread per akun. Tanpa batas, Next.js menyalakan satu worker per CPU untuk mengumpulkan data halaman ("Collecting page data using 63 workers"), lalu build berhenti dengan `Resource temporarily unavailable (os error 11)` dan `SIGABRT`. `next.config.mjs` membatasinya ke satu worker (`experimental.cpus: 1`, `workerThreads: false`), jadi log build menulis "using 1 worker". Bila error yang sama masih muncul, deploy ulang sekali, karena batas thread di server build bersama bisa sedang penuh.
 
+## Jika hPanel menampilkan Vulnerabilities
+
+Halaman **Keamanan, Vulnerabilities** di hPanel mendaftar paket website yang punya celah keamanan yang sudah diumumkan, beserta versi perbaikannya. Setiap ZIP dan setiap push ke GitHub sekarang diperiksa dengan daftar yang sama. ZIP tidak dibuat selama masih ada celah, dan GitHub memeriksa ulang setiap pagi, karena celah baru bisa diumumkan untuk versi yang kemarin masih bersih. Bila daftar di hPanel tidak kosong, berarti versi yang sedang berjalan sudah lama. Pasang ZIP terbaru, atau minta pembaruan bila ZIP terbaru pun sudah tertinggal. Setelah deploy, daftar di hPanel kosong lagi saat pemindaian berikutnya.
+
 ## Jika login menampilkan error database
 
 Isi email/password admin pada `/admin`, lalu tekan **Periksa koneksi database**. Pemeriksaan dijalankan pada proses aplikasi yang sedang berjalan di Hostinger, memakai konfigurasi yang sama dengan CMS, tanpa membuat/menghapus tabel atau mengubah data. Kredensial admin diverifikasi sebelum informasi koneksi ditampilkan; pemeriksaan tetap dapat digunakan saat MySQL menolak koneksi. Tidak ada sesi login yang diterbitkan melalui pemeriksaan ini.

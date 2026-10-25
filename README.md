@@ -249,6 +249,10 @@ Tes browser memakai Chromium di `/usr/bin/chromium`; sesuaikan `executablePath` 
 
 Uji Dive Shop pada server demo lokal dengan `BASE_URL=http://127.0.0.1:3182 node scripts/verify-shop.mjs`. Tes memeriksa jual/rental gabungan, hitungan harga, pencarian/filter, pesan WhatsApp, CRUD katalog CMS, foto, penyimpanan setelah reload, dan tampilan mobile; konten katalog dikembalikan setelah pengujian. Tes ini hanya untuk instance demo lokal khusus pengujian, karena mengubah katalog dan menambah gambar uji.
 
+## Keamanan paket
+
+`npm run cek:keamanan` (`scripts/cek-keamanan.mjs`) menjalankan `npm audit` atas `package-lock.json` dan berhenti bila ada paket dengan celah keamanan, daftar yang sama dengan hPanel di Keamanan, Vulnerabilities. `npm run zip:hostinger` menjalankannya lebih dulu, jadi ZIP tidak dibuat selama masih ada celah. Di GitHub, `.github/workflows/keamanan-paket.yml` menjalankan pemeriksaan yang sama di setiap push dan setiap pagi 07:17 WIT, dan `.github/dependabot.yml` membuka pull request pembaruan keamanan serta pembaruan kecil harian. Pull request keamanan Dependabot perlu diaktifkan sekali di Settings, Code security, Dependabot security updates. Oktober 2026 next diperbarui dari 16.4.0 ke 16.4.3 dan nodemailer dari 10.0.10 ke 10.2.1 karena tiga celah next (dua kritis) dan tiga celah nodemailer.
+
 ## Admin CMS
 
 Footer bersama pada beranda dan Dive Shop memuat navigasi, WhatsApp, email, lokasi, dan ikon Instagram/Facebook/TikTok/YouTube. Ubah melalui `/admin/contact` lalu simpan; perubahan langsung tampil tanpa rebuild. Kosongkan tautan sosial untuk menyembunyikan ikonnya. Tautan sosial default pada demo membuka halaman platform, lalu dapat diganti dengan URL akun resmi. Pengaturan demo lama mendapat default ini sekali; tautan yang kemudian dikosongkan tetap tersembunyi.

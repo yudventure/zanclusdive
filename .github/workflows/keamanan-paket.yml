@@ -1,0 +1,25 @@
+# Checks package-lock.json for known security holes (npm audit) on every
+# push and pull request, and every morning at 07:17 WIT, because new holes
+# are published for packages that were clean the day before. A red check
+# means the site needs an update before the next deploy.
+name: Keamanan paket
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 22 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: node scripts/cek-keamanan.mjs
