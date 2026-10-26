@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import { useId } from "react";
 import ImageUpload from "./ImageUpload.jsx";
 import { builtInPhotos } from "../photography.js";
@@ -16,7 +17,7 @@ export default function PhotoField({
   const id = useId();
   return (
     <div className="admin-image-slot wide">
-      {value && <img src={value} alt={"Preview " + label} />}
+      <Thumb src={value} alt={"Preview " + label} />
       <strong>{label}</strong>
       <ImageUpload
         guide={guide}

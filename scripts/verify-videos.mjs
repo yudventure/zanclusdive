@@ -173,12 +173,13 @@ try {
   const facebookCover = savedVideos[3].poster;
   assert.match(facebookCover, /^\/api\/media\/[0-9a-f-]{36}$/);
   assert.equal(savedVideos[2].poster, undefined);
+  // The admin preview loads the cover's small copy, not the upload.
   assert.equal(
     await videoCards
       .nth(3)
       .locator(".admin-video-preview img")
       .getAttribute("src"),
-    facebookCover,
+    facebookCover + "?w=480",
   );
 
   // Homepage: between the ocean cards and the gallery button, 9:16, and the

@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import ShopEditor from "./ShopEditor.jsx";
@@ -1873,7 +1874,7 @@ export default function Dashboard({ section, account, today }) {
                       <div className="admin-image-grid">
                         {siteImageFields.map(([key, label, guide]) => (
                           <div key={key} className="admin-image-slot">
-                            <img
+                            <Thumb
                               src={content.images[key]}
                               alt={"Preview " + label}
                             />
@@ -1976,7 +1977,7 @@ export default function Dashboard({ section, account, today }) {
                     <div className="admin-media-grid">
                       {data.media.map((m) => (
                         <article key={m.id}>
-                          <img src={m.url} alt={m.name} />
+                          <Thumb src={m.url} alt={m.name} sizes="200px" />
                           <strong>{m.name}</strong>
                           <small>{Math.round(m.bytes / 1024)} KB</small>
                         </article>

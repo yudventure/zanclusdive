@@ -1,5 +1,5 @@
 import { getMedia } from "../../../../src/server/store.js";
-import { resizedImage } from "../../../../src/server/image-resize.js";
+import { keptCopy, resizedImage } from "../../../../src/server/image-resize.js";
 import { mediaWidths } from "../../../../src/photography.js";
 
 const headers = (mime, length) => ({
@@ -15,10 +15,17 @@ export async function GET(request, { params }) {
   if (!/^[a-f0-9-]{36}$/.test(id))
     return new Response("Not found", { status: 404 });
   try {
-    const media = await getMedia(id);
-    if (!media) return new Response("Not found", { status: 404 });
     const asked = Number(new URL(request.url).searchParams.get("w"));
     const width = mediaWidths.find((w) => w >= asked);
+    // A copy already made is sent without reading the upload, which in
+    // MySQL mode means loading the whole photo from the database.
+    const ready = asked > 0 && width ? await keptCopy(id, width) : null;
+    if (ready)
+      return new Response(new Uint8Array(ready), {
+        headers: headers("image/webp", ready.length),
+      });
+    const media = await getMedia(id);
+    if (!media) return new Response("Not found", { status: 404 });
     if (
       asked > 0 &&
       width &&

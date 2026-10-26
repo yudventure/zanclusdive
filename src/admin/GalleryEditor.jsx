@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import { cloneElement, useEffect, useId, useRef, useState } from "react";
 import { builtInPhotos } from "../photography.js";
 import {
@@ -164,8 +165,9 @@ function VideoList({ videos, update, busy, placePhoto }) {
                   {ready &&
                   videoCover(video, source) &&
                   !broken[videoCover(video, source)] ? (
-                    <img
+                    <Thumb
                       src={videoCover(video, source)}
+                      sizes="160px"
                       alt={"Sampul video " + (index + 1)}
                       onError={() =>
                         setBroken((current) => ({
@@ -358,7 +360,11 @@ export default function GalleryEditor({
               <div className="admin-gallery-item">
                 <div className="admin-gallery-photo">
                   {item.src && (
-                    <img src={item.src} alt={"Preview foto " + (index + 1)} />
+                    <Thumb
+                      src={item.src}
+                      alt={"Preview foto " + (index + 1)}
+                      sizes="240px"
+                    />
                   )}
                   <ImageUpload
                     compact

@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
 import ProductVisual from "../shop/ProductVisual.jsx";
@@ -816,7 +817,11 @@ function ProductPhotos({
         <ul className="admin-shop-photo-list">
           {images.map((src, index) => (
             <li key={src}>
-              <img src={src} alt={`Foto ${index + 1} ${product.name}`} />
+              <Thumb
+                src={src}
+                alt={`Foto ${index + 1} ${product.name}`}
+                sizes="160px"
+              />
               {index === 0 && <span className="admin-photo-cover">Utama</span>}
               <div>
                 {index > 0 && (

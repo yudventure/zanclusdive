@@ -310,6 +310,7 @@ Pembayaran PayPal sungguhan (`PAYPAL_MODE=live`) ditawarkan dengan `CMS_MODE=mys
 - **Sampul video.** Setiap video di deretan 9:16 menampilkan sampul seketika, dan sampul itu baru hilang saat videonya benar-benar berputar. Sampul TikTok diambil otomatis oleh server dari TikTok sekali, lalu disimpan. Instagram dan Facebook tidak memberi sampul, jadi unggah sendiri lewat **Situs web → Foto & media → Video vertikal → Upload sampul** (foto tegak 9:16). Sampul sendiri juga bisa menggantikan sampul TikTok atau YouTube.
 - **Foto seukuran layar.** Foto yang diunggah dikirim ke HP dalam ukuran kecil (sekitar 85 KB, bukan sekitar 500 KB). Salinannya dibuat server saat pertama diminta, jadi pengunjung pertama setelah upload menunggu sebentar, pengunjung berikutnya langsung cepat. Tidak ada pengaturan yang perlu diisi.
 - **Foto bawaan** website disimpan browser sehari, jadi halaman kedua dan kunjungan berikutnya tidak mengunduhnya lagi.
+- **Panel admin lebih ringan.** Pratinjau foto di panel (Foto & media, galeri, sampul video, Dive Shop, kursus, aktivitas, daftar harga) memakai salinan kecil yang sama, bukan foto asli, dan baru dimuat saat terlihat di layar. Delapan foto kamera yang dulu sekitar 19 MB kini sekitar 160 KB. Salinan yang sudah ada dikirim tanpa membaca foto aslinya dari database lebih dulu.
 
 ## Kalender reservasi
 

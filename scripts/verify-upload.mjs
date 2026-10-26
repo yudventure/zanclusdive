@@ -80,6 +80,12 @@ try {
     uploaded.name,
     "IMG_2041." + (uploaded.mime === "image/webp" ? "webp" : "jpg"),
   );
+  // The admin preview is the small copy, loaded when it comes into view,
+  // not the full upload.
+  const preview = slot.locator("img");
+  assert.equal(await preview.getAttribute("src"), hero + "?w=480");
+  assert.equal(await preview.getAttribute("loading"), "lazy");
+  assert.match(await preview.getAttribute("srcset"), /\?w=828 828w/);
   const visitor = await context.newPage();
   await visitor.goto(base + "/id", { waitUntil: "networkidle" });
   assert.equal(await visitor.locator(".hero-photo").getAttribute("src"), hero);

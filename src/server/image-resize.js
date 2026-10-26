@@ -68,6 +68,15 @@ export const keptImage = (name) =>
 export const keepImage = (name, data) =>
   /^[\w.-]{1,140}$/.test(name) ? keep(name, data) : Promise.resolve();
 
+// A copy made before, without the original: the photo route answers from
+// it before reading the upload from the database. Null when there is none
+// yet, or when the original is served instead.
+export async function keptCopy(key, width) {
+  if (!/^[\w-]{1,120}$/.test(key)) return null;
+  const kept = await cached(`${key}-w${width}.webp`);
+  return kept?.length ? kept : null;
+}
+
 // A WebP copy at most `width` pixels wide, or null to serve the original.
 // `key` names the copy in the cache (letters, digits and dashes).
 export async function resizedImage(key, original, width, quality = 74) {

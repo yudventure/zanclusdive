@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useId, useState } from "react";
 import { activityKeys, activityLabels } from "../activity-model.js";
@@ -177,7 +178,7 @@ export default function ActivitiesEditor({
         <h2>Sampul halaman detail</h2>
         <div className="admin-form">
           <div className="admin-image-slot wide">
-            <img src={activity.image} alt="Preview sampul" />
+            <Thumb src={activity.image} alt="Preview sampul" />
             <ImageUpload
               guide="activityCover"
               label="Ganti foto sampul"
@@ -234,7 +235,7 @@ export default function ActivitiesEditor({
         </p>
         <div className="admin-form">
           <div className="admin-image-slot wide">
-            <img src={activity.cardImage} alt="Preview foto kartu" />
+            <Thumb src={activity.cardImage} alt="Preview foto kartu" />
             <ImageUpload
               guide="activityCard"
               label="Ganti foto kartu"

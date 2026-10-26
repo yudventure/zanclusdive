@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import { cloneElement, useId } from "react";
 import { courseLimit, defaultCourses, partnerLimit } from "../course-model.js";
 import { builtInPhotos } from "../photography.js";
@@ -159,7 +160,11 @@ export default function CourseEditor({
             <div className="admin-gallery-item">
               <div className="admin-gallery-photo">
                 {course.image && (
-                  <img src={course.image} alt={"Foto " + course.name.id} />
+                  <Thumb
+                    src={course.image}
+                    alt={"Foto " + course.name.id}
+                    sizes="240px"
+                  />
                 )}
                 <ImageUpload
                   compact
