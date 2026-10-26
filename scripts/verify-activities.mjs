@@ -135,7 +135,22 @@ try {
     if (key === "diving") {
       assert.deepEqual(
         packages.map((item) => item.name.id),
-        ["Discovery Dive", "Pemandu selam"],
+        [
+          "Discovery Dive",
+          "Pemandu selam",
+          "Fun Dive Pesisir Waigeo",
+          "Fun Dive Kri, Mansuar & Arborek",
+          "Fun Dive Piaynemo",
+        ],
+      );
+      // The fun dives are priced per diver and follow the participants.
+      assert.deepEqual(
+        packages.slice(2).map((item) => [item.price, item.unit.id]),
+        [
+          [2100000, "/ penyelam"],
+          [2700000, "/ penyelam"],
+          [4000000, "/ penyelam"],
+        ],
       );
       assert.equal(
         await page.locator("#add-ons-title").textContent(),

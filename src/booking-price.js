@@ -126,7 +126,7 @@ export function defaultQuantity(unit, { participants, startDate, endDate }) {
   const u = String(unit ?? "").toLowerCase();
   const people = Math.max(1, Math.min(1000, Number(participants) || 1));
   const days = daysOf(startDate, endDate);
-  if (/orang|person|pax|peserta/.test(u)) return people;
+  if (/orang|person|pax|peserta|penyelam|diver/.test(u)) return people;
   if (/malam|night/.test(u)) return Math.max(1, days - 1);
   if (/hari|day/.test(u)) return days;
   return 1;

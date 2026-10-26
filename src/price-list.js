@@ -31,6 +31,46 @@ const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
   unit: { id: unitId, en: unitEn },
 });
 const day = ["/ hari", "/ day"];
+// Fun dive packages, one day per diver, priced as the owner set them in
+// October 2026. Lists saved before get them once (priceRevision).
+const funDives = [
+  {
+    id: "diving-fun-dive-waigeo",
+    ...item(
+      "Fun Dive Pesisir Waigeo",
+      "Fun Dive Waigeo Coastal Reefs",
+      "1 hari, 2x selam di terumbu pesisir Waigeo. Divemaster, tabung, pemberat, makan siang di pulau, kopi Papua, teh & buah",
+      "1 day, 2 dives on the Waigeo coastal reefs. Divemaster, tanks, weights, island picnic lunch, Papuan coffee, tea & fruit",
+      2100000,
+      "/ penyelam",
+      "/ diver",
+    ),
+  },
+  {
+    id: "diving-fun-dive-dampier",
+    ...item(
+      "Fun Dive Kri, Mansuar & Arborek",
+      "Fun Dive Kri, Mansuar & Arborek",
+      "1 hari, 3x selam di Selat Dampier. Grup kecil, 1 pemandu untuk 4 penyelam, speedboat, makan siang di pantai pasir atau dermaga",
+      "1 day, 3 dives in the Dampier Strait. Small group, 1 guide per 4 divers, speedboat, lunch on a sandbank or jetty",
+      2700000,
+      "/ penyelam",
+      "/ diver",
+    ),
+  },
+  {
+    id: "diving-fun-dive-piaynemo",
+    ...item(
+      "Fun Dive Piaynemo",
+      "Fun Dive Piaynemo",
+      "1 hari, 2x selam di Melissa's Garden & Batu Rufas, mendaki puncak Piaynemo, Telaga Bintang, speedboat, izin masuk, makan siang",
+      "1 day, 2 dives at Melissa's Garden & Batu Rufas, Piaynemo viewpoint hike, Star Lagoon, speedboat, entry permits, lunch",
+      4000000,
+      "/ penyelam",
+      "/ diver",
+    ),
+  },
+];
 const defaultItems = {
   diving: [
     item(
@@ -50,6 +90,7 @@ const defaultItems = {
       750000,
       ...day,
     ),
+    ...funDives,
   ],
   snorkeling: [
     item(
@@ -342,23 +383,42 @@ const movedFromDiving = {
   Dokumentasi: "extras",
 };
 
+// Packages added to saved lists once, in order: 1 the fun dives. A list
+// saved since keeps what the owner made of them, deleted ones included.
+export const priceRevision = 1;
+function withRevisions(list) {
+  if ((Number(list.revision) || 0) >= priceRevision) return list;
+  const diving = Array.isArray(list.diving) ? list.diving : [];
+  const added = funDives
+    .filter((entry) => !diving.some((other) => other?.id === entry.id))
+    .slice(0, Math.max(0, 8 - diving.length));
+  return {
+    ...list,
+    diving: [...diving, ...structuredClone(added)],
+    revision: priceRevision,
+  };
+}
+
 // Older CMS documents gain the default price list, lists added later, item
 // ids and add-ons, without losing saved prices. Documents from before rental
 // gear moved to the Dive Shop show the rental lists they showed then, and
 // move them to rental products.
 export function withPriceList(content) {
-  const saved = content.priceList;
-  if (!saved)
+  if (!content.priceList)
     return withRentalProducts({
       ...content,
-      priceList: structuredClone(legacyPriceList),
+      priceList: withRevisions(structuredClone(legacyPriceList)),
     });
+  const saved = withRevisions(content.priceList);
   const moved = saved.rentals === "shop";
   const missing = (moved ? allPriceGroups : idGroups).filter(
     (group) => !Array.isArray(saved[group]),
   );
   const legacy = !saved.addOns;
-  if (moved && !missing.length && !legacy && hasIds(saved)) return content;
+  if (moved && !missing.length && !legacy && hasIds(saved))
+    return saved === content.priceList
+      ? content
+      : { ...content, priceList: saved };
   let list = { ...saved };
   for (const group of missing)
     list[group] =
@@ -499,7 +559,7 @@ export const defaultPriceYear = 2026;
 export const priceYear = (priceList) =>
   Number.isInteger(priceList?.year) ? priceList.year : defaultPriceYear;
 export const defaultPriceList = withRentalProducts({
-  priceList: structuredClone(legacyPriceList),
+  priceList: withRevisions(structuredClone(legacyPriceList)),
 }).priceList;
 
 function text(value, label, max, required) {
@@ -572,7 +632,13 @@ export function validatePriceList(input, products = []) {
   const year = Number(input?.year);
   if (set && (!Number.isInteger(year) || year < 2020 || year > 2100))
     throw new Error("Tahun daftar harga harus antara 2020 dan 2100.");
-  return { ...list, addOns, rentals: "shop", ...(set ? { year } : {}) };
+  return {
+    ...list,
+    addOns,
+    rentals: "shop",
+    revision: priceRevision,
+    ...(set ? { year } : {}),
+  };
 }
 
 // The add-ons of an activity page, in the order they were picked, each with

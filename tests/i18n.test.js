@@ -193,7 +193,15 @@ test("package price list validates, migrates and keeps both languages", async ()
   older.priceList = { diving: [], snorkeling: [], trip: [] };
   const moved = withPriceList(older);
   const migrated = moved.priceList;
-  assert.deepEqual(migrated.diving, []);
+  // An older list gets the fun dive packages once.
+  assert.deepEqual(
+    migrated.diving.map((item) => item.id),
+    [
+      "diving-fun-dive-waigeo",
+      "diving-fun-dive-dampier",
+      "diving-fun-dive-piaynemo",
+    ],
+  );
   // Its rental lists were the defaults, already Dive Shop products: none
   // is copied.
   assert.equal(migrated.rentalBasics, undefined);

@@ -219,7 +219,7 @@ Halaman **Tentang kami** memuat bagian **Profil perusahaan** setelah cerita: nam
 
 ## Daftar harga, add-on, dan slot di keranjang
 
-Daftar harga diatur di **Situs web → Daftar harga**. Setiap aktivitas (Diving, Snorkeling, Trip laut) berisi layanan utamanya. Untuk diving itu Discovery Dive dan Pemandu selam.
+Daftar harga diatur di **Situs web → Daftar harga**. Setiap aktivitas (Diving, Snorkeling, Trip laut) berisi layanan utamanya. Untuk diving itu Discovery Dive, Pemandu selam, dan tiga paket fun dive satu hari per penyelam, yaitu **Fun Dive Pesisir Waigeo** (2x selam, Rp 2.100.000), **Fun Dive Kri, Mansuar & Arborek** (3x selam, Rp 2.700.000), dan **Fun Dive Piaynemo** (2x selam, Rp 4.000.000). Ketiga paket fun dive itu masuk sekali ke daftar yang sudah tersimpan saat versi Oktober 2026 terpasang. Harga, isi, atau paket yang dihapus sesudahnya tetap seperti yang disimpan. Satuan **/ penyelam** atau **/ diver** dihitung per peserta, sama seperti **/ orang**.
 
 Alat dan layanan lain ditawarkan sebagai **add-on**, diambil dari daftar yang sudah ada, jadi nama dan harganya cukup diubah di satu tempat.
 

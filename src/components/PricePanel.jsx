@@ -19,7 +19,8 @@ export default function PricePanel({
   return (
     <div className="price-card" inert={hidden} aria-hidden={hidden}>
       <div className="price-inner">
-        <div className="price-body">
+        {/* Scrolls by itself when the list is long (see globals.css). */}
+        <div className="price-body" data-lenis-prevent>
           <p className="price-kicker">{p.kicker(priceYear(priceList))}</p>
           <h3>{p.title(label)}</h3>
           <ul className="price-list">

@@ -18,11 +18,17 @@ const names = (items) => items.map((item) => item.name.id);
 const plain = (items) => structuredClone(items).map(({ id, ...item }) => item);
 const day = { id: "/ hari", en: "/ day" };
 const gear = defaultContent.shop.products;
+const funDiveNames = [
+  "Fun Dive Pesisir Waigeo",
+  "Fun Dive Kri, Mansuar & Arborek",
+  "Fun Dive Piaynemo",
+];
 
 test("diving lists the dives; gear, cameras and documentation are add-ons", () => {
   assert.deepEqual(names(defaultPriceList.diving), [
     "Discovery Dive",
     "Pemandu selam",
+    ...funDiveNames,
   ]);
   assert.deepEqual(names(defaultPriceList.extras), ["Dokumentasi"]);
   // The rental gear is in the Dive Shop, not in the price list.
@@ -105,7 +111,11 @@ test("a diving list saved before add-ons moves its gear and documentation", () =
   );
   const content = withPriceList({ priceList: saved });
   const list = content.priceList;
-  assert.deepEqual(names(list.diving), ["Discovery Dive", "Pemandu selam"]);
+  assert.deepEqual(names(list.diving), [
+    "Discovery Dive",
+    "Pemandu selam",
+    ...funDiveNames,
+  ]);
   // The owner's own price for documentation is kept.
   assert.deepEqual(
     list.extras.map((item) => [item.id, item.price]),
@@ -296,5 +306,42 @@ test("add-ons are paid with a main package, priced from the CMS", () => {
         { addOn: "extras-dokumentasi", itemName: "Dokumentasi", quantity: 31 },
       ]),
     /1–30/,
+  );
+});
+
+test("a list saved before the fun dives gets them once, at its end", () => {
+  const saved = structuredClone(defaultPriceList);
+  delete saved.revision;
+  saved.diving = saved.diving.filter((item) => !/^Fun Dive/.test(item.name.id));
+  saved.diving[1].price = 800000;
+  const list = withPriceList({ priceList: saved }).priceList;
+  assert.deepEqual(names(list.diving), [
+    "Discovery Dive",
+    "Pemandu selam",
+    ...funDiveNames,
+  ]);
+  // The owner's own prices stay, the fun dives come per diver.
+  assert.deepEqual(
+    list.diving.map((item) => item.price),
+    [1200000, 800000, 2100000, 2700000, 4000000],
+  );
+  assert.equal(list.diving[2].unit.en, "/ diver");
+  assert.equal(list.revision, 1);
+  // Saved from the admin, one deleted, it stays deleted.
+  const edited = validatePriceList(
+    { ...list, diving: list.diving.filter((item) => item.price !== 4000000) },
+    gear,
+  );
+  assert.equal(edited.revision, 1);
+  assert.equal(withPriceList({ priceList: edited }).priceList.diving.length, 4);
+  // A full list of eight gets only what fits.
+  const full = structuredClone(saved);
+  full.diving = Array.from({ length: 7 }, (_, i) => ({
+    ...saved.diving[0],
+    id: `diving-paket-${i}`,
+  }));
+  assert.deepEqual(
+    names(withPriceList({ priceList: full }).priceList.diving).slice(7),
+    ["Fun Dive Pesisir Waigeo"],
   );
 });

@@ -31,8 +31,9 @@ import {
   fareSettings,
 } from "../fare-model.js";
 
-// Per-person packages count one unit for each participant.
-const perPerson = (unit) => /orang|person|pax|peserta/i.test(unit || "");
+// Per-person (or per-diver) packages count one unit for each participant.
+const perPerson = (unit) =>
+  /orang|person|pax|peserta|penyelam|diver/i.test(unit || "");
 const unitName = (unit) => (unit || "").replace(/^\/\s*/, "");
 // "2 days", "3 people" in English; Indonesian units stay as they are.
 const unitCount = (unit, count, locale) => {

@@ -67,6 +67,8 @@ test("a picked price takes its quantity from the people or the days", () => {
     endDate: "2026-11-01",
   };
   assert.equal(defaultQuantity("/ orang", booking), 12);
+  assert.equal(defaultQuantity("/ penyelam", booking), 12);
+  assert.equal(defaultQuantity("/ diver", booking), 12);
   assert.equal(defaultQuantity("/ hari", booking), 4);
   assert.equal(defaultQuantity("/ malam", booking), 3);
   assert.equal(defaultQuantity("/ trip", booking), 1);

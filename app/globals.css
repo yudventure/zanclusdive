@@ -675,6 +675,21 @@ nav.open a::after {
   flex: 1;
   min-height: 0;
 }
+/* Beside the photos the card is as tall as the row, so a long list scrolls
+   inside it and fades out above the button. */
+@media (min-width: 861px) {
+  .price-body {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-bottom: 22px;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 calc(100% - 22px),
+      transparent
+    );
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent);
+  }
+}
 .price-kicker {
   margin: 0 0 4px;
   font-size: 10px;
@@ -1456,7 +1471,7 @@ nav.open a::after {
       opacity 0.35s ease;
   }
   .experience-item.is-open .price-card {
-    max-height: 1000px;
+    max-height: 2000px;
   }
   .price-inner {
     width: auto;
