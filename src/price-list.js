@@ -32,57 +32,137 @@ const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
   unit: { id: unitId, en: unitEn },
 });
 const day = ["/ hari", "/ day"];
+// What a package includes, one short line each, in both languages; the
+// cards list them under the package's short summary.
+const includes = (id, en) => ({ includes: { id, en } });
+// Packages whose summary once held what they include. Saved lists still
+// holding that text get the short summary and the list once (revision 3).
+const packageDetails = {
+  "diving-discovery-dive": {
+    before:
+      "2x selam + pemandu. Gratis dokumentasi bawah air untuk lebih dari 4 peserta",
+    info: { id: "Selam pertama, 2x selam", en: "Your first dive, 2 dives" },
+    ...includes(
+      [
+        "Pemandu selam",
+        "Gratis dokumentasi bawah air untuk lebih dari 4 peserta",
+      ],
+      ["Dive guide", "Free underwater documentation for groups over 4"],
+    ),
+  },
+  "diving-fun-dive-waigeo": {
+    before:
+      "1 hari, 2x selam di terumbu pesisir Waigeo. Divemaster, tabung, pemberat, makan siang di pulau, kopi Papua, teh & buah",
+    info: {
+      id: "1 hari, 2x selam di terumbu pesisir Waigeo",
+      en: "1 day, 2 dives on the Waigeo coastal reefs",
+    },
+    ...includes(
+      [
+        "Divemaster",
+        "Tabung dan pemberat",
+        "Makan siang di pulau",
+        "Kopi Papua, teh & buah segar",
+        "Briefing taman laut sebelum menyelam",
+      ],
+      [
+        "Divemaster",
+        "Tanks and weights",
+        "Island picnic lunch",
+        "Papuan coffee, tea & fresh fruit",
+        "Marine park pre-dive briefing",
+      ],
+    ),
+  },
+  "diving-fun-dive-dampier": {
+    before:
+      "1 hari, 3x selam di Selat Dampier. Grup kecil, 1 pemandu untuk 4 penyelam, speedboat, makan siang di pantai pasir atau dermaga",
+    info: {
+      id: "1 hari, 3x selam di Selat Dampier",
+      en: "1 day, 3 dives in the Dampier Strait",
+    },
+    ...includes(
+      [
+        "Grup kecil, 1 pemandu untuk 4 penyelam",
+        "Speedboat",
+        "Makan siang di pantai pasir atau dermaga",
+      ],
+      [
+        "Small group, 1 guide per 4 divers",
+        "Speedboat transfer",
+        "Lunch on a sandbank or jetty",
+      ],
+    ),
+  },
+  "diving-fun-dive-piaynemo": {
+    before:
+      "1 hari, 2x selam di Melissa's Garden & Batu Rufas, mendaki puncak Piaynemo, Telaga Bintang, speedboat, izin masuk, makan siang",
+    info: {
+      id: "1 hari, 2x selam di Melissa's Garden & Batu Rufas",
+      en: "1 day, 2 dives at Melissa's Garden & Batu Rufas",
+    },
+    ...includes(
+      [
+        "Mendaki ke puncak Piaynemo",
+        "Singgah di Telaga Bintang",
+        "Speedboat dan izin masuk pulau",
+        "Makan siang di pulau, buah, kopi & teh",
+      ],
+      [
+        "Piaynemo viewpoint hike",
+        "Stop at the Star Lagoon",
+        "Speedboat and island entry permits",
+        "Island lunch, fruit, coffee & tea",
+      ],
+    ),
+  },
+};
+const detailed = (id, entry) => ({
+  ...entry,
+  info: structuredClone(packageDetails[id].info),
+  includes: structuredClone(packageDetails[id].includes),
+});
 // Fun dive packages, one day per diver, priced as the owner set them in
 // October 2026. Lists saved before get them once (priceRevision), and a
 // photo of the place (packagePhotos).
 const funDives = [
-  {
-    id: "diving-fun-dive-waigeo",
-    ...item(
-      "Fun Dive Pesisir Waigeo",
-      "Fun Dive Waigeo Coastal Reefs",
-      "1 hari, 2x selam di terumbu pesisir Waigeo. Divemaster, tabung, pemberat, makan siang di pulau, kopi Papua, teh & buah",
-      "1 day, 2 dives on the Waigeo coastal reefs. Divemaster, tanks, weights, island picnic lunch, Papuan coffee, tea & fruit",
-      2100000,
-      "/ penyelam",
-      "/ diver",
-    ),
-  },
-  {
-    id: "diving-fun-dive-dampier",
-    ...item(
-      "Fun Dive Kri, Mansuar & Arborek",
-      "Fun Dive Kri, Mansuar & Arborek",
-      "1 hari, 3x selam di Selat Dampier. Grup kecil, 1 pemandu untuk 4 penyelam, speedboat, makan siang di pantai pasir atau dermaga",
-      "1 day, 3 dives in the Dampier Strait. Small group, 1 guide per 4 divers, speedboat, lunch on a sandbank or jetty",
-      2700000,
-      "/ penyelam",
-      "/ diver",
-    ),
-  },
-  {
-    id: "diving-fun-dive-piaynemo",
-    ...item(
-      "Fun Dive Piaynemo",
-      "Fun Dive Piaynemo",
-      "1 hari, 2x selam di Melissa's Garden & Batu Rufas, mendaki puncak Piaynemo, Telaga Bintang, speedboat, izin masuk, makan siang",
-      "1 day, 2 dives at Melissa's Garden & Batu Rufas, Piaynemo viewpoint hike, Star Lagoon, speedboat, entry permits, lunch",
-      4000000,
-      "/ penyelam",
-      "/ diver",
-    ),
-  },
-];
+  [
+    "diving-fun-dive-waigeo",
+    "Fun Dive Pesisir Waigeo",
+    "Fun Dive Waigeo Coastal Reefs",
+    2100000,
+  ],
+  [
+    "diving-fun-dive-dampier",
+    "Fun Dive Kri, Mansuar & Arborek",
+    "Fun Dive Kri, Mansuar & Arborek",
+    2700000,
+  ],
+  [
+    "diving-fun-dive-piaynemo",
+    "Fun Dive Piaynemo",
+    "Fun Dive Piaynemo",
+    4000000,
+  ],
+].map(([id, nameId, nameEn, price]) =>
+  detailed(id, {
+    id,
+    ...item(nameId, nameEn, "", "", price, "/ penyelam", "/ diver"),
+  }),
+);
 const defaultItems = {
   diving: [
-    item(
-      "Discovery Dive",
-      "Discovery Dive",
-      "2x selam + pemandu. Gratis dokumentasi bawah air untuk lebih dari 4 peserta",
-      "2 dives + guide. Free underwater documentation for groups over 4",
-      1200000,
-      "/ orang",
-      "/ person",
+    detailed(
+      "diving-discovery-dive",
+      item(
+        "Discovery Dive",
+        "Discovery Dive",
+        "",
+        "",
+        1200000,
+        "/ orang",
+        "/ person",
+      ),
     ),
     item(
       "Pemandu selam",
@@ -386,9 +466,10 @@ const movedFromDiving = {
 };
 
 // Changes made to saved lists once, in order: 1 the fun dives, 2 a photo
-// on the diving packages. A list saved since keeps what the owner made of
-// them, deleted packages and removed photos included.
-export const priceRevision = 2;
+// on the diving packages, 3 what they include as a list. A list saved
+// since keeps what the owner made of them, deleted packages and removed
+// photos included.
+export const priceRevision = 3;
 // The site's own photos until the owner uploads one of the place itself:
 // gearing up on the boat, a diver over the reef, a coral reef, the
 // owner's photo of a diver and a turtle in the Dampier Strait, and the
@@ -426,11 +507,24 @@ function withRevisions(list) {
       ),
     ];
   diving = diving.map((entry) => {
-    if (!entry || entry.image) return entry;
+    if (!entry) return entry;
     const photo = packagePhotos.find(
       ([id, name]) => entry.id === id || (!entry.id && entry.name?.id === name),
     );
-    return photo ? { ...entry, image: photo[2] } : entry;
+    let next = entry;
+    if (revision < 2 && photo && !entry.image)
+      next = { ...next, image: photo[2] };
+    // Only a summary still as it shipped is split; one the owner wrote
+    // stays as it is.
+    const id = entry.id ?? photo?.[0];
+    if (
+      revision < 3 &&
+      packageDetails[id] &&
+      !entry.includes &&
+      entry.info?.id === packageDetails[id].before
+    )
+      next = detailed(id, next);
+    return next;
   });
   return { ...list, diving, revision: priceRevision };
 }
@@ -613,6 +707,27 @@ function text(value, label, max, required) {
   return out;
 }
 
+// Up to 8 lines of what a package includes, per language, blank lines
+// left out.
+export const includeLimit = 8;
+function lines(value) {
+  const out = {};
+  for (const lang of ["id", "en"]) {
+    const list = value?.[lang] ?? [];
+    if (
+      !Array.isArray(list) ||
+      list.some((line) => typeof line !== "string" || line.length > 100)
+    )
+      throw new Error("Isi paket pada daftar harga tidak valid.");
+    out[lang] = list.map((line) => line.trim()).filter(Boolean);
+    if (out[lang].length > includeLimit)
+      throw new Error(
+        `Isi paket berisi maksimal ${includeLimit} baris per bahasa.`,
+      );
+  }
+  return out;
+}
+
 // "products" are the saved catalog, for add-ons that are rental gear.
 export function validatePriceList(input, products = []) {
   const ided = withIds(input ?? {});
@@ -629,7 +744,8 @@ export function validatePriceList(input, products = []) {
             throw new Error(
               "Harga pada daftar harga harus berupa rupiah positif.",
             );
-          // A photo is kept only when the item has one.
+          // What it includes and its photo are kept only when set.
+          const included = lines(entry.includes);
           const image =
             typeof entry.image === "string" && entry.image.trim()
               ? imageURL(entry.image)
@@ -640,6 +756,9 @@ export function validatePriceList(input, products = []) {
             info: text(entry.info, "Keterangan", 160, false),
             price,
             unit: text(entry.unit, "Satuan", 20, false),
+            ...(included.id.length || included.en.length
+              ? { includes: included }
+              : {}),
             ...(image ? { image } : {}),
           };
         }),
@@ -721,3 +840,9 @@ export function addOnItems(priceList, activity, products = []) {
 // A text in the visitor's language, falling back to Indonesian.
 export const priceText = (value, locale) =>
   (locale === "en" && value.en) || value.id;
+// What a package includes in the visitor's language, falling back to the
+// Indonesian list.
+export const priceIncludes = (item, locale) =>
+  (locale === "en" && item?.includes?.en?.length
+    ? item.includes.en
+    : item?.includes?.id) ?? [];

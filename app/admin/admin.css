@@ -1116,6 +1116,9 @@
   display: flex;
   gap: 4px;
 }
+.admin-price-includes {
+  margin-top: 14px;
+}
 /* The package photo under its texts, as wide as the card on the site. */
 .admin-price-photo {
   display: grid;

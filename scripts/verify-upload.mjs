@@ -228,7 +228,7 @@ try {
   await visitor.goto(base + "/id/diving", { waitUntil: "networkidle" });
   assert.equal(
     await visitor
-      .locator(".activity-prices li", { hasText: "Fun Dive Piaynemo" })
+      .locator(".activity-prices > li", { hasText: "Fun Dive Piaynemo" })
       .locator(".activity-price-photo")
       .getAttribute("src"),
     packagePhoto,

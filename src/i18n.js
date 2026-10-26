@@ -384,6 +384,7 @@ const id = {
     addOnTag: "Add-on",
     addOnsLabel: "Add-on",
     addOnsTitle: (label) => `Add-on ${label.toLowerCase()}`,
+    includesLabel: (name) => `Yang termasuk dalam ${name}`,
     addOnsIntro:
       "Tambahkan kalau perlu, bersama paket utama di atas. Alat dan layanannya sama dengan yang ada di Dive Shop dan layanan Zanclus lainnya.",
     addOnsPick: "Mau tambah sesuatu?",
@@ -1713,6 +1714,7 @@ const en = {
     addOnTag: "Add-on",
     addOnsLabel: "Add-ons",
     addOnsTitle: (label) => `${label} add-ons`,
+    includesLabel: (name) => `What ${name} includes`,
     addOnsIntro:
       "Add them if you need, together with a main package above. The gear and services are the same ones offered in our Dive Shop and other Zanclus services.",
     addOnsPick: "Anything to add?",

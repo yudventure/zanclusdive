@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   addOnItems,
   addOnLimit,
+  priceIncludes,
   allPriceGroups,
   defaultPriceList,
   legacyPriceList,
@@ -326,13 +327,13 @@ test("a list saved before the fun dives gets them once, at its end", () => {
     [1200000, 800000, 2100000, 2700000, 4000000],
   );
   assert.equal(list.diving[2].unit.en, "/ diver");
-  assert.equal(list.revision, 2);
+  assert.equal(list.revision, 3);
   // Saved from the admin, one deleted, it stays deleted.
   const edited = validatePriceList(
     { ...list, diving: list.diving.filter((item) => item.price !== 4000000) },
     gear,
   );
-  assert.equal(edited.revision, 2);
+  assert.equal(edited.revision, 3);
   assert.equal(withPriceList({ priceList: edited }).priceList.diving.length, 4);
   // A full list of eight gets only what fits.
   const full = structuredClone(saved);
@@ -406,5 +407,92 @@ test("each diving package shows a photo of the place, once", () => {
         gear,
       ),
     /HTTPS atau aset/,
+  );
+});
+
+test("a package lists what it includes, split once from its old summary", () => {
+  const waigeo = defaultPriceList.diving.find(
+    (item) => item.id === "diving-fun-dive-waigeo",
+  );
+  assert.equal(waigeo.info.id, "1 hari, 2x selam di terumbu pesisir Waigeo");
+  assert.deepEqual(priceIncludes(waigeo, "en"), [
+    "Divemaster",
+    "Tanks and weights",
+    "Island picnic lunch",
+    "Papuan coffee, tea & fresh fruit",
+    "Marine park pre-dive briefing",
+  ]);
+  // Without English lines, English visitors read the Indonesian ones.
+  assert.deepEqual(
+    priceIncludes({ includes: { id: ["Divemaster"], en: [] } }, "en"),
+    ["Divemaster"],
+  );
+  assert.deepEqual(priceIncludes({}, "id"), []);
+  // A list saved at revision 2 with the long summaries: the ones still as
+  // they shipped are split, the one the owner rewrote stays.
+  const saved = structuredClone(defaultPriceList);
+  saved.revision = 2;
+  const before = {
+    "diving-discovery-dive": [
+      "2x selam + pemandu. Gratis dokumentasi bawah air untuk lebih dari 4 peserta",
+      "2 dives + guide. Free underwater documentation for groups over 4",
+    ],
+    "diving-fun-dive-waigeo": [
+      "1 hari, 2x selam di terumbu pesisir Waigeo. Divemaster, tabung, pemberat, makan siang di pulau, kopi Papua, teh & buah",
+      "1 day, 2 dives on the Waigeo coastal reefs. Divemaster, tanks, weights, island picnic lunch, Papuan coffee, tea & fruit",
+    ],
+    "diving-fun-dive-dampier": ["Paket favorit tamu kami", ""],
+  };
+  saved.diving = saved.diving.map(({ includes, ...item }) =>
+    before[item.id]
+      ? { ...item, info: { id: before[item.id][0], en: before[item.id][1] } }
+      : item,
+  );
+  const list = withPriceList({ priceList: saved }).priceList;
+  const byId = Object.fromEntries(list.diving.map((item) => [item.id, item]));
+  assert.equal(
+    byId["diving-discovery-dive"].info.id,
+    "Selam pertama, 2x selam",
+  );
+  assert.equal(byId["diving-discovery-dive"].includes.id.length, 2);
+  assert.equal(byId["diving-fun-dive-waigeo"].includes.en.length, 5);
+  assert.equal(
+    byId["diving-fun-dive-dampier"].info.id,
+    "Paket favorit tamu kami",
+  );
+  assert.equal(byId["diving-fun-dive-dampier"].includes, undefined);
+  assert.equal(list.revision, 3);
+  // Saved from the admin: blank lines go, empty lists are not kept, and
+  // more than eight lines are refused.
+  const kept = validatePriceList(
+    {
+      ...list,
+      diving: list.diving.map((item, i) =>
+        i === 0
+          ? { ...item, includes: { id: ["  Pemandu ", "", "Foto"], en: [] } }
+          : i === 1
+            ? { ...item, includes: { id: [""], en: [""] } }
+            : item,
+      ),
+    },
+    gear,
+  );
+  assert.deepEqual(kept.diving[0].includes, {
+    id: ["Pemandu", "Foto"],
+    en: [],
+  });
+  assert.equal("includes" in kept.diving[1], false);
+  assert.throws(
+    () =>
+      validatePriceList(
+        {
+          ...list,
+          diving: [
+            { ...list.diving[0], includes: { id: Array(9).fill("x"), en: [] } },
+          ],
+        },
+        gear,
+      ),
+    /maksimal 8 baris/,
   );
 });

@@ -149,7 +149,7 @@ try {
         await page.locator(".activity-prices .activity-price-photo").count(),
         packages.length,
       );
-      const lone = page.locator(".activity-prices li").last();
+      const lone = page.locator(".activity-prices > li").last();
       const [lonePhoto, loneName] = await Promise.all([
         lone.locator(".activity-price-photo").boundingBox(),
         lone.locator("strong").boundingBox(),
@@ -157,6 +157,22 @@ try {
       assert.ok(
         lonePhoto.x + lonePhoto.width <= loneName.x,
         "photo on the left",
+      );
+      // No colored line down the side, and what each fun dive includes is a
+      // checked list inside its card.
+      assert.equal(
+        await lone.evaluate((el) => getComputedStyle(el).borderLeftWidth),
+        "1px",
+      );
+      assert.deepEqual(
+        await page
+          .locator(".activity-prices > li", {
+            hasText: "Fun Dive Kri, Mansuar & Arborek",
+          })
+          .locator(".activity-price-includes li")
+          .allTextContents(),
+        packages.find((item) => item.id === "diving-fun-dive-dampier").includes
+          .id,
       );
       // The fun dives are priced per diver and follow the participants.
       assert.deepEqual(

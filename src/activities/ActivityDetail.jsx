@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import ScrollEffects from "../components/ScrollEffects.jsx";
 import { photoSrcSet } from "../photography.js";
 import { activityInquiry } from "../activity-model.js";
-import { addOnItems, priceText } from "../price-list.js";
+import { addOnItems, priceIncludes, priceText } from "../price-list.js";
 import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
 import ActivityCards from "./ActivityCards.jsx";
@@ -1034,6 +1034,7 @@ export default function ActivityDetail({
                     <ul className="activity-prices">
                       {prices.map((item, index) => {
                         const name = priceText(item.name, locale);
+                        const included = priceIncludes(item, locale);
                         const payable = packages.some(
                           (entry) => entry.index === index,
                         );
@@ -1059,6 +1060,16 @@ export default function ActivityDetail({
                               <strong>{name}</strong>
                               {priceText(item.info, locale) && (
                                 <small>{priceText(item.info, locale)}</small>
+                              )}
+                              {included.length > 0 && (
+                                <ul
+                                  className="activity-price-includes"
+                                  aria-label={p.includesLabel(name)}
+                                >
+                                  {included.map((line) => (
+                                    <li key={line}>{line}</li>
+                                  ))}
+                                </ul>
                               )}
                             </span>
                             <div className="activity-price-foot">

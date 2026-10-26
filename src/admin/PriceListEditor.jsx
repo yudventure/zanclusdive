@@ -5,6 +5,7 @@ import {
   allPriceGroups,
   defaultPriceYear,
   extraLabels,
+  includeLimit,
   priceGroups,
   priceYear,
   shopAddOn,
@@ -228,6 +229,24 @@ export default function PriceListEditor({
       list.map((entry) => (entry.id === id ? { ...entry, image: url } : entry)),
     );
   }
+  // One line per thing the package includes; blank lines are dropped when
+  // the list is saved.
+  function setIncludes(id, lang, lines) {
+    update(group, (list) =>
+      list.map((entry) =>
+        entry.id === id
+          ? {
+              ...entry,
+              includes: {
+                id: entry.includes?.id ?? [],
+                en: entry.includes?.en ?? [],
+                [lang]: lines,
+              },
+            }
+          : entry,
+      ),
+    );
+  }
   function move(index, delta) {
     const next = [...items];
     const [item] = next.splice(index, 1);
@@ -372,6 +391,30 @@ export default function PriceListEditor({
               {text(index, "unit", "id", "Satuan (Indonesia)", 20, "/ hari")}
               {text(index, "unit", "en", "Unit (English)", 20, "/ day")}
             </div>
+            {/* What it includes, Indonesian and English side by side. */}
+            {priceGroups.includes(group) && (
+              <div className="admin-form-grid admin-price-includes">
+                {[
+                  ["id", "Termasuk (Indonesia)", "Divemaster"],
+                  ["en", "Included (English)", "Divemaster"],
+                ].map(([lang, label, placeholder]) => (
+                  <Field
+                    key={lang}
+                    label={label}
+                    hint={`Satu per baris, maksimal ${includeLimit}. Tampil sebagai daftar bercentang di kartu paket.`}
+                  >
+                    <textarea
+                      rows={4}
+                      placeholder={placeholder}
+                      value={(item.includes?.[lang] ?? []).join("\n")}
+                      onChange={(e) =>
+                        setIncludes(item.id, lang, e.target.value.split("\n"))
+                      }
+                    />
+                  </Field>
+                ))}
+              </div>
+            )}
             {placePhoto && priceGroups.includes(group) && (
               <div className="admin-price-photo">
                 <PhotoField
