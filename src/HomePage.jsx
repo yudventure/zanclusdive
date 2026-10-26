@@ -4,6 +4,7 @@ import SiteNavLinks from "./components/SiteNavLinks.jsx";
 import PartnerMarquee from "./course/PartnerMarquee.jsx";
 import { initializeWebsite } from "./main.js";
 import ShopTeaser from "./shop/ShopTeaser.jsx";
+import TravelRoute from "./components/TravelRoute.jsx";
 import SiteFooter from "./components/SiteFooter.jsx";
 import ContactIcon from "./components/ContactIcon.jsx";
 import ScrollEffects from "./components/ScrollEffects.jsx";
@@ -11,21 +12,40 @@ import HeroWeather from "./components/HeroWeather.jsx";
 import PricePanel from "./components/PricePanel.jsx";
 import DiveSiteMap from "./components/DiveSiteMap.jsx";
 import DiveGallery from "./components/DiveGallery.jsx";
+import DiveVideos from "./components/DiveVideos.jsx";
+import EventBanners from "./components/EventBanner.jsx";
 import LanguageSwitch from "./components/LanguageSwitch.jsx";
 import { photoSrcSet } from "./photography.js";
 import { defaultMapQuery } from "./contact-model.js";
+import { withService } from "./service-model.js";
 import { dictionary, formatIDR, localeHref } from "./i18n.js";
+import { LockedSection, LockedBadge } from "./components/Locked.jsx";
+import { noLocks, pageLocked, sectionLocked } from "./developer.js";
 
-function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
+function ExperienceCard({
+  activityKey,
+  activity,
+  className,
+  kicker,
+  locale,
+  locked,
+}) {
   const t = dictionary(locale);
   const label = t.activityLabels[activityKey];
+  // A page locked in developer mode keeps its card, marked and not a link.
+  const Card = locked ? "div" : "a";
   return (
-    <a
-      className={`course-card ${className}`}
+    <Card
+      className={`course-card ${className}${locked ? " is-locked" : ""}`}
       data-activity={activityKey}
-      href={localeHref(locale, `/${activityKey}`)}
-      aria-label={t.common.viewDetailOf(label)}
+      {...(locked
+        ? {}
+        : {
+            href: localeHref(locale, `/${activityKey}`),
+            "aria-label": t.common.viewDetailOf(label),
+          })}
     >
+      {locked && <LockedBadge locale={locale} />}
       <img
         className="course-photo"
         data-depth
@@ -60,10 +80,87 @@ function ExperienceCard({ activityKey, activity, className, kicker, locale }) {
           {t.common.viewDetail} <span aria-hidden="true">↗</span>
         </span>
       </div>
-    </a>
+    </Card>
   );
 }
-export default function HomePage({ content, locale = "en" }) {
+// The experience items stacked on phones and small tablets: each sticks
+// once it is read to its end (or under the header when it fits on the
+// screen), and the next one rises over it while it folds back, shrinks a
+// little and dims. Only CSS variables change while scrolling (--stick, the
+// sticky top, and --fold, 0 to 1), so nothing on the page moves or jumps.
+// Returns whether the items are stacked.
+function useFoldingStack(row, count) {
+  const [stacked, setStacked] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 860px)");
+    const sync = () => setStacked(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  useEffect(() => {
+    const list = row.current;
+    if (!stacked || !list) return;
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const items = () => [...list.children];
+    let frame = 0;
+    function update() {
+      frame = 0;
+      const header =
+        document.querySelector(".site-header")?.getBoundingClientRect()
+          .bottom ?? 0;
+      const top = Math.max(0, header) + 12;
+      const all = items();
+      all.forEach((item, index) => {
+        const height = item.offsetHeight;
+        item.style.setProperty(
+          "--stick",
+          `${Math.round(Math.min(top, innerHeight - height - 16))}px`,
+        );
+        const next = all[index + 1];
+        let fold = 0;
+        if (next && !still.matches) {
+          const box = item.getBoundingClientRect();
+          const bottom = Math.min(box.bottom, innerHeight);
+          const seen = Math.max(1, bottom - Math.max(box.top, top));
+          fold = (bottom - next.getBoundingClientRect().top) / seen;
+        }
+        item.style.setProperty(
+          "--fold",
+          Math.min(1, Math.max(0, fold)).toFixed(3),
+        );
+      });
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    const sizes = new ResizeObserver(schedule);
+    for (const item of items()) sizes.observe(item);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      sizes.disconnect();
+      for (const item of items()) {
+        item.style.removeProperty("--stick");
+        item.style.removeProperty("--fold");
+      }
+    };
+  }, [stacked, count, row]);
+  return stacked;
+}
+
+export default function HomePage({
+  content,
+  locale = "en",
+  locks = noLocks,
+  payments,
+  banners = [],
+  stock = {},
+}) {
   const motionRoot = useRef(null);
   const t = dictionary(locale);
   const h = t.home;
@@ -71,10 +168,13 @@ export default function HomePage({ content, locale = "en" }) {
     (key) => content.activities[key].enabled,
   );
   const [openActivity, setOpenActivity] = useState(null);
-  // Hover opens items only in the side-by-side layout; stacked layouts and
-  // touch screens use the "see prices" buttons, avoiding layout jumps.
+  // Hover opens items only in the side-by-side layout.
   const hoverLayout = () =>
     window.matchMedia("(hover: hover) and (min-width: 861px)").matches;
+  // Stacked on phones and small tablets, every item shows its prices and
+  // the items fold over one another while scrolling (useFoldingStack).
+  const experienceRow = useRef(null);
+  const stacked = useFoldingStack(experienceRow, visibleActivities.length);
   const kickers = {
     diving: h.divingKicker,
     snorkeling: h.snorkelingKicker,
@@ -165,6 +265,8 @@ export default function HomePage({ content, locale = "en" }) {
             <img
               className="hero-photo"
               src={content.images.hero}
+              srcSet={photoSrcSet(content.images.hero)}
+              sizes="100vw"
               alt={h.heroAlt}
               width="1672"
               height="941"
@@ -196,288 +298,379 @@ export default function HomePage({ content, locale = "en" }) {
             id="experiences"
             aria-labelledby="experiences-title"
           >
-            <div
-              className="section-heading flex items-center justify-between gap-5"
-              data-reveal
-            >
-              <div>
-                <p className="eyebrow">{t.kickers.adventure}</p>
-                <h2 id="experiences-title">
-                  {content.text.experiencesHeading}
-                </h2>
-              </div>
-              <button className="button lime small" id="see-all">
-                {h.seeAll + " "}
-                <span>{"↗"}</span>
-              </button>
-            </div>
-            {/* Accordion: the item under the pointer (or keyboard focus)
-                widens and shows its prices; diving is open by default. */}
-            <div
-              className="experience-row"
-              id="prices"
-              data-visible-activities={visibleActivities.length}
-              onMouseLeave={() => hoverLayout() && setOpenActivity(null)}
-            >
-              {visibleActivities.map((key, index) => {
-                const open = key === (openActivity || visibleActivities[0]);
-                const prices = content.priceList?.[key]?.length > 0;
-                return (
-                  <article
-                    key={key}
-                    className={"experience-item" + (open ? " is-open" : "")}
-                    aria-label={t.activityLabels[key]}
-                    onMouseEnter={() => hoverLayout() && setOpenActivity(key)}
-                    onFocus={() => setOpenActivity(key)}
-                    data-reveal
-                    style={{ "--reveal-delay": `${index * 80}ms` }}
-                  >
-                    <ExperienceCard
-                      activityKey={key}
-                      activity={content.activities[key]}
-                      className={cardClasses[key]}
-                      kicker={kickers[key]}
-                      locale={locale}
-                    />
-                    {prices && !open && (
-                      <button
-                        type="button"
-                        className="experience-toggle"
-                        onClick={() => setOpenActivity(key)}
-                      >
-                        {t.prices.show(t.activityLabels[key])}
-                        <span aria-hidden="true">↓</span>
-                      </button>
-                    )}
-                    {prices && (
-                      <PricePanel
-                        priceList={content.priceList}
-                        group={key}
-                        locale={locale}
-                        hidden={!open}
-                      />
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-            <div className="quiz-panel" data-reveal>
-              <img
-                className="quiz-photo"
-                src={content.images.course}
-                srcSet={photoSrcSet(content.images.course)}
-                sizes="(max-width: 1320px) 100vw, 1280px"
-                alt=""
-                width="1536"
-                height="864"
-                loading="lazy"
-              />
-              <p className="eyebrow">{t.course.kicker}</p>
-              <h2>{content.text.quizTitle}</h2>
-              <p>{content.text.quizDescription}</p>
-              <a
-                className="button quiz-button"
-                href={localeHref(locale, "/course")}
-              >
-                {t.course.cta + " "}
-                <span>{"↗"}</span>
-              </a>
-              <button className="quiz-help" id="open-quiz" type="button">
-                {t.course.help}
-              </button>
-              <PartnerMarquee
-                partners={content.courses?.partners}
+            {sectionLocked(locks, "experiences") ? (
+              <LockedSection
+                as="div"
+                section="experiences"
                 locale={locale}
+                whatsapp={WHATSAPP_NUMBER}
               />
-              <div className="photo-fan" aria-hidden="true">
-                {[
-                  "galleryDive",
-                  "galleryFreedive",
-                  "galleryCoral",
-                  "galleryTurtle",
-                  "galleryIsland",
-                ].map((key, index) => (
-                  <div
-                    className={`fan-photo photo-${["one", "two", "three", "four", "five"][index]}`}
-                    key={key}
-                  >
-                    <img
-                      src={content.images[key]}
-                      alt=""
-                      width="640"
-                      height="426"
-                      loading="lazy"
-                    />
+            ) : (
+              <>
+                <div
+                  className="section-heading flex items-center justify-between gap-5"
+                  data-reveal
+                >
+                  <div>
+                    <p className="eyebrow">{t.kickers.adventure}</p>
+                    <h2 id="experiences-title">
+                      {content.text.experiencesHeading}
+                    </h2>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div id="more-courses" className="more-courses" hidden>
-              <p>{h.moreCourses}</p>
-              <button className="button dark" data-book>
-                {h.planDive + " "}
-                <span>{"↗"}</span>
-              </button>
-            </div>
-          </section>
-          <DiveSiteMap locale={locale} />
-          <section className="ocean-section" id="ocean">
-            <div
-              className="section-heading flex items-center justify-between gap-5"
-              data-reveal
-            >
-              <div>
-                <p className="eyebrow">{t.gallery.eyebrow}</p>
-                <h2>
-                  {content.text.oceanTitle1}
-                  <br />
-                  {content.text.oceanTitle2}
-                </h2>
-              </div>
-              <p className="section-intro">{content.text.oceanDescription}</p>
-            </div>
-            <div className="ocean-grid">
-              <article className="ocean-card reef-card" data-reveal>
+                </div>
+                <EventBanners
+                  banners={banners}
+                  whatsapp={content.contact.whatsapp}
+                  locale={locale}
+                />
+                {/* Accordion: the item under the pointer (or keyboard focus)
+                widens and shows its prices; diving is open by default. */}
+                <div
+                  ref={experienceRow}
+                  className={"experience-row" + (stacked ? " is-stacking" : "")}
+                  id="prices"
+                  data-visible-activities={visibleActivities.length}
+                  onMouseLeave={() => hoverLayout() && setOpenActivity(null)}
+                >
+                  {visibleActivities.map((key, index) => {
+                    const open =
+                      stacked || key === (openActivity || visibleActivities[0]);
+                    const locked = pageLocked(locks, key);
+                    const prices =
+                      !locked && content.priceList?.[key]?.length > 0;
+                    return (
+                      <article
+                        key={key}
+                        className={"experience-item" + (open ? " is-open" : "")}
+                        aria-label={t.activityLabels[key]}
+                        onMouseEnter={() =>
+                          hoverLayout() && setOpenActivity(key)
+                        }
+                        onFocus={() => setOpenActivity(key)}
+                        data-reveal
+                        style={{
+                          "--reveal-delay": `${index * 80}ms`,
+                          zIndex: index + 1,
+                        }}
+                      >
+                        <ExperienceCard
+                          activityKey={key}
+                          activity={content.activities[key]}
+                          className={cardClasses[key]}
+                          kicker={kickers[key]}
+                          locale={locale}
+                          locked={locked}
+                        />
+                        {prices && !open && (
+                          <button
+                            type="button"
+                            className="experience-toggle"
+                            onClick={() => setOpenActivity(key)}
+                          >
+                            {t.prices.show(t.activityLabels[key])}
+                            <span aria-hidden="true">↓</span>
+                          </button>
+                        )}
+                        {prices && (
+                          <PricePanel
+                            priceList={content.priceList}
+                            products={content.shop?.products ?? []}
+                            group={key}
+                            locale={locale}
+                            hidden={!open}
+                          />
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {sectionLocked(locks, "course") ? (
+              <LockedSection
+                as="div"
+                section="course"
+                locale={locale}
+                whatsapp={WHATSAPP_NUMBER}
+              />
+            ) : (
+              <div className="quiz-panel" data-reveal>
                 <img
-                  className="ocean-photo"
-                  data-depth
-                  src={content.images.reef}
-                  alt={h.reefAlt}
-                  width="1200"
-                  height="800"
+                  className="quiz-photo"
+                  src={content.images.course}
+                  srcSet={photoSrcSet(content.images.course)}
+                  sizes="(max-width: 1320px) 100vw, 1280px"
+                  alt=""
+                  width="1536"
+                  height="864"
                   loading="lazy"
                 />
-                <h3>
-                  {h.reefTitle[0]}
-                  <br />
-                  {h.reefTitle[1]}
-                </h3>
-              </article>
-              <article
-                className="ocean-card open-card"
-                data-reveal
-                style={{ "--reveal-delay": "100ms" }}
-              >
-                <img
-                  className="ocean-photo"
-                  data-depth
-                  src={content.images.ocean}
-                  srcSet={photoSrcSet(content.images.ocean)}
-                  sizes="(max-width: 700px) 90vw, 45vw"
-                  alt={h.oceanAlt}
-                  width="1200"
-                  height="800"
-                  loading="lazy"
+                <p className="eyebrow">{t.course.kicker}</p>
+                <h2>{content.text.quizTitle}</h2>
+                <p>{content.text.quizDescription}</p>
+                <a
+                  className="button quiz-button"
+                  href={localeHref(locale, "/course")}
+                >
+                  {t.course.cta + " "}
+                  <span>{"↗"}</span>
+                </a>
+                <button className="quiz-help" id="open-quiz" type="button">
+                  {t.course.help}
+                </button>
+                <PartnerMarquee
+                  partners={content.courses?.partners}
+                  locale={locale}
                 />
-                <h3>
-                  {h.oceanTitle[0]}
-                  <br />
-                  {h.oceanTitle[1]}
-                </h3>
-              </article>
-            </div>
-            <DiveGallery gallery={content.gallery} locale={locale} />
-          </section>
-          <ShopTeaser
-            shop={content.shop}
-            priceList={content.priceList}
-            whatsapp={content.contact.whatsapp}
-            locale={locale}
-          />
-          <section
-            className="contact-section"
-            id="contact"
-            aria-labelledby="contact-title"
-          >
-            <div className="contact-copy" data-reveal>
-              <p className="eyebrow">{h.storeEyebrow}</p>
-              <h2 id="contact-title">
-                {h.storeTitle[0]}
-                <br />
-                {h.storeTitle[1]}
-              </h2>
-              <p className="contact-description">{h.storeIntro}</p>
-              <ul className="store-details">
-                <li>
-                  <span className="contact-channel-icon">
-                    <ContactIcon name="location" />
-                  </span>
-                  <span>
-                    <small>{h.storeAddress}</small>
-                    <strong>{storeAddress}</strong>
-                  </span>
-                </li>
-                <li>
-                  <span className="contact-channel-icon">
-                    <ContactIcon name="whatsapp" />
-                  </span>
-                  <span>
-                    <small>WHATSAPP</small>
-                    <a
-                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                <div className="photo-fan" aria-hidden="true">
+                  {[
+                    "galleryDive",
+                    "galleryFreedive",
+                    "galleryCoral",
+                    "galleryTurtle",
+                    "galleryIsland",
+                  ].map((key, index) => (
+                    <div
+                      className={`fan-photo photo-${["one", "two", "three", "four", "five"][index]}`}
+                      key={key}
                     >
-                      {WHATSAPP_DISPLAY}
-                    </a>
-                  </span>
-                </li>
-                {content.contact.email && (
+                      <img
+                        src={content.images[key]}
+                        srcSet={photoSrcSet(content.images[key])}
+                        sizes="(max-width: 700px) 30vw, 22vw"
+                        alt=""
+                        width="640"
+                        height="426"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+          {sectionLocked(locks, "dive-sites") ? (
+            <LockedSection
+              section="dive-sites"
+              id="dive-sites"
+              locale={locale}
+              whatsapp={WHATSAPP_NUMBER}
+            />
+          ) : (
+            <DiveSiteMap locale={locale} />
+          )}
+          {sectionLocked(locks, "ocean") ? (
+            <LockedSection
+              section="ocean"
+              id="ocean"
+              locale={locale}
+              whatsapp={WHATSAPP_NUMBER}
+            />
+          ) : (
+            <section className="ocean-section" id="ocean">
+              <div
+                className="section-heading flex items-center justify-between gap-5"
+                data-reveal
+              >
+                <div>
+                  <p className="eyebrow">{t.gallery.eyebrow}</p>
+                  <h2>
+                    {content.text.oceanTitle1}
+                    <br />
+                    {content.text.oceanTitle2}
+                  </h2>
+                </div>
+                <p className="section-intro">{content.text.oceanDescription}</p>
+              </div>
+              <div className="ocean-grid">
+                <article className="ocean-card reef-card" data-reveal>
+                  <img
+                    className="ocean-photo"
+                    data-depth
+                    src={content.images.reef}
+                    srcSet={photoSrcSet(content.images.reef)}
+                    sizes="(max-width: 700px) 90vw, 45vw"
+                    alt={h.reefAlt}
+                    width="1200"
+                    height="800"
+                    loading="lazy"
+                  />
+                  <h3>
+                    {h.reefTitle[0]}
+                    <br />
+                    {h.reefTitle[1]}
+                  </h3>
+                </article>
+                <article
+                  className="ocean-card open-card"
+                  data-reveal
+                  style={{ "--reveal-delay": "100ms" }}
+                >
+                  <img
+                    className="ocean-photo"
+                    data-depth
+                    src={content.images.ocean}
+                    srcSet={photoSrcSet(content.images.ocean)}
+                    sizes="(max-width: 700px) 90vw, 45vw"
+                    alt={h.oceanAlt}
+                    width="1200"
+                    height="800"
+                    loading="lazy"
+                  />
+                  <h3>
+                    {h.oceanTitle[0]}
+                    <br />
+                    {h.oceanTitle[1]}
+                  </h3>
+                </article>
+              </div>
+              {sectionLocked(locks, "videos") ? (
+                content.gallery?.videos?.length > 0 && (
+                  <LockedSection
+                    as="div"
+                    section="videos"
+                    locale={locale}
+                    whatsapp={WHATSAPP_NUMBER}
+                  />
+                )
+              ) : (
+                <DiveVideos videos={content.gallery?.videos} locale={locale} />
+              )}
+              <DiveGallery gallery={content.gallery} locale={locale} />
+            </section>
+          )}
+          {sectionLocked(locks, "shop") ? (
+            <LockedSection
+              section="shop"
+              id="dive-shop"
+              locale={locale}
+              whatsapp={WHATSAPP_NUMBER}
+            />
+          ) : (
+            <ShopTeaser
+              shop={content.shop}
+              service={withService(content).service}
+              whatsapp={content.contact.whatsapp}
+              locale={locale}
+              locks={locks}
+              payments={payments}
+              fares={content.fares}
+              stock={stock}
+            />
+          )}
+          {sectionLocked(locks, "travel") ? (
+            <LockedSection
+              section="travel"
+              id="getting-here"
+              locale={locale}
+              whatsapp={WHATSAPP_NUMBER}
+            />
+          ) : (
+            <TravelRoute whatsapp={WHATSAPP_NUMBER} locale={locale} />
+          )}
+          {sectionLocked(locks, "contact") ? (
+            <LockedSection
+              section="contact"
+              id="contact"
+              locale={locale}
+              whatsapp={WHATSAPP_NUMBER}
+            />
+          ) : (
+            <section
+              className="contact-section"
+              id="contact"
+              aria-labelledby="contact-title"
+            >
+              <div className="contact-copy" data-reveal>
+                <p className="eyebrow">{h.storeEyebrow}</p>
+                <h2 id="contact-title">
+                  {h.storeTitle[0]}
+                  <br />
+                  {h.storeTitle[1]}
+                </h2>
+                <p className="contact-description">{h.storeIntro}</p>
+                <ul className="store-details">
                   <li>
                     <span className="contact-channel-icon">
-                      <ContactIcon name="email" />
+                      <ContactIcon name="location" />
                     </span>
                     <span>
-                      <small>EMAIL</small>
-                      <a href={`mailto:${content.contact.email}`}>
-                        {content.contact.email}
+                      <small>{h.storeAddress}</small>
+                      <strong>{storeAddress}</strong>
+                    </span>
+                  </li>
+                  <li>
+                    <span className="contact-channel-icon">
+                      <ContactIcon name="whatsapp" />
+                    </span>
+                    <span>
+                      <small>WHATSAPP</small>
+                      <a
+                        href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {WHATSAPP_DISPLAY}
                       </a>
                     </span>
                   </li>
-                )}
-              </ul>
-              <div className="contact-actions">
-                <a
-                  className="button dark"
-                  href={mapLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {h.directions} <span aria-hidden="true">↗</span>
-                </a>
-                <a
-                  className="contact-chat"
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {h.storeChat} <span aria-hidden="true">↗</span>
-                </a>
+                  {content.contact.email && (
+                    <li>
+                      <span className="contact-channel-icon">
+                        <ContactIcon name="email" />
+                      </span>
+                      <span>
+                        <small>EMAIL</small>
+                        <a href={`mailto:${content.contact.email}`}>
+                          {content.contact.email}
+                        </a>
+                      </span>
+                    </li>
+                  )}
+                </ul>
+                <div className="contact-actions">
+                  <a
+                    className="button dark"
+                    href={mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {h.directions} <span aria-hidden="true">↗</span>
+                  </a>
+                  <a
+                    className="contact-chat"
+                    href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(h.whatsappVisit)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {h.storeChat} <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+                <p className="contact-note">{h.storeNote}</p>
               </div>
-              <p className="contact-note">{h.storeNote}</p>
-            </div>
-            <div
-              className="store-map"
-              data-reveal
-              style={{ "--reveal-delay": "100ms" }}
-            >
-              <iframe
-                title={h.mapTitle}
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-              <div className="store-map-caption">
-                <span>
-                  <strong>Zanclus Dive Center</strong>
-                  <small>Waisai · Raja Ampat</small>
-                </span>
-                <a href={mapLink} target="_blank" rel="noopener noreferrer">
-                  {h.openMap} <span aria-hidden="true">↗</span>
-                </a>
+              <div
+                className="store-map"
+                data-reveal
+                style={{ "--reveal-delay": "100ms" }}
+              >
+                <iframe
+                  title={h.mapTitle}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=15&output=embed`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="store-map-caption">
+                  <span>
+                    <strong>Zanclus Dive Center</strong>
+                    <small>Waisai · Raja Ampat</small>
+                  </span>
+                  <a href={mapLink} target="_blank" rel="noopener noreferrer">
+                    {h.openMap} <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
         </main>
         <SiteFooter
           contact={content.contact}

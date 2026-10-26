@@ -76,7 +76,11 @@ test("saved custom photos survive migration and every editable image survives CM
     else invalid.activities.trip.cardImage = "http://example.com/unsafe.jpg";
     assert.throws(() => validateContent(invalid));
   }
-  assert.equal(photoSrcSet(saved.images.ocean), undefined);
+  // An uploaded photo lists the smaller copies the server makes of it.
+  assert.match(
+    photoSrcSet(saved.images.ocean),
+    /^\/api\/media\/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\?w=480 480w, /,
+  );
 });
 test("bundled placements have distinct image bytes and responsive assets exist", async () => {
   const urls = [

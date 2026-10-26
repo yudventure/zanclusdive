@@ -1,3 +1,162 @@
+/* 9:16 YouTube videos between the ocean cards and the gallery button. */
+.dive-videos {
+  display: flex;
+  gap: 20px;
+  margin: 28px 0 0;
+  padding: 0 0 8px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #2f5d6b transparent;
+}
+.dive-video {
+  flex: 0 0 clamp(210px, 21vw, 290px);
+  scroll-snap-align: center;
+}
+/* Centred when the row fits, still scrollable from the start when not. */
+.dive-video:first-child {
+  margin-left: auto;
+}
+.dive-video:last-child {
+  margin-right: auto;
+}
+.dive-video-frame {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border: 1px solid #ffffff14;
+  border-radius: 24px;
+  background: #062b3b;
+  box-shadow: 0 18px 40px #0000004d;
+}
+.dive-video-frame img,
+.dive-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+/* The cover shows at once and stays over the player until the video
+   really plays, then fades; taps go through to the player. */
+.dive-video-cover {
+  z-index: 1;
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
+}
+.dive-video-frame.is-playing .dive-video-cover {
+  opacity: 0;
+  visibility: hidden;
+}
+.dive-video-play {
+  z-index: 2;
+}
+.dive-video-caption {
+  z-index: 3;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dive-video-cover {
+    transition: none;
+  }
+}
+/* Plays like a looping clip; the link below opens it on YouTube. */
+.dive-video-frame iframe {
+  pointer-events: none;
+}
+.dive-video-frame.is-tapped iframe,
+.dive-video-frame.is-own-player iframe {
+  pointer-events: auto;
+}
+/* Shown until a player plays when the video has no cover picture. */
+.dive-video-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 20%, #1d6f7d 0, transparent 55%),
+    linear-gradient(160deg, #0b3f4f, #031c28);
+  color: #ffffff59;
+}
+.dive-video-poster svg {
+  width: 56px;
+  height: 56px;
+}
+.dive-video-frame.is-own-player .dive-video-caption {
+  padding-top: 18px;
+}
+.dive-video-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: #01192940;
+  cursor: pointer;
+}
+.dive-video-play span {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  padding-left: 4px;
+  border-radius: 50%;
+  background: #bef4a5;
+  color: #062b3b;
+  font-size: 18px;
+}
+.dive-video-caption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 40px 16px 16px;
+  background: linear-gradient(0deg, #011929d9, transparent);
+  pointer-events: none;
+}
+.dive-video-frame.is-tapped .dive-video-caption {
+  display: none;
+}
+.dive-video-caption span {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #e8f5f5;
+}
+.dive-video-caption a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  height: 34px;
+  margin-left: auto;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #ffffff26;
+  color: white;
+  font-size: 14px;
+  pointer-events: auto;
+  transition: background 0.2s;
+}
+.dive-video-caption a svg {
+  width: 15px;
+  height: 15px;
+}
+.dive-video-caption a span {
+  font-size: 13px;
+  color: inherit;
+}
+.dive-video-caption a:hover {
+  background: #bef4a5;
+  color: #062b3b;
+}
 .dive-gallery-toggle {
   display: flex;
   flex-direction: column;
@@ -179,6 +338,16 @@
   }
 }
 @media (max-width: 520px) {
+  .dive-videos {
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .dive-video {
+    flex-basis: 64vw;
+  }
+  .dive-video-frame {
+    border-radius: 18px;
+  }
   .dive-gallery-grid {
     grid-auto-rows: 130px;
     gap: 10px;

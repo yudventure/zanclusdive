@@ -190,7 +190,16 @@
   font-size: 12px;
   color: #6b8289;
 }
-.course-signup select {
+/* No side panel: the courses use the full width. */
+.activity-layout.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Course sign-up window. */
+.course-checkout {
+  width: min(680px, calc(100% - 24px));
+}
+.course-checkout select {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
@@ -200,6 +209,154 @@
   font: inherit;
   font-size: 14px;
   color: #062b3b;
+}
+.course-checkout-intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5d7770;
+}
+.course-pick {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #f1f7f5;
+}
+.course-pick img {
+  flex: none;
+  width: 96px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.course-pick div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.course-pick small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2c7a74;
+}
+.course-pick strong {
+  font-size: 18px;
+  color: #062b3b;
+}
+.course-pick span {
+  font-size: 13px;
+  color: #4f6b64;
+}
+.course-group {
+  display: grid;
+  gap: 14px;
+  margin: 6px 0 0;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid #e3ecea;
+}
+.course-group > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2c7a74;
+}
+.course-group > legend + * {
+  clear: both;
+}
+.course-choice {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.course-choice legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #062b3b;
+}
+.course-choice legend .form-required {
+  margin-left: 4px;
+}
+.course-choice label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #d5e3e0;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.course-choice label:has(input:checked) {
+  border-color: #1f8f8a;
+  background: #eef8f6;
+}
+.course-choice input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: #0d6f73;
+}
+.course-hint {
+  margin: -6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6b8289;
+}
+.course-choice .course-hint {
+  margin-top: 2px;
+}
+/* The summary has longer labels than the activity checkout. */
+.course-checkout .plan-summary-list div {
+  grid-template-columns: 150px minmax(0, 1fr);
+}
+.course-checkout .plan-summary-list dt {
+  overflow-wrap: anywhere;
+}
+/* Not sure yet: a clear second choice next to paying in full. */
+.course-checkout .pay-unsure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1.5px solid #1f8f8a;
+  border-radius: 999px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 13px;
+}
+.course-checkout .pay-unsure:hover {
+  background: #eef8f6;
+}
+@media (max-width: 560px) {
+  .course-checkout .plan-summary-list div {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+  .course-checkout .form-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .course-pick img {
+    width: 72px;
+    height: 56px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -279,18 +436,28 @@
     transparent
   );
 }
-/* Half a gap on each end keeps both copies the same width, so the loop
-   has no jump. */
+/* Each copy of the list ends with one gap, so the copies sit evenly and
+   moving by one copy's width loops without a jump. Until the page has
+   measured a copy, two copies move by half the strip. */
 .partner-marquee-track {
   --partner-gap: 56px;
   display: flex;
+  width: max-content;
+  animation: partner-scroll 36s linear infinite;
+  will-change: transform;
+}
+.partner-marquee-track.is-measured {
+  animation-name: partner-scroll-copy;
+  animation-duration: var(--run, 36s);
+}
+.partner-marquee-track ul {
+  display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--partner-gap);
-  width: max-content;
   margin: 0;
-  padding: 6px calc(var(--partner-gap) / 2);
+  padding: 6px var(--partner-gap) 6px 0;
   list-style: none;
-  animation: partner-scroll 36s linear infinite;
 }
 .partner-marquee:hover .partner-marquee-track,
 .partner-marquee:focus-within .partner-marquee-track {
@@ -304,12 +471,18 @@
   color: white;
   text-shadow: 0 1px 12px #0000008c;
 }
-/* Logos are shown white so any partner fits the dark section. */
+/* Logos keep their own colours, lifted off the photo by a soft shadow; a
+   dark one-colour logo is shown white so it stays visible. */
+/* Every logo gets the box its shape calls for (logoBox), so a round
+   emblem and a wide word mark look the same size. */
 .partner-marquee-track img {
-  height: 34px;
-  width: auto;
-  max-width: 130px;
+  width: var(--logo-w, auto);
+  height: var(--logo-h, 44px);
+  max-width: none;
   object-fit: contain;
+  filter: drop-shadow(0 1px 8px #00000080);
+}
+.partner-marquee-track img.is-white {
   filter: brightness(0) invert(1) drop-shadow(0 1px 8px #00000066);
   opacity: 0.92;
 }
@@ -325,7 +498,12 @@
 }
 @keyframes partner-scroll {
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes partner-scroll-copy {
+  to {
+    transform: translate3d(calc(-1 * var(--copy-w)), 0, 0);
   }
 }
 /* Dark band under the /course hero. */
@@ -337,13 +515,18 @@
   text-align: center;
 }
 @media (prefers-reduced-motion: reduce) {
-  .partner-marquee-track {
+  .partner-marquee-track,
+  .partner-marquee-track.is-measured {
     animation: none;
-    flex-wrap: wrap;
-    justify-content: center;
     width: auto;
   }
-  .partner-marquee-track li[aria-hidden] {
+  .partner-marquee-track ul {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    padding-right: 0;
+  }
+  .partner-marquee-track ul[aria-hidden] {
     display: none;
   }
   .partner-marquee-window {
@@ -357,15 +540,19 @@
   }
   .partner-marquee-track {
     --partner-gap: 36px;
-    animation-duration: 28s;
   }
   .partner-marquee-track img {
-    height: 28px;
+    width: calc(var(--logo-w, 44px) * 0.8);
+    height: calc(var(--logo-h, 44px) * 0.8);
   }
   .partner-name {
     font-size: 18px;
   }
+  /* Long full names wrap to two lines, keeping the moving strip short. */
   .partner-marquee-track small {
+    max-width: 170px;
     font-size: 11px;
+    line-height: 1.35;
+    white-space: normal;
   }
 }

@@ -12,7 +12,7 @@ import { homedir } from "node:os";
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { demoSeed, withDemoEnglish, withoutSamples } from "../demo-data.js";
-import { demoShop, withShop } from "../shop-model.js";
+import { demoShop, withShop, withSplitProducts } from "../shop-model.js";
 import { demoSocials, withContactFields } from "../contact-model.js";
 import { withActivities, activityKeys } from "../activity-model.js";
 import { withPhotography, photographyVersion } from "../photography.js";
@@ -22,11 +22,13 @@ import {
   withActivityRefresh,
 } from "../content-i18n.js";
 import { withPriceList } from "../price-list.js";
+import { withCalendar } from "../calendar-model.js";
 import {
   assertBookable,
   bookingReceipt,
   BookingError,
 } from "../booking-model.js";
+import { agentHolds } from "../agent-calendar.js";
 
 async function writeState(directory, state) {
   const temporary = join(directory, randomUUID() + ".tmp");
@@ -59,6 +61,12 @@ async function dataDirectory() {
   } catch {}
   return directory;
 }
+
+// The folder the store writes to, once it has been opened.
+export const demoStorageDirectory = () =>
+  globalThis.__zanclusDemoStores?.get(
+    process.env.CMS_DEMO_DATA_DIR || "default",
+  )?.directory ?? null;
 
 // Local test servers (CMS_DEMO_LOGIN=true) keep the sample bookings.
 const sampleMode = () => process.env.CMS_DEMO_LOGIN === "true";
@@ -123,8 +131,10 @@ function store() {
         state.version++;
         await writeState(directory, state);
       }
-      const titled = withPriceList(
-        withActivityRefresh(withRajaAmpatTitle(state.content)),
+      const titled = withSplitProducts(
+        withCalendar(
+          withPriceList(withActivityRefresh(withRajaAmpatTitle(state.content))),
+        ),
       );
       if (JSON.stringify(titled) !== JSON.stringify(state.content)) {
         state.content = titled;
@@ -200,7 +210,12 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
         );
       return { receipt: previous.receipt, created: false };
     }
-    assertBookable(state.content, state.bookings, payload);
+    // Places used by linked agent and OTA calendars count too.
+    assertBookable(
+      state.content,
+      [...state.bookings, ...agentHolds(state.content, state.agents)],
+      payload,
+    );
     const booking = {
       ...payload,
       id: randomUUID(),
@@ -210,6 +225,203 @@ export async function createBookingRequest(payload, requestId, fingerprint) {
     state.bookings.push(booking);
     state.bookingRequests[requestId] = { fingerprint, receipt };
     return { receipt, created: true };
+  });
+}
+// A booking paid online: checked like a website request, saved at once.
+export async function createPaymentBooking(payload) {
+  return mutate((state) => {
+    // Places used by linked agent and OTA calendars count too.
+    assertBookable(
+      state.content,
+      [...state.bookings, ...agentHolds(state.content, state.agents)],
+      payload,
+    );
+    const booking = {
+      ...payload,
+      id: randomUUID(),
+      updatedAt: new Date().toISOString(),
+    };
+    state.bookings.push(booking);
+    return booking;
+  });
+}
+// Changes one booking in place; change returns the new booking, or null to
+// leave it as it is.
+export async function updateBooking(id, change) {
+  return mutate((state) => {
+    const index = state.bookings.findIndex((booking) => booking.id === id);
+    if (index < 0) return null;
+    const next = change(structuredClone(state.bookings[index]));
+    if (!next) return state.bookings[index];
+    state.bookings[index] = {
+      ...next,
+      id,
+      updatedAt: new Date().toISOString(),
+    };
+    return state.bookings[index];
+  });
+}
+// A guest changing their own paid booking (a new date, or a cancellation):
+// a new date is checked against the daily places without the booking
+// itself, inside the same lock as new bookings. change returns the new
+// booking or null, and may throw to refuse.
+export async function changeOwnBooking(id, change) {
+  return mutate((state) => {
+    const index = state.bookings.findIndex((booking) => booking.id === id);
+    if (index < 0) return null;
+    const current = state.bookings[index];
+    const next = change(structuredClone(current));
+    if (!next) return current;
+    if (
+      next.status !== "cancelled" &&
+      (next.startDate !== current.startDate || next.endDate !== current.endDate)
+    )
+      assertBookable(
+        state.content,
+        [
+          ...state.bookings.filter((booking) => booking.id !== id),
+          ...agentHolds(state.content, state.agents),
+        ],
+        next,
+      );
+    state.bookings[index] = {
+      ...next,
+      id,
+      updatedAt: new Date().toISOString(),
+    };
+    return state.bookings[index];
+  });
+}
+export async function listAgents() {
+  return (await read()).agents ?? [];
+}
+export async function saveAgent(agent) {
+  return mutate((state) => {
+    state.agents ||= [];
+    const index = state.agents.findIndex((a) => a.id === agent.id);
+    if (index < 0) state.agents.push(agent);
+    else state.agents[index] = agent;
+    return agent;
+  });
+}
+// Changes an agent only if it still exists; change returns the new agent
+// or null to keep it as is.
+export async function updateAgent(id, change) {
+  return mutate((state) => {
+    const index = (state.agents ||= []).findIndex((a) => a.id === id);
+    if (index < 0) return null;
+    const next = change(structuredClone(state.agents[index]));
+    if (!next) return state.agents[index];
+    state.agents[index] = { ...next, id };
+    return state.agents[index];
+  });
+}
+export async function deleteAgent(id) {
+  return mutate((state) => {
+    const before = (state.agents ||= []).length;
+    state.agents = state.agents.filter((a) => a.id !== id);
+    return state.agents.length < before;
+  });
+}
+// Generic records by kind, as the MySQL store keeps them. A "where" of
+// "AND id LIKE ?" with one pattern is honoured; anything else is ignored.
+export async function listRecords(kind, where = "", params = []) {
+  const all = Object.values((await read()).records?.[kind] ?? {});
+  if (where.includes("LIKE") && typeof params[0] === "string") {
+    const pattern = new RegExp(
+      "^" +
+        params[0]
+          .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+          .replace(/%/g, ".*")
+          .replace(/_/g, ".") +
+        "$",
+    );
+    return all.filter((record) => pattern.test(record.id));
+  }
+  return all.sort((a, b) => a.id.localeCompare(b.id));
+}
+export async function saveRecord(kind, record) {
+  return mutate((state) => {
+    ((state.records ||= {})[kind] ||= {})[record.id] = record;
+    return record;
+  });
+}
+export async function deleteRecord(kind, id) {
+  return mutate((state) => {
+    const bucket = (state.records ||= {})[kind] ?? {};
+    const existed = Boolean(bucket[id]);
+    if (existed) delete bucket[id];
+    return existed;
+  });
+}
+// HRD: employees, attendance by day and locked payslips.
+export async function listEmployees() {
+  return (await read()).employees ?? [];
+}
+export async function saveEmployee(employee) {
+  return mutate((state) => {
+    state.employees ||= [];
+    const index = state.employees.findIndex((e) => e.id === employee.id);
+    if (index < 0) state.employees.push(employee);
+    else state.employees[index] = employee;
+    return employee;
+  });
+}
+export async function deleteEmployee(id) {
+  return mutate((state) => {
+    const before = (state.employees ||= []).length;
+    state.employees = state.employees.filter((e) => e.id !== id);
+    return state.employees.length < before;
+  });
+}
+export async function listAttendance(month) {
+  return Object.values((await read()).attendance ?? {}).filter((record) =>
+    record.date.startsWith(month + "-"),
+  );
+}
+export async function saveAttendance(records) {
+  return mutate((state) => {
+    state.attendance ||= {};
+    for (const record of records) state.attendance[record.id] = record;
+    return records;
+  });
+}
+export async function listPayslips(month) {
+  return Object.values((await read()).payslips ?? {}).filter(
+    (slip) => slip.month === month,
+  );
+}
+export async function savePayslip(slip) {
+  return mutate((state) => {
+    (state.payslips ||= {})[slip.id] = slip;
+    return slip;
+  });
+}
+export async function deletePayslip(id) {
+  return mutate((state) => {
+    const existed = Boolean(state.payslips?.[id]);
+    if (existed) delete state.payslips[id];
+    return existed;
+  });
+}
+// Staff accounts made in the admin.
+export async function listUsers() {
+  return (await read()).users ?? [];
+}
+export async function saveUser(user) {
+  return mutate((state) => {
+    state.users ||= [];
+    const index = state.users.findIndex((u) => u.id === user.id);
+    if (index < 0) state.users.push(user);
+    else state.users[index] = user;
+    return user;
+  });
+}
+export async function deleteUser(id) {
+  return mutate((state) => {
+    const before = (state.users ||= []).length;
+    state.users = state.users.filter((u) => u.id !== id);
+    return state.users.length < before;
   });
 }
 export async function deleteBooking(id) {
@@ -265,6 +477,22 @@ export async function getMedia(id) {
   } catch {
     return null;
   }
+}
+// Passwords changed in the admin, by lower-case email: { salt, hash,
+// changedAt }. Never part of the content or the admin state.
+export async function listPasswords() {
+  return (await read()).passwords ?? {};
+}
+export async function savePassword(email, record) {
+  return mutate((state) => {
+    state.passwords ||= {};
+    state.passwords[email.trim().toLowerCase()] = record;
+  });
+}
+export async function deletePassword(email) {
+  return mutate((state) => {
+    delete (state.passwords ||= {})[email.trim().toLowerCase()];
+  });
 }
 export async function loginBlocked() {
   const { failures } = await read();

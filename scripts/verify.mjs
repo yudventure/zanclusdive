@@ -60,7 +60,7 @@ const quickChat = page.getByRole("link", {
 });
 assert.equal(await quickChat.isVisible(), true);
 const quickURL = await quickChat.getAttribute("href");
-assert.ok(quickURL.startsWith("https://wa.me/6285190849237?text="));
+assert.ok(quickURL.startsWith("https://wa.me/6285190969308?text="));
 assert.match(decodeURIComponent(quickURL), /mendapat bantuan/);
 await context.route("https://wa.me/**", (route) =>
   route.fulfill({
@@ -113,9 +113,10 @@ assert.equal(
   await page.locator(".experience-item.is-open .price-card h3").textContent(),
   "Harga paket diving",
 );
+// Diving lists its main packages; gear and services are add-ons on its page.
 assert.equal(
   await page.locator(".experience-item.is-open .price-list li").count(),
-  6,
+  2,
 );
 await page.locator('.course-card[data-activity="snorkeling"]').hover();
 assert.equal(
@@ -156,7 +157,7 @@ await page.locator('#booking-form button[type="submit"]').click();
 await page.locator("#booking-result").waitFor({ state: "visible" });
 await assertCentered("#booking-dialog");
 const wa = await page.locator("#send-whatsapp").getAttribute("href");
-assert.ok(wa.startsWith("https://wa.me/6285190849237?text="));
+assert.ok(wa.startsWith("https://wa.me/6285190969308?text="));
 assert.match(decodeURIComponent(wa), /Ayu <script>/);
 assert.match(decodeURIComponent(wa), /Peserta: 2/);
 assert.match(decodeURIComponent(wa), /Pengalaman spesial/);
@@ -170,10 +171,8 @@ await page.locator("#download-plan").click();
 const download = await downloadPromise;
 assert.match(download.suggestedFilename(), /^zanclus-rencana-/);
 await page.locator("#booking-dialog .close-modal").click();
-await page.locator("#see-all").click();
-assert.equal(await page.locator("#more-courses").isVisible(), true);
-await page.locator("#see-all").click();
-assert.equal(await page.locator("#more-courses").isVisible(), false);
+// The experiences heading has no "See all" button any more.
+assert.equal(await page.locator("#see-all").count(), 0);
 await page.setViewportSize({ width: 390, height: 844 });
 await page.goto(site, { waitUntil: "networkidle" });
 assert.equal(await quickChat.isVisible(), true, "Mobile quick service visible");
@@ -183,6 +182,59 @@ assert.equal(
   false,
   "Mobile overflow",
 );
+// On a phone the experience items stack with their prices open, and each
+// one folds back as the next rises over it while scrolling.
+{
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const tab = await phone.newPage();
+  tab.on("pageerror", (e) => errors.push(e.message));
+  await tab.goto(site, { waitUntil: "networkidle" });
+  assert.equal(await tab.locator(".experience-row.is-stacking").count(), 1);
+  assert.equal(
+    await tab.locator(".experience-item.is-open").count(),
+    await tab.locator(".experience-item").count(),
+  );
+  assert.equal(await tab.locator(".experience-toggle").count(), 0);
+  const folds = async (y) => {
+    await tab.evaluate((y) => window.scrollTo(0, y), y);
+    await tab.waitForTimeout(400);
+    return tab.evaluate(() =>
+      [...document.querySelectorAll(".experience-item")].map((item) => [
+        getComputedStyle(item).position,
+        Number(item.style.getPropertyValue("--fold")),
+        Math.round(item.getBoundingClientRect().top),
+      ]),
+    );
+  };
+  const rowTop = await tab.evaluate(
+    () =>
+      document.querySelector(".experience-row").getBoundingClientRect().top +
+      scrollY,
+  );
+  const before = await folds(rowTop - 200);
+  assert.ok(before.every(([position, fold]) => position === "sticky" && !fold));
+  const firstHeight = await tab.evaluate(
+    () => document.querySelector(".experience-item").offsetHeight,
+  );
+  const during = await folds(rowTop + firstHeight - 300);
+  assert.ok(
+    during[0][1] > 0 && during[0][1] < 1,
+    "the first item is folding " + JSON.stringify(during),
+  );
+  assert.ok(during[0][2] <= 0, "the first item stays stuck");
+  assert.ok(during[1][2] < 844, "the next item rises over it");
+  await tab.screenshot({ path: "artifacts/mobile-fold.png" });
+  assert.equal(
+    await tab.evaluate(() => document.documentElement.scrollWidth > innerWidth),
+    false,
+    "Mobile overflow while folding",
+  );
+  await phone.close();
+}
 await page.locator(".menu-toggle").click();
 assert.equal(await page.locator("#navigation").isVisible(), true);
 await page.locator('#navigation a[href="#experiences"]').click();

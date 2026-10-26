@@ -124,12 +124,15 @@ export const defaultCourses = {
     },
   ],
   // Certification partners shown in the running strip. Without an uploaded
-  // logo the short name is shown as a text badge.
+  // logo the short name is shown as a text badge; a logo keeps its own
+  // colours or is shown white (logoStyle).
   partners: [
     {
       name: "SSI",
       full: t("Scuba Schools International", "Scuba Schools International"),
       logo: "",
+      logoStyle: "color",
+      logoRatio: 0,
     },
     {
       name: "CMAS",
@@ -138,6 +141,8 @@ export const defaultCourses = {
         "Confédération Mondiale des Activités Subaquatiques",
       ),
       logo: "",
+      logoStyle: "color",
+      logoRatio: 0,
     },
     {
       name: "PADI",
@@ -146,10 +151,35 @@ export const defaultCourses = {
         "Professional Association of Diving Instructors",
       ),
       logo: "",
+      logoStyle: "color",
+      logoRatio: 0,
     },
   ],
 };
 export const partnerLimit = 12;
+
+// Logos of every shape look the same size in the running strip: a wide
+// word mark gets less height than a round emblem (height follows the
+// width-to-height ratio to the power -0.4), inside a 150 x 52 px box.
+export function logoBox(ratio) {
+  const r =
+    Number.isFinite(ratio) && ratio > 0
+      ? Math.min(8, Math.max(0.25, ratio))
+      : 1;
+  let height = Math.min(52, 46 * r ** -0.4);
+  let width = height * r;
+  if (width > 150) {
+    width = 150;
+    height = width / r;
+  }
+  return { width: Math.round(width), height: Math.round(height) };
+}
+const logoRatio = (value) => {
+  const ratio = Number(value);
+  return Number.isFinite(ratio) && ratio >= 0.1 && ratio <= 10
+    ? Math.round(ratio * 1000) / 1000
+    : 0;
+};
 
 export function withCourses(content) {
   return content.courses
@@ -202,6 +232,11 @@ export function validatePartners(input) {
       name,
       full: text(p.full, "Nama lengkap partner", 120, false),
       logo: mediaURL(p.logo, "Logo partner"),
+      // "color" shows the logo as it is; "white" as a white silhouette.
+      logoStyle: p.logoStyle === "white" ? "white" : "color",
+      // Width over height of the trimmed logo, measured when it was
+      // uploaded; 0 when unknown (older uploads are measured in the page).
+      logoRatio: p.logo ? logoRatio(p.logoRatio) : 0,
     };
   });
 }
@@ -249,6 +284,79 @@ export function validateCourses(input) {
 }
 
 // WhatsApp message for a course request.
+// Answers a course sign-up asks for besides name and contact. Option keys
+// are stored; their words come from the dictionary.
+export const courseChoices = {
+  dives: ["0", "1-20", "21-50", "50+"],
+  swim: ["comfortable", "basic", "no"],
+  health: ["fit", "condition"],
+  wetsuit: ["", "XS", "S", "M", "L", "XL", "XXL"],
+  language: ["id", "en"],
+};
+function validDate(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return false;
+  const day = new Date(date + "T12:00:00Z");
+  return (
+    !Number.isNaN(day.valueOf()) && day.toISOString().slice(0, 10) === date
+  );
+}
+// Whole years from a birth date to a day, both YYYY-MM-DD.
+export function ageOn(birth, day) {
+  const [by, bm, bd] = birth.split("-").map(Number);
+  const [y, m, d] = day.split("-").map(Number);
+  return y - by - (m < bm || (m === bm && d < bd) ? 1 : 0);
+}
+// The minimum age written on the course ("Usia 10+"), or 8.
+export const courseMinAge = (course) =>
+  Number(/(\d+)\s*\+/.exec(course?.age?.id ?? "")?.[1]) || 8;
+
+// The course questions, checked, as [label, value] lines in the page
+// language. details.date is the start date. Throws with the reason.
+export function courseProfile(course, details, locale = "id") {
+  const t = dictionary(locale).course;
+  const pick = (key) =>
+    courseChoices[key].includes(details[key]) ? details[key] : null;
+  const birth = details.birthDate;
+  if (!validDate(birth) || birth < "1900-01-01" || birth >= details.date)
+    throw new Error(t.errBirth);
+  const min = courseMinAge(course);
+  if (ageOn(birth, details.date) < min) throw new Error(t.errAge(min));
+  const text = (value, max) => {
+    const out = typeof value === "string" ? value.trim() : "";
+    if (out.length > max) throw new Error(t.errLong);
+    return out;
+  };
+  const nationality = text(details.nationality, 60);
+  const dives = pick("dives") ?? "0";
+  const swim = pick("swim");
+  if (!swim) throw new Error(t.errSwim);
+  const health = pick("health");
+  if (!health) throw new Error(t.errHealth);
+  if (health === "condition" && !text(details.notes, 1000))
+    throw new Error(t.errHealthNotes);
+  const wetsuit = pick("wetsuit") ?? "";
+  const fins =
+    details.fins === "" || details.fins === undefined || details.fins === null
+      ? ""
+      : Number(details.fins);
+  if (fins !== "" && (!Number.isInteger(fins) || fins < 30 || fins > 50))
+    throw new Error(t.errFins);
+  const stay = text(details.stay, 120);
+  const language = pick("language") ?? "id";
+  const m = t.message;
+  return [
+    [m.birth, birth],
+    ...(nationality ? [[m.nationality, nationality]] : []),
+    [m.dives, t.diveOptions[dives]],
+    [m.swim, t.swimOptions[swim]],
+    [m.health, t.healthOptions[health]],
+    ...(wetsuit ? [[m.wetsuit, wetsuit]] : []),
+    ...(fins ? [[m.fins, String(fins)]] : []),
+    ...(stay ? [[m.stay, stay]] : []),
+    [m.language, t.languageOptions[language]],
+  ];
+}
+
 export function courseInquiry(course, details, today, locale = "id") {
   const t = dictionary(locale).course;
   if (!course?.enabled) throw new Error(t.errCourse);
@@ -258,6 +366,7 @@ export function courseInquiry(course, details, today, locale = "id") {
   if (!whatsapp) throw new Error(t.errWhatsapp);
   const email = cleanEmail(details.email);
   if (email === null) throw new Error(t.errEmail);
+  if (!email) throw new Error(t.errEmailRequired);
   const date = details.date;
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(date || "") ||
@@ -271,16 +380,18 @@ export function courseInquiry(course, details, today, locale = "id") {
     throw new Error(t.errParticipants);
   const notes = typeof details.notes === "string" ? details.notes.trim() : "";
   if (notes.length > 1000) throw new Error(t.errNotes);
+  const profile = courseProfile(course, details, locale);
   return [
     t.message.greeting(courseText(course.name, locale)),
     `${t.message.name}: ${name}`,
     `WhatsApp: ${whatsapp}`,
-    ...(email ? [`Email: ${email}`] : []),
+    `Email: ${email}`,
     `${t.message.date}: ${date}`,
     t.message.people(participants),
     ...(details.certification
       ? [`${t.message.license}: ${String(details.certification).slice(0, 80)}`]
       : []),
+    ...profile.map(([label, value]) => `${label}: ${value}`),
     ...(notes ? [`${t.message.notes}: ${notes}`] : []),
     t.message.closing,
   ].join("\n");
