@@ -1,6 +1,7 @@
 // Package prices shown beside the experience cards, from the Zanclus Dive
 // Center price list (2026). Editable in the CMS; each text has both languages.
 import { dictionary } from "./i18n.js";
+import { imageURL } from "./image-url.js";
 import { rentalAddOn, rentalTabOf, shopAddOn } from "./shop-model.js";
 
 export const priceGroups = ["diving", "snorkeling", "trip"];
@@ -32,7 +33,8 @@ const item = (nameId, nameEn, infoId, infoEn, price, unitId, unitEn) => ({
 });
 const day = ["/ hari", "/ day"];
 // Fun dive packages, one day per diver, priced as the owner set them in
-// October 2026. Lists saved before get them once (priceRevision).
+// October 2026. Lists saved before get them once (priceRevision), and a
+// photo of the place (packagePhotos).
 const funDives = [
   {
     id: "diving-fun-dive-waigeo",
@@ -383,20 +385,54 @@ const movedFromDiving = {
   Dokumentasi: "extras",
 };
 
-// Packages added to saved lists once, in order: 1 the fun dives. A list
-// saved since keeps what the owner made of them, deleted ones included.
-export const priceRevision = 1;
+// Changes made to saved lists once, in order: 1 the fun dives, 2 a photo
+// on the diving packages. A list saved since keeps what the owner made of
+// them, deleted packages and removed photos included.
+export const priceRevision = 2;
+// The site's own photos until the owner uploads one of the place itself:
+// gearing up on the boat, a diver over the reef, a coral reef, the
+// owner's photo of a diver and a turtle in the Dampier Strait, and the
+// Piaynemo karst islands.
+const packagePhotos = [
+  [
+    "diving-discovery-dive",
+    "Discovery Dive",
+    "/assets/photos/gallery-dive.webp",
+  ],
+  ["diving-pemandu-selam", "Pemandu selam", "/assets/photos/diving-card.webp"],
+  [
+    "diving-fun-dive-waigeo",
+    "Fun Dive Pesisir Waigeo",
+    "/assets/photos/fan-coral.webp",
+  ],
+  [
+    "diving-fun-dive-dampier",
+    "Fun Dive Kri, Mansuar & Arborek",
+    "/assets/photos/banner-penyu.webp",
+  ],
+  ["diving-fun-dive-piaynemo", "Fun Dive Piaynemo", "/assets/photos/trip.webp"],
+];
 function withRevisions(list) {
-  if ((Number(list.revision) || 0) >= priceRevision) return list;
-  const diving = Array.isArray(list.diving) ? list.diving : [];
-  const added = funDives
-    .filter((entry) => !diving.some((other) => other?.id === entry.id))
-    .slice(0, Math.max(0, 8 - diving.length));
-  return {
-    ...list,
-    diving: [...diving, ...structuredClone(added)],
-    revision: priceRevision,
-  };
+  const revision = Number(list.revision) || 0;
+  if (revision >= priceRevision) return list;
+  let diving = Array.isArray(list.diving) ? list.diving : [];
+  if (revision < 1)
+    diving = [
+      ...diving,
+      ...structuredClone(
+        funDives
+          .filter((entry) => !diving.some((other) => other?.id === entry.id))
+          .slice(0, Math.max(0, 8 - diving.length)),
+      ),
+    ];
+  diving = diving.map((entry) => {
+    if (!entry || entry.image) return entry;
+    const photo = packagePhotos.find(
+      ([id, name]) => entry.id === id || (!entry.id && entry.name?.id === name),
+    );
+    return photo ? { ...entry, image: photo[2] } : entry;
+  });
+  return { ...list, diving, revision: priceRevision };
 }
 
 // Older CMS documents gain the default price list, lists added later, item
@@ -593,12 +629,18 @@ export function validatePriceList(input, products = []) {
             throw new Error(
               "Harga pada daftar harga harus berupa rupiah positif.",
             );
+          // A photo is kept only when the item has one.
+          const image =
+            typeof entry.image === "string" && entry.image.trim()
+              ? imageURL(entry.image)
+              : "";
           return {
             id: entry.id,
             name: text(entry.name, "Nama item", 80, true),
             info: text(entry.info, "Keterangan", 160, false),
             price,
             unit: text(entry.unit, "Satuan", 20, false),
+            ...(image ? { image } : {}),
           };
         }),
       ];

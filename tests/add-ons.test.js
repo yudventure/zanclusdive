@@ -326,13 +326,13 @@ test("a list saved before the fun dives gets them once, at its end", () => {
     [1200000, 800000, 2100000, 2700000, 4000000],
   );
   assert.equal(list.diving[2].unit.en, "/ diver");
-  assert.equal(list.revision, 1);
+  assert.equal(list.revision, 2);
   // Saved from the admin, one deleted, it stays deleted.
   const edited = validatePriceList(
     { ...list, diving: list.diving.filter((item) => item.price !== 4000000) },
     gear,
   );
-  assert.equal(edited.revision, 1);
+  assert.equal(edited.revision, 2);
   assert.equal(withPriceList({ priceList: edited }).priceList.diving.length, 4);
   // A full list of eight gets only what fits.
   const full = structuredClone(saved);
@@ -343,5 +343,68 @@ test("a list saved before the fun dives gets them once, at its end", () => {
   assert.deepEqual(
     names(withPriceList({ priceList: full }).priceList.diving).slice(7),
     ["Fun Dive Pesisir Waigeo"],
+  );
+});
+
+test("each diving package shows a photo of the place, once", () => {
+  // The defaults: a photo on every diving package, none elsewhere.
+  assert.deepEqual(
+    defaultPriceList.diving.map((item) => item.image),
+    [
+      "/assets/photos/gallery-dive.webp",
+      "/assets/photos/diving-card.webp",
+      "/assets/photos/fan-coral.webp",
+      "/assets/photos/banner-penyu.webp",
+      "/assets/photos/trip.webp",
+    ],
+  );
+  assert.ok(defaultPriceList.snorkeling.every((item) => !item.image));
+  // A list saved with the fun dives (revision 1), one of them deleted and
+  // Discovery Dive with the owner's own photo, gets the others' photos.
+  const saved = structuredClone(defaultPriceList);
+  saved.revision = 1;
+  saved.diving = saved.diving
+    .filter((item) => item.id !== "diving-fun-dive-piaynemo")
+    .map(({ image, ...item }) => item);
+  saved.diving[0].image = "/api/media/0b9c1a52-7d1e-4a7b-9b2f-3c4d5e6f7a8b";
+  const list = withPriceList({ priceList: saved }).priceList;
+  assert.deepEqual(
+    list.diving.map((item) => [item.id, item.image]),
+    [
+      [
+        "diving-discovery-dive",
+        "/api/media/0b9c1a52-7d1e-4a7b-9b2f-3c4d5e6f7a8b",
+      ],
+      ["diving-pemandu-selam", "/assets/photos/diving-card.webp"],
+      ["diving-fun-dive-waigeo", "/assets/photos/fan-coral.webp"],
+      ["diving-fun-dive-dampier", "/assets/photos/banner-penyu.webp"],
+    ],
+  );
+  // A photo the owner removes and saves stays removed.
+  const removed = validatePriceList(
+    {
+      ...list,
+      diving: list.diving.map((item, i) =>
+        i === 1 ? { ...item, image: "" } : item,
+      ),
+    },
+    gear,
+  );
+  assert.equal("image" in removed.diving[1], false);
+  assert.equal(
+    "image" in withPriceList({ priceList: removed }).priceList.diving[1],
+    false,
+  );
+  // Only photos the site can serve are kept.
+  assert.throws(
+    () =>
+      validatePriceList(
+        {
+          ...list,
+          diving: [{ ...list.diving[0], image: "javascript:alert(1)" }],
+        },
+        gear,
+      ),
+    /HTTPS atau aset/,
   );
 });

@@ -17,6 +17,11 @@ export const photoGuides = {
   activityCover: { size: "1920 × 1080", ratio: "16:9" },
   activityCard: { size: "1200 × 800", ratio: "3:2" },
   courseCard: { size: "1600 × 900", ratio: "16:9" },
+  package: {
+    size: "1600 × 900",
+    ratio: "16:9",
+    tip: "foto tempat selam atau suasana paketnya",
+  },
   bannerBackground: {
     size: "2400 × 1200",
     ratio: "2:1",

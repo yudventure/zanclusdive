@@ -1116,6 +1116,23 @@
   display: flex;
   gap: 4px;
 }
+/* The package photo under its texts, as wide as the card on the site. */
+.admin-price-photo {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 14px;
+  max-width: 480px;
+}
+.admin-price-photo .admin-image-slot {
+  width: 100%;
+}
+.admin-price-photo .admin-image-slot.wide img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+}
 .admin-text-button {
   border: 0;
   background: none;

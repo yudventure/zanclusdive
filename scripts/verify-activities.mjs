@@ -143,6 +143,21 @@ try {
           "Fun Dive Piaynemo",
         ],
       );
+      // Every diving package shows a photo of the place; the one alone on
+      // the last row lies flat, photo on the left of its texts.
+      assert.equal(
+        await page.locator(".activity-prices .activity-price-photo").count(),
+        packages.length,
+      );
+      const lone = page.locator(".activity-prices li").last();
+      const [lonePhoto, loneName] = await Promise.all([
+        lone.locator(".activity-price-photo").boundingBox(),
+        lone.locator("strong").boundingBox(),
+      ]);
+      assert.ok(
+        lonePhoto.x + lonePhoto.width <= loneName.x,
+        "photo on the left",
+      );
       // The fun dives are priced per diver and follow the participants.
       assert.deepEqual(
         packages.slice(2).map((item) => [item.price, item.unit.id]),

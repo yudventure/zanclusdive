@@ -13,6 +13,7 @@ import { rentalAddOn } from "../shop-model.js";
 import { activityLabels } from "../activity-model.js";
 import { dictionary, formatIDR } from "../i18n.js";
 import { fareSettings } from "../fare-model.js";
+import PhotoField from "./PhotoField.jsx";
 
 function Field({ label, hint, children }) {
   const id = useId();
@@ -181,6 +182,8 @@ export default function PriceListEditor({
   updateFares,
   onSave,
   busy,
+  media = [],
+  placePhoto,
 }) {
   const [group, setGroup] = useState("diving");
   const items = priceList[group];
@@ -216,6 +219,13 @@ export default function PriceListEditor({
               [field]: lang ? { ...item[field], [lang]: value } : value,
             },
       ),
+    );
+  }
+  // By id, through the list as it is when the upload ends, so an edit
+  // made while the photo uploads is kept.
+  function setPhoto(id, url) {
+    update(group, (list) =>
+      list.map((entry) => (entry.id === id ? { ...entry, image: url } : entry)),
     );
   }
   function move(index, delta) {
@@ -284,6 +294,8 @@ export default function PriceListEditor({
           {intro(group)} Isi nama dan keterangan dalam dua bahasa. Kolom English
           yang kosong memakai teks Indonesia. Maksimal 8 item, harga dalam
           rupiah.
+          {priceGroups.includes(group) &&
+            " Foto setiap paket tampil di kartunya, jadi tamu melihat tempat selam atau suasana yang akan dia pesan. Foto langsung terpasang begitu diunggah."}
         </p>
         <p className="admin-subtle">
           Sewa alat tidak lagi di sini. Setiap alat sewa adalah produk Dive Shop
@@ -360,6 +372,31 @@ export default function PriceListEditor({
               {text(index, "unit", "id", "Satuan (Indonesia)", 20, "/ hari")}
               {text(index, "unit", "en", "Unit (English)", 20, "/ day")}
             </div>
+            {placePhoto && priceGroups.includes(group) && (
+              <div className="admin-price-photo">
+                <PhotoField
+                  label={`Foto ${item.name.id || "paket"}`}
+                  guide="package"
+                  value={item.image ?? ""}
+                  media={media}
+                  placePhoto={placePhoto}
+                  onChange={(url) => setPhoto(item.id, url)}
+                />
+                {item.image ? (
+                  <button
+                    type="button"
+                    className="admin-text-button"
+                    onClick={() => setPhoto(item.id, "")}
+                  >
+                    Hapus foto, lalu simpan
+                  </button>
+                ) : (
+                  <small className="admin-subtle">
+                    Tanpa foto, kartu paketnya hanya berisi teks.
+                  </small>
+                )}
+              </div>
+            )}
           </fieldset>
         ))}
         <button

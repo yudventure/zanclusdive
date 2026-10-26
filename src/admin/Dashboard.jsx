@@ -1737,6 +1737,8 @@ export default function Dashboard({ section, account, today }) {
                   }}
                   onSave={saveSettings}
                   busy={busy}
+                  media={data.media}
+                  placePhoto={placePhoto}
                 />
               )}
               {section === "shop" && (

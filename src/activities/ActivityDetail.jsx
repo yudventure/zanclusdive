@@ -1037,8 +1037,24 @@ export default function ActivityDetail({
                         const payable = packages.some(
                           (entry) => entry.index === index,
                         );
+                        // A photo of the place, so guests see where
+                        // they will dive before they buy.
                         return (
-                          <li key={index}>
+                          <li
+                            key={index}
+                            className={item.image ? "has-photo" : undefined}
+                          >
+                            {item.image && (
+                              <img
+                                className="activity-price-photo"
+                                src={item.image}
+                                srcSet={photoSrcSet(item.image)}
+                                sizes="(max-width: 700px) 100vw, 560px"
+                                alt={name}
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            )}
                             <span>
                               <strong>{name}</strong>
                               {priceText(item.info, locale) && (

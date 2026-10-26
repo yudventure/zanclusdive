@@ -606,6 +606,51 @@ nav.open .nav-sub a {
   font-size: 12px;
   color: #6b8289;
 }
+/* A package with a photo of the place: the photo fills the top of the
+   card. Alone on the last row, the card lies flat, photo on the left. */
+.activity-prices li.has-photo {
+  justify-content: flex-start;
+  padding-top: 0;
+  overflow: hidden;
+}
+.activity-prices li.has-photo > .activity-price-foot {
+  margin-top: auto;
+}
+.activity-price-photo {
+  display: block;
+  width: calc(100% + 36px);
+  max-width: none;
+  margin: 0 -18px 2px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #e3ecea;
+}
+@media (min-width: 701px) {
+  .activity-prices li.has-photo:last-child:nth-child(odd) {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
+    column-gap: 22px;
+    row-gap: 12px;
+    padding: 0;
+  }
+  .activity-prices li.has-photo:last-child:nth-child(odd) > img {
+    grid-row: 1 / -1;
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+    margin: 0;
+    aspect-ratio: auto;
+  }
+  .activity-prices li.has-photo:last-child:nth-child(odd) > span {
+    padding: 18px 18px 0 0;
+  }
+  .activity-prices
+    li.has-photo:last-child:nth-child(odd)
+    > .activity-price-foot {
+    padding: 0 18px 18px 0;
+  }
+}
 /* A card left alone on the last row takes the whole row. */
 .activity-prices li:last-child:nth-child(odd),
 .activity-addon-list li:last-child:nth-child(odd),

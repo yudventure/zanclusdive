@@ -199,6 +199,41 @@ try {
     /^\/api\/media\//,
   );
 
+  // A package photo in the price list: placed at once, then shown on the
+  // package's card on the activity page.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  const versionBefore = (await state()).version;
+  await page
+    .locator(".admin-price-photo .admin-image-slot")
+    .filter({
+      has: page.locator(":scope > strong", {
+        hasText: /^Foto Fun Dive Piaynemo$/,
+      }),
+    })
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: "piaynemo.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(small),
+    });
+  await page
+    .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
+    .waitFor({ timeout: 60000 });
+  const priced = await state();
+  assert.equal(priced.version, versionBefore + 1, "package photo saved");
+  const packagePhoto = priced.content.priceList.diving.find(
+    (item) => item.id === "diving-fun-dive-piaynemo",
+  ).image;
+  assert.match(packagePhoto, /^\/api\/media\//);
+  await visitor.goto(base + "/id/diving", { waitUntil: "networkidle" });
+  assert.equal(
+    await visitor
+      .locator(".activity-prices li", { hasText: "Fun Dive Piaynemo" })
+      .locator(".activity-price-photo")
+      .getAttribute("src"),
+    packagePhoto,
+  );
+
   // Mobile: the upload control is a large tap target.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/admin/media", { waitUntil: "networkidle" });
@@ -212,7 +247,7 @@ try {
   await page.screenshot({ path: "artifacts/upload-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS upload: camera photo shrunk below 4 MB, placed and saved in one step, live on the homepage, stored as a file; smaller WebP copies at 480, 828, 1280 and 1920 px in srcset, kept a year, a phone loading the 828 px copy; site photos cached a day; multi-photo gallery upload; shop and activity photos; mobile tap target.",
+    "PASS upload: camera photo shrunk below 4 MB, placed and saved in one step, live on the homepage, stored as a file; smaller WebP copies at 480, 828, 1280 and 1920 px in srcset, kept a year, a phone loading the 828 px copy; site photos cached a day; multi-photo gallery upload; shop, activity and package photos; mobile tap target.",
   );
 } finally {
   await browser.close();

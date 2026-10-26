@@ -1,4 +1,5 @@
 import { experiences } from "./domain.js";
+import { imageURL } from "./image-url.js";
 import { packagesTotal, validatePackages } from "./booking-price.js";
 import { validateSeo, defaultSeo } from "./seo.js";
 import {
@@ -157,6 +158,7 @@ export const sources = {
   agent: "Agen / partner",
   walkin: "Walk-in",
 };
+export { imageURL };
 function plain(value, label, max = 2000, required = true) {
   if (
     typeof value !== "string" ||
@@ -165,17 +167,6 @@ function plain(value, label, max = 2000, required = true) {
   )
     throw new Error(`${label} tidak valid.`);
   return value.trim();
-}
-export function imageURL(value) {
-  const s = plain(value, "URL gambar", 1200);
-  if (s.startsWith("/assets/") || /^\/api\/media\/[a-f0-9-]{36}$/.test(s))
-    return s;
-  try {
-    const url = new URL(s);
-    if (url.protocol === "https:" && !url.username && !url.password)
-      return url.href;
-  } catch {}
-  throw new Error("Gambar harus memakai URL HTTPS atau aset website.");
 }
 function galleryCaptionText(value) {
   const out = {};
