@@ -3462,14 +3462,114 @@ strong.admin-overdue {
   stroke-width: 2.4;
   stroke-linecap: round;
 }
-.admin-day-side {
+/* The day's agenda and the guests around today share the column beside
+   the month, which stays in view while the page scrolls. */
+.admin-calendar-side {
   position: sticky;
   top: 104px;
+  display: grid;
+  gap: 18px;
   max-height: calc(100vh - 124px);
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.admin-day-side,
+.admin-guest-flow {
   margin: 0;
   padding: 22px;
-  overscroll-behavior: contain;
+}
+.admin-guest-flow h2 {
+  margin: 4px 0;
+  font-size: 19px;
+}
+.admin-guest-flow > .admin-subtle {
+  margin: 0;
+}
+.admin-flow-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 14px 0 4px;
+  border-radius: 14px;
+}
+.admin-flow-tabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 4px 6px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+.admin-flow-tabs b {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #dbe8f0;
+  color: #2b5a73;
+  font-size: 12px;
+}
+.admin-flow-tabs button[aria-pressed="true"] b {
+  background: var(--admin-ink);
+  color: white;
+}
+.admin-flow-total {
+  margin: 12px 0 0;
+  color: #5d7385;
+  font-size: 14px;
+}
+.admin-flow-day {
+  margin-top: 16px;
+}
+.admin-flow-day h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.admin-flow-day h3 small {
+  margin-left: auto;
+  color: #718394;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.admin-flow-day ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-flow-kind {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #1f6fa8;
+  vertical-align: 1px;
+}
+.admin-day-person.is-snorkeling .admin-flow-kind {
+  background: #1f9e94;
+}
+.admin-day-person.is-trip .admin-flow-kind {
+  background: #e3a230;
+}
+.admin-day-person.is-course .admin-flow-kind {
+  background: #c2569b;
+}
+.admin-day-person.is-shop .admin-flow-kind {
+  background: #3c8d5a;
+}
+.admin-day-person.is-service .admin-flow-kind {
+  background: #8a6d3b;
+}
+.admin-day-person.is-agent .admin-flow-kind {
+  background: #7c5cd6;
 }
 .admin-day-empty h2 {
   margin: 0 0 8px;
@@ -3668,7 +3768,7 @@ strong.admin-overdue {
   .admin-calendar-layout {
     grid-template-columns: minmax(0, 1fr);
   }
-  .admin-day-side {
+  .admin-calendar-side {
     position: static;
     max-height: none;
     overflow: visible;
@@ -3679,7 +3779,8 @@ strong.admin-overdue {
     padding: 1px 4px;
     font-size: 11px;
   }
-  .admin-day-side {
+  .admin-day-side,
+  .admin-guest-flow {
     padding: 18px 14px;
   }
   .admin-form-group {

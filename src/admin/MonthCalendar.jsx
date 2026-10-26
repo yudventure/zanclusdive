@@ -10,6 +10,7 @@ import { paymentStatusLabels } from "../payment-model.js";
 import { monthDays } from "../month-grid.js";
 import { rentalCalendar, gearLeft } from "../shop-stock.js";
 import { dayAgenda, whatsappNumber } from "../calendar-day.js";
+import GuestFlow from "./GuestFlow.jsx";
 
 const weekdays = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 const longDate = (date) =>
@@ -397,46 +398,56 @@ export default function MonthCalendar({
           </div>
         )}
       </section>
-      <aside
-        ref={side}
-        className="admin-card admin-day-side"
-        aria-label="Agenda tanggal"
-      >
-        {!picked ? (
-          <div className="admin-day-empty">
-            <h2>Agenda</h2>
-            <p className="admin-subtle">
-              Klik tanggal di kalender untuk melihat siapa saja yang diving,
-              snorkeling, menyewa alat, atau berkegiatan lain pada hari itu, dan
-              untuk mencatat booking baru.
-            </p>
-          </div>
-        ) : view === "gear" ? (
-          <GearDay
-            date={picked}
-            entries={pickedGear}
-            gear={gear}
-            bookings={byId}
-            content={content}
-            onPick={onPick}
-            onEdit={onEdit}
-          />
-        ) : (
-          <DayAgenda
-            key={picked}
-            date={picked}
-            bookings={bookings}
-            agents={agents}
-            gear={gear ?? []}
-            content={content}
-            program={program}
-            focus={focus}
-            onPick={onPick}
-            onEdit={onEdit}
-            onQuickSave={onQuickSave}
-          />
-        )}
-      </aside>
+      <div className="admin-calendar-side">
+        <aside
+          ref={side}
+          className="admin-card admin-day-side"
+          aria-label="Agenda tanggal"
+        >
+          {!picked ? (
+            <div className="admin-day-empty">
+              <h2>Agenda</h2>
+              <p className="admin-subtle">
+                Klik tanggal di kalender untuk melihat siapa saja yang diving,
+                snorkeling, menyewa alat, atau berkegiatan lain pada hari itu,
+                dan untuk mencatat booking baru.
+              </p>
+            </div>
+          ) : view === "gear" ? (
+            <GearDay
+              date={picked}
+              entries={pickedGear}
+              gear={gear}
+              bookings={byId}
+              content={content}
+              onPick={onPick}
+              onEdit={onEdit}
+            />
+          ) : (
+            <DayAgenda
+              key={picked}
+              date={picked}
+              bookings={bookings}
+              agents={agents}
+              gear={gear ?? []}
+              content={content}
+              program={program}
+              focus={focus}
+              onPick={onPick}
+              onEdit={onEdit}
+              onQuickSave={onQuickSave}
+            />
+          )}
+        </aside>
+        <GuestFlow
+          today={today}
+          bookings={bookings}
+          agents={agents}
+          content={content}
+          program={program}
+          onEdit={onEdit}
+        />
+      </div>
     </div>
   );
 }

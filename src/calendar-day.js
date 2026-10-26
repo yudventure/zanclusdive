@@ -73,6 +73,88 @@ export function dayAgenda(date, bookings, { agents = [], gear = [] } = {}) {
 const people = (b) => Number(b.participants) || 0;
 const daysBetween = (from, to) =>
   Math.round((Date.parse(to) - Date.parse(from)) / 864e5);
+const addDays = (date, n) =>
+  new Date(Date.parse(date + "T00:00:00Z") + n * 864e5)
+    .toISOString()
+    .slice(0, 10);
+
+// The guests around today, for the panel beside the calendar: who arrived
+// in the last "days" days (yesterday first), who is out today, and who
+// arrives in the next "days" days, by the day they arrive. A trip of
+// several days counts on its first day. Cancelled reservations and closed
+// dates are left out, "program" narrows it to one activity, and the
+// agents' and OTAs' events come along for all activities.
+export function guestFlow(
+  today,
+  bookings,
+  { agents = [], program = "all", days = 7 } = {},
+) {
+  const open = bookings.filter(
+    (b) =>
+      !["cancelled", "closed"].includes(b.status) &&
+      (program === "all" || b.experience === program),
+  );
+  const events =
+    program === "all"
+      ? agents
+          .filter((agent) => agent.enabled)
+          .flatMap((agent) =>
+            (agent.events ?? []).map((event) => ({ agent, event })),
+          )
+      : [];
+  const rank = (b) => bookingPrograms.indexOf(b.experience);
+  const sorted = (list) =>
+    list.sort((x, y) =>
+      x.booking && y.booking
+        ? rank(x.booking) - rank(y.booking) ||
+          String(x.booking.guestName).localeCompare(String(y.booking.guestName))
+        : x.booking
+          ? -1
+          : y.booking
+            ? 1
+            : 0,
+    );
+  const dayGroup = (date, entries) => ({
+    date,
+    entries: sorted(entries),
+    people: entries.reduce(
+      (sum, e) => sum + (e.booking ? people(e.booking) : 0),
+      0,
+    ),
+  });
+  const trip = (booking, date) => ({
+    booking,
+    day: daysBetween(booking.startDate, date) + 1,
+    days: daysBetween(booking.startDate, booking.endDate) + 1,
+  });
+  const arriving = (date) =>
+    dayGroup(date, [
+      ...open.filter((b) => b.startDate === date).map((b) => trip(b, date)),
+      ...events.filter(({ event }) => event.start === date),
+    ]);
+  const range = (from, count, step) =>
+    Array.from({ length: count }, (_, i) => addDays(from, (i + 1) * step));
+  const now = dayGroup(today, [
+    ...open
+      .filter((b) => b.startDate <= today && b.endDate >= today)
+      .map((b) => trip(b, today)),
+    ...events.filter(({ event }) => event.start <= today && event.end >= today),
+  ]);
+  // Who arrives today comes before who is already out.
+  now.entries.sort((x, y) => (x.day ?? 1) - (y.day ?? 1));
+  const filled = (groups) => groups.filter((g) => g.entries.length);
+  const total = (groups) => ({
+    count: groups.reduce((sum, g) => sum + g.entries.length, 0),
+    people: groups.reduce((sum, g) => sum + g.people, 0),
+  });
+  const past = filled(range(today, days, -1).map(arriving));
+  const next = filled(range(today, days, 1).map(arriving));
+  return {
+    past: { groups: past, ...total(past) },
+    today: { groups: filled([now]), ...total([now]) },
+    next: { groups: next, ...total(next) },
+  };
+}
 
 // "62812…" for a wa.me link from a phone as typed: 0812…, +62 812…, 812….
 export function whatsappNumber(phone) {
