@@ -70,6 +70,7 @@ export default function MonthCalendar({
   onEdit,
   onQuickSave,
   onSyncAgents,
+  focusOn,
 }) {
   const [program, setProgram] = useState("all");
   const [syncing, setSyncing] = useState(false);
@@ -102,6 +103,19 @@ export default function MonthCalendar({
         30,
       );
   }
+  // A booking shown from its notice ("Lihat di kalender"): its first day
+  // picked and the booking lit, with the calendar brought into view.
+  const card = useRef(null);
+  useEffect(() => {
+    if (!focusOn) return;
+    pick(focusOn.date, focusOn.id);
+    if (!window.matchMedia("(max-width: 1180px)").matches)
+      setTimeout(
+        () =>
+          card.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        30,
+      );
+  }, [focusOn]);
   const days = monthDays(month);
   const list = bookings.filter(
     (b) =>
@@ -140,7 +154,7 @@ export default function MonthCalendar({
       .reduce((sum, b) => sum + (Number(b.participants) || 0), 0);
   return (
     <div className="admin-calendar-layout">
-      <section className="admin-card admin-month-card">
+      <section ref={card} className="admin-card admin-month-card">
         <div className="admin-month-nav">
           <button
             type="button"

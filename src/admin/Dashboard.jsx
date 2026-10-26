@@ -2,6 +2,7 @@
 import Thumb from "./Thumb.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import ShopEditor from "./ShopEditor.jsx";
 import ActivitiesEditor from "./ActivitiesEditor.jsx";
 import PriceListEditor from "./PriceListEditor.jsx";
@@ -406,6 +407,24 @@ export default function Dashboard({ section, account, today }) {
     setNoticeError("");
     setNoticeId(booking.id);
   }
+  // "Lihat di kalender": the reservation calendar on the booking's month,
+  // its first day picked and the booking lit in the day's agenda. From
+  // another page it goes there first (?lihat=<id>).
+  const router = useRouter();
+  const [calendarFocus, setCalendarFocus] = useState(null);
+  function focusCalendar(booking) {
+    setMonth(booking.startDate.slice(0, 7));
+    setCalendarFocus({
+      date: booking.startDate,
+      id: booking.id,
+      at: Date.now(),
+    });
+  }
+  function showInCalendar(booking) {
+    setNoticeId(null);
+    if (section === "calendar") focusCalendar(booking);
+    else router.push("/admin/calendar?lihat=" + booking.id);
+  }
   async function confirmNotice(booking, kind) {
     setBusy(true);
     setNoticeError("");
@@ -505,6 +524,13 @@ export default function Dashboard({ section, account, today }) {
   // notice of that reservation, ?ubah=<id> opens that
   // reservation in the full form, #daftar-reservasi goes to the list.
   const loaded = Boolean(data);
+  const shownId = useSearchParams().get("lihat");
+  useEffect(() => {
+    if (section !== "calendar" || !loaded || !shownId) return;
+    const shown = data.bookings.find((b) => b.id === shownId);
+    if (shown) focusCalendar(shown);
+    window.history.replaceState(null, "", "/admin/calendar");
+  }, [section, loaded, shownId]);
   useEffect(() => {
     if (section !== "calendar" || !loaded) return;
     const url = new URL(window.location.href);
@@ -1255,6 +1281,7 @@ export default function Dashboard({ section, account, today }) {
                     onEdit={editReservation}
                     onQuickSave={quickReservation}
                     onSyncAgents={syncAgentCalendars}
+                    focusOn={calendarFocus}
                   />
                   {calendarForm && editor}
                   <section
@@ -2014,6 +2041,7 @@ export default function Dashboard({ section, account, today }) {
           busy={busy}
           error={noticeError}
           onConfirm={confirmNotice}
+          onShowCalendar={showInCalendar}
           onClose={() => setNoticeId(null)}
         />
       )}

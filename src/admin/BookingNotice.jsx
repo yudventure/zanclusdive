@@ -22,6 +22,7 @@ export default function BookingNotice({
   busy,
   error,
   onConfirm,
+  onShowCalendar,
   onClose,
 }) {
   const card = useOutsideClose(true, () => !busy && onClose());
@@ -85,6 +86,16 @@ export default function BookingNotice({
             >
               Chat WhatsApp
             </a>
+          )}
+          {onShowCalendar && (
+            <button
+              type="button"
+              className="admin-button secondary"
+              disabled={busy}
+              onClick={() => onShowCalendar(booking)}
+            >
+              Lihat di kalender
+            </button>
           )}
           <button
             type="button"

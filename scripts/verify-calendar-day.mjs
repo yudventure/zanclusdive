@@ -323,6 +323,38 @@ try {
   );
   assert.doesNotMatch(await notice.textContent(), /[:;—]/);
   shots && (await notice.screenshot({ path: `${shots}/97-konfirmasi.png` }));
+  // "Lihat di kalender" goes to the reservation calendar on the booking's
+  // month, its day picked and the booking lit in the agenda.
+  const monthLabel = new Date(day + "T12:00:00").toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+  const shownInCalendar = async () => {
+    await page.waitForURL(/\/admin\/calendar$/);
+    await page
+      .locator(".admin-day-person.is-focus", { hasText: "Rombongan Sorong" })
+      .waitFor();
+    assert.match(
+      await page.locator(".admin-month-card").textContent(),
+      new RegExp(monthLabel, "i"),
+    );
+    assert.equal(await page.locator(".admin-month-day.is-selected").count(), 1);
+  };
+  await notice.getByRole("button", { name: "Lihat di kalender" }).click();
+  await shownInCalendar();
+  assert.equal(await notice.count(), 0);
+  shots &&
+    (await page
+      .locator(".admin-calendar-layout")
+      .screenshot({ path: `${shots}/99-lihat-kalender.png` }));
+  // Back on another page, the bell still has it waiting for an answer.
+  await page.goto(base + "/admin/customers", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Notifikasi reservasi" }).click();
+  await page
+    .locator(".admin-popover")
+    .getByRole("link", { name: /Rombongan Sorong/ })
+    .click();
+  await notice.waitFor();
   await notice.getByRole("button", { name: "Konfirmasi booking" }).click();
   await page
     .locator(".admin-success", {
@@ -347,6 +379,14 @@ try {
     await notice.getByRole("button", { name: /Konfirmasi/ }).count(),
     0,
   );
+  // On the calendar itself, opened on this month, the button moves the
+  // calendar to the booking's month at once.
+  await notice.getByRole("button", { name: "Lihat di kalender" }).click();
+  await shownInCalendar();
+  await page.goto(base + `/admin/calendar?booking=${sorong.id}`, {
+    waitUntil: "networkidle",
+  });
+  await notice.waitFor();
   await page.keyboard.press("Escape");
   assert.equal(await notice.count(), 0);
   assert.ok(
