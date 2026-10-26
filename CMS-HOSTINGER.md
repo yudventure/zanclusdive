@@ -273,7 +273,7 @@ Tamu yang mengisi email menerima email ber-logo Zanclus dalam bahasa Indonesia a
 Pengaturan ada di **Keuangan → Pembayaran online → Email tamu & invoice** (superadmin dan keuangan):
 
 - **Batas waktu pembayaran**: 1 jam sampai 3 hari, bawaan 24 jam. Link Midtrans kedaluwarsa pada batas ini.
-- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer dan di halaman transfer setelah tamu memesan di website. Isi juga **Kode SWIFT** (8 atau 11 huruf, misalnya BMRIIDJA untuk Mandiri, CENAIDJA untuk BCA) agar tamu dari luar negeri bisa transfer internasional. Kodenya tampil di bawah nama pemilik rekening. Boleh dikosongkan.
+- **Rekening untuk transfer bank**: sampai 3 rekening; tampil di email tagihan transfer dan di halaman transfer setelah tamu memesan di website. Isi juga **Kode SWIFT** (8 atau 11 huruf, misalnya BMRIIDJA untuk Mandiri, CENAIDJA untuk BCA) agar tamu dari luar negeri bisa transfer internasional. **Alamat bank** (alamat cabang, misalnya Jl. Raya Waisai, Raja Ampat, Indonesia) melengkapinya, karena bank pengirim di luar negeri sering memintanya. Keduanya tampil di bawah nama pemilik rekening dan boleh dikosongkan.
 - **Catatan di invoice**: mis. ketentuan pembatalan, dalam bahasa Indonesia dan Inggris.
 - **Salinan setiap email ke**: email kantor yang menerima salinan (BCC) untuk arsip.
 - **Pratinjau** dan **Kirim ke email saya** menampilkan contoh setiap email dengan pengaturan yang sudah disimpan.

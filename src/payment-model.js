@@ -47,21 +47,24 @@ export function validatePayments(input) {
   if (copyTo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(copyTo))
     throw new Error("Email salinan invoice tidak valid.");
   const list = Array.isArray(input.accounts) ? input.accounts : [];
-  // The SWIFT code (8 or 11 letters and digits) lets guests abroad send
-  // an international transfer; kept only when filled in.
+  // The SWIFT code (8 or 11 letters and digits) and the bank's address
+  // let guests abroad send an international transfer; each is kept only
+  // when filled in.
   const accounts = list
     .map((a) => {
       const swift = text(a?.swift, "Kode SWIFT", 20)
         .replace(/\s/g, "")
         .toUpperCase();
+      const address = text(a?.address, "Alamat bank", 200);
       return {
         bank: text(a?.bank, "Nama bank", 40),
         number: text(a?.number, "Nomor rekening", 30),
         holder: text(a?.holder, "Atas nama", 80),
         ...(swift ? { swift } : {}),
+        ...(address ? { address } : {}),
       };
     })
-    .filter((a) => a.bank || a.number || a.holder || a.swift);
+    .filter((a) => a.bank || a.number || a.holder || a.swift || a.address);
   if (accounts.length > accountLimit)
     throw new Error(`Maksimal ${accountLimit} rekening transfer.`);
   for (const a of accounts) {

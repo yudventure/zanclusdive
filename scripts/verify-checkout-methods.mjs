@@ -173,6 +173,10 @@ try {
   await a.getByLabel("Atas nama").first().fill("PT Zanclus Dive Center");
   // Typed in lower case, saved as the bank's SWIFT code.
   await a.getByLabel("Kode SWIFT").first().fill("cenaidja");
+  await a
+    .getByLabel("Alamat bank")
+    .first()
+    .fill("Jl. Raya Waisai, Raja Ampat, Indonesia");
   await a.getByRole("button", { name: "Simpan pengaturan email" }).click();
   await a.getByText("Pengaturan email tamu tersimpan.").waitFor();
   await transferCard.locator(".admin-dev-switch").click();
@@ -274,7 +278,7 @@ try {
   );
   assert.match(
     await page.locator(".zs-account").textContent(),
-    /BCA\s*123 456 7890\s*Account name PT Zanclus Dive Center\s*SWIFT code CENAIDJA/,
+    /BCA\s*123 456 7890\s*Account name PT Zanclus Dive Center\s*SWIFT code CENAIDJA\s*Bank address Jl\. Raya Waisai, Raja Ampat, Indonesia/,
   );
   assert.match(
     await page.locator(".zs-details").textContent(),

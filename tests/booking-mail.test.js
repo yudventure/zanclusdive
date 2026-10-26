@@ -268,11 +268,14 @@ test("a SWIFT code goes with an account, for guests paying from abroad", async (
         number: "160 000 347 4455",
         holder: "Zanclus",
         swift: " bmri idja ",
+        address: " Jl. Raya Waisai, Raja Ampat ",
       },
       { bank: "BCA", number: "123 456 7890", holder: "Zanclus", swift: "" },
     ],
   });
   assert.equal(saved.accounts[0].swift, "BMRIIDJA");
+  assert.equal(saved.accounts[0].address, "Jl. Raya Waisai, Raja Ampat");
+  assert.equal("address" in saved.accounts[1], false);
   assert.equal("swift" in saved.accounts[1], false);
   assert.equal(
     validatePayments({
@@ -306,7 +309,11 @@ test("a SWIFT code goes with an account, for guests paying from abroad", async (
     const booking = sampleBooking("order", { now, method: "transfer", lang });
     const mail = bookingMail("order", { booking, content: c, base });
     assert.match(mail.html, words);
-    assert.match(mail.text, /a\.n\. Zanclus, SWIFT BMRIIDJA\n/);
+    assert.match(
+      mail.text,
+      /a\.n\. Zanclus, SWIFT BMRIIDJA, (Alamat bank|Bank address) Jl\. Raya Waisai, Raja Ampat\n/,
+    );
+    assert.match(mail.html, /Jl\. Raya Waisai, Raja Ampat<\/span><\/p>/);
     assert.doesNotMatch(mail.html, /123 456 7890[\s\S]{0,300}SWIFT/);
   }
   const { statusMarkup } = await import("../src/status-pages.js");
@@ -316,4 +323,5 @@ test("a SWIFT code goes with an account, for guests paying from abroad", async (
     accounts: saved.accounts,
   });
   assert.match(page, /<span>SWIFT code BMRIIDJA<\/span>/);
+  assert.match(page, /<span>Bank address Jl\. Raya Waisai, Raja Ampat<\/span>/);
 });

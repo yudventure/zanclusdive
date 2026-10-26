@@ -2578,6 +2578,10 @@ strong.admin-overdue {
   display: grid;
   gap: 4px;
 }
+.admin-account-address {
+  grid-column: 1 / -1;
+  margin-bottom: 10px;
+}
 .admin-account-row {
   display: grid;
   grid-template-columns:

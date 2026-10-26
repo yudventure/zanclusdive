@@ -180,6 +180,7 @@ export const statusNames = Object.keys(statusPages);
 const labels = {
   holder: t("a.n.", "Account name"),
   swift: t("Kode SWIFT", "SWIFT code"),
+  address: t("Alamat bank", "Bank address"),
   whatsapp: t("Chat WhatsApp", "Chat on WhatsApp"),
   retry: t("Coba lagi", "Try again"),
   home: t("Kembali ke beranda", "Back to home"),
@@ -334,7 +335,7 @@ export function statusMarkup({
       <p class="zs-text">${page.text[lang]}</p>
       ${message ? `<div class="zs-note"><small>${labels.note[lang]}</small><p>${escape(message)}</p></div>` : ""}
       ${when ? `<p class="zs-until">${labels.until[lang]}: <strong>${escape(when)}</strong></p>` : ""}
-      ${accounts.length ? `<div class="zs-accounts">${accounts.map((a) => `<div class="zs-account"><small>${escape(a.bank)}</small><strong>${escape(a.number)}</strong><span>${labels.holder[lang]} ${escape(a.holder)}</span>${a.swift ? `<span>${labels.swift[lang]} ${escape(a.swift)}</span>` : ""}</div>`).join("")}</div>` : ""}
+      ${accounts.length ? `<div class="zs-accounts">${accounts.map((a) => `<div class="zs-account"><small>${escape(a.bank)}</small><strong>${escape(a.number)}</strong><span>${labels.holder[lang]} ${escape(a.holder)}</span>${a.swift ? `<span>${labels.swift[lang]} ${escape(a.swift)}</span>` : ""}${a.address ? `<span>${labels.address[lang]} ${escape(a.address)}</span>` : ""}</div>`).join("")}</div>` : ""}
       ${details.length ? `<dl class="zs-details">${details.map(([label, value]) => `<div><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>` : ""}
       <div class="zs-actions">${links
         .map(

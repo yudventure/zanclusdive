@@ -29,7 +29,7 @@ export default function GuestMailSettings({
   const accounts = settings.accounts ?? [];
   const rows = [...accounts];
   while (rows.length < accountLimit)
-    rows.push({ bank: "", number: "", holder: "", swift: "" });
+    rows.push({ bank: "", number: "", holder: "", swift: "", address: "" });
   const setAccount = (index, key, value) => {
     const next = rows.map((row, i) =>
       i === index ? { ...row, [key]: value } : row,
@@ -124,8 +124,8 @@ export default function GuestMailSettings({
         Tampil di email tagihan transfer dan di halaman transfer setelah tamu
         memesan di website. Isi sampai {accountLimit} rekening. Kode SWIFT (8
         atau 11 huruf, misalnya BMRIIDJA untuk Mandiri atau CENAIDJA untuk BCA)
-        dipakai tamu luar negeri untuk transfer internasional. Boleh
-        dikosongkan.
+        dan alamat cabang bank dipakai tamu luar negeri untuk transfer
+        internasional. Boleh dikosongkan.
       </p>
       <div className="admin-account-rows">
         {rows.map((row, i) => (
@@ -166,6 +166,16 @@ export default function GuestMailSettings({
                 }
               />
             </Field>
+            <div className="admin-account-address">
+              <Field label="Alamat bank">
+                <input
+                  maxLength={200}
+                  placeholder="Jl. Raya Waisai, Waisai, Raja Ampat, Papua Barat Daya, Indonesia"
+                  value={row.address ?? ""}
+                  onChange={(e) => setAccount(i, "address", e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
         ))}
       </div>
