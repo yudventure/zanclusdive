@@ -10,6 +10,7 @@ import GalleryEditor from "./GalleryEditor.jsx";
 import CalendarEditor from "./CalendarEditor.jsx";
 import CourseEditor from "./CourseEditor.jsx";
 import AboutEditor from "./AboutEditor.jsx";
+import LegalEditor from "./LegalEditor.jsx";
 import ServiceEditor from "./ServiceEditor.jsx";
 import DeveloperEditor from "./DeveloperEditor.jsx";
 import PaymentsEditor, { PaymentBadge } from "./PaymentsEditor.jsx";
@@ -34,6 +35,7 @@ import {
 import { defaultDeveloper, lockCount } from "../developer.js";
 import { defaultCourses } from "../course-model.js";
 import { defaultAbout } from "../about-model.js";
+import { defaultLegal } from "../legal-model.js";
 import { defaultService } from "../service-model.js";
 import Overview, { displayName, dailySchedule } from "./Overview.jsx";
 import { AdminIcon } from "./icons.jsx";
@@ -1549,6 +1551,19 @@ export default function Dashboard({ section, account, today }) {
                       },
                     }))
                   }
+                />
+              )}
+              {section === "legal" && (
+                <LegalEditor
+                  legal={content.legal}
+                  update={(patch) =>
+                    setContent((current) => ({
+                      ...current,
+                      legal: { ...(current.legal ?? defaultLegal), ...patch },
+                    }))
+                  }
+                  onSave={saveSettings}
+                  busy={busy}
                 />
               )}
               {section === "about" && (

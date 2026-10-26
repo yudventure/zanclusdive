@@ -11,7 +11,7 @@ import {
 // English is served at the root; the Indonesian site lives under /id and is
 // rewritten to the same pages with a locale request header.
 const indonesianPages =
-  /^\/id(\/(diving|snorkeling|trip|course|about|service|dive-shop|calendar))?\/?$/;
+  /^\/id(\/(diving|snorkeling|trip|course|about|service|dive-shop|calendar|terms|privacy|refund))?\/?$/;
 // Open even while the whole website is locked.
 const openPaths =
   /^\/(admin|status|maintenance|payment|booking|partner|sw\.js|robots\.txt|sitemap\.xml)(\/|$)/;

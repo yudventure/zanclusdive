@@ -49,6 +49,7 @@ Website publik tersedia dalam bahasa Inggris sebagai default dan Bahasa Indonesi
 | Beranda | `/` | `/id` |
 | Aktivitas | `/diving`, `/snorkeling`, `/trip` | `/id/diving`, `/id/snorkeling`, `/id/trip` |
 | Dive Shop | `/dive-shop` | `/id/dive-shop` |
+| Kebijakan | `/terms`, `/privacy`, `/refund` | `/id/terms`, `/id/privacy`, `/id/refund` |
 
 Tombol **EN / ID** di header berpindah ke halaman yang sama dalam bahasa lain. `proxy.js` mengarahkan URL `/id` ke halaman yang sama dengan bahasa Indonesia; atribut `lang`, metadata, dan tautan `hreflang` mengikuti bahasa. Tautan internal, kalender, kuis, formulir booking, pesan WhatsApp, pesan pesanan Dive Shop, ringkasan unduhan, serta pesan error booking ikut bahasa halaman. Harga tetap dalam rupiah (IDR). CMS admin tetap berbahasa Indonesia.
 
@@ -384,6 +385,23 @@ Paket Diving, Snorkeling, Trip laut, dan sewa alat Dive Shop yang dipesan lewat 
 - **Halaman pesanan tamu** `/booking/<id>?t=<kunci>` dibuka dari tombol **Manage booking / Kelola pesanan** di halaman hasil pembayaran dan dari invoice email. Tamu Comfort dan Flexi memilih tanggal baru dari kalender sisa tempat. Tanggal baru diperiksa lagi di server, di dalam kunci yang sama dengan pesanan baru, tanpa menghitung pesanan itu sendiri. Tamu Flexi bisa membatalkan dan meminta refund. Kunci yang salah memberi halaman 404, dan permintaan dari situs lain ditolak.
 - **Email** ke tamu saat tanggal diganti dan saat refund diminta. Invoice memuat tarif, aturannya, dan tombol Kelola pesanan.
 - **Admin**: daftar Reservasi menandai tarif dan refund. Editor reservasi menampilkan tarif, batas waktunya, tanggal yang diganti tamu, dan permintaan refund dengan tombol **Tandai refund sudah dikirim** (catatan transfer opsional). Refund yang sudah dikirim masuk **Buku kas** sebagai pengeluaran otomatis kategori Refund tamu.
+
+## Halaman kebijakan
+
+Tiga halaman yang tautannya ada di kaki setiap halaman, di sebelah hak cipta.
+
+| Halaman | English | Bahasa Indonesia |
+| --- | --- | --- |
+| Syarat dan ketentuan | `/terms` | `/id/terms` |
+| Kebijakan privasi | `/privacy` | `/id/privacy` |
+| Kebijakan reschedule & refund | `/refund` | `/id/refund` |
+
+- **Isi** di `content.legal` (`src/legal-model.js`). Setiap halaman punya judul, pengantar, dan sampai 16 bagian. Isi bagian dipisah per paragraf dengan baris kosong, dan baris yang diawali `- ` menjadi daftar berpoin. Tanggal **Terakhir diperbarui** dipakai bersama oleh ketiganya. Teks awalnya draf yang mengikuti cara kerja website (pembayaran Midtrans, transfer, PayPal, tarif, Kelola pesanan, UU PDP) dan perlu diperiksa pemilik, bukan nasihat hukum.
+- **Admin** di **Situs web → Halaman kebijakan**. Pilih halamannya, ubah judul, pengantar, dan bagian (tambah, naik, turun, hapus), lalu **Simpan halaman kebijakan**. **Kembalikan teks awal** mengisi ulang halaman yang dipilih dengan draf bawaan sebelum disimpan.
+- **Halaman refund** menampilkan kartu tarif Standard, Comfort, dan Flexi di atas bagian pertama, langsung dari pengaturan tarif di Daftar harga, jadi persen dan batas harinya selalu sama dengan checkout. Saat tarif dimatikan, kartunya diganti kalimat bahwa semua pesanan memakai Standard.
+- **Checkout** (aktivitas, Dive Shop, kursus, servis) menulis "Dengan memesan, kamu menyetujui Syarat dan ketentuan dan Kebijakan reschedule & refund." di bawah tombol bayar. Kedua tautan membuka tab baru supaya isian checkout tidak hilang.
+- **Sitemap** memuat ketiganya dalam dua bahasa dengan prioritas 0,3. Ketiganya ikut tertutup saat seluruh website dikunci di Mode developer.
+- Uji dengan `node scripts/verify-legal.mjs` terhadap server demo lokal (`BASE_URL`).
 
 ## Kalender bersama travel agent
 

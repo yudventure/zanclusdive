@@ -20,6 +20,7 @@ const paths = {
   service:
     "M14.5 6.5a4 4 0 0 0 5 5l-9 9a2.1 2.1 0 0 1-3-3l9-9a4 4 0 0 0-2-2zM18 4l2 2",
   about: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v6M12 7.5h.01",
+  legal: "M7 3h7l5 5v13H7zM14 3v5h5M10 12h6M10 16h6",
   developer: "M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14",
   payments: "M3 7h18v11H3zM3 11h18M7 15h4",
   agents:

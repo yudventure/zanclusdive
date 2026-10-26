@@ -3792,3 +3792,24 @@ strong.admin-overdue {
 .admin-price-year input {
   max-width: 160px;
 }
+
+/* Policy pages: the date with its buttons, and the fares note. */
+.admin-legal .admin-activity-tabs {
+  margin: 4px 0 18px;
+}
+.admin-legal-meta {
+  align-items: end;
+}
+.admin-legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-bottom: 14px;
+}
+.admin-legal-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eff7f4;
+}

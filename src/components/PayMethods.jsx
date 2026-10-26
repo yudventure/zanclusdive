@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { formatIDR } from "../i18n.js";
+import { dictionary, formatIDR, localeHref } from "../i18n.js";
 import { paypalAmount } from "../payment-model.js";
+import { legalLabels, legalPaths } from "../legal-model.js";
 
 // The ways to pay the checkout offers (Midtrans, bank transfer, PayPal) and
 // the texts that change with the one picked. With one way only, nothing is
@@ -58,14 +59,35 @@ export function PayMethodChoice({ p, methods, method, onChange, disabled }) {
   );
 }
 
+// Booking means agreeing to the terms and the reschedule and refund
+// policy; both open in a new tab so the checkout stays as it is.
+function PayAgree({ locale }) {
+  const l = dictionary(locale).legal;
+  const link = (key) => (
+    <a
+      href={localeHref(locale, legalPaths[key])}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {legalLabels[key][locale] || legalLabels[key].id}
+    </a>
+  );
+  return (
+    <p className="pay-agree">
+      {l.agree} {link("terms")} {l.and} {link("refund")}.
+    </p>
+  );
+}
+
 // The small print under the button, for the way picked. Without a choice
 // to make, the way to pay is explained here.
-export function PayNotes({ p, method, payments, total }) {
+export function PayNotes({ p, method, payments, total, locale = "en" }) {
   if (method === "transfer")
     return (
       <div className="pay-notes">
         {(payments?.methods?.length ?? 0) < 2 && <p>{p.methods.transfer[1]}</p>}
         <p>{p.transferHold}</p>
+        <PayAgree locale={locale} />
       </div>
     );
   if (method === "paypal")
@@ -75,12 +97,14 @@ export function PayNotes({ p, method, payments, total }) {
         {payments?.paypalSandbox && (
           <p className="pay-sandbox">{p.paypalSandbox}</p>
         )}
+        <PayAgree locale={locale} />
       </div>
     );
   return (
     <div className="pay-notes">
       <p>{p.secure}</p>
       {payments?.sandbox && <p className="pay-sandbox">{p.sandbox}</p>}
+      <PayAgree locale={locale} />
     </div>
   );
 }

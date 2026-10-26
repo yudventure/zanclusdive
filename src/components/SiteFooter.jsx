@@ -2,6 +2,7 @@ import ContactIcon from "./ContactIcon.jsx";
 import { phoneLabel, socialPlatforms } from "../contact-model.js";
 import { defaultActivities, activityKeys } from "../activity-model.js";
 import { dictionary, localeHref } from "../i18n.js";
+import { legalKeys, legalLabels, legalPaths } from "../legal-model.js";
 
 export default function SiteFooter({
   contact,
@@ -124,6 +125,17 @@ export default function SiteFooter({
           <span id={home ? "year" : undefined}>{new Date().getFullYear()}</span>{" "}
           {t.rights}
         </p>
+        <div
+          className="site-footer-legal"
+          role="navigation"
+          aria-label={dictionary(locale).legal.kicker}
+        >
+          {legalKeys.map((key) => (
+            <a key={key} href={href(legalPaths[key])}>
+              {legalLabels[key][locale] || legalLabels[key].id}
+            </a>
+          ))}
+        </div>
         <a className="site-footer-operator" href="/admin" rel="nofollow">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect

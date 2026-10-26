@@ -11,6 +11,7 @@ import {
 import { defaultCalendar, validateCalendar } from "./calendar-model.js";
 import { defaultCourses, validateCourses } from "./course-model.js";
 import { defaultAbout, validateAbout } from "./about-model.js";
+import { defaultLegal, validateLegal } from "./legal-model.js";
 import { defaultService, validateService } from "./service-model.js";
 import { defaultDeveloper, validateDeveloper } from "./developer.js";
 import { defaultPayments, validatePayments } from "./payment-model.js";
@@ -110,6 +111,7 @@ export const defaultContent = withRentalProducts({
   calendar: structuredClone(defaultCalendar),
   courses: structuredClone(defaultCourses),
   about: structuredClone(defaultAbout),
+  legal: structuredClone(defaultLegal),
   service: structuredClone(defaultService),
   developer: structuredClone(defaultDeveloper),
   payments: { ...defaultPayments },
@@ -325,6 +327,7 @@ export function validateContent(sent) {
     calendar: validateCalendar(input.calendar),
     courses: validateCourses(input.courses),
     about: validateAbout(input.about),
+    legal: validateLegal(input.legal),
     service: validateService(input.service),
     developer: validateDeveloper(input.developer),
     payments: validatePayments(input.payments),

@@ -83,9 +83,16 @@ test("the sitemap lists public pages in both languages with hreflang", () => {
     "/service",
     "/dive-shop",
     "/about",
+    "/terms",
+    "/privacy",
+    "/refund",
   ]);
   const entries = sitemapEntries(content, base);
-  assert.equal(entries.length, 16);
+  assert.equal(entries.length, 22);
+  // The policy pages change seldom and rank below the activities.
+  const terms = entries.find((e) => e.url === base + "/id/terms");
+  assert.equal(terms.priority, 0.3);
+  assert.equal(terms.changeFrequency, "yearly");
   assert.deepEqual(
     entries.slice(0, 4).map((e) => e.url),
     [base + "/", base + "/id", base + "/diving", base + "/id/diving"],

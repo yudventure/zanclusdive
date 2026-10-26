@@ -511,6 +511,19 @@
   width: 15px;
   height: 15px;
 }
+.site-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  font-size: 11px;
+}
+.site-footer-legal a {
+  color: #a9c2c8;
+  transition: color 0.2s;
+}
+.site-footer-legal a:hover {
+  color: #bef4a5;
+}
 @media (max-width: 1100px) {
   .travel-section {
     padding: 65px 28px 56px;
@@ -711,7 +724,8 @@
     gap: 17px;
     font-size: 9px;
   }
-  .site-footer-bottom > p {
+  .site-footer-bottom > p,
+  .site-footer-legal {
     width: 100%;
     line-height: 1.6;
   }

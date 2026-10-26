@@ -262,7 +262,19 @@ try {
   );
   assert.equal(
     await page.locator(".pay-notes").textContent(),
-    "Nothing is charged on the website. We hold your date until the transfer deadline.",
+    "Nothing is charged on the website. We hold your date until the transfer deadline.By booking you agree to our Terms and conditions and Reschedule & refund policy.",
+  );
+  // The policies open in a new tab, so the checkout stays.
+  assert.deepEqual(
+    await page
+      .locator(".pay-agree a")
+      .evaluateAll((links) =>
+        links.map((a) => [a.getAttribute("href"), a.target]),
+      ),
+    [
+      ["/terms", "_blank"],
+      ["/refund", "_blank"],
+    ],
   );
   if (shots)
     await page.locator("#inquiry").screenshot({
@@ -537,7 +549,7 @@ try {
   );
   assert.match(
     await page.locator(".course-checkout .pay-notes").textContent(),
-    /Nomor rekening tampil setelah ini[\s\S]*Tanggalmu kami tahan sampai batas waktu transfer/,
+    /Nomor rekening tampil setelah ini[\s\S]*Tanggalmu kami tahan sampai batas waktu transfer[\s\S]*Dengan memesan, kamu menyetujui Syarat dan ketentuan dan Kebijakan reschedule & refund\./,
   );
   await page.locator(".course-checkout .pay-submit").click();
   await page.waitForURL(/\/payment\/finish\?order_id=/);

@@ -1070,6 +1070,26 @@ const id = {
     fromShop: ["Alat selam perlu dirawat?", "Servis alat selam"],
     metaTitle: "Servis alat selam | Zanclus Dive Center",
   },
+  // The policy pages (src/legal-model.js holds their texts).
+  legal: {
+    kicker: "Kebijakan Zanclus",
+    skip: "Lewati ke isi kebijakan",
+    updated: (date) => `Terakhir diperbarui ${date}`,
+    contents: "Isi halaman",
+    others: "Kebijakan lainnya",
+    faresTitle: "Tarif dan aturannya",
+    faresIntro:
+      "Kenaikan dihitung dari harga paket atau sewa, bukan dari add-on dan pembelian.",
+    faresOff:
+      "Saat ini semua pesanan memakai tarif Standard. Tanggal hanya diganti bila cuaca atau kondisi laut tidak memungkinkan, diputuskan tim kami.",
+    askTitle: "Ada pertanyaan?",
+    askText:
+      "Hubungi tim kami lewat WhatsApp atau email. Sertakan kode pesananmu bila sudah memesan.",
+    chat: "Chat WhatsApp",
+    askMessage: (page) => `Halo Zanclus, saya ingin bertanya tentang ${page}.`,
+    agree: "Dengan memesan, kamu menyetujui",
+    and: "dan",
+  },
   footer: {
     label: "Informasi Zanclus Dive Center",
     tagline: "Jelajahi laut. Temukan cerita.",
@@ -2394,6 +2414,25 @@ const en = {
     shopLink: ["Need new gear or a rental?", "See the Dive Shop catalog"],
     fromShop: ["Does your dive gear need care?", "Dive gear service"],
     metaTitle: "Dive gear service | Zanclus Dive Center",
+  },
+  legal: {
+    kicker: "Zanclus policies",
+    skip: "Skip to the policy",
+    updated: (date) => `Last updated ${date}`,
+    contents: "On this page",
+    others: "Other policies",
+    faresTitle: "Fares and their rules",
+    faresIntro:
+      "The increase is worked out on the package or rental price, not on add-ons or purchases.",
+    faresOff:
+      "All bookings currently use the Standard fare. The date only changes when the weather or sea conditions rule the day out, as decided by our team.",
+    askTitle: "Questions?",
+    askText:
+      "Contact our team on WhatsApp or by email. Include your booking code if you have already booked.",
+    chat: "Chat on WhatsApp",
+    askMessage: (page) => `Hi Zanclus, I have a question about your ${page}.`,
+    agree: "By booking you agree to our",
+    and: "and",
   },
   footer: {
     label: "Zanclus Dive Center information",

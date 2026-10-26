@@ -131,6 +131,12 @@ export const sections = {
     area: "website",
     intro: "Halaman tentang kami dan tim.",
   },
+  legal: {
+    title: "Halaman kebijakan",
+    area: "website",
+    intro:
+      "Syarat dan ketentuan, kebijakan privasi, serta kebijakan reschedule & refund.",
+  },
   contact: {
     title: "Kontak & sosial media",
     area: "website",
@@ -222,6 +228,7 @@ export const menuGroups = [
       "shop",
       "service",
       "about",
+      "legal",
       "contact",
       "seo",
     ],

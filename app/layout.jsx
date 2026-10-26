@@ -14,6 +14,7 @@ import "./forms.css";
 import "./event-banner.css";
 import "../src/components/peta-raja-ampat/peta-raja-ampat.css";
 import "./developer.css";
+import "./legal.css";
 import { headers } from "next/headers";
 import { dictionary, htmlLang } from "../src/i18n.js";
 import { requestLocale, languageAlternates } from "../src/server/locale.js";

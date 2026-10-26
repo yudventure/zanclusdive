@@ -1,6 +1,8 @@
 // Search engines: the site's own address, the Google Search Console
 // verification code, the sitemap entries and the business card Google
 // reads from the homepage.
+import { legalKeys, legalPaths } from "./legal-model.js";
+
 export const defaultSiteUrl = "https://zanclusdivecenter.com";
 // SITE_URL (read at run time) or NEXT_PUBLIC_SITE_URL, else the domain
 // the business uses. Only the origin is kept.
@@ -45,9 +47,12 @@ export function publicPaths(content) {
     paths.push("/course");
   if (content?.service?.items?.some((item) => item.enabled))
     paths.push("/service");
-  paths.push("/dive-shop", "/about");
+  paths.push("/dive-shop", "/about", ...legalPolicyPaths);
   return paths;
 }
+// The policy pages change seldom and rank below the activities.
+const legalPolicyPaths = legalKeys.map((key) => legalPaths[key]);
+const policy = (path) => legalPolicyPaths.includes(path);
 const indonesian = (path) => (path === "/" ? "/id" : "/id" + path);
 export function sitemapEntries(content, base) {
   return publicPaths(content).flatMap((path) => {
@@ -57,8 +62,9 @@ export function sitemapEntries(content, base) {
       "x-default": base + path,
     };
     const shared = {
-      changeFrequency: path === "/" ? "weekly" : "monthly",
-      priority: path === "/" ? 1 : 0.8,
+      changeFrequency:
+        path === "/" ? "weekly" : policy(path) ? "yearly" : "monthly",
+      priority: path === "/" ? 1 : policy(path) ? 0.3 : 0.8,
       alternates: { languages },
     };
     return [

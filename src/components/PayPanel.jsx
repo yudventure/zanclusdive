@@ -79,7 +79,13 @@ export default function PayPanel({
           payButtonText(p, method, { total, locale, payments, paying })}{" "}
         <span aria-hidden="true">↗</span>
       </button>
-      <PayNotes p={p} method={method} payments={payments} total={total} />
+      <PayNotes
+        p={p}
+        method={method}
+        payments={payments}
+        total={total}
+        locale={locale}
+      />
       {message && (
         <details className="plan-message">
           <summary>{p.viewMessage}</summary>

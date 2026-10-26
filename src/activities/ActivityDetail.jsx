@@ -638,6 +638,7 @@ function Inquiry({
                 method={method}
                 payments={payments}
                 total={total}
+                locale={locale}
               />
             </>
           ) : (

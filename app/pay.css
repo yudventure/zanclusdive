@@ -39,6 +39,14 @@
 .pay-notes p {
   margin: 0 0 6px;
 }
+.pay-agree a {
+  color: #1f6f6b;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pay-agree a:hover {
+  color: #062b3b;
+}
 .pay-sandbox {
   display: inline-block;
   padding: 4px 10px;
