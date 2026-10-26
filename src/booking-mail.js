@@ -232,6 +232,8 @@ const words = {
     transferTitle: "Transfer ke rekening berikut",
     bank: "Bank",
     holder: "Atas nama",
+    swift: "Kode SWIFT",
+    swiftUse: "untuk transfer dari luar negeri",
     transferNote: (amount, ref) =>
       `Transfer tepat ${amount} dan tulis kode pesanan ${ref} di berita transfer. Setelah itu kirim bukti transfer lewat WhatsApp agar pembayaran segera kami catat.`,
     sendProof: "Kirim bukti transfer",
@@ -309,6 +311,8 @@ const words = {
     transferTitle: "Transfer to this account",
     bank: "Bank",
     holder: "Account name",
+    swift: "SWIFT code",
+    swiftUse: "for international transfers",
     transferNote: (amount, ref) =>
       `Please transfer exactly ${amount} and add booking code ${ref} to the transfer note. Then send the receipt on WhatsApp so we can record your payment right away.`,
     sendProof: "Send transfer receipt",
@@ -576,7 +580,7 @@ ${manage ? `<p style="margin:6px 0 8px;">${button(manage, t.manage, false)}</p>$
       ? `${heading(t.transferTitle)}${accounts
           .map((a) =>
             table(
-              `<tr><td style="padding:14px 18px;font-family:${font};"><p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${brand.muted};font-weight:700;">${esc(t.bank)} ${esc(a.bank)}</p><p style="margin:0 0 4px;font-size:21px;letter-spacing:1px;font-weight:800;color:${brand.navy};">${esc(a.number)}</p><p style="margin:0;font-size:14px;color:${brand.ink};">${esc(t.holder)} <strong>${esc(a.holder)}</strong></p></td></tr>`,
+              `<tr><td style="padding:14px 18px;font-family:${font};"><p style="margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${brand.muted};font-weight:700;">${esc(t.bank)} ${esc(a.bank)}</p><p style="margin:0 0 4px;font-size:21px;letter-spacing:1px;font-weight:800;color:${brand.navy};">${esc(a.number)}</p><p style="margin:0;font-size:14px;color:${brand.ink};">${esc(t.holder)} <strong>${esc(a.holder)}</strong></p>${a.swift ? `<p style="margin:6px 0 0;font-size:13px;color:${brand.muted};">${esc(t.swift)} <strong style="color:${brand.ink};letter-spacing:.5px;">${esc(a.swift)}</strong> ${esc(t.swiftUse)}</p>` : ""}</td></tr>`,
               `border:1px solid ${brand.line};border-radius:12px;margin:0 0 10px;background:#ffffff;border-collapse:separate;`,
             ),
           )
@@ -617,7 +621,11 @@ ${itemsTable(lines, t, lang, [[t.totalDue, total, true]])}`;
       transfer
         ? [
             t.transferTitle,
-            ...accounts.map((a) => `- ${a.bank} ${a.number} a.n. ${a.holder}`),
+            ...accounts.map(
+              (a) =>
+                `- ${a.bank} ${a.number} a.n. ${a.holder}` +
+                (a.swift ? `, SWIFT ${a.swift}` : ""),
+            ),
             t.transferNote(total, reference),
             proof ? pair(t.sendProof, proof) : "",
           ].join("\n")

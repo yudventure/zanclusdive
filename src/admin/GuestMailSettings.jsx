@@ -29,7 +29,7 @@ export default function GuestMailSettings({
   const accounts = settings.accounts ?? [];
   const rows = [...accounts];
   while (rows.length < accountLimit)
-    rows.push({ bank: "", number: "", holder: "" });
+    rows.push({ bank: "", number: "", holder: "", swift: "" });
   const setAccount = (index, key, value) => {
     const next = rows.map((row, i) =>
       i === index ? { ...row, [key]: value } : row,
@@ -122,7 +122,10 @@ export default function GuestMailSettings({
       <h3 className="admin-guest-mail-title">Rekening untuk transfer bank</h3>
       <p className="admin-subtle">
         Tampil di email tagihan transfer dan di halaman transfer setelah tamu
-        memesan di website. Isi sampai {accountLimit} rekening.
+        memesan di website. Isi sampai {accountLimit} rekening. Kode SWIFT (8
+        atau 11 huruf, misalnya BMRIIDJA untuk Mandiri atau CENAIDJA untuk BCA)
+        dipakai tamu luar negeri untuk transfer internasional. Boleh
+        dikosongkan.
       </p>
       <div className="admin-account-rows">
         {rows.map((row, i) => (
@@ -150,6 +153,17 @@ export default function GuestMailSettings({
                 placeholder="Zanclus Dive Center"
                 value={row.holder}
                 onChange={(e) => setAccount(i, "holder", e.target.value)}
+              />
+            </Field>
+            <Field label="Kode SWIFT">
+              <input
+                maxLength={11}
+                autoCapitalize="characters"
+                placeholder="CENAIDJA"
+                value={row.swift ?? ""}
+                onChange={(e) =>
+                  setAccount(i, "swift", e.target.value.toUpperCase())
+                }
               />
             </Field>
           </div>

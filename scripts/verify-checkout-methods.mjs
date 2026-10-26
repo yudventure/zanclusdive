@@ -171,6 +171,8 @@ try {
   await a.getByLabel("Bank 1").fill("BCA");
   await a.getByLabel("Nomor rekening").first().fill("123 456 7890");
   await a.getByLabel("Atas nama").first().fill("PT Zanclus Dive Center");
+  // Typed in lower case, saved as the bank's SWIFT code.
+  await a.getByLabel("Kode SWIFT").first().fill("cenaidja");
   await a.getByRole("button", { name: "Simpan pengaturan email" }).click();
   await a.getByText("Pengaturan email tamu tersimpan.").waitFor();
   await transferCard.locator(".admin-dev-switch").click();
@@ -272,7 +274,7 @@ try {
   );
   assert.match(
     await page.locator(".zs-account").textContent(),
-    /BCA\s*123 456 7890\s*Account name PT Zanclus Dive Center/,
+    /BCA\s*123 456 7890\s*Account name PT Zanclus Dive Center\s*SWIFT code CENAIDJA/,
   );
   assert.match(
     await page.locator(".zs-details").textContent(),
@@ -306,6 +308,7 @@ try {
   assert.equal(team.replyTo, "tamu@example.com");
   const guestOrder = await nextMail("tamu@example.com", mark);
   assert.match(guestOrder.body, /123 456 7890/);
+  assert.match(guestOrder.body, /SWIFT CENAIDJA/);
 
   // The open admin rings, shows the booking and counts it in the title.
   await look();

@@ -47,13 +47,21 @@ export function validatePayments(input) {
   if (copyTo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(copyTo))
     throw new Error("Email salinan invoice tidak valid.");
   const list = Array.isArray(input.accounts) ? input.accounts : [];
+  // The SWIFT code (8 or 11 letters and digits) lets guests abroad send
+  // an international transfer; kept only when filled in.
   const accounts = list
-    .map((a) => ({
-      bank: text(a?.bank, "Nama bank", 40),
-      number: text(a?.number, "Nomor rekening", 30),
-      holder: text(a?.holder, "Atas nama", 80),
-    }))
-    .filter((a) => a.bank || a.number || a.holder);
+    .map((a) => {
+      const swift = text(a?.swift, "Kode SWIFT", 20)
+        .replace(/\s/g, "")
+        .toUpperCase();
+      return {
+        bank: text(a?.bank, "Nama bank", 40),
+        number: text(a?.number, "Nomor rekening", 30),
+        holder: text(a?.holder, "Atas nama", 80),
+        ...(swift ? { swift } : {}),
+      };
+    })
+    .filter((a) => a.bank || a.number || a.holder || a.swift);
   if (accounts.length > accountLimit)
     throw new Error(`Maksimal ${accountLimit} rekening transfer.`);
   for (const a of accounts) {
@@ -61,6 +69,10 @@ export function validatePayments(input) {
       throw new Error("Lengkapi nama bank, nomor rekening, dan atas nama.");
     if (!/^[\d\s.-]{5,30}$/.test(a.number))
       throw new Error("Nomor rekening hanya angka, spasi, titik, atau strip.");
+    if (a.swift && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(a.swift))
+      throw new Error(
+        "Kode SWIFT terdiri dari 8 atau 11 huruf dan angka, misalnya BMRIIDJA.",
+      );
   }
   const rate =
     input.paypal?.rate === undefined

@@ -259,3 +259,61 @@ test("billing choices, which email fits, and what finance adds", () => {
     ["tx:mt:a"],
   );
 });
+
+test("a SWIFT code goes with an account, for guests paying from abroad", async () => {
+  const saved = validatePayments({
+    accounts: [
+      {
+        bank: "Mandiri",
+        number: "160 000 347 4455",
+        holder: "Zanclus",
+        swift: " bmri idja ",
+      },
+      { bank: "BCA", number: "123 456 7890", holder: "Zanclus", swift: "" },
+    ],
+  });
+  assert.equal(saved.accounts[0].swift, "BMRIIDJA");
+  assert.equal("swift" in saved.accounts[1], false);
+  assert.equal(
+    validatePayments({
+      accounts: [
+        { bank: "B", number: "12345", holder: "Z", swift: "CENAIDJA123" },
+      ],
+    }).accounts[0].swift,
+    "CENAIDJA123",
+  );
+  for (const swift of ["BMRI", "BMRI1DJA", "BMRIIDJA12"])
+    assert.throws(
+      () =>
+        validatePayments({
+          accounts: [{ bank: "B", number: "12345", holder: "Z", swift }],
+        }),
+      { message: /Kode SWIFT/ },
+    );
+  // In the transfer email, in both its parts, and on the transfer page.
+  const c = structuredClone(defaultContent);
+  c.payments = saved;
+  for (const [lang, words] of [
+    [
+      "id",
+      /Kode SWIFT <strong[^>]*>BMRIIDJA<\/strong> untuk transfer dari luar negeri/,
+    ],
+    [
+      "en",
+      /SWIFT code <strong[^>]*>BMRIIDJA<\/strong> for international transfers/,
+    ],
+  ]) {
+    const booking = sampleBooking("order", { now, method: "transfer", lang });
+    const mail = bookingMail("order", { booking, content: c, base });
+    assert.match(mail.html, words);
+    assert.match(mail.text, /a\.n\. Zanclus, SWIFT BMRIIDJA\n/);
+    assert.doesNotMatch(mail.html, /123 456 7890[\s\S]{0,300}SWIFT/);
+  }
+  const { statusMarkup } = await import("../src/status-pages.js");
+  const page = statusMarkup({
+    kind: "transferPending",
+    locale: "en",
+    accounts: saved.accounts,
+  });
+  assert.match(page, /<span>SWIFT code BMRIIDJA<\/span>/);
+});
