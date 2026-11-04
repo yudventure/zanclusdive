@@ -377,21 +377,32 @@ async function apply(booking, status) {
 }
 
 // Midtrans HTTP notification. Returns "ignored" for orders that are not
-// ours (such as the dashboard's test notification).
+// ours (such as the dashboard's test notification). A notification signed
+// with our server key is used as sent; one signed with another key (an
+// account with several server keys) only makes the site ask Midtrans for
+// the order's status, so nothing in its body is trusted.
 export async function recordNotification(notification) {
-  if (!validSignature(notification)) return "forbidden";
-  const booking = await findOrder(notification.order_id);
+  const orderId = notification?.order_id;
+  if (typeof orderId !== "string" || !orderId) return "ignored";
+  const signed = validSignature(notification);
+  const booking = await findOrder(orderId);
   if (!booking) return "ignored";
-  let status = notification;
+  if (!signed)
+    console.warn(
+      "Midtrans notification not signed with this server key; checking the status instead.",
+    );
+  let status = signed ? notification : null;
   // A settled payment is checked once more with Midtrans before the
   // booking is confirmed.
-  if (paymentOutcome(notification) === "paid") {
+  if (!signed || paymentOutcome(notification) === "paid") {
     try {
-      status = (await transactionStatus(notification.order_id)) ?? notification;
+      status = (await transactionStatus(orderId)) ?? status;
     } catch (error) {
       console.error("Midtrans status check failed:", error.message);
+      if (!signed) throw error;
     }
   }
+  if (!status) return "ignored";
   await apply(booking, status);
   return "ok";
 }

@@ -203,11 +203,36 @@ try {
     /Tamu Lunas[\s\S]*Discovery Dive × 2[\s\S]*Lunas/,
   );
 
-  // Notifications must be signed and match the amount.
+  // A notification not signed with this server key is only a reason to ask
+  // Midtrans: a forged expiry leaves the paid order paid.
   let response = await page.request.post(base + "/api/payments/midtrans", {
-    data: { ...mock.status(mock.orders.get(paidId)), signature_key: "00" },
+    data: {
+      ...mock.status(mock.orders.get(paidId)),
+      transaction_status: "expire",
+      status_code: "407",
+      signature_key: "00",
+    },
   });
-  assert.equal(response.status(), 403);
+  assert.equal(response.status(), 200);
+  assert.equal((await order(paidId)).payment.status, "paid");
+  // The dashboard's test notification, for an order that is not ours, and
+  // one without an order are answered without changing anything.
+  for (const data of [
+    {
+      order_id: "payment_notif_test_G000000000_x",
+      status_code: "200",
+      gross_amount: "105000.00",
+      transaction_status: "capture",
+      signature_key: "00",
+    },
+    { transaction_status: "settlement" },
+  ]) {
+    response = await page.request.post(base + "/api/payments/midtrans", {
+      data,
+    });
+    assert.equal(response.status(), 200);
+    assert.equal((await response.json()).ignored, true);
+  }
   mock.orders.set("ZC-OTHER", {
     id: "ZC-OTHER",
     amount: 5,
@@ -234,6 +259,20 @@ try {
   await page.locator(".pay-submit").click();
   await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
   const expiredId = new URL(page.url()).pathname.split("/").pop();
+  // A forged settlement for an order Midtrans has no payment for yet is
+  // ignored.
+  response = await page.request.post(base + "/api/payments/midtrans", {
+    data: {
+      order_id: expiredId,
+      status_code: "200",
+      gross_amount: `${mock.orders.get(expiredId).amount}.00`,
+      transaction_status: "settlement",
+      fraud_status: "accept",
+      signature_key: "00",
+    },
+  });
+  assert.equal(response.status(), 200);
+  assert.notEqual((await order(expiredId)).payment.status, "paid");
   await page.locator("#expire").click();
   await page.waitForURL(/\/payment\/finish/);
   assert.equal(

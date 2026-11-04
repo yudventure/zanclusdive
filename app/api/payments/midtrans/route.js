@@ -2,8 +2,9 @@ import { jsonBody } from "../../../../src/server/auth.js";
 import { recordNotification } from "../../../../src/server/payments.js";
 
 // Midtrans payment notification (set as the Notification URL in the
-// Midtrans dashboard). Signed by Midtrans; a settled payment confirms the
-// booking for its date.
+// Midtrans dashboard). Signed by Midtrans, or checked with Midtrans when
+// signed with another key; a settled payment confirms the booking for its
+// date.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function POST(request) {
@@ -15,8 +16,6 @@ export async function POST(request) {
   }
   try {
     const result = await recordNotification(notification);
-    if (result === "forbidden")
-      return Response.json({ error: "Invalid signature." }, { status: 403 });
     return Response.json(
       result === "ignored" ? { ok: true, ignored: true } : { ok: true },
     );
