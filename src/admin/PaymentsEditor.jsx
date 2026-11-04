@@ -184,6 +184,13 @@ export default function PaymentsEditor({
                 (status.keyEnding ? `, berakhiran ${status.keyEnding}.` : ".")
               : "Server key Midtrans belum diisi. Tambahkan MIDTRANS_SERVER_KEY di environment variable hPanel, lalu deploy ulang. Tombol bayar belum tampil sebelum key diisi."}
           </li>
+          {configured && (
+            <li className={status?.signatureKeyEnding ? "ok" : "info"}>
+              {status?.signatureKeyEnding
+                ? `Signature Secret Key terpasang, berakhiran ${status.signatureKeyEnding}. Notifikasi pembayaran dari Midtrans dicek dengan key ini.`
+                : "Signature Secret Key belum diisi. Bila halaman Access Keys di dashboard Midtrans menampilkan Signature Secret Key, salin ke variabel MIDTRANS_SIGNATURE_KEY di hPanel lalu deploy ulang. Tanpa itu, website menanyakan status setiap notifikasi langsung ke Midtrans."}
+            </li>
+          )}
           <li className={status?.production ? "ok" : "info"}>
             {status?.production
               ? "Mode production: pembayaran sungguhan."

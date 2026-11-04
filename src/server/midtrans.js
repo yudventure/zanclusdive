@@ -13,7 +13,12 @@ import {
 // tests at a stand-in server.
 // Spaces or quotes pasted around the key in hPanel are ignored.
 const key = () => cleanKey(process.env.MIDTRANS_SERVER_KEY);
+// Accounts with server keys made under Access Keys sign their
+// notifications with a separate Signature Secret Key.
+const signatureKey = () => cleanKey(process.env.MIDTRANS_SIGNATURE_KEY);
 export const midtransConfigured = () => key().length > 0;
+export const midtransSignatureKeyEnding = () =>
+  keyEnding(process.env.MIDTRANS_SIGNATURE_KEY);
 export const midtransProduction = () =>
   productionOn(process.env.MIDTRANS_PRODUCTION);
 function base(kind) {
@@ -128,15 +133,18 @@ export async function transactionStatus(orderId) {
 }
 
 // Notifications are signed with SHA512(order_id + status_code +
-// gross_amount + server key).
+// gross_amount + key), the key being the Signature Secret Key when the
+// account has one, or the server key.
 export function validSignature(notification) {
   const { order_id, status_code, gross_amount, signature_key } =
     notification ?? {};
   if (![order_id, status_code, gross_amount, signature_key].every(Boolean))
     return false;
-  const expected = createHash("sha512")
-    .update(`${order_id}${status_code}${gross_amount}${key()}`)
-    .digest();
   const given = Buffer.from(String(signature_key), "hex");
-  return given.length === expected.length && timingSafeEqual(given, expected);
+  return [signatureKey(), key()].filter(Boolean).some((secret) => {
+    const expected = createHash("sha512")
+      .update(`${order_id}${status_code}${gross_amount}${secret}`)
+      .digest();
+    return given.length === expected.length && timingSafeEqual(given, expected);
+  });
 }

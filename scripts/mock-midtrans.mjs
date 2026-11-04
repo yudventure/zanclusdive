@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 // The app runs with MIDTRANS_SNAP_URL and MIDTRANS_API_URL pointing here.
 // /pay/<order> is the "payment page"; /pay/<order>/settlement or /expire
 // sets the result, sends the signed notification and returns to the site.
-export function startMockMidtrans({ port, serverKey, appUrl }) {
+export function startMockMidtrans({ port, serverKey, signatureKey, appUrl }) {
   const orders = new Map();
   const auth = "Basic " + Buffer.from(serverKey + ":").toString("base64");
   const status = (order) => {
@@ -25,7 +25,7 @@ export function startMockMidtrans({ port, serverKey, appUrl }) {
       payment_type: "bank_transfer",
       transaction_id: "mock-" + order.id,
       signature_key: createHash("sha512")
-        .update(order.id + code + gross + serverKey)
+        .update(order.id + code + gross + (signatureKey ?? serverKey))
         .digest("hex"),
     };
   };

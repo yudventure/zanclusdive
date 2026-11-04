@@ -18,6 +18,7 @@ import {
   keyIssues,
   lastMidtransError,
   midtransKeyEnding,
+  midtransSignatureKeyEnding,
 } from "../../../../src/server/midtrans.js";
 import {
   paymentsBlockedByDemo,
@@ -83,6 +84,7 @@ export async function GET(request) {
               demoFolder: cmsMode() === "demo" ? demoStorageDirectory() : null,
               issues: keyIssues(),
               keyEnding: midtransKeyEnding(),
+              signatureKeyEnding: midtransSignatureKeyEnding(),
               lastError: lastMidtransError(),
               // PayPal keys from the hosting, without the secret.
               paypal: {

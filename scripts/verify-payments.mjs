@@ -15,6 +15,9 @@ const port = Number(process.env.MIDTRANS_MOCK_PORT || 3499);
 const mock = await startMockMidtrans({
   port,
   serverKey: "SB-Mid-server-TEST",
+  // Signs notifications with the Signature Secret Key when the server has
+  // one (MIDTRANS_SIGNATURE_KEY), as accounts with Access Keys do.
+  signatureKey: process.env.MIDTRANS_SIGNATURE_KEY,
   appUrl: base,
 });
 const today = new Date().toLocaleDateString("en-CA", {
