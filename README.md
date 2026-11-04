@@ -346,7 +346,7 @@ Aktifkan dari `/admin/payments` setelah environment berikut diisi di hPanel (lal
 
 | Variabel | Isi |
 | --- | --- |
-| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys), dan hanya key itu. Mulai dengan key sandbox `SB-Mid-server-…`. Di akun dengan Access Keys berizin, buat satu server key dengan Snap Checkout **Write** dan Core API **Read**, sisanya None. |
+| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys), dan hanya key itu. Mulai dengan key sandbox `SB-Mid-server-…`. Di akun dengan Access Keys berizin, buat satu server key dengan Snap Checkout **Write** dan Core API **Read**, sisanya None. Key seperti ini bisa berisi titik dan tilde (`Mid-server-AbC.~dEf`), jadi salin utuh. |
 | `MIDTRANS_SIGNATURE_KEY` | Opsional. **Signature Secret Key** dari halaman Access Keys yang sama, bila akun Midtrans menampilkannya. Notifikasi pembayaran dicek dengan key ini atau dengan server key. Tanpa key ini, notifikasi yang tanda tangannya tidak cocok tetap diproses dengan menanyakan statusnya langsung ke Midtrans. |
 | `MIDTRANS_PRODUCTION` | Variabel tersendiri berisi `true`, hanya saat memakai server key production (`Mid-server-…`). Kosongkan untuk sandbox. Jangan ditulis di belakang server key. |
 | `NEXT_PUBLIC_SITE_URL` | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar. |

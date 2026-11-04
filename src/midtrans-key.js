@@ -15,8 +15,9 @@ export const cleanKey = unquote;
 export const productionOn = (value) => unquote(value).toLowerCase() === "true";
 
 // A server key as Midtrans issues it: Mid-server- for real payments,
-// SB-Mid-server- for the sandbox, VT-server- on old accounts.
-const serverKey = /(?:SB-)?(?:Mid|VT)-server-[A-Za-z0-9_-]+/i;
+// SB-Mid-server- for the sandbox, VT-server- on old accounts. Keys made
+// under Access Keys also hold dots and tildes (Mid-server-AbC.~dEf).
+const serverKey = /(?:SB-)?(?:Mid|VT)-server-[A-Za-z0-9._~-]+/i;
 const shown = (text) => (text.length > 40 ? text.slice(0, 40) + "…" : text);
 
 export function keyIssues(rawKey, rawProduction) {

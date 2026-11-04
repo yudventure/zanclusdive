@@ -18,6 +18,11 @@ test("a clean key in the right mode has no issues", () => {
   assert.deepEqual(keyIssues(sandbox, ""), []);
   assert.deepEqual(keyIssues(sandbox, undefined), []);
   assert.deepEqual(keyIssues("VT-server-AbCdEfGh", "false"), []);
+  // Keys made under Access Keys hold dots and tildes, also at the end.
+  const scoped = ["Mid", "server", "AbCdEfGhIjKlMnOpQ.~xYz0w"].join("-");
+  assert.deepEqual(keyIssues(scoped, "true"), []);
+  assert.deepEqual(keyIssues(scoped + ".", "true"), []);
+  assert.equal(keyEnding(scoped), "Yz0w");
   assert.deepEqual(keyIssues("", ""), []);
   // Quotes and spaces around the values are ignored.
   assert.equal(cleanKey(`  "${live}" `), live);
