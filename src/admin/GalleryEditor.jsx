@@ -311,9 +311,11 @@ export default function GalleryEditor({
       <section className="admin-card">
         <h2>Galeri penyelaman</h2>
         <p className="admin-subtle">
-          Foto yang terbuka saat pengunjung menekan Buka galeri di bagian
-          Jelajahi laut. Upload foto dari komputer atau HP, langsung tampil di
-          galeri. Maksimal {galleryLimit} foto, keterangan English boleh kosong.
+          Foto di bawah bagian Jelajahi laut. Di laptop dan tablet semua foto
+          langsung tampil, di HP enam foto pertama sebagai ubin kecil dengan
+          tombol Lihat lebih banyak. Upload foto dari komputer atau HP, langsung
+          tampil di galeri. Maksimal {galleryLimit} foto, keterangan English
+          boleh kosong.
         </p>
         {items.length < galleryLimit && (
           <ImageUpload

@@ -191,7 +191,7 @@ try {
   const top = async (selector) =>
     (await page.locator(selector).boundingBox()).y;
   assert.ok((await top(".ocean-grid")) < (await top(".dive-videos")));
-  assert.ok((await top(".dive-videos")) < (await top(".dive-gallery-toggle")));
+  assert.ok((await top(".dive-videos")) < (await top(".dive-gallery-grid")));
   await row.scrollIntoViewIfNeeded();
   await row.locator("iframe").nth(3).waitFor();
   // The last videos load once the row is swiped to them.

@@ -19,28 +19,46 @@ page.on("pageerror", (error) => errors.push(error.message));
 await page.route("**/api/weather", (r) =>
   r.fulfill({ json: { locations: [] } }),
 );
-const roll = () =>
-  page.locator(".dive-gallery-roll").evaluate((el) => el.offsetHeight);
+const tiles = page.locator(".dive-gallery-grid li");
+// The last photo reaches the right edge: the gallery ends without a gap.
+const flush = () =>
+  page.locator(".dive-gallery-grid").evaluate((grid) => {
+    const shown = [...grid.children].filter(
+      (li) => li.getBoundingClientRect().height > 0,
+    );
+    const last = shown.at(-1).getBoundingClientRect();
+    return Math.abs(grid.getBoundingClientRect().right - last.right) < 2;
+  });
+const columns = () =>
+  page
+    .locator(".dive-gallery-grid")
+    .evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+    );
+const visible = () =>
+  tiles.evaluateAll(
+    (items) =>
+      items.filter((li) => li.getBoundingClientRect().height > 0).length,
+  );
 try {
   await page.goto(base, { waitUntil: "networkidle" });
   assert.equal(
     await page.locator('#navigation a[href="#ocean"]').textContent(),
     "Gallery",
   );
-  const toggle = page.getByRole("button", { name: "Open the gallery" });
-  await toggle.scrollIntoViewIfNeeded();
-  assert.equal(await toggle.getAttribute("aria-expanded"), "false");
-  assert.ok((await roll()) < 2, "gallery starts rolled up");
+  // Laptops: the gallery is open, every photo shows, no button.
+  await page.locator(".dive-gallery-grid").scrollIntoViewIfNeeded();
+  assert.equal(await tiles.count(), 10);
+  assert.equal(await visible(), 10);
   assert.equal(
-    await page.locator(".dive-gallery-roll").getAttribute("inert"),
-    "",
+    await page.getByRole("button", { name: "Open the gallery" }).count(),
+    0,
   );
-  await toggle.click();
-  await page.waitForTimeout(1300);
-  assert.ok((await roll()) > 400, "gallery rolls open");
-  const close = page.getByRole("button", { name: "Close the gallery" });
-  assert.equal(await close.getAttribute("aria-expanded"), "true");
-  assert.equal(await page.locator(".dive-gallery-grid li").count(), 10);
+  assert.equal(await page.locator(".dive-gallery-more").isVisible(), false);
+  // Four to a row on 12 columns; the ten photos after no whole round of
+  // 12 share their rows, the last two half each.
+  assert.equal(await columns(), 12);
+  assert.ok(await flush(), "no gap at the end on laptops");
   // Lightbox with caption, arrows and Escape.
   await page
     .getByRole("button", { name: "View photo A manta in open water" })
@@ -52,9 +70,44 @@ try {
   assert.match(await lightbox.locator("figcaption").textContent(), /4 of 10/);
   await page.keyboard.press("Escape");
   await lightbox.waitFor({ state: "hidden" });
-  await close.click();
-  await page.waitForTimeout(1300);
-  assert.ok((await roll()) < 2, "gallery rolls back up");
+  // Tablets: open too, three to a row.
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.locator(".dive-gallery-grid").scrollIntoViewIfNeeded();
+  assert.equal(await visible(), 10);
+  assert.equal(await page.locator(".dive-gallery-more").isVisible(), false);
+  assert.equal(await columns(), 6);
+  assert.ok(await flush(), "no gap at the end on tablets");
+  // Phones: six small tiles, more with a button, a tap opens the photo.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(base + "/id", { waitUntil: "networkidle" });
+  const more = page.getByRole("button", { name: "Lihat lebih banyak" });
+  await more.scrollIntoViewIfNeeded();
+  assert.equal(await visible(), 6);
+  assert.match(
+    await page.locator(".dive-gallery-more small").textContent(),
+    /^6 dari 10 foto$/,
+  );
+  const small = await tiles.nth(1).boundingBox();
+  assert.ok(small.width < 130 && small.height < 130, "small tiles");
+  if (process.env.SHOT_DIR)
+    await page
+      .locator(".dive-gallery")
+      .screenshot({ path: process.env.SHOT_DIR + "/gallery-390.png" });
+  await more.click();
+  assert.equal(await visible(), 10);
+  assert.equal(await more.count(), 0, "the button goes once all show");
+  assert.ok(await flush(), "no gap at the end on phones");
+  await tiles.nth(8).locator("button").click();
+  await lightbox.waitFor({ state: "visible" });
+  assert.match(await lightbox.locator("figcaption").textContent(), /9 dari 10/);
+  await page.keyboard.press("Escape");
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await page.setViewportSize({ width: 1440, height: 950 });
   // The gallery is edited in the admin and shown in both languages.
   assert.equal(
     (
@@ -82,7 +135,6 @@ try {
     ["/id", "Lihat foto Tim Zanclus di Cape Kri"],
   ]) {
     await page.goto(base + path, { waitUntil: "networkidle" });
-    // Closed, the gallery is inert, so look the photo up by its label.
     assert.equal(
       await page
         .locator(`.dive-gallery-grid button[aria-label="${label}"]`)
@@ -90,18 +142,9 @@ try {
       1,
     );
   }
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(base + "/id", { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Buka galeri" }).click();
-  await page.waitForTimeout(1300);
-  assert.ok(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS gallery: nav label, rolled up by default, rolls open and closed, lightbox with arrows and Escape, admin caption edit in both languages, 390px without horizontal scroll.",
+    "PASS gallery: nav label, open with every photo on laptops (4 to a row) and tablets (3 to a row) without a button, phones with six small tiles and See more until all show, lightbox with arrows and Escape on both, admin caption edit in both languages, 390px without horizontal scroll.",
   );
 } finally {
   await browser.close();

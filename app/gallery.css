@@ -157,14 +157,12 @@
   background: #bef4a5;
   color: #062b3b;
 }
-.dive-gallery-toggle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 36px;
+/* Open on laptops and tablets. On a phone only the first photos show,
+   with a button for more below them. */
+.dive-gallery-more {
+  display: none;
 }
-.dive-gallery-toggle .button {
+.dive-gallery-more .button {
   background: #bef4a5;
   color: #062b3b;
   font-size: 13px;
@@ -173,57 +171,37 @@
 .dive-gallery-arrow {
   display: inline-block;
   margin-left: 6px;
-  transition: transform 0.4s ease;
 }
-.dive-gallery.is-open .dive-gallery-arrow {
-  transform: rotate(180deg);
-}
-.dive-gallery-toggle small {
+.dive-gallery-more small {
   font-size: 11px;
   letter-spacing: 0.5px;
   color: #85b7bf;
 }
-/* Rolls open downward by animating the row from 0fr to 1fr. */
-.dive-gallery-roll {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.dive-gallery.is-open .dive-gallery-roll {
-  grid-template-rows: 1fr;
-}
-.dive-gallery-inner {
-  min-height: 0;
-  overflow: hidden;
-}
+/* Four to a row on a 12-column grid, a large photo and a tall one every
+   six. Photos after the last whole round of 12 share their rows. */
 .dive-gallery-grid {
   list-style: none;
   margin: 0;
-  padding: 32px 0 0;
+  padding: 36px 0 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   grid-auto-rows: 210px;
   grid-auto-flow: dense;
   gap: 14px;
 }
 .dive-gallery-grid li {
-  opacity: 0;
-  transform: translateY(-18px);
-  transition:
-    opacity 0.5s ease,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.dive-gallery.is-open .dive-gallery-grid li {
-  opacity: 1;
-  transform: none;
-  transition-delay: calc(var(--gallery-delay) + 200ms);
+  grid-column: span 3;
 }
 .dive-gallery-grid li:nth-child(6n + 1) {
-  grid-column: span 2;
+  grid-column: span 6;
   grid-row: span 2;
 }
 .dive-gallery-grid li:nth-child(6n + 4) {
   grid-row: span 2;
+}
+.dive-gallery-grid li.is-rest-wide {
+  grid-column: span var(--wide);
+  grid-row: span 1;
 }
 .dive-gallery-grid button {
   position: relative;
@@ -328,13 +306,65 @@
 .dive-lightbox-nav.next {
   right: 14px;
 }
+/* Tablets: three to a row on a 6-column grid, a large photo every six.
+   Photos after the last whole round of 6 share their rows. */
 @media (max-width: 900px) {
   .dive-gallery-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     grid-auto-rows: 170px;
+  }
+  .dive-gallery-grid li,
+  .dive-gallery-grid li.is-rest-wide {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  .dive-gallery-grid li:nth-child(6n + 1) {
+    grid-column: span 4;
+    grid-row: span 2;
   }
   .dive-gallery-grid li:nth-child(6n + 4) {
     grid-row: span 1;
+  }
+  .dive-gallery-grid li.is-rest-narrow {
+    grid-column: span var(--narrow);
+    grid-row: span 1;
+  }
+}
+/* Phones: the same pattern as small tiles, six at a time. */
+@media (max-width: 699px) {
+  .dive-gallery-grid {
+    padding-top: 24px;
+    grid-auto-rows: calc((100vw - 60px) / 3);
+    gap: 6px;
+  }
+  .dive-gallery-grid li.is-more {
+    display: none;
+  }
+  .dive-gallery-grid li {
+    animation: dive-gallery-in 0.45s ease both;
+  }
+  .dive-gallery-grid button {
+    border-radius: 12px;
+  }
+  .dive-gallery-grid li:not(:nth-child(6n + 1)) button span {
+    display: none;
+  }
+  .dive-gallery-grid button span {
+    font-size: 11px;
+    padding: 26px 10px 9px;
+  }
+  .dive-gallery-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+}
+@keyframes dive-gallery-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 }
 @media (max-width: 520px) {
@@ -348,22 +378,9 @@
   .dive-video-frame {
     border-radius: 18px;
   }
-  .dive-gallery-grid {
-    grid-auto-rows: 130px;
-    gap: 10px;
-  }
-  .dive-gallery-grid button {
-    border-radius: 14px;
-  }
-  .dive-gallery-grid button span {
-    font-size: 10px;
-    padding: 26px 10px 10px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dive-gallery-roll,
-  .dive-gallery-grid li,
-  .dive-gallery-arrow {
-    transition: none;
+  .dive-gallery-grid li {
+    animation: none;
   }
 }

@@ -88,9 +88,13 @@ Tambahkan `?lang=id` untuk versi Indonesia. Service worker (`public/sw.js`) meny
 
 Uji dengan `BASE_URL=http://127.0.0.1:3210 node scripts/verify-developer.mjs` pada build produksi server demo lokal dengan `CMS_DEMO_LOGIN=true` dan `CMS_COOKIE_SECURE=false`. Tes ini mengubah mode developer lalu mematikannya lagi.
 
+## Galeri foto di beranda
+
+Galeri foto (`src/components/DiveGallery.jsx`) tampil terbuka di bawah deretan video, tanpa tombol buka dan tutup. Di laptop empat foto sebaris, di tablet tiga, dengan satu foto besar setiap enam foto. Di HP (lebar di bawah 700 px) galeri berupa ubin kecil tiga sebaris dengan pola yang sama, enam foto dulu, lalu tombol **Lihat lebih banyak** menambah enam foto setiap ditekan, dengan keterangan "6 dari 24 foto". Foto yang belum tampil di HP belum diunduh. Setiap foto dibuka besar di jendela foto dengan panah, tombol Esc, dan keterangannya.
+
 ## Video di galeri (YouTube, TikTok, Instagram, Facebook)
 
-Di bawah dua kartu Jelajahi laut dan di atas tombol **Buka galeri** tampil deretan video vertikal 9:16. Isi link di `/admin/media` → **Video vertikal (9:16)** (maksimal 8), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil. Link yang dikenali:
+Di bawah dua kartu Jelajahi laut dan di atas galeri foto tampil deretan video vertikal 9:16. Isi link di `/admin/media` → **Video vertikal (9:16)** (maksimal 8), lalu tekan **Simpan video**. Tanpa video, deretan ini tidak tampil. Link yang dikenali:
 
 - **YouTube**: Shorts, `watch?v=`, `youtu.be`.
 - **TikTok**: `tiktok.com/@akun/video/…`. Link pendek dari tombol Bagikan (`vt.tiktok.com/…`, `vm.tiktok.com/…`) otomatis dibuka server menjadi link lengkap.

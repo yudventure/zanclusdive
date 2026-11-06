@@ -500,9 +500,8 @@ const id = {
   },
   gallery: {
     eyebrow: "GALERI PENYELAMAN ZANCLUS",
-    open: "Buka galeri",
-    close: "Tutup galeri",
-    count: (n) => `${n} foto penyelaman`,
+    more: "Lihat lebih banyak",
+    shown: (n, total) => `${n} dari ${total} foto`,
     view: (name) => `Lihat foto ${name}`,
     lightbox: "Foto galeri",
     closePhoto: "Tutup foto",
@@ -1846,9 +1845,8 @@ const en = {
   },
   gallery: {
     eyebrow: "ZANCLUS DIVE GALLERY",
-    open: "Open the gallery",
-    close: "Close the gallery",
-    count: (n) => `${n} dive photos`,
+    more: "See more photos",
+    shown: (n, total) => `${n} of ${total} photos`,
     view: (name) => `View photo ${name}`,
     lightbox: "Gallery photo",
     closePhoto: "Close photo",
