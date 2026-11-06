@@ -426,6 +426,7 @@ function withIds(list) {
 // photo and video service as add-ons. Snorkeling and trips start without.
 const defaultAddOnNames = {
   diving: [
+    ["extras", "Pemandu selam"],
     ["rentalScuba", "Perlengkapan scuba"],
     ["rentalTank", "Tabung + isi ulang"],
     ["rentalTools", "Dive computer D4i"],
@@ -466,10 +467,14 @@ const movedFromDiving = {
 };
 
 // Changes made to saved lists once, in order: 1 the fun dives, 2 a photo
-// on the diving packages, 3 what they include as a list. A list saved
-// since keeps what the owner made of them, deleted packages and removed
-// photos included.
-export const priceRevision = 3;
+// on the diving packages, 3 what they include as a list, 4 the dive guide
+// moved from the diving packages to Layanan tambahan as a diving add-on.
+// A list saved since keeps what the owner made of them, deleted packages
+// and removed photos included.
+export const priceRevision = 4;
+// The dive guide keeps its id when it moves, so reservations that priced
+// it and its add-on point at the same item.
+const guideId = "diving-pemandu-selam";
 // The site's own photos until the owner uploads one of the place itself:
 // gearing up on the boat, a diver over the reef, a coral reef, the
 // owner's photo of a diver and a turtle in the Dampier Strait, and the
@@ -493,7 +498,7 @@ const packagePhotos = [
   ],
   ["diving-fun-dive-piaynemo", "Fun Dive Piaynemo", "/assets/photos/trip.webp"],
 ];
-function withRevisions(list) {
+export function withRevisions(list) {
   const revision = Number(list.revision) || 0;
   if (revision >= priceRevision) return list;
   let diving = Array.isArray(list.diving) ? list.diving : [];
@@ -526,7 +531,31 @@ function withRevisions(list) {
       next = detailed(id, next);
     return next;
   });
-  return { ...list, diving, revision: priceRevision };
+  let extras = list.extras;
+  let addOns = list.addOns;
+  if (revision < 4) {
+    const at = diving.findIndex(
+      (entry) =>
+        entry?.id === guideId ||
+        (entry && !entry.id && entry.name?.id === "Pemandu selam"),
+    );
+    if (at >= 0 && (extras?.length ?? 0) < 8) {
+      const { image, ...guide } = diving[at];
+      guide.id ??= guideId;
+      diving = diving.filter((_, i) => i !== at);
+      extras = [guide, ...(extras ?? [])];
+      const chosen = addOns?.diving ?? [];
+      if (addOns && !chosen.includes(guide.id) && chosen.length < addOnLimit)
+        addOns = { ...addOns, diving: [guide.id, ...chosen] };
+    }
+  }
+  return {
+    ...list,
+    diving,
+    ...(extras ? { extras } : {}),
+    ...(addOns ? { addOns } : {}),
+    revision: priceRevision,
+  };
 }
 
 // Older CMS documents gain the default price list, lists added later, item

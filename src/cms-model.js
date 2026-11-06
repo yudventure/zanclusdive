@@ -35,6 +35,7 @@ import {
 import { defaultActivities, activityKeys } from "./activity-model.js";
 import {
   legacyPriceList,
+  withRevisions,
   validatePriceList,
   withPriceList,
   withRentalProducts,
@@ -106,7 +107,9 @@ export const defaultContent = withRentalProducts({
   },
   images: { ...defaultSiteImages },
   seo: { ...defaultSeo },
-  priceList: structuredClone(legacyPriceList),
+  // The legacy lists with every revision applied, so saving the defaults
+  // changes nothing the owner chose.
+  priceList: withRevisions(structuredClone(legacyPriceList)),
   gallery: structuredClone(defaultGallery),
   calendar: structuredClone(defaultCalendar),
   courses: structuredClone(defaultCourses),

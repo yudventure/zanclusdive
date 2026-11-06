@@ -25,13 +25,15 @@ const funDiveNames = [
   "Fun Dive Piaynemo",
 ];
 
-test("diving lists the dives; gear, cameras and documentation are add-ons", () => {
+test("diving lists the dives; the guide, gear, cameras and documentation are add-ons", () => {
   assert.deepEqual(names(defaultPriceList.diving), [
     "Discovery Dive",
-    "Pemandu selam",
     ...funDiveNames,
   ]);
-  assert.deepEqual(names(defaultPriceList.extras), ["Dokumentasi"]);
+  assert.deepEqual(names(defaultPriceList.extras), [
+    "Pemandu selam",
+    "Dokumentasi",
+  ]);
   // The rental gear is in the Dive Shop, not in the price list.
   for (const group of legacyRentalGroups)
     assert.equal(defaultPriceList[group], undefined);
@@ -43,6 +45,7 @@ test("diving lists the dives; gear, cameras and documentation are add-ons", () =
   assert.deepEqual(
     addOns.map((item) => [item.group, item.name.id, item.price]),
     [
+      ["extras", "Pemandu selam", 750000],
       ["rentalScuba", "Perlengkapan scuba", 600000],
       ["rentalTank", "Tabung + isi ulang", 100000],
       ["rentalTools", "Dive computer D4i", 500000],
@@ -55,6 +58,7 @@ test("diving lists the dives; gear, cameras and documentation are add-ons", () =
   assert.deepEqual(addOnItems(defaultPriceList, "snorkeling", gear), []);
   // Without the catalog only the services are left.
   assert.deepEqual(names(addOnItems(defaultPriceList, "diving")), [
+    "Pemandu selam",
     "Dokumentasi",
   ]);
   // Every item has its own id.
@@ -66,6 +70,7 @@ test("diving lists the dives; gear, cameras and documentation are add-ons", () =
   assert.deepEqual(validatePriceList(defaultPriceList, gear), defaultPriceList);
   // Rental gear that left the catalog drops out of the add-ons.
   assert.deepEqual(validatePriceList(defaultPriceList).addOns.diving, [
+    "diving-pemandu-selam",
     "extras-dokumentasi",
   ]);
 });
@@ -112,15 +117,15 @@ test("a diving list saved before add-ons moves its gear and documentation", () =
   );
   const content = withPriceList({ priceList: saved });
   const list = content.priceList;
-  assert.deepEqual(names(list.diving), [
-    "Discovery Dive",
-    "Pemandu selam",
-    ...funDiveNames,
-  ]);
-  // The owner's own price for documentation is kept.
+  assert.deepEqual(names(list.diving), ["Discovery Dive", ...funDiveNames]);
+  // The guide moved to the extras; the owner's own price for
+  // documentation is kept.
   assert.deepEqual(
     list.extras.map((item) => [item.id, item.price]),
-    [["extras-dokumentasi", 550000]],
+    [
+      ["diving-pemandu-selam", 750000],
+      ["extras-dokumentasi", 550000],
+    ],
   );
   // The gear became Dive Shop rental products, each once.
   assert.equal(productNamed(content, "Perlengkapan scuba").length, 1);
@@ -149,8 +154,8 @@ test("items the owner removed are not brought back as add-ons", () => {
   });
   const content = withPriceList({ priceList: saved });
   const list = content.priceList;
-  // No documentation in diving, so none in the extras either.
-  assert.deepEqual(list.extras, []);
+  // No documentation in diving, so only the guide is in the extras.
+  assert.deepEqual(names(list.extras), ["Pemandu selam"]);
   // The tank becomes rental gear with its own price.
   assert.deepEqual(
     productNamed(content, "Tabung + isi ulang").map((p) => p.rentalPrice),
@@ -158,6 +163,7 @@ test("items the owner removed are not brought back as add-ons", () => {
   );
   assert.equal(productNamed(content, "GoPro Hero 11 + housing").length, 0);
   assert.deepEqual(names(addOnItems(list, "diving", content.shop.products)), [
+    "Pemandu selam",
     "Perlengkapan scuba",
     "Tabung + isi ulang",
     "Dive computer D4i",
@@ -187,7 +193,7 @@ test("add-ons are checked against the other lists when saved", () => {
     "trip-homestay",
   ];
   const saved = validatePriceList(list);
-  assert.equal(saved.extras[1].id, "extras-antar-jemput-mobil");
+  assert.equal(saved.extras[2].id, "extras-antar-jemput-mobil");
   // Its own packages, unknown ids and repeats drop out.
   assert.deepEqual(saved.addOns.diving, [
     "extras-antar-jemput-mobil",
@@ -197,11 +203,11 @@ test("add-ons are checked against the other lists when saved", () => {
   assert.throws(() => validatePriceList(list), /maksimal 16/);
   // Two items given the same id keep the first; the second gets a new one.
   const twins = structuredClone(defaultPriceList);
-  twins.extras.push({ ...twins.extras[0] });
+  twins.extras.push({ ...twins.extras[1] });
   const fixed = validatePriceList(twins);
   assert.deepEqual(
     fixed.extras.map((item) => item.id),
-    ["extras-dokumentasi", "extras-dokumentasi-2"],
+    ["diving-pemandu-selam", "extras-dokumentasi", "extras-dokumentasi-2"],
   );
   // Saving the whole site keeps the add-ons.
   const content = structuredClone(defaultContent);
@@ -310,31 +316,62 @@ test("add-ons are paid with a main package, priced from the CMS", () => {
   );
 });
 
-test("a list saved before the fun dives gets them once, at its end", () => {
+// The diving list as it was saved before the fun dives: Discovery Dive and
+// the dive guide, the guide not yet among the extras or the add-ons.
+const beforeFunDives = () => {
   const saved = structuredClone(defaultPriceList);
   delete saved.revision;
-  saved.diving = saved.diving.filter((item) => !/^Fun Dive/.test(item.name.id));
+  const [guide, ...extras] = saved.extras;
+  saved.diving = [saved.diving[0], guide];
+  saved.extras = extras;
+  saved.addOns.diving = saved.addOns.diving.filter((id) => id !== guide.id);
+  return saved;
+};
+
+test("a list saved before the fun dives gets them once, at its end", () => {
+  const saved = beforeFunDives();
   saved.diving[1].price = 800000;
+  saved.diving[1].image = "/assets/photos/diving-card.webp";
   const list = withPriceList({ priceList: saved }).priceList;
-  assert.deepEqual(names(list.diving), [
-    "Discovery Dive",
-    "Pemandu selam",
-    ...funDiveNames,
-  ]);
+  assert.deepEqual(names(list.diving), ["Discovery Dive", ...funDiveNames]);
   // The owner's own prices stay, the fun dives come per diver.
   assert.deepEqual(
     list.diving.map((item) => item.price),
-    [1200000, 800000, 2100000, 2700000, 4000000],
+    [1200000, 2100000, 2700000, 4000000],
   );
-  assert.equal(list.diving[2].unit.en, "/ diver");
-  assert.equal(list.revision, 3);
+  assert.equal(list.diving[1].unit.en, "/ diver");
+  // The guide becomes the first extra and diving add-on, with its price.
+  assert.deepEqual(
+    list.extras.map((item) => [item.id, item.price]),
+    [
+      ["diving-pemandu-selam", 800000],
+      ["extras-dokumentasi", 500000],
+    ],
+  );
+  assert.equal(list.addOns.diving[0], "diving-pemandu-selam");
+  // An add-on shows no photo, so the package photo is left behind.
+  assert.equal("image" in list.extras[0], false);
+  assert.equal(list.revision, 4);
   // Saved from the admin, one deleted, it stays deleted.
   const edited = validatePriceList(
     { ...list, diving: list.diving.filter((item) => item.price !== 4000000) },
     gear,
   );
-  assert.equal(edited.revision, 3);
-  assert.equal(withPriceList({ priceList: edited }).priceList.diving.length, 4);
+  assert.equal(edited.revision, 4);
+  assert.equal(withPriceList({ priceList: edited }).priceList.diving.length, 3);
+  // Put back among the diving packages by the owner, it stays there.
+  const back = validatePriceList(
+    {
+      ...list,
+      diving: [...list.diving, list.extras[0]],
+      extras: list.extras.slice(1),
+    },
+    gear,
+  );
+  assert.deepEqual(
+    names(withPriceList({ priceList: back }).priceList.diving).slice(-1),
+    ["Pemandu selam"],
+  );
   // A full list of eight gets only what fits.
   const full = structuredClone(saved);
   full.diving = Array.from({ length: 7 }, (_, i) => ({
@@ -353,7 +390,6 @@ test("each diving package shows a photo of the place, once", () => {
     defaultPriceList.diving.map((item) => item.image),
     [
       "/assets/photos/gallery-dive.webp",
-      "/assets/photos/diving-card.webp",
       "/assets/photos/fan-coral.webp",
       "/assets/photos/banner-penyu.webp",
       "/assets/photos/trip.webp",
@@ -376,7 +412,6 @@ test("each diving package shows a photo of the place, once", () => {
         "diving-discovery-dive",
         "/api/media/0b9c1a52-7d1e-4a7b-9b2f-3c4d5e6f7a8b",
       ],
-      ["diving-pemandu-selam", "/assets/photos/diving-card.webp"],
       ["diving-fun-dive-waigeo", "/assets/photos/fan-coral.webp"],
       ["diving-fun-dive-dampier", "/assets/photos/banner-penyu.webp"],
     ],
@@ -461,7 +496,7 @@ test("a package lists what it includes, split once from its old summary", () => 
     "Paket favorit tamu kami",
   );
   assert.equal(byId["diving-fun-dive-dampier"].includes, undefined);
-  assert.equal(list.revision, 3);
+  assert.equal(list.revision, 4);
   // Saved from the admin: blank lines go, empty lists are not kept, and
   // more than eight lines are refused.
   const kept = validatePriceList(

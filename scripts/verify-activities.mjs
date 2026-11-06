@@ -123,7 +123,7 @@ try {
       key,
       originals.content.shop.products,
     );
-    assert.equal(addOns.length, key === "diving" ? 7 : 0);
+    assert.equal(addOns.length, key === "diving" ? 8 : 0);
     assert.equal(
       await page.locator(".activity-addon-list li").count(),
       addOns.length,
@@ -137,14 +137,14 @@ try {
         packages.map((item) => item.name.id),
         [
           "Discovery Dive",
-          "Pemandu selam",
           "Fun Dive Pesisir Waigeo",
           "Fun Dive Kri, Mansuar & Arborek",
           "Fun Dive Piaynemo",
         ],
       );
-      // Every diving package shows a photo of the place; the one alone on
-      // the last row lies flat, photo on the left of its texts.
+      // Every diving package shows a photo of the place. Two to a row,
+      // the last one alone on its row lies flat, photo on the left of its
+      // texts; otherwise the photo sits above them.
       assert.equal(
         await page.locator(".activity-prices .activity-price-photo").count(),
         packages.length,
@@ -154,10 +154,13 @@ try {
         lone.locator(".activity-price-photo").boundingBox(),
         lone.locator("strong").boundingBox(),
       ]);
-      assert.ok(
-        lonePhoto.x + lonePhoto.width <= loneName.x,
-        "photo on the left",
-      );
+      if (packages.length % 2)
+        assert.ok(
+          lonePhoto.x + lonePhoto.width <= loneName.x,
+          "photo on the left",
+        );
+      else
+        assert.ok(lonePhoto.y + lonePhoto.height <= loneName.y, "photo above");
       // No colored line down the side, and what each fun dive includes is a
       // checked list inside its card.
       assert.equal(
@@ -176,7 +179,7 @@ try {
       );
       // The fun dives are priced per diver and follow the participants.
       assert.deepEqual(
-        packages.slice(2).map((item) => [item.price, item.unit.id]),
+        packages.slice(1).map((item) => [item.price, item.unit.id]),
         [
           [2100000, "/ penyelam"],
           [2700000, "/ penyelam"],
@@ -187,12 +190,17 @@ try {
         await page.locator("#add-ons-title").textContent(),
         "Add-on diving",
       );
-      // The seventh add-on is alone on its row and takes all of it.
+      // Two add-ons to a row; one alone on the last row takes all of it.
       const [list, last] = await Promise.all([
         page.locator(".activity-addon-list").boundingBox(),
         page.locator(".activity-addon-list li").last().boundingBox(),
       ]);
-      assert.ok(Math.abs(list.width - last.width) < 2, "lone add-on full row");
+      if (addOns.length % 2)
+        assert.ok(
+          Math.abs(list.width - last.width) < 2,
+          "lone add-on full row",
+        );
+      else assert.ok(last.width < list.width * 0.6, "add-ons two to a row");
     }
     // The cart bar appears with the first package; the old side panel is
     // gone and checkout opens in a window.
@@ -566,8 +574,8 @@ try {
   );
   assert.equal(
     await divingAddOns.locator("input:checked").count(),
-    7,
-    "diving starts with its gear, cameras and documentation",
+    8,
+    "diving starts with its guide, gear, cameras and documentation",
   );
   await divingAddOns
     .getByRole("checkbox", { name: /^Antar jemput mobil/ })
@@ -632,7 +640,7 @@ try {
     .waitFor();
   priced = (await state()).content.priceList;
   assert.ok(!priced.addOns.diving.includes(car.id));
-  assert.equal(priced.addOns.diving.length, 7);
+  assert.equal(priced.addOns.diving.length, 8);
   await page.goto(site + "/snorkeling", { waitUntil: "networkidle" });
   assert.equal(
     await page.locator("h1").textContent(),
