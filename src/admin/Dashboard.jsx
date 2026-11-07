@@ -586,10 +586,14 @@ export default function Dashboard({ section, account, today }) {
   }
   // Gear for sale made into rental gear, or the other way, takes the
   // English texts of the product it came from.
-  function copyProductTexts(from, to) {
+  // The English texts of a product copied to a new one, without the
+  // fields named in "drop" (a variant's own name, for one).
+  function copyProductTexts(from, to, drop = []) {
     setContent((current) => {
       const english = current.en?.shop?.products?.[from];
       if (!english) return current;
+      const copy = structuredClone(english);
+      for (const key of drop) delete copy[key];
       return {
         ...current,
         en: {
@@ -598,7 +602,7 @@ export default function Dashboard({ section, account, today }) {
             ...current.en.shop,
             products: {
               ...current.en.shop.products,
-              [to]: structuredClone(english),
+              [to]: copy,
             },
           },
         },

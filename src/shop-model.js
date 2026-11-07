@@ -61,6 +61,49 @@ export const pairOf = (products, product) =>
     ? products.find((p) => p.saleEnabled && p.id === product.pair)
     : products.find((p) => p.rentalEnabled && p.pair === product?.id);
 
+// One model in several kinds, such as a colour, a lens or a thickness.
+// Each variant is its own product with its own photos, price, stock and
+// sizes, so the warehouse, the cart and payments treat it like any other
+// product. The family's lead is a product without "variantOf"; its
+// variants name it there. "variant" is the short name on the variant's
+// button (Merah, Hitam), and the lead's "variantLabel" names the choice
+// (Warna, Tipe). The shop shows a family as one card and lets the guest
+// pick the variant in its window.
+export const variantLimit = 12;
+export const familyId = (product) => product?.variantOf || product?.id;
+// The family of a product among these products, the lead first.
+export function familyOf(products, product) {
+  const id = familyId(product);
+  const family = products.filter((p) => p.id === id || p.variantOf === id);
+  return [
+    ...family.filter((p) => p.id === id),
+    ...family.filter((p) => p.id !== id),
+  ];
+}
+// A list with one entry per family: the first of each family stands for
+// it, in the list's own order (after its search, filters and sorting).
+export function oneEach(list, productOf = (item) => item) {
+  const seen = new Set();
+  return list.filter((item) => {
+    const id = familyId(productOf(item));
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+// The lowest price in a family for one way, and whether its variants cost
+// differently ("from" on the card). A price on request counts as none.
+export function familyPrice(family, mode) {
+  const key = mode === "rental" ? "rentalPrice" : "salePrice";
+  const prices = family.map((p) => p[key]);
+  const known = prices.filter((n) => n !== null && n !== undefined);
+  return {
+    price: known.length ? Math.min(...known) : null,
+    varies: new Set(prices).size > 1,
+  };
+}
+export const variantName = (product) => product?.variant || product?.name || "";
+
 // Catalogs saved when one product could be both split it in two: the
 // product keeps its id for sale, and its rental side becomes rental gear
 // "<id>-sewa" right after it, with the rental price, photos and stock

@@ -1119,6 +1119,12 @@ const id = {
       sizeOut: "habis",
       needSize: "Pilih ukuran dulu.",
       pickSize: "Pilih ukuran",
+      // Variants of one model, such as its colours (shop-model.js).
+      variant: "Varian",
+      pickVariant: "Pilih varian",
+      variants: (n, label) =>
+        label ? `${n} pilihan ${label.toLocaleLowerCase("id")}` : `${n} varian`,
+      from: "Mulai",
       quantity: "Jumlah",
       buyPrice: "Harga beli",
       rentPrice: "Harga sewa per hari",
@@ -2461,6 +2467,13 @@ const en = {
       sizeOut: "sold out",
       needSize: "Choose a size first.",
       pickSize: "Choose size",
+      variant: "Option",
+      pickVariant: "Choose option",
+      variants: (n, label) =>
+        label
+          ? `${n} ${label.toLocaleLowerCase("en")} options`
+          : `${n} options`,
+      from: "From",
       quantity: "Quantity",
       buyPrice: "Price to buy",
       rentPrice: "Rental per day",

@@ -26,6 +26,8 @@ import {
   deliveryZoneLimit,
   shopProductLimit,
   withSplitProducts,
+  variantLimit,
+  familyId,
 } from "./shop-model.js";
 import {
   blankSocials,
@@ -431,79 +433,158 @@ export function validateShop(shop) {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
     delivery: validateDelivery(shop.delivery),
-    products: shop.products.map((p) => {
-      if (
-        !p ||
-        typeof p.id !== "string" ||
-        !/^[a-z0-9-]{1,50}$/.test(p.id) ||
-        ids.has(p.id) ||
-        !Object.hasOwn(shopCategories, p.category) ||
-        !Object.hasOwn(availabilityLabels, p.availability) ||
-        [p.enabled, p.saleEnabled, p.rentalEnabled].some(
-          (v) => typeof v !== "boolean",
+    products: checkFamilies(
+      shop.products.map((p) => {
+        if (
+          !p ||
+          typeof p.id !== "string" ||
+          !/^[a-z0-9-]{1,50}$/.test(p.id) ||
+          ids.has(p.id) ||
+          !Object.hasOwn(shopCategories, p.category) ||
+          !Object.hasOwn(availabilityLabels, p.availability) ||
+          [p.enabled, p.saleEnabled, p.rentalEnabled].some(
+            (v) => typeof v !== "boolean",
+          )
         )
-      )
-        throw new Error(
-          "Produk, kategori, atau pilihan jual/rental tidak valid.",
-        );
-      // Gear for sale and rental gear are different products.
-      if (p.saleEnabled === p.rentalEnabled)
-        throw new Error(
-          `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
-        );
-      ids.add(p.id);
-      // Rental gear may name the same model for sale, one rental gear each.
-      const pair =
-        p.rentalEnabled &&
-        typeof p.pair === "string" &&
-        /^[a-z0-9-]{1,50}$/.test(p.pair) &&
-        p.pair !== p.id &&
-        !pairs.has(p.pair)
-          ? p.pair
-          : "";
-      if (pair) pairs.add(pair);
-      function price(value) {
-        if (value === null || value === "") return null;
-        if (typeof value !== "number" && typeof value !== "string")
-          throw new Error("Harga produk tidak valid.");
-        const n = Number(value);
-        if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
           throw new Error(
-            "Harga produk harus berupa rupiah positif, maksimal 1 miliar. Kosongkan untuk penawaran.",
+            "Produk, kategori, atau pilihan jual/rental tidak valid.",
           );
-        return n;
-      }
-      return {
-        id: p.id,
-        category: p.category,
-        availability: p.availability,
-        enabled: p.enabled,
-        saleEnabled: p.saleEnabled,
-        rentalEnabled: p.rentalEnabled,
-        ...(pair ? { pair } : {}),
-        name: plain(p.name, "Nama produk", 100),
-        description: plain(p.description, "Deskripsi produk", 500),
-        specification: plain(
-          p.specification || "",
-          "Spesifikasi produk",
-          300,
-          false,
-        ),
-        ...productMedia(p),
-        details: plain(
-          p.details ?? "",
-          "Deskripsi lengkap",
-          productLimits.details,
-          false,
-        ),
-        specs: specRows(p.specs),
-        // Only the price of its own way.
-        salePrice: p.saleEnabled ? price(p.salePrice) : null,
-        rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
-        sizes: cleanSizes(p.sizes),
-      };
-    }),
+        // Gear for sale and rental gear are different products.
+        if (p.saleEnabled === p.rentalEnabled)
+          throw new Error(
+            `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
+          );
+        ids.add(p.id);
+        // Rental gear may name the same model for sale, one rental gear each.
+        const pair =
+          p.rentalEnabled &&
+          typeof p.pair === "string" &&
+          /^[a-z0-9-]{1,50}$/.test(p.pair) &&
+          p.pair !== p.id &&
+          !pairs.has(p.pair)
+            ? p.pair
+            : "";
+        if (pair) pairs.add(pair);
+        function price(value) {
+          if (value === null || value === "") return null;
+          if (typeof value !== "number" && typeof value !== "string")
+            throw new Error("Harga produk tidak valid.");
+          const n = Number(value);
+          if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
+            throw new Error(
+              "Harga produk harus berupa rupiah positif, maksimal 1 miliar. Kosongkan untuk penawaran.",
+            );
+          return n;
+        }
+        return {
+          id: p.id,
+          category: p.category,
+          availability: p.availability,
+          enabled: p.enabled,
+          saleEnabled: p.saleEnabled,
+          rentalEnabled: p.rentalEnabled,
+          ...(pair ? { pair } : {}),
+          name: plain(p.name, "Nama produk", 100),
+          description: plain(p.description, "Deskripsi produk", 500),
+          specification: plain(
+            p.specification || "",
+            "Spesifikasi produk",
+            300,
+            false,
+          ),
+          ...productMedia(p),
+          details: plain(
+            p.details ?? "",
+            "Deskripsi lengkap",
+            productLimits.details,
+            false,
+          ),
+          specs: specRows(p.specs),
+          // Only the price of its own way.
+          salePrice: p.saleEnabled ? price(p.salePrice) : null,
+          rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
+          sizes: cleanSizes(p.sizes),
+          ...variantFields(p),
+        };
+      }),
+    ),
   };
+}
+// A product's place in a family of variants (shop-model.js): the lead it
+// names, its own short variant name, and on a lead the name of the choice.
+function variantFields(p) {
+  const text = (value, label, max) => {
+    const out = plain(value ?? "", label, max, false).replace(/\s+/g, " ");
+    if (/[<>]/.test(out))
+      throw new Error(`${label} tidak boleh berisi < atau >.`);
+    return out;
+  };
+  const variantOf =
+    typeof p.variantOf === "string" && /^[a-z0-9-]{1,50}$/.test(p.variantOf)
+      ? p.variantOf
+      : "";
+  const variant = text(p.variant, "Nama varian", 40);
+  const variantLabel = text(p.variantLabel, "Jenis pilihan varian", 30);
+  return {
+    ...(variantOf ? { variantOf } : {}),
+    ...(variant ? { variant } : {}),
+    ...(variantLabel ? { variantLabel } : {}),
+  };
+}
+// Each variant names its family's lead: a product of the same way (for
+// sale or for rent) that is no variant itself. A variant whose lead is
+// gone stands alone again. A family holds at most variantLimit products,
+// each with its own variant name and its own product name, so the cart,
+// the order and the payment tell them apart.
+function checkFamilies(products) {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const out = products.map((p) => {
+    if (!p.variantOf) return p;
+    const lead = byId.get(p.variantOf);
+    if (
+      lead &&
+      lead.id !== p.id &&
+      !lead.variantOf &&
+      lead.saleEnabled === p.saleEnabled
+    ) {
+      const { variantLabel, ...rest } = p;
+      return rest;
+    }
+    const { variantOf, ...rest } = p;
+    return rest;
+  });
+  const families = new Map();
+  for (const p of out)
+    families.set(familyId(p), [...(families.get(familyId(p)) ?? []), p]);
+  for (const [id, family] of families) {
+    if (family.length < 2) continue;
+    const lead = byId.get(id);
+    if (family.length > variantLimit)
+      throw new Error(
+        `${lead.name} punya lebih dari ${variantLimit} varian. Pisahkan sebagian jadi produk sendiri.`,
+      );
+    const names = new Set();
+    const variants = new Set();
+    for (const p of family) {
+      if (!p.variant)
+        throw new Error(
+          `Isi nama varian ${p.name}, misalnya warnanya atau tipenya.`,
+        );
+      const variant = p.variant.toLocaleLowerCase("id");
+      if (variants.has(variant))
+        throw new Error(
+          `Nama varian ${p.variant} dipakai dua kali di ${lead.name}.`,
+        );
+      variants.add(variant);
+      const name = p.name.toLocaleLowerCase("id");
+      if (names.has(name))
+        throw new Error(
+          `Nama produk ${p.name} dipakai dua varian. Bedakan namanya, misalnya dengan warnanya.`,
+        );
+      names.add(name);
+    }
+  }
+  return out;
 }
 // A product's photos of the units for sale (the first is its cover, kept
 // as "image" for the cards), of the units for rent, and its video links.

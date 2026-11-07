@@ -3914,3 +3914,106 @@ strong.admin-overdue {
   border-radius: 12px;
   background: #eff7f4;
 }
+/* Variants of one model: the variant's own name, the name of the choice,
+   and the family to open each variant from. */
+.admin-shop-variants {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 18px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #fbf6ef;
+}
+.admin-shop-variants h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.admin-shop-variants p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4d6477;
+}
+.admin-shop-variants p strong {
+  display: block;
+  color: #254961;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+.admin-shop-variants .admin-field {
+  margin: 0;
+}
+.admin-shop-variant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.admin-shop-variant-actions select {
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d5e1e8;
+  border-radius: 10px;
+  background: white;
+  color: #254961;
+}
+.admin-shop-variant-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A variant alone on the last row takes the whole row. */
+.admin-shop-variant-list li:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+@media (max-width: 560px) {
+  .admin-shop-variant-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.admin-shop-variant-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  border: 1px solid #eadfce;
+  border-radius: 12px;
+  background: white;
+  text-align: left;
+  color: #254961;
+}
+.admin-shop-variant-list button.is-current {
+  border-color: #82b7cb;
+  box-shadow: 0 0 0 1px #82b7cb;
+}
+.admin-shop-variant-list span {
+  min-width: 0;
+}
+.admin-shop-variant-list strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.admin-shop-variant-list small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #718394;
+  overflow-wrap: anywhere;
+}
+/* In the product list, a variant sits under its family's lead. */
+.admin-shop-item.is-variant {
+  width: calc(100% - 22px);
+  margin-left: 22px;
+  margin-top: 6px;
+}
+.admin-shop-item.is-variant .admin-shop-thumbnail {
+  width: 44px;
+  height: 44px;
+}

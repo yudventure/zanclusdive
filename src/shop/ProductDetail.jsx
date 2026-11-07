@@ -1,7 +1,15 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
-import { rupiah, unitsLeft, stockBadge, productImages } from "../shop-model.js";
+import {
+  rupiah,
+  unitsLeft,
+  stockBadge,
+  productImages,
+  familyOf,
+  pairOf,
+  variantName,
+} from "../shop-model.js";
 import { storyBlocks } from "../product-story.js";
 import ProductStory from "./ProductStory.jsx";
 import { dictionary } from "../i18n.js";
@@ -13,11 +21,12 @@ import { Video } from "../components/DiveVideos.jsx";
 // from its card or a cart line: the photos with thumbnails, the price and
 // what is left, sizes, how the order is received, then the full
 // description, the spec table and the videos. From a card the guest picks
-// a size and a quantity and adds it; from the cart the window only shows
-// the details.
+// a variant, a size and a quantity and adds it; from the cart the window
+// only shows the details. "catalog" is the products the guest may see:
+// the variants of the same model and the same model the other way.
 export default function ProductDetail({
-  product,
-  pair,
+  product: opened,
+  catalog = [],
   mode,
   stock,
   locale,
@@ -31,6 +40,8 @@ export default function ProductDetail({
   const dict = dictionary(locale);
   const t = dict.shop.detail;
   const d = dict.shop.delivery;
+  // The variant shown: the one opened, or another of its family.
+  const [product, setProduct] = useState(opened);
   const [size, setSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState("");
@@ -40,6 +51,21 @@ export default function ProductDetail({
     const dialog = ref.current;
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
+  const family = familyOf(
+    catalog.filter(
+      (p) => p.enabled && p[mode === "sale" ? "saleEnabled" : "rentalEnabled"],
+    ),
+    product,
+  );
+  const choice = family[0]?.variantLabel || t.variant;
+  function pick(variant) {
+    setProduct(variant);
+    setPhoto(0);
+    setSize("");
+    setQuantity(1);
+    setError("");
+  }
+  const pair = pairOf(catalog, product);
   const sizes = product.sizes ?? [];
   // The photos of the units for sale, or of the units for rent.
   const images = productImages(product, mode);
@@ -79,7 +105,7 @@ export default function ProductDetail({
       setError(t.needSize);
       return;
     }
-    onAdd(size, Math.min(quantity, max));
+    onAdd(size, Math.min(quantity, max), product);
     close();
   }
   return (
@@ -197,6 +223,56 @@ export default function ProductDetail({
             {badge.label}
           </span>
           <p className="shop-detail-text">{product.description}</p>
+          {family.length > 1 && (
+            // The variants of this model, each with its own photo, price
+            // and stock: picking one shows it in the window.
+            <fieldset className="shop-variants">
+              <legend>
+                {choice} <span>{variantName(product)}</span>
+              </legend>
+              <div>
+                {family.map((v) => {
+                  const cover = productImages(v, mode)[0];
+                  const out =
+                    stockBadge(v, stock, mode, dict.availability).state ===
+                    "unavailable";
+                  return (
+                    <label
+                      key={v.id}
+                      className={
+                        (v.id === product.id ? "is-chosen" : "") +
+                        (out ? " is-out" : "")
+                      }
+                    >
+                      <input
+                        type="radio"
+                        name={`${id}-variant`}
+                        value={v.id}
+                        checked={v.id === product.id}
+                        onChange={() => pick(v)}
+                      />
+                      {cover ? (
+                        <img
+                          src={cover}
+                          srcSet={photoSrcSet(cover)}
+                          sizes="44px"
+                          alt=""
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span
+                          className="shop-variant-mark"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span>{variantName(v)}</span>
+                      {out && <small>{t.sizeOut}</small>}
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
           {sizes.length > 0 && (
             <fieldset className="shop-sizes">
               <legend>{t.size}</legend>

@@ -24,7 +24,15 @@ export const translatableFields = {
     "itinerary",
     "faqs",
   ],
-  products: ["name", "description", "specification", "details", "specs"],
+  products: [
+    "name",
+    "description",
+    "specification",
+    "details",
+    "specs",
+    "variant",
+    "variantLabel",
+  ],
 };
 const experienceKeys = ["beginner", "explorer", "specialty"];
 const textKeys = [
@@ -708,6 +716,12 @@ export function validateTranslations(input, products = []) {
                 productLimits.details,
               ),
               specs: specList(t.specs),
+              variant: optional(t.variant, "Nama varian", 40),
+              variantLabel: optional(
+                t.variantLabel,
+                "Jenis pilihan varian",
+                30,
+              ),
             },
           ];
         }),

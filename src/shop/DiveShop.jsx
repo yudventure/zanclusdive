@@ -20,7 +20,9 @@ import {
   stockBadge,
   deliveryChoice,
   productAs,
-  pairOf,
+  familyOf,
+  familyPrice,
+  oneEach,
 } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
 import FareChoice from "../components/FareChoice.jsx";
@@ -90,6 +92,9 @@ export default function DiveShop({
     (p) => p.enabled && p[mode === "sale" ? "saleEnabled" : "rentalEnabled"],
   );
   // The same search and filters as the homepage Dive Shop.
+  // A model in several variants shows as one card: the first variant the
+  // search, filters and sorting keep stands for it.
+  const visible = eligible.filter((p) => !itemLocked(locks, "product", p.id));
   const products = filterItems(
     eligible.map((p) => ({
       product: p,
@@ -100,6 +105,7 @@ export default function DiveShop({
     { query: search, category, available, sort },
     { categoryName: (key) => shopCategories[key], locale },
   ).map((item) => item.product);
+  const cards = oneEach(products);
   const categories = [...new Set(eligible.map((p) => p.category))];
   let quote;
   try {
@@ -336,7 +342,7 @@ export default function DiveShop({
                 </label>
               </div>
               <div className="shop-filter-row">
-                <p>{t.count(products.length, mode === "sale")}</p>
+                <p>{t.count(cards.length, mode === "sale")}</p>
                 <div className="shop-filter-controls">
                   <label>
                     <span className="sr-only">{t.category}</span>
@@ -383,16 +389,29 @@ export default function DiveShop({
                 {notice || t.pick}
               </p>
               <div className="shop-product-grid">
-                {products.map((product) => {
-                  const price =
-                    product[mode === "sale" ? "salePrice" : "rentalPrice"];
+                {cards.map((product) => {
                   const locked = itemLocked(locks, "product", product.id);
-                  const badge = stockBadge(
-                    product,
-                    stock,
-                    mode,
-                    dict.availability,
+                  const family = locked
+                    ? [product]
+                    : familyOf(visible, product);
+                  const variants = family.length > 1;
+                  const { price, varies } = variants
+                    ? familyPrice(family, mode)
+                    : {
+                        price:
+                          product[
+                            mode === "sale" ? "salePrice" : "rentalPrice"
+                          ],
+                        varies: false,
+                      };
+                  // A family is available while one of its variants is.
+                  const badges = family.map((v) =>
+                    stockBadge(v, stock, mode, dict.availability),
                   );
+                  const badge =
+                    [badges[family.indexOf(product)], ...badges].find(
+                      (b) => b && b.state !== "unavailable",
+                    ) ?? badges[0];
                   return (
                     <article
                       className={
@@ -441,21 +460,37 @@ export default function DiveShop({
                             {product.specification}
                           </p>
                         )}
+                        {variants && (
+                          <p className="shop-variant-count">
+                            {t.detail.variants(
+                              family.length,
+                              family[0].variantLabel,
+                            )}
+                          </p>
+                        )}
                         <div className="shop-product-bottom">
                           <p className="shop-price">
+                            {varies && price !== null && (
+                              <small className="shop-price-from">
+                                {t.detail.from}
+                              </small>
+                            )}
                             {price === null ? t.askPrice : money(price)}
                             {mode === "rental" && price !== null && (
                               <small>{t.perDay}</small>
                             )}
                           </p>
-                          {product.sizes?.length ? (
-                            // Gear with sizes is added from its window.
+                          {variants || product.sizes?.length ? (
+                            // Gear with variants or sizes is added from its
+                            // window.
                             <button
                               disabled={locked || badge.state === "unavailable"}
-                              aria-label={`${t.detail.pickSize} ${product.name}`}
+                              aria-label={`${variants ? t.detail.pickVariant : t.detail.pickSize} ${product.name}`}
                               onClick={() => openDetail(product)}
                             >
-                              {t.detail.pickSize}
+                              {variants
+                                ? t.detail.pickVariant
+                                : t.detail.pickSize}
                             </button>
                           ) : (
                             <button
@@ -473,7 +508,7 @@ export default function DiveShop({
                   );
                 })}
               </div>
-              {!products.length && (
+              {!cards.length && (
                 <div className="shop-empty">
                   <h3>{t.emptyTitle}</h3>
                   <p>{t.emptyText}</p>
@@ -902,9 +937,8 @@ export default function DiveShop({
         <ProductDetail
           key={detail.product.id + detail.mode}
           product={detail.product}
-          pair={pairOf(
-            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
-            detail.product,
+          catalog={shop.products.filter(
+            (p) => !itemLocked(locks, "product", p.id),
           )}
           mode={detail.mode}
           stock={stock}
@@ -913,7 +947,8 @@ export default function DiveShop({
           delivery={shop.delivery}
           onAdd={
             detail.add
-              ? (size, quantity) => add(detail.product, size, quantity)
+              ? (size, quantity, variant) =>
+                  add(variant ?? detail.product, size, quantity)
               : null
           }
           onClose={() => setDetail(null)}

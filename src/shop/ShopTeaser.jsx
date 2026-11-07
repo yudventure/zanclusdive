@@ -13,7 +13,9 @@ import {
   productAs,
   rentalTabs,
   rentalTabOf,
-  pairOf,
+  familyOf,
+  familyPrice,
+  oneEach,
 } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
@@ -248,6 +250,12 @@ export default function ShopTeaser({
     { query, category, available, sort },
     { categoryName, locale },
   );
+  // A model in several variants shows as one card: the first variant the
+  // search, filters and sorting keep stands for it.
+  const cards = oneEach(shown, (item) => item.product);
+  const familyCount = (list) => oneEach(list, (item) => item.product).length;
+  const unlocked = (list) =>
+    list.filter((p) => !itemLocked(locks, "product", p.id));
   const filtered =
     Boolean(query.trim()) ||
     category !== "all" ||
@@ -265,8 +273,10 @@ export default function ShopTeaser({
         .filter((tab) => tab !== active)
         .map((tab) => [
           tab,
-          inTab(tab).filter((p) =>
-            matchesSearch(p, query, categoryName(p.category)),
+          oneEach(
+            inTab(tab).filter((p) =>
+              matchesSearch(p, query, categoryName(p.category)),
+            ),
           ).length,
         ])
         .filter(([, n]) => n > 0)
@@ -301,10 +311,11 @@ export default function ShopTeaser({
   });
   const quantity = (key) =>
     cart.find((line) => line.key === key)?.quantity ?? 0;
-  // Every size of a product in the cart in one way, for its card.
-  const inCart = (productId, mode) =>
+  // Every size of a product (or of every variant of a model) in the cart
+  // in one way, for its card.
+  const inCart = (ids, mode) =>
     cart
-      .filter((line) => line.productId === productId && line.mode === mode)
+      .filter((line) => ids.includes(line.productId) && line.mode === mode)
       .reduce((total, line) => total + line.quantity, 0);
   const productOf = (line) =>
     shop.products.find((p) => p.id === line.productId);
@@ -521,7 +532,9 @@ export default function ShopTeaser({
           )}
           {items.length > 0 && (
             <div className="shop-finder-status">
-              <p aria-live="polite">{s.count(shown.length, items.length)}</p>
+              <p aria-live="polite">
+                {s.count(familyCount(shown), familyCount(items))}
+              </p>
               {filtered && (
                 <button type="button" onClick={resetFilters}>
                   {s.reset}
@@ -543,8 +556,20 @@ export default function ShopTeaser({
             <p className="shop-finder-empty">{s.noMatch}</p>
           ) : items.length ? (
             <ul className="shop-item-grid">
-              {shown.map((item) => {
+              {cards.map((item) => {
                 const count = quantity(item.key);
+                const family = item.locked
+                  ? [item.product]
+                  : familyOf(unlocked(inTab(active)), item.product);
+                const variants = family.length > 1;
+                const { price, varies } = variants
+                  ? familyPrice(family, item.mode)
+                  : { price: item.price, varies: false };
+                // A family can be added while one of its variants is left.
+                const left = Math.max(
+                  ...family.map((v) => unitsLeft(v, stock, item.mode) ?? 10),
+                );
+                const ids = family.map((v) => v.id);
                 return (
                   <li
                     className={"shop-item" + (item.locked ? " is-locked" : "")}
@@ -593,19 +618,32 @@ export default function ShopTeaser({
                       {item.info && (
                         <p className="shop-item-info">{item.info}</p>
                       )}
+                      {variants && (
+                        <p className="shop-variant-count">
+                          {t.detail.variants(
+                            family.length,
+                            family[0].variantLabel,
+                          )}
+                        </p>
+                      )}
                       <p className="shop-item-price">
-                        {item.price === null
-                          ? s.askPrice
-                          : rupiah(item.price, locale)}
+                        {varies && price !== null && (
+                          <small className="shop-price-from">
+                            {t.detail.from}{" "}
+                          </small>
+                        )}
+                        {price === null ? s.askPrice : rupiah(price, locale)}
                         {item.unit && <small> {item.unit}</small>}
                       </p>
-                      {item.locked ? null : item.product?.sizes?.length ? (
-                        // Gear with sizes goes into the cart from its window.
+                      {item.locked ? null : variants ||
+                        item.product?.sizes?.length ? (
+                        // Gear with variants or sizes goes into the cart
+                        // from its window.
                         <>
                           <button
                             type="button"
                             className="shop-item-add"
-                            disabled={item.left <= 0}
+                            disabled={left <= 0}
                             onClick={() =>
                               setDetail({
                                 product: item.product,
@@ -614,13 +652,15 @@ export default function ShopTeaser({
                               })
                             }
                           >
-                            {item.left <= 0 ? s.out : t.detail.pickSize}
+                            {left <= 0
+                              ? s.out
+                              : variants
+                                ? t.detail.pickVariant
+                                : t.detail.pickSize}
                           </button>
-                          {inCart(item.productId, item.mode) > 0 && (
+                          {inCart(ids, item.mode) > 0 && (
                             <small className="shop-item-in-cart">
-                              {t.detail.inCart(
-                                inCart(item.productId, item.mode),
-                              )}
+                              {t.detail.inCart(inCart(ids, item.mode))}
                             </small>
                           )}
                         </>
@@ -991,10 +1031,7 @@ export default function ShopTeaser({
         <ProductDetail
           key={detail.product.id + detail.mode}
           product={detail.product}
-          pair={pairOf(
-            shop.products.filter((p) => !itemLocked(locks, "product", p.id)),
-            detail.product,
-          )}
+          catalog={unlocked(shop.products)}
           mode={detail.mode}
           stock={stock}
           locale={locale}
@@ -1002,8 +1039,8 @@ export default function ShopTeaser({
           delivery={shop.delivery}
           onAdd={
             detail.add
-              ? (size, count) =>
-                  addSized(detail.product, detail.mode, size, count)
+              ? (size, count, variant) =>
+                  addSized(variant ?? detail.product, detail.mode, size, count)
               : null
           }
           onClose={() => setDetail(null)}

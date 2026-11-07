@@ -15,6 +15,9 @@ import {
   pairOf,
   deliveryOf,
   deliveryZoneLimit,
+  familyId,
+  familyOf,
+  variantLimit,
 } from "../shop-model.js";
 import { videoPlatforms, videoSource } from "../gallery.js";
 import {
@@ -88,8 +91,16 @@ export default function ShopEditor({
   // The list of one kind, searched by name.
   const [find, setFind] = useState("");
   const ofKind = shop.products.filter((p) => kindOf(p) === kind);
-  const listed = ofKind.filter((p) =>
-    p.name.toLowerCase().includes(find.trim().toLowerCase()),
+  // Variants listed right under their family's lead.
+  const ordered = ofKind.flatMap((p) =>
+    p.variantOf && ofKind.some((q) => q.id === p.variantOf)
+      ? []
+      : [p, ...ofKind.filter((q) => q.variantOf === p.id)],
+  );
+  const listed = ordered.filter((p) =>
+    [p.name, p.variant ?? ""].some((text) =>
+      text.toLowerCase().includes(find.trim().toLowerCase()),
+    ),
   );
   const count = (k) => shop.products.filter((p) => kindOf(p) === k).length;
   const t = kinds[kind];
@@ -107,6 +118,7 @@ export default function ShopEditor({
   }, [busy]);
   const product = ofKind.find((p) => p.id === selectedID) || ofKind[0];
   const pair = product && pairOf(shop.products, product);
+  const family = product ? familyOf(ofKind, product) : [];
   const full = shop.products.length >= shopProductLimit;
   function show(next, id) {
     setKind(next);
@@ -175,6 +187,10 @@ export default function ShopEditor({
     };
     delete copy.pair;
     delete copy.stockCounts;
+    // The other way has its own variants.
+    delete copy.variantOf;
+    delete copy.variant;
+    delete copy.variantLabel;
     if (toRent) copy.pair = product.id;
     update("products", (products) => [
       ...products.map((p) =>
@@ -182,8 +198,60 @@ export default function ShopEditor({
       ),
       copy,
     ]);
-    onCopyTexts?.(product.id, id);
+    onCopyTexts?.(product.id, id, ["variant", "variantLabel"]);
     show(toRent ? "rental" : "sale", id);
+  }
+  // Another variant of this model, such as another colour: a copy of this
+  // product (texts, price, sizes, specs and videos) in the same family,
+  // without its photos and stock, kept as a draft right after the family.
+  function addVariant() {
+    const id = crypto.randomUUID();
+    const lead = familyId(product);
+    const copy = {
+      ...product,
+      id,
+      variantOf: lead,
+      variant: "",
+      name: `${product.name.slice(0, 85)} (varian baru)`,
+      image: "",
+      images: [],
+      rentalImages: [],
+      enabled: false,
+    };
+    delete copy.pair;
+    delete copy.stockCounts;
+    delete copy.variantLabel;
+    update("products", (products) => {
+      const last = products.reduce(
+        (at, p, index) => (familyId(p) === lead ? index : at),
+        -1,
+      );
+      return [
+        ...products.slice(0, last + 1),
+        copy,
+        ...products.slice(last + 1),
+      ];
+    });
+    onCopyTexts?.(product.id, id, ["name", "variant", "variantLabel"]);
+    setFind("");
+    setSelectedID(id);
+  }
+  // This product joins another product's family as one of its variants.
+  function joinFamily(otherId) {
+    const other = shop.products.find((p) => p.id === otherId);
+    if (!other) return;
+    editMany({ variantOf: familyId(other) });
+  }
+  // This product stands alone again. A lead hands its family to its first
+  // variant.
+  function leaveFamily() {
+    update("products", (products) =>
+      handOver(products, product).map((p) => {
+        if (p.id !== product.id) return p;
+        const { variantOf, variantLabel, ...rest } = p;
+        return rest;
+      }),
+    );
   }
   function remove() {
     if (
@@ -192,7 +260,9 @@ export default function ShopEditor({
       )
     )
       return;
-    const remaining = shop.products.filter((p) => p.id !== product.id);
+    const remaining = handOver(shop.products, product).filter(
+      (p) => p.id !== product.id,
+    );
     update("products", remaining);
     setSelectedID(remaining.find((p) => kindOf(p) === kind)?.id);
   }
@@ -297,7 +367,9 @@ export default function ShopEditor({
             <button
               type="button"
               className={
-                "admin-shop-item " + (product?.id === p.id ? "selected" : "")
+                "admin-shop-item " +
+                (product?.id === p.id ? "selected" : "") +
+                (p.variantOf ? " is-variant" : "")
               }
               key={p.id}
               onClick={() => setSelectedID(p.id)}
@@ -309,7 +381,11 @@ export default function ShopEditor({
               <span>
                 <strong>{p.name}</strong>
                 <small>
+                  {p.variantOf ? `Varian ${p.variant || "tanpa nama"} · ` : ""}
                   {priceText(p)} · {p.enabled ? "Tampil" : "Draft"}
+                  {!p.variantOf && ofKind.some((q) => q.variantOf === p.id)
+                    ? ` · ${ofKind.filter((q) => q.variantOf === p.id).length + 1} varian`
+                    : ""}
                 </small>
               </span>
             </button>
@@ -380,6 +456,27 @@ export default function ShopEditor({
                 />
               </Field>
             </div>
+            <ProductVariants
+              product={product}
+              family={family}
+              others={ordered.filter(
+                (p) => !p.variantOf && familyId(p) !== familyId(product),
+              )}
+              disabled={busy}
+              canAdd={!full && family.length < variantLimit}
+              edit={edit}
+              editLead={(key, value) =>
+                update("products", (products) =>
+                  products.map((p) =>
+                    p.id === family[0].id ? { ...p, [key]: value } : p,
+                  ),
+                )
+              }
+              onOpen={setSelectedID}
+              onAdd={addVariant}
+              onJoin={joinFamily}
+              onLeave={leaveFamily}
+            />
             <SizesAndAvailability
               mode={kind}
               product={product}
@@ -450,6 +547,161 @@ export default function ShopEditor({
         </button>
       </div>
     </form>
+  );
+}
+
+// A lead leaving its family, or deleted, hands it to its first variant:
+// the others name that variant as their lead, and it keeps the name of the
+// choice.
+function handOver(products, lead) {
+  const members = products.filter((p) => p.variantOf === lead.id);
+  if (!members.length) return products;
+  const next = members[0].id;
+  return products.map((p) => {
+    if (p.id === next) {
+      const { variantOf, ...rest } = p;
+      return lead.variantLabel
+        ? { ...rest, variantLabel: lead.variantLabel }
+        : rest;
+    }
+    return p.variantOf === lead.id ? { ...p, variantOf: next } : p;
+  });
+}
+
+// One model in several variants, such as colours: each variant is its own
+// product with its own photos, price, stock and sizes, and the website
+// shows the family as one card with the variants to pick.
+function ProductVariants({
+  product,
+  family,
+  others,
+  disabled,
+  canAdd,
+  edit,
+  editLead,
+  onOpen,
+  onAdd,
+  onJoin,
+  onLeave,
+}) {
+  const lead = family[0];
+  if (family.length < 2)
+    return (
+      <section className="admin-shop-variants" aria-label="Varian">
+        <h3>Varian</h3>
+        <p>
+          <strong>Satu model dalam beberapa warna atau tipe?</strong>
+          Buat variannya dari produk ini. Nama, deskripsi, harga, ukuran,
+          spesifikasi, dan video ikut tersalin, lalu foto dan stok tiap varian
+          diisi sendiri. Di website semua varian tampil sebagai satu kartu
+          dengan pilihan varian.
+        </p>
+        <div className="admin-shop-variant-actions">
+          <button
+            type="button"
+            className="admin-button secondary"
+            disabled={disabled || !canAdd}
+            onClick={onAdd}
+          >
+            + Tambah varian
+          </button>
+          {others.length > 0 && (
+            <select
+              aria-label="Jadikan varian dari produk lain"
+              value=""
+              disabled={disabled}
+              onChange={(e) => e.target.value && onJoin(e.target.value)}
+            >
+              <option value="">Jadikan varian dari produk lain…</option>
+              {others.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </section>
+    );
+  return (
+    <section className="admin-shop-variants" aria-label="Varian">
+      <h3>Varian ({family.length})</h3>
+      <p>
+        Tampil sebagai satu kartu di website. Tiap varian punya foto, harga,
+        stok, dan ukurannya sendiri. Beri nama produk yang berbeda untuk tiap
+        varian, misalnya Masker Poseidon Red Line dan Masker Poseidon Black
+        Line, supaya pesanan tidak tertukar.
+      </p>
+      <div className="admin-form-grid">
+        <Field
+          label="Nama varian produk ini"
+          hint="Tulisan di tombol varian, misalnya Merah atau Lensa minus."
+        >
+          <input
+            required
+            maxLength={40}
+            placeholder="Misalnya Merah"
+            value={product.variant ?? ""}
+            onChange={(e) => edit("variant", e.target.value)}
+          />
+        </Field>
+        <Field
+          label="Jenis pilihan"
+          hint="Judul di atas tombol varian, berlaku untuk semua varian. Misalnya Warna, Tipe, atau Ketebalan."
+        >
+          <input
+            maxLength={30}
+            placeholder="Warna"
+            value={lead.variantLabel ?? ""}
+            onChange={(e) => editLead("variantLabel", e.target.value)}
+          />
+        </Field>
+      </div>
+      <ul className="admin-shop-variant-list">
+        {family.map((p) => (
+          <li key={p.id}>
+            <button
+              type="button"
+              className={p.id === product.id ? "is-current" : ""}
+              aria-current={p.id === product.id ? "true" : undefined}
+              onClick={() => onOpen(p.id)}
+            >
+              <span className="admin-shop-thumbnail">
+                <ProductVisual product={productAs(p, kindOf(p))} />
+              </span>
+              <span>
+                <strong>{p.variant || "Belum diberi nama varian"}</strong>
+                <small>
+                  {p.name}
+                  {p === lead ? " · Produk utama" : ""}
+                </small>
+                <small>
+                  {priceText(p)} · {p.enabled ? "Tampil" : "Draft"}
+                </small>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="admin-shop-variant-actions">
+        <button
+          type="button"
+          className="admin-button secondary"
+          disabled={disabled || !canAdd}
+          onClick={onAdd}
+        >
+          + Tambah varian
+        </button>
+        <button
+          type="button"
+          className="admin-inline"
+          disabled={disabled}
+          onClick={onLeave}
+        >
+          Lepas produk ini dari varian
+        </button>
+      </div>
+    </section>
   );
 }
 

@@ -1843,6 +1843,96 @@
   font-size: 9px;
   font-weight: 500;
 }
+/* The variants of one model in the product window: a photo and a name
+   each, the one shown outlined in the brand colour. */
+.shop-variants {
+  margin: 18px 0 0;
+  padding: 0;
+  border: 0;
+}
+.shop-variants legend {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.shop-variants legend span {
+  margin-left: 4px;
+  font-weight: 400;
+  color: #547379;
+}
+.shop-variants > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.shop-variants label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 5px 14px 5px 5px;
+  border: 1px solid #cfe0db;
+  border-radius: 14px;
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.shop-variants input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.shop-variants img,
+.shop-variant-mark {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #edf3f0;
+}
+.shop-variants label.is-chosen {
+  border-color: #0d6f73;
+  box-shadow: 0 0 0 1px #0d6f73;
+  background: #eef7f5;
+}
+.shop-variants label:has(input:focus-visible) {
+  outline: 2px solid #0d6f73;
+  outline-offset: 2px;
+}
+.shop-variants label.is-out {
+  color: #8a9ea4;
+}
+.shop-variants label.is-out img {
+  opacity: 0.55;
+}
+.shop-variants small {
+  font-size: 10px;
+  font-weight: 500;
+  color: #8a9ea4;
+}
+/* How many variants a card's model has, such as 3 pilihan warna. */
+.shop-variant-count {
+  align-self: flex-start;
+  margin: 0 0 18px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eaf4e7;
+  color: #164f61;
+  font-size: 10px;
+  font-weight: 600;
+}
+.shop-specification + .shop-variant-count {
+  margin-top: -12px;
+}
+.shop-item .shop-variant-count {
+  margin: 8px 0 0;
+}
+.shop-price-from {
+  margin-right: 4px;
+}
 .shop-detail-actions {
   display: flex;
   align-items: center;
