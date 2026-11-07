@@ -308,8 +308,17 @@ try {
   ]);
   assert.equal(await a.locator(".admin-shop-item.is-variant").count(), 2);
   await listed.filter({ hasText: "Masker Line Merah" }).click();
-  const section = a.locator(".admin-shop-variants");
-  assert.equal(await section.locator("h3").textContent(), "Varian (3)");
+  // Options and stock are one section of the price block.
+  const section = a.locator(".admin-shop-mode .admin-options-stock");
+  assert.equal(
+    await section.locator("h3").textContent(),
+    "Pilihan & stok jual",
+  );
+  assert.equal(
+    await section.locator(".admin-variant-row:not(.is-head)").count(),
+    3,
+  );
+  assert.equal(await a.locator(".admin-shop-variants").count(), 0);
   assert.equal(await section.getByLabel("Jenis pilihan").inputValue(), "Warna");
   assert.equal(
     await section.getByLabel("Nama varian Masker Line Merah").inputValue(),
@@ -325,7 +334,11 @@ try {
   const values = section.getByLabel("Pilihan warna");
   await values.fill("Biru");
   await values.press("Enter");
-  await section.locator("h3", { hasText: "Varian (4)" }).waitFor();
+  await section.getByLabel("Nama varian Masker Line Biru").waitFor();
+  assert.equal(
+    await section.locator(".admin-variant-row:not(.is-head)").count(),
+    4,
+  );
   assert.equal(
     await a.locator(".admin-shop-item.selected strong").textContent(),
     "Masker Line Merah",
@@ -375,10 +388,9 @@ try {
   // The lead leaving hands the family to its first variant.
   await listed.filter({ hasText: "Masker Line Merah" }).click();
   await a.getByRole("button", { name: "Lepas produk ini dari varian" }).click();
-  assert.equal(
-    await a.locator(".admin-shop-variants h3").textContent(),
-    "Varian",
-  );
+  // Alone again: one stock field, no variant rows.
+  await section.locator(".admin-variant-table.is-single").waitFor();
+  await section.getByLabel("Stok jual", { exact: true }).waitFor();
   await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
   await a
     .getByRole("status")
@@ -398,8 +410,8 @@ try {
     .getByLabel("Jadikan varian dari produk lain")
     .selectOption({ label: "Masker Line Hitam" });
   assert.equal(
-    await a.locator(".admin-shop-variants h3").textContent(),
-    "Varian (4)",
+    await section.locator(".admin-variant-row:not(.is-head)").count(),
+    4,
   );
   await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
   await a
@@ -411,6 +423,34 @@ try {
       .variantOf,
     "demo-mask-hitam",
   );
+  // Sizes split every variant's stock at once.
+  await section.getByLabel("Ukuran", { exact: true }).fill("S, M");
+  await section.getByLabel("Ukuran", { exact: true }).press("Enter");
+  await section.getByLabel("Stok Hitam ukuran M", { exact: true }).fill("2");
+  await section.getByLabel("Stok Merah ukuran S", { exact: true }).fill("1");
+  assert.match(
+    await section.locator(".admin-variant-total").textContent(),
+    /^Total stok 3 /,
+  );
+  shots &&
+    (await section.screenshot({ path: `${shots}/pilihan-stok-ukuran.png` }));
+  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
+  await a
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  const sized = (await state()).content.shop.products.filter(
+    (p) => p.id === "demo-mask-hitam" || p.variantOf === "demo-mask-hitam",
+  );
+  assert.equal(sized.length, 4);
+  for (const p of sized) assert.deepEqual(p.sizes, ["S", "M"]);
+  const sizeStock = async (id, size) =>
+    (await (await api("/api/admin/shop-stock")).json()).items.find(
+      (item) =>
+        item.productId === id && item.mode === "sale" && item.size === size,
+    )?.stock;
+  assert.equal(await sizeStock("demo-mask-hitam", "M"), 2);
+  assert.equal(await sizeStock("demo-mask", "S"), 1);
   await noSideScroll(a);
   assert.deepEqual(errors, []);
   console.log("Variants verified.");

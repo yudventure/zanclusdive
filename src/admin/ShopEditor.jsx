@@ -28,7 +28,7 @@ import {
 } from "../product-story.js";
 import ProductStory from "../shop/ProductStory.jsx";
 import SpecTable from "./SpecTable.jsx";
-import ProductVariants from "./VariantTable.jsx";
+import OptionsStock from "./OptionsStock.jsx";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 import {
   cleanCode,
@@ -528,33 +528,34 @@ export default function ShopEditor({
                 />
               </Field>
             </div>
-            <ProductVariants
-              product={product}
-              family={family}
-              catalog={shop.products}
-              others={ordered.filter(
-                (p) => !p.variantOf && familyId(p) !== familyId(product),
-              )}
-              disabled={busy}
-              canAdd={!full && family.length < variantLimit}
-              items={stock}
-              itemsError={stockError}
-              editProduct={editProduct}
-              setStock={setVariantStock}
-              onOpen={setSelectedID}
-              onAddValue={addVariantValue}
-              onJoin={joinFamily}
-              onLeave={leaveFamily}
-            />
-            <SizesAndAvailability
-              mode={kind}
-              product={product}
-              canStock={canStock}
-              edit={edit}
-            />
             <ModeSection
               mode={kind}
               product={product}
+              stockPanel={
+                <OptionsStock
+                  mode={kind}
+                  product={product}
+                  family={family}
+                  catalog={shop.products}
+                  others={ordered.filter(
+                    (p) => !p.variantOf && familyId(p) !== familyId(product),
+                  )}
+                  items={stock}
+                  itemsError={stockError}
+                  canStock={canStock}
+                  canAddVariant={!full && family.length < variantLimit}
+                  disabled={busy}
+                  editProduct={editProduct}
+                  setStock={setVariantStock}
+                  setFamilySizes={(sizes) =>
+                    family.forEach((p) => editProduct(p.id, { sizes }))
+                  }
+                  onAddValue={addVariantValue}
+                  onOpen={setSelectedID}
+                  onJoin={joinFamily}
+                  onLeave={leaveFamily}
+                />
+              }
               items={stock}
               error={stockError}
               media={media}
@@ -685,107 +686,6 @@ function ProductPair({ mode, pair, disabled, onOpen, onCopy }) {
   );
 }
 
-// The sizes and how the website follows the stock. The stock of each size
-// is typed below.
-function SizesAndAvailability({ mode, product, canStock, edit }) {
-  const [draft, setDraft] = useState("");
-  const sizes = product.sizes ?? [];
-  function addSizes() {
-    const next = [...sizes];
-    for (const raw of draft.split(",")) {
-      const size = raw.trim().replace(/\s+/g, " ").slice(0, 16);
-      if (
-        size &&
-        !/[<>]|::/.test(size) &&
-        next.length < sizeLimit &&
-        !next.some((s) => s.toLowerCase() === size.toLowerCase())
-      )
-        next.push(size);
-    }
-    edit("sizes", next);
-    setDraft("");
-  }
-  return (
-    <section className="admin-shop-stock" aria-label="Ukuran dan ketersediaan">
-      <h3>Ukuran & ketersediaan</h3>
-      <div className="admin-size-row">
-        <Field label="Ukuran">
-          <input
-            maxLength={120}
-            placeholder="Contoh S, M, L, XL"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addSizes();
-              }
-            }}
-          />
-        </Field>
-        <button
-          type="button"
-          className="admin-button secondary"
-          disabled={!draft.trim() || sizes.length >= sizeLimit}
-          onClick={addSizes}
-        >
-          Tambah ukuran
-        </button>
-      </div>
-      {sizes.length ? (
-        <ul className="admin-size-chips" aria-label="Ukuran produk">
-          {sizes.map((size) => (
-            <li key={size}>
-              {size}
-              <button
-                type="button"
-                aria-label={`Hapus ukuran ${size}`}
-                onClick={() =>
-                  edit(
-                    "sizes",
-                    sizes.filter((s) => s !== size),
-                  )
-                }
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="admin-subtle">
-          Tanpa ukuran. Tambahkan ukuran kalau tamu perlu memilih, misalnya
-          wetsuit, fin, atau BCD.
-        </p>
-      )}
-      <Field label="Ketersediaan di website">
-        <select
-          value={product.availability}
-          onChange={(e) => edit("availability", e.target.value)}
-        >
-          {Object.entries(availabilityLabels).map(([k, label]) => (
-            <option key={k} value={k}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <p className="admin-subtle">
-        {product.availability !== "stock"
-          ? "Stok tetap tercatat di Gudang, tapi website tidak memeriksanya. Pilih Ikuti stok gudang supaya website menampilkan sisa stok."
-          : mode === "sale"
-            ? "Website menampilkan sisa stok, dan pesanan online tidak bisa melebihinya. Penjualan online mengurangi stoknya."
-            : "Website menampilkan sisa alat, dan sewa online tidak bisa melebihinya pada tanggal sewanya. Sewa yang dicatat di Kalender reservasi ikut dihitung, lalu alatnya kembali."}
-      </p>
-      {canStock && (
-        <a className="admin-inline" href="/admin/stock">
-          Buka Barang & stok
-        </a>
-      )}
-    </section>
-  );
-}
-
 // The price, stock and photos of gear for sale, or of rental gear.
 const modeText = {
   sale: {
@@ -818,6 +718,7 @@ const modeText = {
 function ModeSection({
   mode,
   product,
+  stockPanel,
   items,
   error,
   media,
@@ -879,13 +780,7 @@ function ModeSection({
           }
         />
       </Field>
-      <ModeStock
-        mode={mode}
-        product={product}
-        items={items}
-        error={error}
-        editMany={editMany}
-      />
+      {stockPanel}
       <ProductPhotos
         label={t.photos}
         hint={t.photoHint}
@@ -902,89 +797,6 @@ function ModeSection({
 // The stock of one way, per size. Each size (or the product, without
 // sizes) is an item in Gudang. A count typed here is saved with the
 // catalog as a stock opname in the warehouse.
-function ModeStock({ mode, product, items, error, editMany }) {
-  const t = modeText[mode];
-  const sizes = product.sizes ?? [];
-  const byVariant = new Map(
-    (items ?? [])
-      .filter((item) => item.productId)
-      .map((item) => [variantKey(item.productId, item.mode, item.size), item]),
-  );
-  const unit = (size) =>
-    byVariant.get(variantKey(product.id, mode, size))?.unit ??
-    unitForProduct(product);
-  // An item without a size that this product leaves behind when it gets
-  // sizes, so its stock is not lost from sight.
-  const before = sizes.length
-    ? byVariant.get(variantKey(product.id, mode))
-    : null;
-  function setCount(size, value) {
-    editMany({
-      stockCounts: {
-        ...product.stockCounts,
-        [mode]: { ...product.stockCounts?.[mode], [size]: value },
-      },
-      // Typing the stock means the website should follow it.
-      ...(["request", "available"].includes(product.availability)
-        ? { availability: "stock" }
-        : {}),
-    });
-  }
-  if (error)
-    return (
-      <p className="admin-error" role="alert">
-        {error}
-      </p>
-    );
-  if (!items) return <p className="admin-subtle">Memuat stok…</p>;
-  return (
-    <div className="admin-stock-rows">
-      {sizesOf(product).map((size) => {
-        const item = byVariant.get(variantKey(product.id, mode, size));
-        const held = item?.shop;
-        const typed = product.stockCounts?.[mode]?.[size];
-        const notes = (
-          mode === "rental"
-            ? [
-                held?.rentedToday && `${held.rentedToday} disewa hari ini`,
-                held?.bookedLater && `${held.bookedLater} dipesan untuk nanti`,
-              ]
-            : [held?.waiting && `${held.waiting} menunggu pembayaran`]
-        ).filter(Boolean);
-        return (
-          <div className="admin-stock-row" key={size || "all"}>
-            <Field label={size ? `${t.stock} ukuran ${size}` : t.stock}>
-              <input
-                type="number"
-                min={0}
-                max={100000}
-                step={1}
-                placeholder="0"
-                value={typed ?? item?.stock ?? ""}
-                onChange={(e) => setCount(size, e.target.value)}
-              />
-            </Field>
-            <span className="admin-stock-unit">{unit(size)}</span>
-            <small>
-              {notes.length
-                ? notes.join(", ")
-                : item
-                  ? "Belum ada pesanan"
-                  : "Baru, tersimpan saat katalog disimpan"}
-            </small>
-          </div>
-        );
-      })}
-      {before && before.stock > 0 && (
-        <p className="admin-subtle is-warn">
-          {t.stock} lama tanpa ukuran ({before.stock} {before.unit}) tetap di
-          Gudang sebagai barang biasa. Isi stok tiap ukuran di atas.
-        </p>
-      )}
-    </div>
-  );
-}
-
 // The first photo is the cover on cards. For sale, "image" follows it for
 // the parts of the site that show one photo.
 const withPhotos = (product, mode, images) => {

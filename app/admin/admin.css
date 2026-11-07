@@ -4330,3 +4330,55 @@ strong.admin-overdue {
   border-color: #82b7cb;
   box-shadow: 0 0 0 2px #82b7cb66;
 }
+/* Options and stock in one place, inside the price and photos block. */
+.admin-options-stock {
+  margin: 0;
+  background: white;
+}
+.admin-option-rows {
+  display: grid;
+  gap: 14px;
+}
+.admin-option-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 12px;
+  align-items: start;
+}
+.admin-options-stock .admin-size-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+.admin-variant-table.is-single .admin-variant-row {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 10px 0;
+}
+.admin-stock-cell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 6px;
+  flex: 1;
+  min-width: 90px;
+  font-size: 13px;
+  color: #4d6477;
+}
+.admin-stock-cell > input {
+  grid-column: 2;
+  min-height: 42px;
+}
+.admin-stock-cell > span {
+  grid-column: 1;
+  font-weight: 600;
+}
+.admin-stock-cell > small {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: #8a5a00;
+}
+@media (max-width: 760px) {
+  .admin-option-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
