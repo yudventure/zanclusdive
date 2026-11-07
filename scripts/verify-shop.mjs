@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3182";
+const shots = process.env.SHOT_DIR;
 // The Indonesian website (/id); English is served at the root.
 const site = base + "/id";
 assert.ok(
@@ -40,6 +41,66 @@ try {
   await mkdir("artifacts", { recursive: true });
   assert.equal((await api.get(base + "/api/admin/state")).status(), 401);
   await page.goto(site, { waitUntil: "networkidle" });
+  // Homepage Dive Shop: search and filters, in Beli and in every rental
+  // tab.
+  const panel = page.locator("#dive-shop .shop-service-panel");
+  const cards = panel.locator(".shop-item h4");
+  const found = panel.locator(".shop-finder-status p");
+  const find = panel.getByRole("searchbox", { name: "Cari perlengkapan" });
+  const width = async (locator) => (await locator.boundingBox()).width;
+  assert.equal(await found.textContent(), "7 alat");
+  await find.fill("wetsuit");
+  assert.deepEqual(await cards.allTextContents(), ["Wetsuit 3 mm"]);
+  assert.equal(await found.textContent(), "1 dari 7 alat");
+  // A card alone on its row takes the whole row.
+  const grid = panel.locator(".shop-item-grid");
+  assert.ok(
+    Math.abs((await width(panel.locator(".shop-item"))) - (await width(grid))) <
+      2,
+  );
+  // The other tabs with the same words are one tap away.
+  await find.fill("kamera");
+  assert.equal(await panel.locator(".shop-finder-empty").count(), 1);
+  await panel.getByRole("button", { name: "Sewa kamera bawah air 3" }).click();
+  assert.equal(
+    await page
+      .getByRole("tab", { name: "Sewa kamera bawah air" })
+      .getAttribute("aria-selected"),
+    "true",
+  );
+  assert.equal(await cards.count(), 3);
+  await panel.getByRole("button", { name: "Hapus pencarian" }).click();
+  // A category and an order in a rental tab.
+  await page.getByRole("tab", { name: "Sewa masker, snorkel & fin" }).click();
+  await panel.getByLabel("Kategori").selectOption("fins");
+  assert.deepEqual(await cards.allTextContents(), [
+    "Open heel fins",
+    "Fin full foot",
+    "Fin open heel",
+    "Booties",
+  ]);
+  await panel.getByLabel("Urutkan").selectOption("priceHigh");
+  assert.deepEqual(await cards.allTextContents(), [
+    "Fin open heel",
+    "Open heel fins",
+    "Fin full foot",
+    "Booties",
+  ]);
+  assert.equal(await found.textContent(), "4 dari 7 alat");
+  shots &&
+    (await panel.screenshot({ path: `${shots}/89-cari-saring-beranda.png` }));
+  await panel.getByRole("button", { name: "Hapus filter" }).click();
+  assert.equal(await found.textContent(), "7 alat");
+  // Two cards on the last row of three share it.
+  await page
+    .getByRole("tab", { name: "Sewa BCD, regulator & wetsuit" })
+    .click();
+  assert.equal(await cards.count(), 8);
+  const items = panel.locator(".shop-item");
+  const half = ((await width(grid)) - 14) / 2;
+  for (const n of [6, 7])
+    assert.ok(Math.abs((await width(items.nth(n))) - half) < 2);
+  await page.getByRole("tab", { name: "Beli alat selam & aksesori" }).click();
   await page.locator('#dive-shop a[href="/id/dive-shop"]').click();
   await page
     .getByRole("heading", { name: "Temukan perlengkapanmu." })
@@ -57,34 +118,48 @@ try {
       exact: true,
     })
     .click();
+  // The demo gear and the rental gear of the 2025 price list.
   await page.getByRole("button", { name: "Rental alat", exact: true }).click();
-  assert.equal(await page.locator(".shop-product-card").count(), 8);
+  assert.equal(await page.locator(".shop-product-card").count(), 26);
   await page.getByLabel("Kategori perlengkapan").selectOption("fins");
-  assert.equal(await page.locator(".shop-product-card").count(), 1);
+  assert.deepEqual(
+    await page.locator(".shop-product-card h3").allTextContents(),
+    ["Open heel fins", "Fin full foot", "Fin open heel", "Booties"],
+  );
+  // The same orders as the homepage.
+  await page.getByLabel("Urutkan").selectOption("priceHigh");
+  assert.deepEqual(
+    await page.locator(".shop-product-card h3").allTextContents(),
+    ["Fin open heel", "Open heel fins", "Fin full foot", "Booties"],
+  );
+  await page.getByLabel("Urutkan").selectOption("default");
+  // Fins come in sizes: the size is picked in the product window.
   await page
-    .getByRole("button", {
-      name: "Tambahkan Open heel fins untuk rental",
-      exact: true,
-    })
+    .getByRole("button", { name: "Pilih ukuran Open heel fins", exact: true })
     .click();
+  const detail = page.locator("dialog.shop-detail");
+  await detail.locator(".shop-sizes label", { hasText: /^M$/ }).click();
+  await detail.getByRole("button", { name: "Masukkan ke keranjang" }).click();
+  await detail.waitFor({ state: "detached" });
   await page.getByLabel("Jumlah Open heel fins rental").selectOption("2");
   await page.getByLabel("Durasi (hari)").fill("3");
   await page.getByLabel("Nama kamu").fill("Tamu Uji Shop");
   await page.getByLabel("Nomor WhatsApp").fill("081234567890");
   await page
-    .getByLabel("Ukuran / catatan", { exact: false })
-    .fill("Fin ukuran M, ambil di dive center");
+    .getByLabel("Catatan", { exact: false })
+    .fill("Ambil di dive center");
   assert.match(await page.locator(".shop-total").textContent(), /1\.100\.000/);
   await page.getByRole("button", { name: "Siapkan pesan pesanan" }).click();
   const url = await page
     .getByRole("link", { name: "Lanjut ke WhatsApp" })
     .getAttribute("href");
-  assert.ok(url.startsWith("https://wa.me/6285190849237?text="));
+  assert.ok(url.startsWith("https://wa.me/6285190969308?text="));
   const message = new URL(url).searchParams.get("text");
   assert.match(message, /BELI · Mask & snorkel set × 1/);
-  assert.match(message, /RENTAL · Open heel fins × 2/);
+  assert.match(message, /RENTAL · Open heel fins ukuran M × 2/);
   assert.match(message, /selama 3 hari/);
-  assert.match(message, /Fin ukuran M/);
+  assert.match(message, /Catatan Ambil di dive center/);
+  assert.doesNotMatch(message, /[:;—]/);
   assert.doesNotMatch(message, /demo|contoh/i);
   // Do not send or navigate to WhatsApp during verification.
   await page.getByLabel("Durasi (hari)").fill("2");
@@ -126,8 +201,12 @@ try {
       });
       const rect = await page.locator("#order").boundingBox();
       assert.ok(rect.y >= 70 && rect.y < 200);
-      await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
-      await page.waitForFunction(() => window.scrollY === 0);
+      // The smooth scroll to the order panel may still be running: keep
+      // asking for the top until the page is there.
+      await page.waitForFunction(() => {
+        scrollTo({ top: 0, behavior: "instant" });
+        return window.scrollY === 0;
+      });
       await page.screenshot({
         path: "artifacts/dive-shop-mobile.png",
         fullPage: true,
@@ -144,11 +223,17 @@ try {
   );
   const initial = await state();
   originals = initial.content;
-  assert.equal(initial.content.shop.products.length, 8);
+  // Seven products for sale, and 26 rental gear: the same seven for rent,
+  // the cylinder, and the gear of the 2025 price list.
+  assert.equal(initial.content.shop.products.length, 33);
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Dive Shop", exact: true }).waitFor();
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("720000");
-  await page.getByLabel("Harga rental per hari (Rp)").fill("55000");
+  assert.equal(await page.getByLabel("Harga sewa per hari (Rp)").count(), 0);
+  // The mask for rent is its own product, in the other list.
+  await page.getByRole("tab", { name: /Barang sewa/ }).click();
+  assert.equal(await page.getByLabel("Harga jual (Rp)").count(), 0);
+  await page.getByLabel("Harga sewa per hari (Rp)").fill("55000");
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();
@@ -165,19 +250,21 @@ try {
   );
   await live.getByRole("button", { name: "Rental alat", exact: true }).click();
   assert.match(
-    await live.locator('[data-product="demo-mask"] .shop-price').textContent(),
+    await live
+      .locator('[data-product="demo-mask-sewa"] .shop-price')
+      .textContent(),
     /55\.000/,
   );
 
+  await page.getByRole("tab", { name: /Barang jual/ }).click();
   await page
-    .getByRole("button", { name: "+ Tambah produk", exact: true })
+    .getByRole("button", { name: "+ Tambah barang jual", exact: true })
     .click();
   await page.getByLabel("Nama produk", { exact: true }).fill("Mask Uji CMS");
   await page
-    .getByLabel("Deskripsi produk", { exact: true })
+    .getByLabel("Deskripsi singkat", { exact: true })
     .fill("Perlengkapan untuk pengujian katalog.");
   await page.getByLabel("Harga jual (Rp)", { exact: true }).fill("800000");
-  await page.getByLabel("Harga rental per hari (Rp)").fill("60000");
   await page.getByLabel("Tampilkan produk di website", { exact: true }).check();
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
@@ -190,7 +277,10 @@ try {
   const added = snapshot.content.shop.products.find(
     (p) => p.name === "Mask Uji CMS",
   );
-  assert.ok(added);
+  assert.deepEqual(
+    [added.saleEnabled, added.rentalEnabled, added.rentalPrice],
+    [true, false, null],
+  );
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Mask Uji CMS" }).click();
   assert.equal(
@@ -199,7 +289,7 @@ try {
   );
   await live.reload({ waitUntil: "networkidle" });
   await live.locator(`[data-product="${added.id}"]`).waitFor();
-  await page.getByLabel("Ketersediaan produk").selectOption("unavailable");
+  await page.getByLabel("Ketersediaan di website").selectOption("unavailable");
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();
@@ -209,7 +299,9 @@ try {
     .waitFor();
   await live.reload({ waitUntil: "networkidle" });
   assert.equal(
-    await live.locator(`[data-product="${added.id}"] button`).isDisabled(),
+    await live
+      .locator(`[data-product="${added.id}"] .shop-product-bottom button`)
+      .isDisabled(),
     true,
   );
   await page
@@ -238,7 +330,14 @@ try {
   assert.equal(upload.status(), 201);
   const picture = await upload.json();
   await page.reload({ waitUntil: "networkidle" });
-  await page.getByLabel("Atau pilih dari koleksi").selectOption(picture.url);
+  // Other photos sit behind "Pilih foto lain atau tempel URL".
+  const salePhotos = page.locator(
+    ".admin-shop-mode.is-sale .admin-shop-photos",
+  );
+  await salePhotos
+    .locator("summary", { hasText: "Pilih foto lain atau tempel URL" })
+    .click();
+  await salePhotos.getByLabel("Tambah dari koleksi").selectOption(picture.url);
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();
@@ -268,10 +367,65 @@ try {
     400,
     "Old editors cannot erase new shop data",
   );
+  // The same mask for rent is made from it: the texts come along, while
+  // the price, photos and stock are its own.
   await page.getByRole("button", { name: "Mask Uji CMS" }).click();
+  const pairCard = page.locator(".admin-shop-pair");
+  assert.match(await pairCard.textContent(), /^Model ini juga disewakan\?/);
+  await pairCard.getByRole("button", { name: "+ Buat barang sewa" }).click();
+  assert.equal(
+    await page
+      .getByRole("tab", { name: /Barang sewa/ })
+      .getAttribute("aria-selected"),
+    "true",
+  );
+  assert.equal(
+    await page.getByLabel("Nama produk", { exact: true }).inputValue(),
+    "Mask Uji CMS",
+  );
+  const rentPrice = page.getByLabel("Harga sewa per hari (Rp)");
+  assert.equal(await rentPrice.inputValue(), "");
+  await rentPrice.fill("60000");
+  await page
+    .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
+    .click();
+  await page
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  const copy = (await state()).content.shop.products.find(
+    (p) => p.pair === added.id,
+  );
+  assert.deepEqual(
+    [
+      copy.name,
+      copy.description,
+      copy.saleEnabled,
+      copy.rentalEnabled,
+      copy.rentalPrice,
+      copy.images,
+      copy.enabled,
+    ],
+    [
+      "Mask Uji CMS",
+      "Perlengkapan untuk pengujian katalog.",
+      false,
+      true,
+      60000,
+      [],
+      false,
+    ],
+  );
+  await page.getByRole("tab", { name: /Barang sewa/ }).click();
+  await page.getByRole("button", { name: "Mask Uji CMS" }).click();
+  await pairCard.getByRole("button", { name: "Buka barang jualnya" }).click();
+  assert.match(
+    await pairCard.textContent(),
+    /^Juga disewakanMask Uji CMS, Rp\s60\.000 per hari, draft\./,
+  );
   page.once("dialog", (dialog) => dialog.accept());
   await page
-    .getByRole("button", { name: "Hapus produk ini", exact: true })
+    .getByRole("button", { name: "Hapus barang jual ini", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })

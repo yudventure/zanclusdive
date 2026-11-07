@@ -2,17 +2,29 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { dictionary } from "../i18n.js";
 import { defaultGallery, galleryCaption } from "../gallery.js";
+import { photoSrcSet } from "../photography.js";
 
-// The Zanclus dive gallery. It stays rolled up under the ocean cards until
-// the visitor opens it; a photo opens larger in a lightbox.
+// The Zanclus dive gallery under the ocean cards, open on laptops and
+// tablets. A phone shows the first photos as small tiles and more with a
+// button; any photo opens larger in a lightbox.
+const phoneStep = 6;
+// The mosaic repeats every 12 photos on laptops (four to a row) and every
+// 6 on tablets and phones (three to a row). Photos after the last whole
+// round share their rows evenly, so the gallery never ends with a gap: a
+// photo alone takes the whole row, two take half each.
+function rest(index, count, round, perRow, columns) {
+  const start = count - (count % round);
+  if (index < start) return null;
+  const rowStart = start + Math.floor((index - start) / perRow) * perRow;
+  return columns / Math.min(perRow, count - rowStart);
+}
 export default function DiveGallery({ gallery, locale }) {
   const t = dictionary(locale).gallery;
   const items = (gallery ?? defaultGallery).items;
-  const [open, setOpen] = useState(false);
+  const [shown, setShown] = useState(phoneStep);
   const [current, setCurrent] = useState(null);
   const id = useId();
   const lightbox = useRef(null);
-  const toggle = useRef(null);
   useEffect(() => {
     if (current === null) return;
     const key = (event) => {
@@ -30,65 +42,68 @@ export default function DiveGallery({ gallery, locale }) {
   function step(delta) {
     setCurrent((i) => (i + delta + items.length) % items.length);
   }
-  function close() {
-    setOpen(false);
-    toggle.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-  }
   const item = current === null ? null : items[current];
   return (
-    <div className={`dive-gallery ${open ? "is-open" : ""}`}>
-      <div className="dive-gallery-toggle">
-        <button
-          ref={toggle}
-          type="button"
-          className="button"
-          aria-expanded={open}
-          aria-controls={`${id}-gallery`}
-          onClick={() => (open ? close() : setOpen(true))}
-        >
-          {open ? t.close : t.open}{" "}
-          <span aria-hidden="true" className="dive-gallery-arrow">
-            ↓
-          </span>
-        </button>
-        <small>{t.count(items.length)}</small>
-      </div>
-      <div
-        className="dive-gallery-roll"
-        id={`${id}-gallery`}
-        inert={!open}
-        aria-hidden={!open}
-      >
-        <div className="dive-gallery-inner">
-          <ul className="dive-gallery-grid">
-            {items.map((photo, index) => (
-              <li
-                key={index}
-                style={{ "--gallery-delay": `${Math.min(index, 11) * 45}ms` }}
+    <div className="dive-gallery">
+      <ul className="dive-gallery-grid" id={`${id}-gallery`}>
+        {items.map((photo, index) => {
+          const wide = rest(index, items.length, 12, 4, 12);
+          const narrow = rest(index, items.length, 6, 3, 6);
+          return (
+            <li
+              key={index}
+              className={
+                [
+                  index >= shown && "is-more",
+                  wide && "is-rest-wide",
+                  narrow && "is-rest-narrow",
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
+              style={{
+                "--wide": wide ?? undefined,
+                "--narrow": narrow ?? undefined,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => show(index)}
+                aria-label={t.view(galleryCaption(photo, locale) || index + 1)}
               >
-                <button
-                  type="button"
-                  onClick={() => show(index)}
-                  aria-label={t.view(
-                    galleryCaption(photo, locale) || index + 1,
-                  )}
-                >
-                  <img
-                    src={photo.src}
-                    alt=""
-                    loading="lazy"
-                    width="900"
-                    height="600"
-                  />
-                  {galleryCaption(photo, locale) && (
-                    <span>{galleryCaption(photo, locale)}</span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
+                <img
+                  src={photo.src}
+                  srcSet={photoSrcSet(photo.src)}
+                  sizes="(max-width: 699px) 34vw, (max-width: 900px) 33vw, 25vw"
+                  alt=""
+                  loading="lazy"
+                  width="900"
+                  height="600"
+                />
+                {galleryCaption(photo, locale) && (
+                  <span>{galleryCaption(photo, locale)}</span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {shown < items.length && (
+        <div className="dive-gallery-more">
+          <button
+            type="button"
+            className="button"
+            aria-controls={`${id}-gallery`}
+            onClick={() => setShown((n) => n + phoneStep)}
+          >
+            {t.more}{" "}
+            <span aria-hidden="true" className="dive-gallery-arrow">
+              ↓
+            </span>
+          </button>
+          <small>{t.shown(shown, items.length)}</small>
         </div>
-      </div>
+      )}
       <dialog
         ref={lightbox}
         className="dive-lightbox"
@@ -100,7 +115,12 @@ export default function DiveGallery({ gallery, locale }) {
       >
         {item && (
           <figure>
-            <img src={item.src} alt={galleryCaption(item, locale)} />
+            <img
+              src={item.src}
+              srcSet={photoSrcSet(item.src)}
+              sizes="100vw"
+              alt={galleryCaption(item, locale)}
+            />
             <figcaption>
               <span>{galleryCaption(item, locale)}</span>
               <small>{t.position(current + 1, items.length)}</small>

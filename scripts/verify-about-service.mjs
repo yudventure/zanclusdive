@@ -55,6 +55,24 @@ try {
     "Tentang kami",
   );
   assert.equal(await page.locator(".about-story p").count(), 3);
+  // The company behind Zanclus: profile, standing, portfolio, partners.
+  assert.equal(await page.locator(".activity-jump-links a").count(), 4);
+  assert.equal(
+    await page.locator("#company .about-company-text h3").textContent(),
+    "PT Zanclus Daya Cipta",
+  );
+  assert.match(
+    await page.locator(".about-company-standing").textContent(),
+    /diperhitungkan di Raja Ampat/,
+  );
+  assert.deepEqual(
+    await page.locator(".about-portfolio strong").allTextContents(),
+    ["Pelatihan", "Ekowisata", "Kajian ilmiah", "Pengadaan barang"],
+  );
+  assert.match(
+    await page.locator(".about-partners p").textContent(),
+    /Yayasan Terumbu Karang Indonesia/,
+  );
   assert.equal(await page.locator(".about-values li").count(), 3);
   assert.deepEqual(
     await page
@@ -85,6 +103,10 @@ try {
   assert.equal(
     await page.locator(".about-service strong").last().textContent(),
     "Gear service",
+  );
+  assert.match(
+    await page.locator(".about-company-standing").textContent(),
+    /counts in Raja Ampat/,
   );
 
   // Menu: About us on its own, the gear service under Dive Shop, footer.
@@ -258,12 +280,22 @@ try {
     .getByLabel("Keterangan (Indonesia)")
     .last()
     .fill("Anak-anak ikut.");
+  await page
+    .getByLabel("Kalimat sorotan (Indonesia)")
+    .fill("Dive center pilihan di Raja Ampat.");
+  await page.getByRole("button", { name: "+ Tambah bidang" }).click();
+  await page.getByLabel("Nama bidang (Indonesia)").last().fill("Konservasi");
   await page.getByRole("button", { name: "Simpan poin" }).click();
   await page.getByText("Perubahan sudah tersimpan").waitFor();
   await uploadPhoto(page.locator(".admin-image-slot").first(), "tim.jpg");
   await page.goto(base + "/id/about", { waitUntil: "networkidle" });
   assert.equal(await page.locator("h1").textContent(), "Tentang Zanclus.");
   assert.equal(await page.locator(".about-values li").count(), 4);
+  assert.equal(
+    await page.locator(".about-company-standing").textContent(),
+    "Dive center pilihan di Raja Ampat.",
+  );
+  assert.equal(await page.locator(".about-portfolio li").count(), 5);
   assert.match(
     await page.locator(".activity-hero-photo").getAttribute("src"),
     /^\/api\/media\//,
@@ -290,7 +322,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS about & service: About story, values and six services with their pages, English copy, menu links (About us, Dive Shop › gear service), footer and Dive Shop links, one-line menu from 1181px and menu button below, service prices, choose and tick, estimate, #service link, WhatsApp request message, English service page, admin price, visibility and cover photo, About title, values and photo, 390px without sideways scroll. No messages sent.",
+    "PASS about & service: About story, company profile (standing, portfolio, partners, edited from the admin), values and six services with their pages, English copy, menu links (About us, Dive Shop › gear service), footer and Dive Shop links, one-line menu from 1181px and menu button below, service prices, choose and tick, estimate, #service link, WhatsApp request message, English service page, admin price, visibility and cover photo, About title, values and photo, 390px without sideways scroll. No messages sent.",
   );
 } finally {
   await browser.close();

@@ -3,6 +3,9 @@ import { publicContent } from "../../src/server/store.js";
 import { requestLocale, languageAlternates } from "../../src/server/locale.js";
 import { localizeContent } from "../../src/content-i18n.js";
 import { dictionary } from "../../src/i18n.js";
+import { developerGate } from "../../src/server/developer-gate.jsx";
+import { paymentOptions } from "../../src/server/payments.js";
+import { publicShopStock } from "../../src/server/shop-stock.js";
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const locale = await requestLocale();
@@ -20,9 +23,16 @@ export default async function ShopPage({ searchParams }) {
   const query = await searchParams;
   const locale = await requestLocale();
   const content = localizeContent(await publicContent(), locale);
+  const { locks, blocked } = await developerGate("dive-shop", content, locale);
+  if (blocked) return blocked;
   return (
     <DiveShop
+      locks={locks}
+      payments={paymentOptions(content)}
+      fares={content.fares}
       shop={content.shop}
+      // Units left of the products that follow the warehouse stock.
+      stock={await publicShopStock(content.shop?.products)}
       contact={content.contact}
       images={content.images}
       activities={content.activities}

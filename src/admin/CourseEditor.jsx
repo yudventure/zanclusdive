@@ -1,4 +1,5 @@
 "use client";
+import Thumb from "./Thumb.jsx";
 import { cloneElement, useId } from "react";
 import { courseLimit, defaultCourses, partnerLimit } from "../course-model.js";
 import { builtInPhotos } from "../photography.js";
@@ -38,6 +39,7 @@ export default function CourseEditor({
   onSave,
   busy,
   placePhoto,
+  placeLogo,
   editPartners,
 }) {
   const items = (courses ?? defaultCourses).items;
@@ -158,10 +160,15 @@ export default function CourseEditor({
             <div className="admin-gallery-item">
               <div className="admin-gallery-photo">
                 {course.image && (
-                  <img src={course.image} alt={"Foto " + course.name.id} />
+                  <Thumb
+                    src={course.image}
+                    alt={"Foto " + course.name.id}
+                    sizes="240px"
+                  />
                 )}
                 <ImageUpload
                   compact
+                  guide="courseCard"
                   label={course.image ? "Ganti foto" : "Upload foto"}
                   onFile={(file) =>
                     placePhoto(file, (url) => change(index, { image: url }))
@@ -258,9 +265,12 @@ export default function CourseEditor({
         <h2>Partner sertifikasi</h2>
         <p className="admin-subtle">
           Tampil sebagai running text di bagian kursus beranda dan di halaman
-          /course, putih di atas foto gelap tanpa kartu atau bingkai. Upload logo
-          resmi (PNG berlatar transparan) dari PC atau HP; tanpa logo, nama
-          singkat tampil sebagai tulisan. Maksimal {partnerLimit} partner.
+          /course, di atas foto gelap tanpa kartu atau bingkai. Upload logo
+          resmi (PNG berlatar transparan) dari PC atau HP: bagian transparan di
+          tepinya dipotong otomatis, dan logo tampil dengan warna aslinya. Logo
+          gelap satu warna otomatis dibuat putih supaya tetap terlihat;
+          pilihannya bisa diganti di bawah pratinjau. Tanpa logo, nama singkat
+          tampil sebagai tulisan. Maksimal {partnerLimit} partner.
         </p>
         {partners.map((partner, index) => (
           <fieldset className="admin-price-item" key={index}>
@@ -300,20 +310,52 @@ export default function CourseEditor({
               <div className="admin-gallery-photo admin-partner-logo">
                 <span className="admin-partner-preview">
                   {partner.logo ? (
-                    <img src={partner.logo} alt={"Logo " + partner.name} />
+                    <img
+                      className={
+                        partner.logoStyle === "white" ? "is-white" : "is-color"
+                      }
+                      src={partner.logo}
+                      alt={"Logo " + partner.name}
+                    />
                   ) : (
                     partner.name || "Logo"
                   )}
                 </span>
                 <ImageUpload
                   compact
+                  guide="logo"
                   label={partner.logo ? "Ganti logo" : "Upload logo"}
                   onFile={(file) =>
-                    placePhoto(file, (url) =>
-                      changePartner(index, { logo: url }),
+                    placeLogo(file, (url, logoStyle, logoRatio) =>
+                      changePartner(index, { logo: url, logoStyle, logoRatio }),
                     )
                   }
                 />
+                {partner.logo && (
+                  <fieldset className="admin-partner-style">
+                    <legend>Tampilan logo</legend>
+                    {[
+                      ["color", "Warna asli"],
+                      ["white", "Putih"],
+                    ].map(([value, text]) => (
+                      <label key={value}>
+                        <input
+                          type="radio"
+                          name={`partner-style-${index}`}
+                          checked={
+                            (partner.logoStyle === "white"
+                              ? "white"
+                              : "color") === value
+                          }
+                          onChange={() =>
+                            changePartner(index, { logoStyle: value })
+                          }
+                        />
+                        {text}
+                      </label>
+                    ))}
+                  </fieldset>
+                )}
                 {partner.logo && (
                   <button
                     type="button"
@@ -364,7 +406,13 @@ export default function CourseEditor({
             onClick={() =>
               editPartners((list) => [
                 ...list,
-                { name: "", full: { id: "", en: "" }, logo: "" },
+                {
+                  name: "",
+                  full: { id: "", en: "" },
+                  logo: "",
+                  logoStyle: "color",
+                  logoRatio: 0,
+                },
               ])
             }
           >

@@ -410,7 +410,7 @@
 }
 .activity-inquiry {
   position: sticky;
-  top: 116px;
+  top: calc(var(--header-h) + 20px);
   padding: 30px;
   border: 1px solid #dbe8df;
   border-radius: 22px;
@@ -465,9 +465,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  margin-top: 22px;
-  padding-top: 22px;
-  border-top: 1px solid #d9e5df;
+  margin-top: 26px;
   flex-wrap: wrap;
 }
 .activity-inquiry-contact svg {

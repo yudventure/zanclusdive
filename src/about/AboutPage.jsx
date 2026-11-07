@@ -14,6 +14,7 @@ import { dictionary, localeHref } from "../i18n.js";
 const icons = {
   story:
     "M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5",
+  company: "M4 21V5l8-3 8 3v16M4 21h16M9 21v-4h6v4M8 8h2M14 8h2M8 12h2M14 12h2",
   values: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-5",
   services: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
   chat: "M4 20l1.4-4.2A8 8 0 1 1 8.2 18.6z",
@@ -51,6 +52,7 @@ export default function AboutPage({ content, locale = "en" }) {
   const dict = dictionary(locale);
   const a = dict.about;
   const about = content.about;
+  const company = about.company;
   const href = (path) => localeHref(locale, path);
   const motionRoot = useRef(null);
   const banner = (kind, [eyebrow, title, intro]) => (
@@ -145,12 +147,14 @@ export default function AboutPage({ content, locale = "en" }) {
               className="activity-jump-links"
               aria-label={dict.activity.sections}
             >
-              {["story", "values", "services"].map((id, index) => (
-                <a href={"#" + id} key={id}>
-                  <Icon name={id} />
-                  {a.sections[index]}
-                </a>
-              ))}
+              {["story", "company", "values", "services"]
+                .filter((id) => id !== "company" || company)
+                .map((id) => (
+                  <a href={"#" + id} key={id}>
+                    <Icon name={id} />
+                    {a.sections[id]}
+                  </a>
+                ))}
             </div>
             <section className="activity-block" id="story" data-reveal>
               {banner("story", a.story)}
@@ -160,6 +164,45 @@ export default function AboutPage({ content, locale = "en" }) {
                 ))}
               </div>
             </section>
+            {company && (
+              <section className="activity-block" id="company" data-reveal>
+                {banner("company", a.company)}
+                <div className="about-company">
+                  <div className="about-company-text">
+                    {aboutText(company.title, locale) && (
+                      <h3>{aboutText(company.title, locale)}</h3>
+                    )}
+                    {paragraphs(company.text, locale).map((text, index) => (
+                      <p key={index}>{text}</p>
+                    ))}
+                  </div>
+                  {aboutText(company.standing, locale) && (
+                    <p className="about-company-standing">
+                      {aboutText(company.standing, locale)}
+                    </p>
+                  )}
+                </div>
+                {company.portfolio.length > 0 && (
+                  <>
+                    <h3 className="about-company-heading">{a.portfolio}</h3>
+                    <ul className="about-portfolio">
+                      {company.portfolio.map((item, index) => (
+                        <li key={index}>
+                          <strong>{aboutText(item.title, locale)}</strong>
+                          <p>{aboutText(item.text, locale)}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {aboutText(company.partners, locale) && (
+                  <div className="about-partners">
+                    <h3 className="about-company-heading">{a.partners}</h3>
+                    <p>{aboutText(company.partners, locale)}</p>
+                  </div>
+                )}
+              </section>
+            )}
             {about.values.length > 0 && (
               <section className="activity-block" id="values" data-reveal>
                 {banner("values", a.values)}
