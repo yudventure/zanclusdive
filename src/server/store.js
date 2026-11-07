@@ -7,6 +7,7 @@ import { databaseFailure } from "../database-error.js";
 import { isDemo } from "../cms-mode.js";
 import * as demo from "./demo-store.js";
 import { withShop, withSplitProducts } from "../shop-model.js";
+import { voucherPlaces } from "../voucher-model.js";
 import { withContactFields } from "../contact-model.js";
 import { withActivities } from "../activity-model.js";
 import { withPhotography } from "../photography.js";
@@ -96,17 +97,22 @@ async function storedContent() {
   };
 }
 // Voucher codes stay on the server (src/voucher-model.js). Public pages
-// only learn that a voucher is on, to show the code field at checkout.
+// only learn the places where a voucher is on (Dive Shop purchases or
+// rentals, an activity, courses, servicing), to show the code field at
+// those checkouts.
 export function withoutVouchers(content) {
   if (!content?.shop) return content;
   const { vouchers, ...shop } = content.shop;
   const today = bookingDates().today;
+  const on = (vouchers ?? []).filter(
+    (v) => v.enabled && (!v.end || v.end >= today),
+  );
   return {
     ...content,
     shop: {
       ...shop,
-      voucherOn: (vouchers ?? []).some(
-        (v) => v.enabled && (!v.end || v.end >= today),
+      voucherPlaces: Object.keys(voucherPlaces).filter((place) =>
+        on.some((v) => (v.places ?? ["sale", "rental"]).includes(place)),
       ),
     },
   };

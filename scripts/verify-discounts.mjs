@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { demoAccount } from "../src/demo-data.js";
 import { startMockMidtrans } from "./mock-midtrans.mjs";
+import { defaultCourses } from "../src/course-model.js";
 
 const base = process.env.BASE_URL || "http://127.0.0.1:3413";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(base).hostname));
@@ -59,7 +60,15 @@ const voucher = (patch) => ({
   value: 10,
   maxDiscount: null,
   minSpend: 0,
-  scope: "all",
+  places: [
+    "sale",
+    "rental",
+    "diving",
+    "snorkeling",
+    "trip",
+    "course",
+    "service",
+  ],
   start: "",
   end: "",
   limit: null,
@@ -79,8 +88,21 @@ try {
   fins.comparePrice = 1600000;
   first.content.shop.vouchers = [
     voucher({ code: "HEMAT10", maxDiscount: 100000, note: "Promo Instagram" }),
-    voucher({ code: "SEWA25", kind: "amount", value: 25000, scope: "rental" }),
+    voucher({
+      code: "SEWA25",
+      kind: "amount",
+      value: 25000,
+      places: ["rental"],
+    }),
     voucher({ code: "LAMA", end: "2020-01-31" }),
+    voucher({ code: "DIVE15", value: 15, places: ["diving"] }),
+    voucher({ code: "SERVIS10", places: ["service"] }),
+    voucher({
+      code: "KURSUS50",
+      kind: "amount",
+      value: 50000,
+      places: ["course"],
+    }),
   ];
   assert.equal(
     (
@@ -149,7 +171,7 @@ try {
   await form.getByRole("button", { name: "Pakai" }).click();
   await form
     .locator(".voucher-error", {
-      hasText: "Kupon SEWA25 hanya untuk sewa alat.",
+      hasText: "Kupon SEWA25 hanya berlaku untuk sewa alat.",
     })
     .waitFor();
   await code.fill("hemat10");
@@ -282,6 +304,106 @@ try {
   assert.ok(box.x >= 0 && box.x + box.width <= 390);
   await phone.close();
 
+  // A voucher for diving only, at the diving checkout, paid online.
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Jayapura",
+  });
+  await page.goto(base + "/id/diving", { waitUntil: "networkidle" });
+  await page
+    .getByRole("button", { name: "Tambahkan Discovery Dive ke keranjang" })
+    .click();
+  await page.locator(".activity-cart-bar .button").click();
+  await page.locator("#inquiry-name").fill("Tamu Diving");
+  await page.locator("#inquiry-whatsapp").fill("081234567892");
+  await page.locator(`.plan-dates .slot-day[data-date="${today}"]`).click();
+  await page.locator("#inquiry-participants").fill("1");
+  await page
+    .getByRole("button", { name: "Lanjut ke ringkasan pembayaran" })
+    .click();
+  const plan = page.locator(".plan-summary");
+  await plan.getByLabel("Kode kupon").fill("servis10");
+  await plan.getByRole("button", { name: "Pakai" }).click();
+  await plan
+    .locator(".voucher-error", {
+      hasText: "Kupon SERVIS10 hanya berlaku untuk servis alat.",
+    })
+    .waitFor();
+  await plan.getByLabel("Kode kupon").fill("dive15");
+  await plan.getByRole("button", { name: "Pakai" }).click();
+  await plan.locator(".voucher-applied").waitFor();
+  assert.match(
+    spaced(await plan.locator(".plan-summary-list").textContent()),
+    /Kupon DIVE15 ?−Rp 180\.000/,
+  );
+  assert.match(
+    spaced(await plan.locator(".plan-summary-total").textContent()),
+    /Rp 1\.020\.000$/,
+  );
+  shots && (await plan.screenshot({ path: `${shots}/kupon-diving.png` }));
+  await plan.locator(".pay-submit").click();
+  await page.waitForURL(new RegExp(`127.0.0.1:${port}/pay/`));
+  const divingOrder = mock.orders.get(
+    new URL(page.url()).pathname.split("/").pop(),
+  );
+  assert.deepEqual(divingOrder.items.at(-1), {
+    id: "voucher-DIVE15",
+    price: -180000,
+    quantity: 1,
+    name: "Kupon DIVE15",
+  });
+  assert.equal(divingOrder.amount, 1020000);
+
+  // Gear servicing takes its own voucher.
+  await page.goto(base + "/id/service#regulator", {
+    waitUntil: "networkidle",
+  });
+  await page.waitForFunction(
+    () => document.querySelector('input[value="regulator"]')?.checked,
+  );
+  await page.locator("#service-name").fill("Tamu Servis");
+  await page.locator("#service-whatsapp").fill("081234567893");
+  await page.locator("#service-date").fill(today);
+  await page.getByRole("button", { name: /Lanjut ke pembayaran/ }).click();
+  const serviceBox = page.locator(".activity-message");
+  await serviceBox.getByLabel("Kode kupon").fill("SERVIS10");
+  await serviceBox.getByRole("button", { name: "Pakai" }).click();
+  await serviceBox.locator(".voucher-applied").waitFor();
+  assert.match(
+    spaced(await serviceBox.locator(".pay-total").textContent()),
+    /Kupon SERVIS10 −Rp 65\.000.*Rp 585\.000$/,
+  );
+
+  // A course voucher, priced by the server; the Dive Shop refuses it.
+  const course = defaultCourses.items.find((c) => c.enabled && c.price);
+  const courseTry = await context.request.post(base + "/api/vouchers", {
+    headers: { Origin: base },
+    data: {
+      kind: "course",
+      course: course.id,
+      participants: 2,
+      date: today,
+      voucher: "kursus50",
+    },
+  });
+  assert.deepEqual(await courseTry.json(), {
+    code: "KURSUS50",
+    discount: 50000,
+  });
+  const shopTry = await context.request.post(base + "/api/vouchers", {
+    headers: { Origin: base },
+    data: {
+      kind: "shop",
+      lines: [
+        { source: "product", id: "demo-mask", mode: "sale", quantity: 1 },
+      ],
+      voucher: "KURSUS50",
+    },
+  });
+  assert.equal(
+    (await shopTry.json()).error,
+    "Kupon KURSUS50 hanya berlaku untuk kursus selam.",
+  );
+
   // The admin: vouchers with their uses, and both checks on save.
   await a.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   const vouchers = a.locator(".admin-vouchers");
@@ -292,7 +414,7 @@ try {
   );
   assert.match(
     await hemat.locator(".admin-voucher-head small").textContent(),
-    /^Aktif · terpakai 1$/,
+    /^Aktif · terpakai 1Semua tempat$/,
   );
   assert.match(
     await vouchers
@@ -318,6 +440,15 @@ try {
   await added.getByLabel("Belanja minimal (Rp)").fill("500000");
   await added.getByLabel("Kuota pemakaian").fill("20");
   await added.getByLabel("Sekali per tamu", { exact: false }).check();
+  // Only for gear servicing and dive courses.
+  for (const place of [
+    "Dive Shop, beli alat",
+    "Dive Shop, sewa alat",
+    "Diving",
+    "Snorkeling",
+    "Trip laut",
+  ])
+    await added.getByLabel(place, { exact: true }).uncheck();
   shots && (await vouchers.screenshot({ path: `${shots}/kupon-admin.png` }));
   await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
   await a
@@ -330,6 +461,14 @@ try {
   assert.deepEqual(
     [saved.kind, saved.value, saved.minSpend, saved.limit, saved.oncePerGuest],
     ["amount", 50000, 500000, 20, true],
+  );
+  assert.deepEqual(saved.places, ["course", "service"]);
+  assert.match(
+    await vouchers
+      .locator("li", { hasText: "BARU2026" })
+      .locator(".admin-voucher-head small")
+      .textContent(),
+    /Kursus selam, Servis alat$/,
   );
   // The crossed-out price must be above the price.
   await a.locator(".admin-shop-item", { hasText: "Open heel fins" }).click();

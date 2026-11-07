@@ -7,6 +7,7 @@ import SiteFooter from "../components/SiteFooter.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
+import VoucherField from "../components/VoucherField.jsx";
 import SectionBanner from "../activities/SectionBanner.jsx";
 import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
@@ -52,7 +53,15 @@ function Icon({ name, size = 18 }) {
   );
 }
 
-function Request({ items, chosen, onToggle, contact, payments, locale }) {
+function Request({
+  items,
+  chosen,
+  onToggle,
+  contact,
+  payments,
+  locale,
+  voucherOn = false,
+}) {
   const s = dictionary(locale).service;
   const a = dictionary(locale).activity;
   const p = dictionary(locale).payment;
@@ -71,7 +80,34 @@ function Request({ items, chosen, onToggle, contact, payments, locale }) {
   useEffect(() => setToday(new Date().toLocaleDateString("en-CA")), []);
   useEffect(() => setMessage(""), [chosen]);
   const picked = items.filter((item) => chosen.includes(item.id));
-  const estimate = picked.reduce((sum, item) => sum + item.price, 0);
+  // A voucher applied once the request is ready, priced by the server;
+  // a change to the request drops it.
+  const [voucher, setVoucher] = useState(null);
+  useEffect(() => {
+    if (!message) setVoucher(null);
+  }, [message]);
+  const discount = voucher?.discount ?? 0;
+  const estimate = picked.reduce((sum, item) => sum + item.price, 0) - discount;
+  const voucherLine = voucher
+    ? dictionary(locale).order.voucher(
+        voucher.code,
+        formatIDR(voucher.discount, locale),
+      )
+    : "";
+  const sentMessage = voucherLine ? `${message}\n${voucherLine}` : message;
+  const voucherField = voucherOn && (
+    <VoucherField
+      id="service"
+      order={{
+        kind: "service",
+        services: picked.map((item) => item.id),
+        date: details.date,
+      }}
+      value={voucher}
+      onChange={setVoucher}
+      locale={locale}
+    />
+  );
   function change(key, value) {
     setDetails((current) => ({ ...current, [key]: value }));
     setMessage("");
@@ -212,6 +248,7 @@ function Request({ items, chosen, onToggle, contact, payments, locale }) {
       {message && ready && (
         <div className="activity-message" role="status" ref={messageRef}>
           <h3>{p.summaryPay}</h3>
+          {voucherField}
           <PayPanel
             order={{
               kind: "service",
@@ -221,9 +258,15 @@ function Request({ items, chosen, onToggle, contact, payments, locale }) {
               whatsapp: details.whatsapp,
               email: details.email,
               notes: details.notes,
+              ...(voucher ? { voucher: voucher.code } : {}),
             }}
             total={estimate}
-            message={message}
+            breakdown={
+              voucher
+                ? `${dictionary(locale).shop.voucher.applied(voucher.code)} −${formatIDR(voucher.discount, locale)}`
+                : undefined
+            }
+            message={sentMessage}
             whatsapp={contact.whatsapp}
             payments={payments}
             locale={locale}
@@ -233,10 +276,11 @@ function Request({ items, chosen, onToggle, contact, payments, locale }) {
       {message && !ready && (
         <div className="activity-message" role="status" ref={messageRef}>
           <h3>{a.ready}</h3>
-          <p className="activity-message-preview">{message}</p>
+          {voucherField}
+          <p className="activity-message-preview">{sentMessage}</p>
           <a
             className="button lime"
-            href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`}
+            href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(sentMessage)}`}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -488,6 +532,9 @@ export default function ServicePage({
                   contact={content.contact}
                   payments={payments}
                   locale={locale}
+                  voucherOn={Boolean(
+                    content.shop?.voucherPlaces?.includes("service"),
+                  )}
                 />
               )}
             </div>

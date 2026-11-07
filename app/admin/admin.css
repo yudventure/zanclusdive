@@ -4071,3 +4071,21 @@ strong.admin-overdue {
   flex-wrap: wrap;
   gap: 10px 24px;
 }
+.admin-voucher-places {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.admin-voucher-places legend {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #254961;
+}
+.admin-voucher-places > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px 18px;
+}

@@ -305,8 +305,8 @@ const kinds = {
 // pay request; window is { today, last } in WIT and locks the developer
 // locks. Activity packages and rentals take the fare asked for (Standard
 // when none): its increase is one more line, and its rules go with the
-// order. A Dive Shop order may carry a voucher code: its discount is one
-// more line, below zero, and "voucher" names it (src/voucher-model.js).
+// order. An order may carry a voucher code for its place: its discount is
+// one more line, below zero, and "voucher" names it (src/voucher-model.js).
 export function priceOrder(content, input, window, locks, locale = "id") {
   const price = kinds[input?.kind ?? "activity"];
   if (!price || locks?.site) fail("Data pembayaran tidak valid.", 400);
@@ -347,14 +347,15 @@ export function priceOrder(content, input, window, locks, locale = "id") {
       error.voucher = true;
       throw error;
     };
-    const found =
-      order.program === "shop"
-        ? findVoucher(content.shop?.vouchers, input.voucher, window.today)
-        : null;
+    const found = findVoucher(
+      content.shop?.vouchers,
+      input.voucher,
+      window.today,
+    );
     if (!found) fail(t.unknown);
     let result;
     try {
-      result = voucherDiscount(found, order.lines, locale);
+      result = voucherDiscount(found, order.lines, locale, order.program);
     } catch (error) {
       fail(error.message);
     }
@@ -365,7 +366,7 @@ export function priceOrder(content, input, window, locks, locale = "id") {
       quantity: 1,
       discount: true,
     });
-    // A Flexi refund gives back what was paid for the rentals.
+    // A Flexi refund gives back what was paid, purchases aside.
     if (fare) fare.refundable = Math.max(0, fare.refundable - result.rentals);
     voucher = {
       id: found.id,

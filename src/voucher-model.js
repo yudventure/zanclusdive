@@ -1,18 +1,39 @@
-// Discount vouchers for Dive Shop orders: a code the team shares (on
-// Instagram, with a returning guest), worth a share of the order or an
-// amount of rupiah, from a minimum spend, between two dates, for a number
-// of uses. They live in content.shop.vouchers, but the codes never reach
-// a public page: publicContent (src/server/store.js) keeps only whether
-// any voucher is on. Every discount is priced on the server, in
-// priceOrder (src/order-pricing.js), as one negative line of the order.
+// Discount vouchers: a code the team shares (on Instagram, with a
+// returning guest), worth a share of the order or an amount of rupiah,
+// from a minimum spend, between two dates, for a number of uses, in the
+// places the team picks (Dive Shop purchases or rentals, each activity,
+// dive courses, gear servicing). They live in content.shop.vouchers, but
+// the codes never reach a public page: publicContent (src/server/store.js)
+// keeps only the places where a voucher is on. Every discount is priced
+// on the server, in priceOrder (src/order-pricing.js), as one negative
+// line of the order.
 import { formatIDR } from "./i18n.js";
 
 export const voucherLimit = 30;
-export const voucherScopes = {
-  all: "Semua alat",
-  sale: "Barang jual saja",
-  rental: "Barang sewa saja",
+// Where a voucher may be used, as the admin names them.
+export const voucherPlaces = {
+  sale: "Dive Shop, beli alat",
+  rental: "Dive Shop, sewa alat",
+  diving: "Diving",
+  snorkeling: "Snorkeling",
+  trip: "Trip laut",
+  course: "Kursus selam",
+  service: "Servis alat",
 };
+// The place of one priced line of an order: Dive Shop lines by the way
+// they are ordered, every other order by its program.
+export const placeOf = (line, program) =>
+  program === "shop" ? (line.rent ? "rental" : "sale") : program;
+// Vouchers saved before places had a scope.
+const scopePlaces = {
+  all: ["sale", "rental"],
+  sale: ["sale"],
+  rental: ["rental"],
+};
+export const placesOf = (v) =>
+  Array.isArray(v?.places)
+    ? v.places
+    : (scopePlaces[v?.scope] ?? scopePlaces.all);
 export const voucherKinds = {
   percent: "Persen",
   amount: "Rupiah",
@@ -33,7 +54,7 @@ export const newVoucher = (id) => ({
   value: 10,
   maxDiscount: null,
   minSpend: 0,
-  scope: "all",
+  places: Object.keys(voucherPlaces),
   start: "",
   end: "",
   limit: null,
@@ -92,7 +113,11 @@ export function validateVouchers(input) {
           ? `Potongan kupon ${code} harus 1–90 persen.`
           : `Potongan kupon ${code} minimal Rp 1.000.`,
       );
-    const scope = Object.hasOwn(voucherScopes, v.scope) ? v.scope : "all";
+    const places = Array.isArray(v.places)
+      ? Object.keys(voucherPlaces).filter((p) => v.places.includes(p))
+      : (scopePlaces[v.scope] ?? scopePlaces.all);
+    if (!places.length)
+      fail(`Pilih minimal satu tempat kupon ${code} bisa dipakai.`);
     const start = typeof v.start === "string" ? v.start : "";
     const end = typeof v.end === "string" ? v.end : "";
     if ((start && !datePattern.test(start)) || (end && !datePattern.test(end)))
@@ -125,7 +150,7 @@ export function validateVouchers(input) {
             })
           : null,
       minSpend: rupiahField(v.minSpend, `Belanja minimal kupon ${code}`),
-      scope,
+      places,
       start,
       end,
       limit,
@@ -138,8 +163,17 @@ export function validateVouchers(input) {
 const texts = {
   id: {
     unknown: "Kode kupon tidak ditemukan atau sudah tidak berlaku.",
-    sale: (code) => `Kupon ${code} hanya untuk barang jual.`,
-    rental: (code) => `Kupon ${code} hanya untuk sewa alat.`,
+    places: {
+      sale: "beli alat di Dive Shop",
+      rental: "sewa alat",
+      diving: "diving",
+      snorkeling: "snorkeling",
+      trip: "trip laut",
+      course: "kursus selam",
+      service: "servis alat",
+    },
+    only: (code, names) => `Kupon ${code} hanya berlaku untuk ${names}.`,
+    and: "dan",
     minSpend: (code, amount) =>
       `Kupon ${code} berlaku untuk belanja minimal ${amount}.`,
     used: (code) => `Kuota kupon ${code} sudah habis.`,
@@ -149,8 +183,17 @@ const texts = {
   },
   en: {
     unknown: "This voucher code was not found or is no longer valid.",
-    sale: (code) => `Voucher ${code} is for gear to buy only.`,
-    rental: (code) => `Voucher ${code} is for rental gear only.`,
+    places: {
+      sale: "gear to buy",
+      rental: "gear rental",
+      diving: "diving",
+      snorkeling: "snorkeling",
+      trip: "sea trips",
+      course: "dive courses",
+      service: "gear servicing",
+    },
+    only: (code, names) => `Voucher ${code} is only for ${names}.`,
+    and: "and",
     minSpend: (code, amount) =>
       `Voucher ${code} needs a minimum spend of ${amount}.`,
     used: (code) => `Voucher ${code} has been fully used.`,
@@ -176,28 +219,37 @@ export function findVoucher(vouchers, code, today) {
   );
 }
 
+// "diving, snorkeling dan trip laut": the places of a voucher for a guest.
+function placeNames(places, t) {
+  const names = places.map((p) => t.places[p]);
+  return names.length > 1
+    ? `${names.slice(0, -1).join(", ")} ${t.and} ${names.at(-1)}`
+    : names[0];
+}
 // The discount a voucher gives on an order's priced lines
-// ({ price, quantity, rent, extra, fare }): it covers the gear in its
-// scope, never the delivery fee or the fare's increase, from its minimum
-// spend, at most its cap and never more than the gear it covers. Returns
-// { discount, covered, rentals } (rentals is the part of the covered gear
-// that is rented, for the fare's refund) or throws a message for the guest.
-export function voucherDiscount(voucher, lines, locale = "id") {
+// ({ price, quantity, rent, extra, fare }) of a program (shop, an
+// activity, course, service): it covers the lines in its places, never
+// the delivery fee or the fare's increase, from its minimum spend, at
+// most its cap and never more than the lines it covers. Returns
+// { discount, covered, rentals } (rentals is the part of the discount on
+// lines a Flexi refund gives back, everything but Dive Shop purchases)
+// or throws a message for the guest.
+export function voucherDiscount(
+  voucher,
+  lines,
+  locale = "id",
+  program = "shop",
+) {
   const t = voucherText(locale);
+  const places = placesOf(voucher);
   const covered = lines.filter(
     (line) =>
       !line.extra &&
       !line.fare &&
       !line.discount &&
-      (voucher.scope === "all" ||
-        (voucher.scope === "rental") === Boolean(line.rent)),
+      places.includes(placeOf(line, program)),
   );
-  if (!covered.length)
-    fail(
-      voucher.scope === "rental"
-        ? t.rental(voucher.code)
-        : t.sale(voucher.code),
-    );
+  if (!covered.length) fail(t.only(voucher.code, placeNames(places, t)));
   const sum = (list) =>
     list.reduce((total, line) => total + line.price * line.quantity, 0);
   const subtotal = sum(covered);
@@ -210,7 +262,9 @@ export function voucherDiscount(voucher, lines, locale = "id") {
   if (voucher.kind === "percent" && voucher.maxDiscount)
     discount = Math.min(discount, voucher.maxDiscount);
   discount = Math.min(discount, subtotal);
-  const rentals = sum(covered.filter((line) => line.rent));
+  const rentals = sum(
+    covered.filter((line) => placeOf(line, program) !== "sale"),
+  );
   return {
     discount,
     covered: subtotal,
@@ -248,6 +302,13 @@ export function checkVoucherUses(voucher, uses, locale = "id") {
 
 // The voucher as the admin list describes it: "10%, maks Rp 50.000" or
 // "Rp 25.000", with its minimum spend.
+// The places of a voucher as the admin list names them.
+export function voucherPlaceText(v) {
+  const places = placesOf(v);
+  return places.length === Object.keys(voucherPlaces).length
+    ? "Semua tempat"
+    : places.map((p) => voucherPlaces[p]).join(", ");
+}
 export function voucherSummary(v) {
   const off =
     v.kind === "percent"

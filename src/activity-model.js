@@ -283,6 +283,8 @@ export function activityInquiry(
             )
             .join(", ")}`,
           ...(order.fare ? [order.fare] : []),
+          // A voucher priced by the server, already off the estimate.
+          ...(order.voucher ? [order.voucher] : []),
           `${t.estimate}: ${formatIDR(order.total, locale)}`,
         ]
       : []),

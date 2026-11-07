@@ -33,7 +33,9 @@ import {
   newVoucher,
   voucherKinds,
   voucherLimit,
-  voucherScopes,
+  voucherPlaces,
+  voucherPlaceText,
+  placesOf,
   voucherSummary,
   voucherUses,
 } from "../voucher-model.js";
@@ -1785,7 +1787,11 @@ function VoucherSettings({ vouchers, bookings, disabled, onChange }) {
               >
                 <strong>{v.code || "Kupon baru"}</strong>
                 <span>{voucherSummary(v)}</span>
-                <small>{state}</small>
+                <small>
+                  {state}
+                  <br />
+                  {voucherPlaceText(v)}
+                </small>
               </button>
               {shown && (
                 <div className="admin-voucher-body">
@@ -1881,18 +1887,6 @@ function VoucherSettings({ vouchers, bookings, disabled, onChange }) {
                         }
                       />
                     </Field>
-                    <Field label="Berlaku untuk">
-                      <select
-                        value={v.scope}
-                        onChange={(e) => edit(v.id, { scope: e.target.value })}
-                      >
-                        {Object.entries(voucherScopes).map(([k, label]) => (
-                          <option key={k} value={k}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
                     <Field
                       label="Mulai tanggal"
                       hint="Kosong berarti mulai sekarang."
@@ -1941,6 +1935,38 @@ function VoucherSettings({ vouchers, bookings, disabled, onChange }) {
                       />
                     </Field>
                   </div>
+                  <fieldset className="admin-voucher-places">
+                    <legend>Bisa dipakai di</legend>
+                    <div>
+                      {Object.entries(voucherPlaces).map(([place, label]) => {
+                        const chosen = placesOf(v);
+                        return (
+                          <label key={place} className="admin-toggle">
+                            <input
+                              type="checkbox"
+                              checked={chosen.includes(place)}
+                              onChange={(e) =>
+                                edit(v.id, {
+                                  places: Object.keys(voucherPlaces).filter(
+                                    (p) =>
+                                      p === place
+                                        ? e.target.checked
+                                        : chosen.includes(p),
+                                  ),
+                                })
+                              }
+                            />
+                            {label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <small className="admin-subtle">
+                      Kolom kode kupon hanya muncul di checkout tempat yang
+                      dicentang. Potongannya hanya untuk barang atau paket dari
+                      tempat itu.
+                    </small>
+                  </fieldset>
                   <div className="admin-voucher-toggles">
                     <label className="admin-toggle">
                       <input

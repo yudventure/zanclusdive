@@ -856,15 +856,20 @@ export default function ShopTeaser({
           })}
         </ul>
         {!cart.length && <p className="muted">{s.cartEmpty}</p>}
-        {shop.voucherOn && cart.length > 0 && !message && (
-          <VoucherField
-            id={`${id}-checkout`}
-            order={voucherOrder}
-            value={voucher}
-            onChange={setVoucher}
-            locale={locale}
-          />
-        )}
+        {shop.voucherPlaces?.some((place) =>
+          cart.some(
+            (line) => (line.mode === "rental" ? "rental" : "sale") === place,
+          ),
+        ) &&
+          !message && (
+            <VoucherField
+              id={`${id}-checkout`}
+              order={voucherOrder}
+              value={voucher}
+              onChange={setVoucher}
+              locale={locale}
+            />
+          )}
         <dl className="shop-checkout-totals">
           {totals.sale > 0 && (
             <div>

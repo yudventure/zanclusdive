@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
+import VoucherField from "../components/VoucherField.jsx";
 import ContactIcon from "../components/ContactIcon.jsx";
 import { photoSrcSet } from "../photography.js";
 import { phoneLabel } from "../contact-model.js";
@@ -54,6 +55,7 @@ export default function CourseCheckout({
   today,
   lastDate,
   locale,
+  voucherOn = false,
 }) {
   const c = dictionary(locale).course;
   const a = dictionary(locale).activity;
@@ -93,7 +95,21 @@ export default function CourseCheckout({
   }, [step]);
 
   const participants = Number(details.participants) || 0;
-  const total = course.price * Math.max(1, participants);
+  // A voucher applied in the summary, priced by the server; going back to
+  // the form drops it.
+  const [voucher, setVoucher] = useState(null);
+  useEffect(() => {
+    if (step !== "summary") setVoucher(null);
+  }, [step, course.id]);
+  const discount = voucher?.discount ?? 0;
+  const total = course.price * Math.max(1, participants) - discount;
+  const voucherLine = voucher
+    ? dictionary(locale).order.voucher(
+        voucher.code,
+        formatIDR(voucher.discount, locale),
+      )
+    : "";
+  const sentMessage = voucherLine ? `${message}\n${voucherLine}` : message;
   const capacity = slots?.capacity ?? 0;
   const closed = (key) =>
     (slots?.closed ?? []).some(([from, to]) => key >= from && key <= to);
@@ -493,6 +509,20 @@ export default function CourseCheckout({
               </div>
             ))}
           </dl>
+          {voucherOn && (
+            <VoucherField
+              id="course-plan"
+              order={{
+                kind: "course",
+                course: course.id,
+                participants,
+                date: details.date,
+              }}
+              value={voucher}
+              onChange={setVoucher}
+              locale={locale}
+            />
+          )}
           {ready ? (
             <PayPanel
               order={{
@@ -500,10 +530,15 @@ export default function CourseCheckout({
                 course: course.id,
                 ...details,
                 participants,
+                ...(voucher ? { voucher: voucher.code } : {}),
               }}
               total={total}
-              breakdown={breakdown}
-              message={message}
+              breakdown={
+                voucher
+                  ? `${breakdown}, ${dictionary(locale).shop.voucher.applied(voucher.code)} −${formatIDR(voucher.discount, locale)}`
+                  : breakdown
+              }
+              message={sentMessage}
               whatsapp={contact.whatsapp}
               payments={payments}
               locale={locale}
@@ -521,7 +556,7 @@ export default function CourseCheckout({
               </p>
               <a
                 className="button lime"
-                href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(message)}`}
+                href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent(sentMessage)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -529,7 +564,7 @@ export default function CourseCheckout({
               </a>
               <details className="plan-message">
                 <summary>{p.viewMessage}</summary>
-                <p className="activity-message-preview">{message}</p>
+                <p className="activity-message-preview">{sentMessage}</p>
               </details>
             </div>
           )}

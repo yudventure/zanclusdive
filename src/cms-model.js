@@ -434,7 +434,10 @@ export function validateShop(shop) {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
     delivery: validateDelivery(shop.delivery),
-    vouchers: validateVouchers(shop.vouchers),
+    // Catalogs without vouchers stay as they were saved.
+    ...(shop.vouchers?.length
+      ? { vouchers: validateVouchers(shop.vouchers) }
+      : {}),
     products: checkFamilies(
       shop.products.map((p) => {
         if (

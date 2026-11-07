@@ -124,7 +124,7 @@ test("vouchers are saved with clean codes and checked values", () => {
   const shop = demoShop();
   shop.vouchers = [voucher()];
   assert.equal(validateShop(shop).vouchers[0].code, "HEMAT10");
-  assert.deepEqual(validateShop(demoShop()).vouchers, []);
+  assert.equal(validateShop(demoShop()).vouchers, undefined);
   assert.equal(cleanCode(" ab-12 c "), "AB-12C");
   assert.equal(
     spaced(voucherSummary(voucher({ maxDiscount: 50000, minSpend: 500000 }))),
@@ -145,7 +145,7 @@ test("a voucher works between its days while it is on", () => {
   assert.equal(findVoucher(undefined, "HEMAT10", "2030-01-06"), null);
 });
 
-test("a voucher covers the gear in its scope, from its minimum spend", () => {
+test("a voucher covers the lines in its places, from its minimum spend", () => {
   const lines = [
     { price: 1000000, quantity: 1, rent: false },
     { price: 300000, quantity: 1, rent: true },
@@ -163,7 +163,7 @@ test("a voucher covers the gear in its scope, from its minimum spend", () => {
     50000,
   );
   assert.equal(
-    voucherDiscount(voucher({ scope: "rental" }), lines).discount,
+    voucherDiscount(voucher({ places: ["rental"] }), lines).discount,
     30000,
   );
   assert.equal(
@@ -172,8 +172,8 @@ test("a voucher covers the gear in its scope, from its minimum spend", () => {
     1300000,
   );
   assert.throws(
-    () => voucherDiscount(voucher({ scope: "rental" }), lines.slice(0, 1)),
-    { message: "Kupon HEMAT10 hanya untuk sewa alat." },
+    () => voucherDiscount(voucher({ places: ["rental"] }), lines.slice(0, 1)),
+    { message: "Kupon HEMAT10 hanya berlaku untuk sewa alat." },
   );
   assert.throws(
     () => voucherDiscount(voucher({ minSpend: 2000000 }), lines, "en"),
@@ -247,11 +247,11 @@ test("a Flexi refund gives back the rentals after their part of the voucher", ()
   assert.equal(withVoucher.fare.refundable, without.fare.refundable - 20000);
 });
 
-test("an unknown, expired or out-of-scope code stops the payment", () => {
+test("an unknown or expired code, or one for other places, stops the payment", () => {
   const content = contentWith([
     voucher(),
     voucher({ id: "v-old", code: "LAMA", end: "2029-12-31" }),
-    voucher({ id: "v-rent", code: "SEWA", scope: "rental" }),
+    voucher({ id: "v-rent", code: "SEWA", places: ["rental"] }),
   ]);
   const pay = (code, kind = "shop") =>
     priceOrder(
@@ -265,7 +265,7 @@ test("an unknown, expired or out-of-scope code stops the payment", () => {
       message: "Kode kupon tidak ditemukan atau sudah tidak berlaku.",
     });
   assert.throws(() => pay("SEWA"), {
-    message: "Kupon SEWA hanya untuk sewa alat.",
+    message: "Kupon SEWA hanya berlaku untuk sewa alat.",
   });
   assert.ok(new PricingError("x") instanceof Error);
 });
@@ -348,4 +348,84 @@ test("WhatsApp orders name the voucher and take its discount off", () => {
   );
   assert.match(homepage, /Voucher HEMAT10, discount IDR 125,000/);
   assert.match(homepage, /Estimated total IDR 1,125,000/);
+});
+
+test("a voucher works in the places the team picks", () => {
+  // Saved before places: its scope becomes Dive Shop places.
+  assert.deepEqual(
+    validateVouchers([{ ...voucher(), places: undefined, scope: "rental" }])[0]
+      .places,
+    ["rental"],
+  );
+  assert.deepEqual(
+    validateVouchers([{ ...voucher(), places: undefined }])[0].places,
+    ["sale", "rental"],
+  );
+  assert.deepEqual(
+    validateVouchers([voucher({ places: ["trip", "diving", "nowhere"] })])[0]
+      .places,
+    ["diving", "trip"],
+  );
+  assert.throws(
+    () => validateVouchers([voucher({ places: [] })]),
+    /Pilih minimal satu tempat kupon HEMAT10/,
+  );
+  const packages = [{ price: 1500000, quantity: 2 }];
+  // An activity order is covered by its activity's place.
+  assert.equal(
+    voucherDiscount(voucher({ places: ["diving"] }), packages, "id", "diving")
+      .discount,
+    300000,
+  );
+  assert.throws(
+    () =>
+      voucherDiscount(
+        voucher({ places: ["diving", "trip", "course"] }),
+        packages,
+        "id",
+        "snorkeling",
+      ),
+    {
+      message:
+        "Kupon HEMAT10 hanya berlaku untuk diving, trip laut dan kursus selam.",
+    },
+  );
+  assert.throws(
+    () =>
+      voucherDiscount(
+        voucher({ places: ["service"] }),
+        packages,
+        "en",
+        "course",
+      ),
+    { message: "Voucher HEMAT10 is only for gear servicing." },
+  );
+  // A course paid online takes its voucher.
+  const content = contentWith([voucher({ places: ["course"] })]);
+  const course = content.courses.items.find((c) => c.enabled && c.price);
+  const order = priceOrder(
+    content,
+    {
+      kind: "course",
+      course: course.id,
+      participants: 1,
+      date: "2030-02-10",
+      voucher: "HEMAT10",
+    },
+    window,
+    open,
+  );
+  assert.equal(order.voucher.discount, Math.floor(course.price / 10));
+  assert.equal(order.amount, course.price - Math.floor(course.price / 10));
+  // The same code on a Dive Shop cart is refused.
+  assert.throws(
+    () =>
+      priceOrder(
+        content,
+        { kind: "shop", lines: [fins], days: 1, voucher: "HEMAT10" },
+        window,
+        open,
+      ),
+    { message: "Kupon HEMAT10 hanya berlaku untuk kursus selam." },
+  );
 });

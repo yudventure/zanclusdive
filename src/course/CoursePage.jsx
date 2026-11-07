@@ -359,6 +359,9 @@ export default function CoursePage({
                   today={today}
                   lastDate={lastDate}
                   locale={locale}
+                  voucherOn={Boolean(
+                    content.shop?.voucherPlaces?.includes("course"),
+                  )}
                 />
               </dialog>
             )}

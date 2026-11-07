@@ -18,6 +18,7 @@ import { payableItems, quantityLimit } from "../payment-model.js";
 import CartIcon from "../components/CartIcon.jsx";
 import SlotCalendar, { SlotMonth, slotState } from "./SlotCalendar.jsx";
 import FareChoice from "../components/FareChoice.jsx";
+import VoucherField from "../components/VoucherField.jsx";
 import {
   usePayMethod,
   payButtonText,
@@ -62,6 +63,7 @@ function Inquiry({
   payments,
   fares,
   locale,
+  voucherOn = false,
 }) {
   const t = dictionary(locale).activity;
   const p = dictionary(locale).payment;
@@ -77,6 +79,9 @@ function Inquiry({
   const [method, setMethod, methods] = usePayMethod(payments);
   // Standard, Comfort or Flexi; the increase applies to the packages.
   const [fare, setFare] = useState("standard");
+  // A voucher applied in the summary, { code, discount }, priced by the
+  // server.
+  const [voucher, setVoucher] = useState(null);
   const [today, setToday] = useState("");
   const [fields, setFields] = useState({
     name: "",
@@ -129,7 +134,8 @@ function Inquiry({
   const offered = fareChoices(fares).length > 1 && packagesTotal > 0;
   const fareChoice = fareFor(fares, offered ? fare : "standard");
   const markup = fareMarkup(packagesTotal, fareChoice.percent);
-  const total = subtotal + markup;
+  const discount = voucher?.discount ?? 0;
+  const total = subtotal + markup - discount;
   const fareName = f.names[fareChoice.tier];
   const unitOf = (line) =>
     unitCount(priceText(line.item.unit, locale), line.quantity, locale);
@@ -146,8 +152,35 @@ function Inquiry({
         })),
         total,
         ...(offered ? { fare: f.message(fareName, fareChoice.percent) } : {}),
+        ...(voucher
+          ? {
+              voucher: dictionary(locale).order.voucher(
+                voucher.code,
+                formatIDR(voucher.discount, locale),
+              ),
+            }
+          : {}),
       }
     : null;
+  const payLines = lines.map((line) => ({
+    ...(line.item.addOn ? { addOn: line.item.id } : { item: line.item.index }),
+    itemName: priceText(line.item.name, "id"),
+    quantity: line.quantity,
+  }));
+  // What the server prices a voucher on. A change made back in the form
+  // drops the voucher; one made in the summary is priced again there.
+  const voucherOrder = {
+    kind: "activity",
+    activity: activityKey,
+    lines: payLines,
+    fare: fareChoice.tier,
+    date,
+    participants,
+  };
+  const voucherKey = JSON.stringify(voucherOrder);
+  useEffect(() => {
+    if (step !== "summary") setVoucher(null);
+  }, [voucherKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const chosen = (item) => cart.some((line) => line.key === item.key);
   const unchosen = offers.filter((item) => !item.addOn && !chosen(item));
   const unchosenAddOns = offers.filter((item) => item.addOn && !chosen(item));
@@ -214,14 +247,9 @@ function Inquiry({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           activity: activityKey,
-          lines: lines.map((line) => ({
-            ...(line.item.addOn
-              ? { addOn: line.item.id }
-              : { item: line.item.index }),
-            itemName: priceText(line.item.name, "id"),
-            quantity: line.quantity,
-          })),
+          lines: payLines,
           fare: fareChoice.tier,
+          ...(voucher ? { voucher: voucher.code } : {}),
           ...details,
           method,
         }),
@@ -584,6 +612,14 @@ function Inquiry({
                     ],
                   ]
                 : []),
+              ...(voucher
+                ? [
+                    [
+                      dictionary(locale).shop.voucher.applied(voucher.code),
+                      `−${formatIDR(voucher.discount, locale)}`,
+                    ],
+                  ]
+                : []),
               [p.date, dateText],
               [p.participants, p.people(Number(details.participants))],
               [p.name, details.name.trim()],
@@ -601,6 +637,15 @@ function Inquiry({
               </div>
             ))}
           </dl>
+          {voucherOn && mainLines.length > 0 && (
+            <VoucherField
+              id={`${activityKey}-plan`}
+              order={voucherOrder}
+              value={voucher}
+              onChange={setVoucher}
+              locale={locale}
+            />
+          )}
           {lines.length > 0 && (
             <p className="pay-total plan-summary-total">
               <span>
@@ -1261,6 +1306,9 @@ export default function ActivityDetail({
                 lastDate={lastDate}
                 payments={payments}
                 fares={content.fares}
+                voucherOn={Boolean(
+                  content.shop?.voucherPlaces?.includes(activityKey),
+                )}
                 locale={locale}
               />
             </dialog>

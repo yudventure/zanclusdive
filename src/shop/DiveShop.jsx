@@ -843,7 +843,13 @@ export default function DiveShop({
                         locale={locale}
                       />
                     )}
-                    {shop.voucherOn && cart.length > 0 && (
+                    {shop.voucherPlaces?.some((place) =>
+                      cart.some(
+                        (line) =>
+                          (line.mode === "rental" ? "rental" : "sale") ===
+                          place,
+                      ),
+                    ) && (
                       <VoucherField
                         id="order"
                         order={voucherOrder}

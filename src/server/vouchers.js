@@ -5,6 +5,8 @@ import { priceOrder, PricingError } from "../order-pricing.js";
 import { BookingError, bookingDates } from "../booking-model.js";
 import { visitorLocks } from "../developer.js";
 import { cleanEmail, cleanWhatsApp } from "../contact-fields.js";
+import { withCourses } from "../course-model.js";
+import { withService } from "../service-model.js";
 import {
   checkVoucherUses,
   cleanCode,
@@ -33,10 +35,11 @@ export function allowVoucherCheck(request, now = Date.now()) {
   limits.set(key, entry);
 }
 
-// A voucher code tried on a Dive Shop cart before paying or sending the
-// order: the discount the server would give, priced like the payment
-// itself. How the gear is received and the start date do not change the
-// discount, so they do not stop the check.
+// A voucher code tried on an order before paying or sending it (a Dive
+// Shop cart, activity packages, a course or gear servicing): the discount
+// the server would give, priced like the payment itself. How the gear is
+// received and the date do not change the discount, so they do not stop
+// the check.
 export async function checkVoucher(input, locale = "id") {
   const t = voucherText(locale);
   // Messages already in the guest's language.
@@ -46,11 +49,19 @@ export async function checkVoucher(input, locale = "id") {
     throw said(t.unknown);
   const code = cleanCode(input.voucher);
   if (!code) throw said(t.unknown);
-  const { content } = await getContent();
+  // Courses and services saved before those parts existed use defaults,
+  // as on their pages and at payment.
+  const content = withService(withCourses((await getContent()).content));
   const window = bookingDates();
-  const startDate =
-    typeof input.startDate === "string" && input.startDate >= window.today
-      ? input.startDate
+  const kind = ["shop", "activity", "course", "service"].includes(input.kind)
+    ? input.kind
+    : "shop";
+  const day = (value) =>
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    value >= window.today &&
+    value <= window.last
+      ? value
       : window.today;
   let order;
   try {
@@ -58,9 +69,10 @@ export async function checkVoucher(input, locale = "id") {
       content,
       {
         ...input,
-        kind: "shop",
+        kind,
         voucher: code,
-        startDate,
+        startDate: day(input.startDate),
+        date: day(input.date),
         delivery:
           content.shop?.delivery?.pickup === false
             ? input.delivery
