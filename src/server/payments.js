@@ -42,6 +42,7 @@ import { withCourses, courseProfile } from "../course-model.js";
 import { withService } from "../service-model.js";
 import { dueAt, invoiceNumber } from "../booking-mail.js";
 import { fareNames } from "../fare-model.js";
+import { checkVoucherUses, voucherUses } from "../voucher-model.js";
 import { autoMail, later } from "./booking-mail.js";
 import { recordShopSales, reserveShopStock } from "./shop-stock.js";
 
@@ -136,9 +137,13 @@ export async function startPayment(input, { origin, locale = "id" }) {
       input,
       bookingDates(),
       visitorLocks(content.developer),
+      locale,
     );
   } catch (error) {
-    if (error instanceof PricingError) throw fail(error.message, error.status);
+    if (error instanceof PricingError)
+      throw Object.assign(fail(error.message, error.status), {
+        localized: Boolean(error.voucher),
+      });
     throw error;
   }
   const name = typeof input.name === "string" ? input.name.trim() : "";
@@ -150,6 +155,21 @@ export async function startPayment(input, { origin, locale = "id" }) {
     );
   const email = cleanEmail(input.email);
   if (email === null) throw fail("Format email belum benar.");
+  // A voucher must still have uses left, and be this guest's first use
+  // when it is once per guest.
+  if (order.voucher)
+    try {
+      checkVoucherUses(
+        order.voucher,
+        voucherUses(await listBookings(), order.voucher, {
+          phone: whatsapp,
+          email,
+        }),
+        locale,
+      );
+    } catch (error) {
+      throw Object.assign(fail(error.message, 409), { localized: true });
+    }
   const notes = typeof input.notes === "string" ? input.notes.trim() : "";
   if (notes.length > 1000) throw fail("Catatan maksimal 1.000 karakter.");
   const certification =
@@ -262,6 +282,16 @@ export async function startPayment(input, { origin, locale = "id" }) {
         // The fare and its rules as they were when ordered, and the key to
         // the guest's own page for moving the date or asking for a refund.
         ...(order.fare ? { fare: order.fare } : {}),
+        // The voucher used and its discount, counted against its uses.
+        ...(order.voucher
+          ? {
+              voucher: {
+                id: order.voucher.id,
+                code: order.voucher.code,
+                discount: order.voucher.discount,
+              },
+            }
+          : {}),
         manageToken: randomUUID(),
       },
     });

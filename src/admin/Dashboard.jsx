@@ -1802,6 +1802,7 @@ export default function Dashboard({ section, account, today }) {
                   canStock={can("gudang")}
                   canCalendar={can("bookings")}
                   onCopyTexts={copyProductTexts}
+                  bookings={data.bookings}
                 />
               )}
               {section === "experiences" && (

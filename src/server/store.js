@@ -23,6 +23,7 @@ import {
   assertBookable,
   bookingReceipt,
   BookingError,
+  bookingDates,
 } from "../booking-model.js";
 export function databaseConfigured() {
   return databaseIssues().length === 0;
@@ -94,11 +95,27 @@ async function storedContent() {
     version: rows[0].version,
   };
 }
+// Voucher codes stay on the server (src/voucher-model.js). Public pages
+// only learn that a voucher is on, to show the code field at checkout.
+export function withoutVouchers(content) {
+  if (!content?.shop) return content;
+  const { vouchers, ...shop } = content.shop;
+  const today = bookingDates().today;
+  return {
+    ...content,
+    shop: {
+      ...shop,
+      voucherOn: (vouchers ?? []).some(
+        (v) => v.enabled && (!v.end || v.end >= today),
+      ),
+    },
+  };
+}
 export async function publicContent() {
-  if (isDemo()) return (await getContent()).content;
+  if (isDemo()) return withoutVouchers((await getContent()).content);
   if (!databaseConfigured()) return structuredClone(defaultContent);
   try {
-    return (await getContent()).content;
+    return withoutVouchers((await getContent()).content);
   } catch (error) {
     console.error(
       "CMS: content database unavailable; using website defaults.",

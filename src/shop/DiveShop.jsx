@@ -23,8 +23,10 @@ import {
   familyOf,
   familyPrice,
   oneEach,
+  discountOf,
 } from "../shop-model.js";
 import PayPanel from "../components/PayPanel.jsx";
+import VoucherField from "../components/VoucherField.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import { dictionary, localeHref } from "../i18n.js";
@@ -73,6 +75,9 @@ export default function DiveShop({
     [notice, setNotice] = useState("");
   // Standard, Comfort or Flexi for the rentals.
   const [fare, setFare] = useState("standard");
+  // A voucher applied at checkout, { code, discount }, priced by the
+  // server.
+  const [voucher, setVoucher] = useState(null);
   // The product window: { product, mode, add } (add false from the cart).
   const [detail, setDetail] = useState(null);
   // Picked up at the dive center or delivered: { method, zone, address }.
@@ -126,6 +131,25 @@ export default function DiveShop({
   // With online payment on, an order priced in full is paid with Midtrans.
   const payable =
     Boolean(payments?.ready) && Boolean(quote) && !quote.needsQuote;
+  const discount = voucher?.discount ?? 0;
+  const orderLines = cart.map((line) => ({
+    source: "product",
+    id: line.id,
+    mode: line.mode,
+    quantity: line.quantity,
+    size: line.size ?? "",
+  }));
+  // What the server prices a voucher on.
+  const voucherOrder = {
+    kind: "shop",
+    lines: orderLines,
+    days: Number(details.days) || 1,
+    startDate: details.startDate,
+    fare: fareChoice.tier,
+  };
+  useEffect(() => {
+    if (!cart.length) setVoucher(null);
+  }, [cart.length]);
   const count = cart.reduce((n, p) => n + p.quantity, 0);
   function changeCart(next) {
     setCart(next);
@@ -193,6 +217,7 @@ export default function DiveShop({
             ...details,
             fare: { text: fareText, markup },
             delivery: deliveryChoice(shop.delivery, delivery, locale),
+            voucher,
           },
           false,
           locale,
@@ -412,6 +437,8 @@ export default function DiveShop({
                     [badges[family.indexOf(product)], ...badges].find(
                       (b) => b && b.state !== "unavailable",
                     ) ?? badges[0];
+                  // The normal price crossed out, when one price shows.
+                  const off = varies ? null : discountOf(product, mode);
                   return (
                     <article
                       className={
@@ -478,6 +505,12 @@ export default function DiveShop({
                             {price === null ? t.askPrice : money(price)}
                             {mode === "rental" && price !== null && (
                               <small>{t.perDay}</small>
+                            )}
+                            {off && (
+                              <span className="shop-price-off">
+                                <del>{money(off.compare)}</del>
+                                <span>{t.detail.save(off.percent)}</span>
+                              </span>
                             )}
                           </p>
                           {variants || product.sizes?.length ? (
@@ -810,6 +843,18 @@ export default function DiveShop({
                         locale={locale}
                       />
                     )}
+                    {shop.voucherOn && cart.length > 0 && (
+                      <VoucherField
+                        id="order"
+                        order={voucherOrder}
+                        value={voucher}
+                        onChange={(next) => {
+                          setVoucher(next);
+                          setMessage("");
+                        }}
+                        locale={locale}
+                      />
+                    )}
                     <div className="shop-total">
                       <span>
                         {t.estimate(quote?.needsQuote)}
@@ -827,10 +872,15 @@ export default function DiveShop({
                             {t.delivery.fee(zoneName)} {money(fee)}
                           </small>
                         )}
+                        {discount > 0 && (
+                          <small className="shop-fare-note">
+                            {t.voucher.applied(voucher.code)} −{money(discount)}
+                          </small>
+                        )}
                       </span>
                       <strong>
                         {quote
-                          ? money(quote.total + markup + fee)
+                          ? money(quote.total + markup + fee - discount)
                           : t.checkDuration}
                       </strong>
                     </div>
@@ -853,13 +903,8 @@ export default function DiveShop({
                       <PayPanel
                         order={{
                           kind: "shop",
-                          lines: cart.map((line) => ({
-                            source: "product",
-                            id: line.id,
-                            mode: line.mode,
-                            quantity: line.quantity,
-                            size: line.size ?? "",
-                          })),
+                          lines: orderLines,
+                          ...(voucher ? { voucher: voucher.code } : {}),
                           days: Number(details.days) || 1,
                           startDate: details.startDate,
                           fare: fareChoice.tier,
@@ -869,7 +914,7 @@ export default function DiveShop({
                           notes: details.notes,
                           delivery,
                         }}
-                        total={quote.total + markup + fee}
+                        total={quote.total + markup + fee - discount}
                         message={message}
                         whatsapp={contact.whatsapp}
                         payments={payments}

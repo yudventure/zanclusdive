@@ -29,6 +29,7 @@ import {
   variantLimit,
   familyId,
 } from "./shop-model.js";
+import { validateVouchers } from "./voucher-model.js";
 import {
   blankSocials,
   socialPlatforms,
@@ -433,6 +434,7 @@ export function validateShop(shop) {
     heading: plain(shop.heading, "Judul Dive Shop", 150),
     description: plain(shop.description, "Deskripsi Dive Shop", 600),
     delivery: validateDelivery(shop.delivery),
+    vouchers: validateVouchers(shop.vouchers),
     products: checkFamilies(
       shop.products.map((p) => {
         if (
@@ -466,7 +468,8 @@ export function validateShop(shop) {
             : "";
         if (pair) pairs.add(pair);
         function price(value) {
-          if (value === null || value === "") return null;
+          if (value === null || value === "" || value === undefined)
+            return null;
           if (typeof value !== "number" && typeof value !== "string")
             throw new Error("Harga produk tidak valid.");
           const n = Number(value);
@@ -504,11 +507,29 @@ export function validateShop(shop) {
           salePrice: p.saleEnabled ? price(p.salePrice) : null,
           rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
           sizes: cleanSizes(p.sizes),
+          ...comparePrice(
+            p,
+            price(p.saleEnabled ? p.salePrice : p.rentalPrice),
+          ),
           ...variantFields(p),
         };
       }),
     ),
   };
+}
+// The normal price crossed out above the price of the product's own way
+// (discountOf in shop-model.js). It must be higher than that price.
+function comparePrice(p, own) {
+  const value = p.comparePrice;
+  if (value === null || value === undefined || value === "") return {};
+  const n = Number(value);
+  if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
+    throw new Error("Harga coret harus berupa rupiah positif.");
+  if (own === null || n <= own)
+    throw new Error(
+      `Harga coret ${String(p.name ?? "produk").slice(0, 100)} harus lebih tinggi dari harga ${p.saleEnabled ? "jual" : "sewa"}nya. Kosongkan kalau tidak ada diskon.`,
+    );
+  return { comparePrice: n };
 }
 // A product's place in a family of variants (shop-model.js): the lead it
 // names, its own short variant name, and on a lead the name of the choice.

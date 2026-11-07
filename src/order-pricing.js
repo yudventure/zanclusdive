@@ -11,6 +11,7 @@ import { addOnItems, priceText } from "./price-list.js";
 import { itemLocked, pageLocked } from "./developer.js";
 import { fareNames, orderFare } from "./fare-model.js";
 import { deliveryChoice } from "./shop-model.js";
+import { findVoucher, voucherDiscount, voucherText } from "./voucher-model.js";
 
 export class PricingError extends Error {
   constructor(message, status = 409) {
@@ -304,8 +305,9 @@ const kinds = {
 // pay request; window is { today, last } in WIT and locks the developer
 // locks. Activity packages and rentals take the fare asked for (Standard
 // when none): its increase is one more line, and its rules go with the
-// order.
-export function priceOrder(content, input, window, locks) {
+// order. A Dive Shop order may carry a voucher code: its discount is one
+// more line, below zero, and "voucher" names it (src/voucher-model.js).
+export function priceOrder(content, input, window, locks, locale = "id") {
   const price = kinds[input?.kind ?? "activity"];
   if (!price || locks?.site) fail("Data pembayaran tidak valid.", 400);
   const {
@@ -336,18 +338,60 @@ export function priceOrder(content, input, window, locks) {
         fare: true,
       });
   }
+  let voucher = null;
+  if (input.voucher) {
+    const t = voucherText(locale);
+    // Voucher messages are written in the guest's language already.
+    const fail = (message) => {
+      const error = new PricingError(message);
+      error.voucher = true;
+      throw error;
+    };
+    const found =
+      order.program === "shop"
+        ? findVoucher(content.shop?.vouchers, input.voucher, window.today)
+        : null;
+    if (!found) fail(t.unknown);
+    let result;
+    try {
+      result = voucherDiscount(found, order.lines, locale);
+    } catch (error) {
+      fail(error.message);
+    }
+    order.lines.push({
+      id: `voucher-${found.code}`.slice(0, 50),
+      name: both(`Kupon ${found.code}`, `Voucher ${found.code}`),
+      price: -result.discount,
+      quantity: 1,
+      discount: true,
+    });
+    // A Flexi refund gives back what was paid for the rentals.
+    if (fare) fare.refundable = Math.max(0, fare.refundable - result.rentals);
+    voucher = {
+      id: found.id,
+      code: found.code,
+      discount: result.discount,
+      limit: found.limit,
+      oncePerGuest: found.oncePerGuest,
+    };
+  }
   const amount = total(order.lines);
+  if (voucher && amount <= 0)
+    fail(
+      "Total setelah kupon harus lebih dari Rp 0. Hubungi tim lewat WhatsApp.",
+    );
   if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 1e9)
     fail("Data pembayaran tidak valid.", 400);
-  return { ...order, amount, fare };
+  return { ...order, amount, fare, ...(voucher ? { voucher } : {}) };
 }
 
 // "Discovery Dive × 2" or "Beli Fins × 1, Sewa Wetsuit (2 hari) × 1"; the
-// fare's increase and the delivery fee are named without a count.
+// fare's increase, the delivery fee and a voucher are named without a
+// count.
 export const orderLabel = (lines, locale) =>
   lines
     .map((line) =>
-      line.fare || line.extra
+      line.fare || line.extra || line.discount
         ? priceText(line.name, locale)
         : `${priceText(line.name, locale)} × ${line.quantity}`,
     )

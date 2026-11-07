@@ -34,7 +34,11 @@ export async function POST(request) {
   } catch (error) {
     if (error instanceof BookingError)
       return Response.json(
-        { error: bookingErrorMessage(error.message, locale) },
+        {
+          error: error.localized
+            ? error.message
+            : bookingErrorMessage(error.message, locale),
+        },
         { status: error.status, headers },
       );
     console.error(

@@ -78,7 +78,16 @@ export function checkoutMessage(cart, details, today, locale = "id") {
     // The fare picked for the rentals, with its increase in the total.
     ...(details.fare?.text ? [details.fare.text] : []),
     ...deliveryLines(details.delivery, locale),
-    `${m.total} ${rupiah(totals.total + (details.fare?.markup ?? 0) + (details.delivery?.fee ?? 0), locale)}`,
+    // A voucher priced by the server, with its discount in the total.
+    ...(details.voucher
+      ? [
+          m.voucher(
+            details.voucher.code,
+            rupiah(details.voucher.discount, locale),
+          ),
+        ]
+      : []),
+    `${m.total} ${rupiah(totals.total + (details.fare?.markup ?? 0) + (details.delivery?.fee ?? 0) - (details.voucher?.discount ?? 0), locale)}`,
     ...(totals.needsQuote ? [m.quote] : []),
     ...(notes ? [`${m.notes} ${notes}`] : []),
     "",

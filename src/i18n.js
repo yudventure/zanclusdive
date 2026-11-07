@@ -1109,6 +1109,16 @@ const id = {
   shop: {
     maxUnits: "Maksimal 10 unit per perlengkapan.",
     onlyLeft: (name, n) => `Stok ${name} tinggal ${n}.`,
+    // A voucher code at checkout (src/voucher-model.js).
+    voucher: {
+      label: "Kode kupon",
+      placeholder: "Misalnya HEMAT10",
+      apply: "Pakai",
+      checking: "Mengecek…",
+      remove: "Hapus kupon",
+      applied: (code) => `Kupon ${code}`,
+      failed: "Kupon belum bisa dicek. Coba lagi sebentar.",
+    },
     // The product window, opened from a card or a cart line.
     detail: {
       open: (name) => `Lihat detail ${name}`,
@@ -1125,6 +1135,8 @@ const id = {
       variants: (n, label) =>
         label ? `${n} pilihan ${label.toLocaleLowerCase("id")}` : `${n} varian`,
       from: "Mulai",
+      // Beside the normal price crossed out (harga coret).
+      save: (n) => `Hemat ${n}%`,
       quantity: "Jumlah",
       buyPrice: "Harga beli",
       rentPrice: "Harga sewa per hari",
@@ -1322,6 +1334,7 @@ const id = {
         perDay: "/ hari",
         period: (days, date) => `Lama sewa ${days} hari, mulai ${date}`,
         total: "Perkiraan total",
+        voucher: (code, amount) => `Kupon ${code}, potongan ${amount}`,
         quote: "Beberapa harga mohon dikonfirmasi.",
         notes: "Catatan",
         closing:
@@ -1381,6 +1394,7 @@ const id = {
       `Rental mulai ${start}, selama ${days} hari.`,
     estimate: (needsQuote, total) =>
       `Estimasi ${needsQuote ? "harga yang tercantum" : "total"} ${total}${needsQuote ? " + alat yang perlu penawaran" : ""}.`,
+    voucher: (code, amount) => `Kupon ${code}, potongan ${amount}`,
     notesLabel: "Catatan",
     closing:
       "Mohon konfirmasi stok, ukuran, harga final, serta pengambilan/pengiriman dan ketentuan rental.",
@@ -2458,6 +2472,15 @@ const en = {
   shop: {
     maxUnits: "Up to 10 units per item.",
     onlyLeft: (name, n) => `Only ${n} left of ${name}.`,
+    voucher: {
+      label: "Voucher code",
+      placeholder: "For example SAVE10",
+      apply: "Apply",
+      checking: "Checking…",
+      remove: "Remove voucher",
+      applied: (code) => `Voucher ${code}`,
+      failed: "The voucher cannot be checked right now. Try again shortly.",
+    },
     detail: {
       open: (name) => `See details of ${name}`,
       view: "See details",
@@ -2474,6 +2497,7 @@ const en = {
           ? `${n} ${label.toLocaleLowerCase("en")} options`
           : `${n} options`,
       from: "From",
+      save: (n) => `Save ${n}%`,
       quantity: "Quantity",
       buyPrice: "Price to buy",
       rentPrice: "Rental per day",
@@ -2670,6 +2694,7 @@ const en = {
         period: (days, date) =>
           `Rental for ${days} ${days === 1 ? "day" : "days"}, starting ${date}`,
         total: "Estimated total",
+        voucher: (code, amount) => `Voucher ${code}, discount ${amount}`,
         quote: "Please confirm the missing prices.",
         notes: "Notes",
         closing: "Please confirm availability and how to pay. Thank you!",
@@ -2728,6 +2753,7 @@ const en = {
       `Rental from ${start}, for ${days} ${Number(days) === 1 ? "day" : "days"}.`,
     estimate: (needsQuote, total) =>
       `Estimated ${needsQuote ? "listed prices" : "total"} ${total}${needsQuote ? " + gear that needs a quote" : ""}.`,
+    voucher: (code, amount) => `Voucher ${code}, discount ${amount}`,
     notesLabel: "Notes",
     closing:
       "Please confirm stock, sizes, final price, pick-up/delivery and rental terms.",

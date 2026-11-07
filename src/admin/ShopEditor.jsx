@@ -18,6 +18,7 @@ import {
   familyId,
   familyOf,
   variantLimit,
+  discountOf,
 } from "../shop-model.js";
 import { videoPlatforms, videoSource } from "../gallery.js";
 import {
@@ -27,6 +28,15 @@ import {
 } from "../product-story.js";
 import ProductStory from "../shop/ProductStory.jsx";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
+import {
+  cleanCode,
+  newVoucher,
+  voucherKinds,
+  voucherLimit,
+  voucherScopes,
+  voucherSummary,
+  voucherUses,
+} from "../voucher-model.js";
 
 function Field({ label, hint, children }) {
   const id = useId();
@@ -67,7 +77,11 @@ const priceText = (product) => {
   const sale = product.saleEnabled;
   const price = sale ? product.salePrice : product.rentalPrice;
   if (price === null) return "Harga lewat penawaran";
-  return sale ? rupiah(price) : `${rupiah(price)} per hari`;
+  const off = discountOf(product, sale ? "sale" : "rental");
+  return (
+    (sale ? rupiah(price) : `${rupiah(price)} per hari`) +
+    (off ? `, hemat ${off.percent}%` : "")
+  );
 };
 
 export default function ShopEditor({
@@ -83,6 +97,7 @@ export default function ShopEditor({
   locale = "id",
   onImport,
   onCopyTexts,
+  bookings,
 }) {
   const [kind, setKind] = useState(() =>
     shop.products[0] ? kindOf(shop.products[0]) : "sale",
@@ -187,6 +202,8 @@ export default function ShopEditor({
     };
     delete copy.pair;
     delete copy.stockCounts;
+    // The other way has its own price, so no crossed-out price yet.
+    delete copy.comparePrice;
     // The other way has its own variants.
     delete copy.variantOf;
     delete copy.variant;
@@ -312,6 +329,12 @@ export default function ShopEditor({
           </Field>
         </div>
       </section>
+      <VoucherSettings
+        vouchers={shop.vouchers ?? []}
+        bookings={bookings}
+        disabled={busy}
+        onChange={(vouchers) => update("vouchers", vouchers)}
+      />
       <div
         className="admin-shop-kinds"
         role="tablist"
@@ -920,6 +943,29 @@ function ModeSection({
           value={product[t.price] ?? ""}
           onChange={(e) =>
             edit(t.price, e.target.value === "" ? null : Number(e.target.value))
+          }
+        />
+      </Field>
+      <Field
+        label="Harga normal, dicoret (Rp)"
+        hint={
+          discountOf(product, mode)
+            ? `Tampil dicoret di website dengan label Hemat ${discountOf(product, mode).percent}%. Kosongkan kalau diskonnya selesai.`
+            : `Untuk diskon. Isi harga sebelum diskon, lebih tinggi dari ${mode === "sale" ? "harga jual" : "harga sewa"}. Kosong berarti tanpa harga coret.`
+        }
+      >
+        <input
+          type="number"
+          min={1}
+          max={1e9}
+          step={1}
+          placeholder="Kosong = tanpa harga coret"
+          value={product.comparePrice ?? ""}
+          onChange={(e) =>
+            edit(
+              "comparePrice",
+              e.target.value === "" ? null : Number(e.target.value),
+            )
           }
         />
       </Field>
@@ -1653,3 +1699,284 @@ function DeliverySettings({ delivery, onChange }) {
   );
 }
 const newZoneId = () => "zone-" + crypto.randomUUID().slice(0, 8);
+
+const shortDate = (date) =>
+  new Date(date + "T12:00:00Z").toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+const rupiahInput = (value) => (value === "" ? null : Number(value));
+
+// Discount vouchers for Dive Shop orders (src/voucher-model.js): a code,
+// a share or an amount off, from a minimum spend, between two dates, for
+// a number of uses. Guests type the code at checkout; the website never
+// shows it. Uses are counted from orders paid online that carry it.
+function VoucherSettings({ vouchers, bookings, disabled, onChange }) {
+  const [open, setOpen] = useState(null);
+  const edit = (id, patch) =>
+    onChange(vouchers.map((v) => (v.id === id ? { ...v, ...patch } : v)));
+  function add() {
+    const voucher = newVoucher("v-" + crypto.randomUUID().slice(0, 8));
+    onChange([...vouchers, voucher]);
+    setOpen(voucher.id);
+  }
+  function remove(voucher) {
+    if (
+      !confirm(
+        `Hapus kupon ${voucher.code || "baru"}? Pesanan yang sudah memakainya tidak berubah. Tekan Simpan katalog untuk menerapkan.`,
+      )
+    )
+      return;
+    onChange(vouchers.filter((v) => v.id !== voucher.id));
+  }
+  return (
+    <section className="admin-card admin-vouchers" aria-labelledby="vouchers">
+      <div className="admin-card-heading">
+        <div>
+          <h2 id="vouchers">Kupon diskon</h2>
+          <p className="admin-subtle">
+            Kode yang tamu ketik saat checkout Dive Shop, misalnya untuk promo
+            Instagram atau tamu langganan. Potongannya dihitung server dari alat
+            di keranjang, tanpa ongkos antar dan kenaikan tarif. Kodenya tidak
+            pernah tampil di website. Pemakaian dihitung dari pesanan yang
+            dibayar online, sedangkan pesanan WhatsApp menyebut kodenya di
+            pesan.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="admin-button secondary"
+          disabled={disabled || vouchers.length >= voucherLimit}
+          onClick={add}
+        >
+          + Tambah kupon
+        </button>
+      </div>
+      {!vouchers.length && (
+        <p className="admin-subtle">
+          Belum ada kupon. Kolom kode kupon baru muncul di checkout setelah ada
+          kupon yang aktif.
+        </p>
+      )}
+      <ul className="admin-voucher-list">
+        {vouchers.map((v) => {
+          const used = Array.isArray(bookings)
+            ? voucherUses(bookings, v).used
+            : null;
+          const state = [
+            v.enabled ? "Aktif" : "Nonaktif",
+            used !== null &&
+              `terpakai ${used}${v.limit ? ` dari ${v.limit}` : ""}`,
+            v.start && `mulai ${shortDate(v.start)}`,
+            v.end && `sampai ${shortDate(v.end)}`,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          const shown = open === v.id;
+          return (
+            <li key={v.id} className={v.enabled ? "" : "is-off"}>
+              <button
+                type="button"
+                className="admin-voucher-head"
+                aria-expanded={shown}
+                onClick={() => setOpen(shown ? null : v.id)}
+              >
+                <strong>{v.code || "Kupon baru"}</strong>
+                <span>{voucherSummary(v)}</span>
+                <small>{state}</small>
+              </button>
+              {shown && (
+                <div className="admin-voucher-body">
+                  <div className="admin-form-grid">
+                    <Field
+                      label="Kode kupon"
+                      hint="4–20 huruf, angka, atau tanda hubung. Tamu bisa mengetik huruf kecil."
+                    >
+                      <input
+                        required
+                        maxLength={20}
+                        value={v.code}
+                        placeholder="Misalnya HEMAT10"
+                        onChange={(e) =>
+                          edit(v.id, { code: cleanCode(e.target.value) })
+                        }
+                      />
+                    </Field>
+                    <Field label="Jenis potongan">
+                      <select
+                        value={v.kind}
+                        onChange={(e) =>
+                          edit(v.id, {
+                            kind: e.target.value,
+                            value: e.target.value === "percent" ? 10 : 25000,
+                            maxDiscount: null,
+                          })
+                        }
+                      >
+                        {Object.entries(voucherKinds).map(([k, label]) => (
+                          <option key={k} value={k}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field
+                      label={
+                        v.kind === "percent" ? "Potongan (%)" : "Potongan (Rp)"
+                      }
+                      hint={
+                        v.kind === "percent"
+                          ? "1–90 persen dari alat yang dicakup kupon."
+                          : "Potongan tetap, tidak lebih dari harga alat yang dicakup."
+                      }
+                    >
+                      <input
+                        type="number"
+                        required
+                        min={v.kind === "percent" ? 1 : 1000}
+                        max={v.kind === "percent" ? 90 : 1e9}
+                        step={1}
+                        value={v.value ?? ""}
+                        onChange={(e) =>
+                          edit(v.id, { value: rupiahInput(e.target.value) })
+                        }
+                      />
+                    </Field>
+                    {v.kind === "percent" && (
+                      <Field
+                        label="Potongan maksimal (Rp)"
+                        hint="Kosong berarti tanpa batas."
+                      >
+                        <input
+                          type="number"
+                          min={1000}
+                          max={1e9}
+                          step={1}
+                          placeholder="Tanpa batas"
+                          value={v.maxDiscount ?? ""}
+                          onChange={(e) =>
+                            edit(v.id, {
+                              maxDiscount: rupiahInput(e.target.value),
+                            })
+                          }
+                        />
+                      </Field>
+                    )}
+                    <Field
+                      label="Belanja minimal (Rp)"
+                      hint="Dari alat yang dicakup kupon. 0 berarti tanpa minimal."
+                    >
+                      <input
+                        type="number"
+                        min={0}
+                        max={1e9}
+                        step={1}
+                        value={v.minSpend ?? 0}
+                        onChange={(e) =>
+                          edit(v.id, {
+                            minSpend: rupiahInput(e.target.value) ?? 0,
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Berlaku untuk">
+                      <select
+                        value={v.scope}
+                        onChange={(e) => edit(v.id, { scope: e.target.value })}
+                      >
+                        {Object.entries(voucherScopes).map(([k, label]) => (
+                          <option key={k} value={k}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field
+                      label="Mulai tanggal"
+                      hint="Kosong berarti mulai sekarang."
+                    >
+                      <input
+                        type="date"
+                        value={v.start}
+                        onChange={(e) => edit(v.id, { start: e.target.value })}
+                      />
+                    </Field>
+                    <Field
+                      label="Sampai tanggal"
+                      hint="Hari terakhir kupon bisa dipakai, waktu Waisai. Kosong berarti tanpa batas."
+                    >
+                      <input
+                        type="date"
+                        value={v.end}
+                        min={v.start || undefined}
+                        onChange={(e) => edit(v.id, { end: e.target.value })}
+                      />
+                    </Field>
+                    <Field
+                      label="Kuota pemakaian"
+                      hint="Berapa pesanan boleh memakainya. Kosong berarti tanpa batas."
+                    >
+                      <input
+                        type="number"
+                        min={1}
+                        max={100000}
+                        step={1}
+                        placeholder="Tanpa batas"
+                        value={v.limit ?? ""}
+                        onChange={(e) =>
+                          edit(v.id, { limit: rupiahInput(e.target.value) })
+                        }
+                      />
+                    </Field>
+                    <Field
+                      label="Catatan untuk tim"
+                      hint="Tidak tampil ke tamu, misalnya Promo Instagram November."
+                    >
+                      <input
+                        maxLength={120}
+                        value={v.note}
+                        onChange={(e) => edit(v.id, { note: e.target.value })}
+                      />
+                    </Field>
+                  </div>
+                  <div className="admin-voucher-toggles">
+                    <label className="admin-toggle">
+                      <input
+                        type="checkbox"
+                        checked={v.enabled}
+                        onChange={(e) =>
+                          edit(v.id, { enabled: e.target.checked })
+                        }
+                      />
+                      Kupon aktif
+                    </label>
+                    <label className="admin-toggle">
+                      <input
+                        type="checkbox"
+                        checked={v.oncePerGuest}
+                        onChange={(e) =>
+                          edit(v.id, { oncePerGuest: e.target.checked })
+                        }
+                      />
+                      Sekali per tamu, dicek dari nomor WhatsApp atau email
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-inline danger"
+                    disabled={disabled}
+                    onClick={() => remove(v)}
+                  >
+                    Hapus kupon ini
+                  </button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}

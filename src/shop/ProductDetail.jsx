@@ -9,6 +9,7 @@ import {
   familyOf,
   pairOf,
   variantName,
+  discountOf,
 } from "../shop-model.js";
 import { storyBlocks } from "../product-story.js";
 import ProductStory from "./ProductStory.jsx";
@@ -217,6 +218,12 @@ export default function ProductDetail({
             <strong>
               {price === null ? dict.shop.askPrice : rupiah(price, locale)}
             </strong>
+            {discountOf(product, mode) && (
+              <span className="shop-price-off">
+                <del>{rupiah(discountOf(product, mode).compare, locale)}</del>
+                <span>{t.save(discountOf(product, mode).percent)}</span>
+              </span>
+            )}
             {other && <small>{other}</small>}
           </p>
           <span className={"shop-stock stock-" + badge.state}>

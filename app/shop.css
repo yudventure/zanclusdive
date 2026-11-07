@@ -1933,6 +1933,34 @@
 .shop-price-from {
   margin-right: 4px;
 }
+/* The normal price crossed out beside a lower price, with the share off. */
+.shop-price-off {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.shop-price-off del {
+  color: #8a9ea4;
+}
+.shop-price-off > span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fde8e4;
+  color: #b8321d;
+  font-weight: 700;
+}
+.shop-detail-price .shop-price-off {
+  margin: 0;
+  font-size: 15px;
+}
+.shop-detail-price .shop-price-off > span {
+  color: #b8321d;
+  font-size: 12px;
+}
 .shop-detail-actions {
   display: flex;
   align-items: center;
@@ -2274,4 +2302,90 @@
   .product-story .story-list li {
     font-size: 14.5px;
   }
+}
+/* A voucher code at checkout, and the voucher applied with its discount. */
+.voucher-field {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+.voucher-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #164f61;
+}
+.voucher-row {
+  display: flex;
+  gap: 8px;
+}
+.voucher-row input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cfe0db;
+  border-radius: 12px;
+  background: white;
+  color: #062b3b;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.voucher-row input::placeholder {
+  letter-spacing: 0;
+  text-transform: none;
+}
+.voucher-row button {
+  flex: none;
+  height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #062b3b;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.voucher-row button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.voucher-applied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #b9e2c6;
+  border-radius: 12px;
+  background: #eef8f0;
+  color: #164f61;
+  font-size: 13px;
+}
+.voucher-applied span {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.voucher-applied strong {
+  color: #b8321d;
+}
+.voucher-applied button {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: #4c7884;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.voucher-error {
+  margin: 0;
+  font-size: 12px;
+  color: #b8321d;
+}
+.shop-checkout-totals div.is-discount dd {
+  color: #b8321d;
 }

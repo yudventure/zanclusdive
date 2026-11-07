@@ -103,6 +103,23 @@ export function familyPrice(family, mode) {
   };
 }
 export const variantName = (product) => product?.variant || product?.name || "";
+// The normal price shown crossed out beside a lower price ("harga coret"),
+// for the product's own way, and the share off, rounded down so the site
+// never promises more than the real saving. null without a lower price.
+export function discountOf(product, mode) {
+  const price = product?.[mode === "rental" ? "rentalPrice" : "salePrice"];
+  const compare = product?.comparePrice;
+  if (
+    !Number.isSafeInteger(price) ||
+    !Number.isSafeInteger(compare) ||
+    compare <= price
+  )
+    return null;
+  return {
+    compare,
+    percent: Math.max(1, Math.floor(((compare - price) * 100) / compare)),
+  };
+}
 
 // Catalogs saved when one product could be both split it in two: the
 // product keeps its id for sale, and its rental side becomes rental gear
@@ -577,13 +594,23 @@ export function orderMessage(
     // The fare picked for the rentals, with its increase in the estimate.
     ...(details.fare?.text ? [details.fare.text] : []),
     ...deliveryLines(details.delivery, locale),
+    // A voucher priced by the server, with its discount in the estimate.
+    ...(details.voucher
+      ? [
+          t.voucher(
+            details.voucher.code,
+            rupiah(details.voucher.discount, locale),
+          ),
+        ]
+      : []),
     "",
     t.estimate(
       quote.needsQuote,
       rupiah(
         quote.total +
           (details.fare?.markup ?? 0) +
-          (details.delivery?.fee ?? 0),
+          (details.delivery?.fee ?? 0) -
+          (details.voucher?.discount ?? 0),
         locale,
       ),
     ),

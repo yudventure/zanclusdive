@@ -1,5 +1,5 @@
 "use client";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import ProductVisual from "./ProductVisual.jsx";
 import ProductDetail from "./ProductDetail.jsx";
 import DeliveryChoice, {
@@ -16,11 +16,13 @@ import {
   familyOf,
   familyPrice,
   oneEach,
+  discountOf,
 } from "../shop-model.js";
 import { dictionary, localeHref } from "../i18n.js";
 import { addLine, cartTotals, checkoutMessage } from "./cart.js";
 import FormField from "../components/FormField.jsx";
 import PayPanel from "../components/PayPanel.jsx";
+import VoucherField from "../components/VoucherField.jsx";
 import FareChoice from "../components/FareChoice.jsx";
 import { fareChoices, fareFor, fareMarkup } from "../fare-model.js";
 import CartIcon from "../components/CartIcon.jsx";
@@ -192,6 +194,10 @@ export default function ShopTeaser({
   // Standard, Comfort or Flexi for the rentals.
   const [fare, setFare] = useState("standard");
   const [cart, setCart] = useState([]);
+  const [voucher, setVoucher] = useState(null);
+  useEffect(() => {
+    if (!cart.length) setVoucher(null);
+  }, [cart.length]);
   const [form, setForm] = useState({
     name: "",
     whatsapp: "",
@@ -291,15 +297,27 @@ export default function ShopTeaser({
     : "";
   // With online payment on, a cart priced in full is paid with Midtrans.
   const payable = Boolean(payments?.ready) && !totals.needsQuote;
+  // A voucher applied at checkout, { code, discount }, priced by the
+  // server on the same lines.
+  const discount = voucher?.discount ?? 0;
+  const orderLines = cart.map((line) => ({
+    source: "product",
+    id: line.productId,
+    mode: line.mode,
+    quantity: line.quantity,
+    size: line.size ?? "",
+  }));
+  const voucherOrder = {
+    kind: "shop",
+    lines: orderLines,
+    days: Number(form.days) || 1,
+    startDate: form.startDate,
+    fare: fareChoice.tier,
+  };
   const order = () => ({
     kind: "shop",
-    lines: cart.map((line) => ({
-      source: "product",
-      id: line.productId,
-      mode: line.mode,
-      quantity: line.quantity,
-      size: line.size ?? "",
-    })),
+    lines: orderLines,
+    ...(voucher ? { voucher: voucher.code } : {}),
     days: Number(form.days) || 1,
     startDate: form.startDate,
     fare: fareChoice.tier,
@@ -397,6 +415,7 @@ export default function ShopTeaser({
             ...form,
             fare: { text: fareText, markup },
             delivery: deliveryChoice(shop.delivery, delivery, locale),
+            voucher,
           },
           today(),
           locale,
@@ -570,6 +589,8 @@ export default function ShopTeaser({
                   ...family.map((v) => unitsLeft(v, stock, item.mode) ?? 10),
                 );
                 const ids = family.map((v) => v.id);
+                // The normal price crossed out, when one price shows.
+                const off = varies ? null : discountOf(item.product, item.mode);
                 return (
                   <li
                     className={"shop-item" + (item.locked ? " is-locked" : "")}
@@ -634,6 +655,12 @@ export default function ShopTeaser({
                         )}
                         {price === null ? s.askPrice : rupiah(price, locale)}
                         {item.unit && <small> {item.unit}</small>}
+                        {off && (
+                          <span className="shop-price-off">
+                            <del>{rupiah(off.compare, locale)}</del>
+                            <span>{t.detail.save(off.percent)}</span>
+                          </span>
+                        )}
                       </p>
                       {item.locked ? null : variants ||
                         item.product?.sizes?.length ? (
@@ -829,6 +856,15 @@ export default function ShopTeaser({
           })}
         </ul>
         {!cart.length && <p className="muted">{s.cartEmpty}</p>}
+        {shop.voucherOn && cart.length > 0 && !message && (
+          <VoucherField
+            id={`${id}-checkout`}
+            order={voucherOrder}
+            value={voucher}
+            onChange={setVoucher}
+            locale={locale}
+          />
+        )}
         <dl className="shop-checkout-totals">
           {totals.sale > 0 && (
             <div>
@@ -854,9 +890,15 @@ export default function ShopTeaser({
               <dd>{rupiah(fee, locale)}</dd>
             </div>
           )}
+          {discount > 0 && (
+            <div className="is-discount">
+              <dt>{t.voucher.applied(voucher.code)}</dt>
+              <dd>−{rupiah(discount, locale)}</dd>
+            </div>
+          )}
           <div>
             <dt>{payable ? p.total : s.estimate}</dt>
-            <dd>{rupiah(totals.total + markup + fee, locale)}</dd>
+            <dd>{rupiah(totals.total + markup + fee - discount, locale)}</dd>
           </div>
         </dl>
         {offered && !message && (
@@ -873,7 +915,7 @@ export default function ShopTeaser({
           <div className="shop-checkout-done">
             <PayPanel
               order={order()}
-              total={totals.total + markup + fee}
+              total={totals.total + markup + fee - discount}
               message={message}
               whatsapp={whatsapp}
               payments={payments}
