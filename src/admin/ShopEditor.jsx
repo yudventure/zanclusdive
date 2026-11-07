@@ -27,6 +27,8 @@ import {
   storyBlocks,
 } from "../product-story.js";
 import ProductStory from "../shop/ProductStory.jsx";
+import SpecTable from "./SpecTable.jsx";
+import ProductVariants from "./VariantTable.jsx";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 import {
   cleanCode,
@@ -220,18 +222,65 @@ export default function ShopEditor({
     onCopyTexts?.(product.id, id, ["variant", "variantLabel"]);
     show(toRent ? "rental" : "sale", id);
   }
-  // Another variant of this model, such as another colour: a copy of this
-  // product (texts, price, sizes, specs and videos) in the same family,
-  // without its photos and stock, kept as a draft right after the family.
-  function addVariant() {
+  // Any product of the catalog changed in place: a patch, or a function of
+  // the product as it is now.
+  function editProduct(id, patch) {
+    update("products", (products) =>
+      products.map((p) =>
+        p.id === id
+          ? { ...p, ...(typeof patch === "function" ? patch(p) : patch) }
+          : p,
+      ),
+    );
+  }
+  // A variant's stock typed in the variants table, as in its own editor.
+  function setVariantStock(target, size, value) {
+    const mode = kindOf(target);
+    editProduct(target.id, (p) => ({
+      stockCounts: {
+        ...p.stockCounts,
+        [mode]: { ...p.stockCounts?.[mode], [size]: value },
+      },
+      ...(["request", "available"].includes(p.availability)
+        ? { availability: "stock" }
+        : {}),
+    }));
+  }
+  // A value of the choice typed in the Varian section. The first names
+  // this product; each next one becomes a new variant: a copy of the lead
+  // (texts, price, sizes, specs and videos) without its photos and stock,
+  // kept as a draft right after the family, named after the lead with the
+  // value in place of the lead's own.
+  function addVariantValue(value) {
+    if (family.length < 2 && !product.variant) {
+      edit("variant", value);
+      return;
+    }
+    const lead = family[0];
+    const leadId = lead.id;
     const id = crypto.randomUUID();
-    const lead = familyId(product);
+    const base =
+      lead.variant &&
+      lead.name
+        .toLocaleLowerCase("id")
+        .includes(lead.variant.toLocaleLowerCase("id"))
+        ? lead.name.replace(
+            new RegExp(
+              lead.variant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+              "i",
+            ),
+            value,
+          )
+        : `${lead.name} ${value}`;
+    let name = base.slice(0, 100);
+    for (let n = 2; shop.products.some((p) => p.name === name); n++)
+      name = `${base.slice(0, 95)} ${n}`;
     const copy = {
-      ...product,
+      ...lead,
       id,
-      variantOf: lead,
-      variant: "",
-      name: `${product.name.slice(0, 85)} (varian baru)`,
+      variantOf: leadId,
+      variant: value,
+      name,
       image: "",
       images: [],
       rentalImages: [],
@@ -242,7 +291,7 @@ export default function ShopEditor({
     delete copy.variantLabel;
     update("products", (products) => {
       const last = products.reduce(
-        (at, p, index) => (familyId(p) === lead ? index : at),
+        (at, p, index) => (familyId(p) === leadId ? index : at),
         -1,
       );
       return [
@@ -251,9 +300,7 @@ export default function ShopEditor({
         ...products.slice(last + 1),
       ];
     });
-    onCopyTexts?.(product.id, id, ["name", "variant", "variantLabel"]);
-    setFind("");
-    setSelectedID(id);
+    onCopyTexts?.(leadId, id, ["name", "variant", "variantLabel"]);
   }
   // This product joins another product's family as one of its variants.
   function joinFamily(otherId) {
@@ -484,21 +531,18 @@ export default function ShopEditor({
             <ProductVariants
               product={product}
               family={family}
+              catalog={shop.products}
               others={ordered.filter(
                 (p) => !p.variantOf && familyId(p) !== familyId(product),
               )}
               disabled={busy}
               canAdd={!full && family.length < variantLimit}
-              edit={edit}
-              editLead={(key, value) =>
-                update("products", (products) =>
-                  products.map((p) =>
-                    p.id === family[0].id ? { ...p, [key]: value } : p,
-                  ),
-                )
-              }
+              items={stock}
+              itemsError={stockError}
+              editProduct={editProduct}
+              setStock={setVariantStock}
               onOpen={setSelectedID}
-              onAdd={addVariant}
+              onAddValue={addVariantValue}
               onJoin={joinFamily}
               onLeave={leaveFamily}
             />
@@ -539,8 +583,9 @@ export default function ShopEditor({
                 onImport?.(product.id, texts, shared)
               }
             />
-            <SpecRows
+            <SpecTable
               rows={product.specs ?? []}
+              catalog={shop.products}
               onChange={(rows) => edit("specs", rows)}
             />
             <ProductVideos
@@ -591,143 +636,6 @@ function handOver(products, lead) {
     }
     return p.variantOf === lead.id ? { ...p, variantOf: next } : p;
   });
-}
-
-// One model in several variants, such as colours: each variant is its own
-// product with its own photos, price, stock and sizes, and the website
-// shows the family as one card with the variants to pick.
-function ProductVariants({
-  product,
-  family,
-  others,
-  disabled,
-  canAdd,
-  edit,
-  editLead,
-  onOpen,
-  onAdd,
-  onJoin,
-  onLeave,
-}) {
-  const lead = family[0];
-  if (family.length < 2)
-    return (
-      <section className="admin-shop-variants" aria-label="Varian">
-        <h3>Varian</h3>
-        <p>
-          <strong>Satu model dalam beberapa warna atau tipe?</strong>
-          Buat variannya dari produk ini. Nama, deskripsi, harga, ukuran,
-          spesifikasi, dan video ikut tersalin, lalu foto dan stok tiap varian
-          diisi sendiri. Di website semua varian tampil sebagai satu kartu
-          dengan pilihan varian.
-        </p>
-        <div className="admin-shop-variant-actions">
-          <button
-            type="button"
-            className="admin-button secondary"
-            disabled={disabled || !canAdd}
-            onClick={onAdd}
-          >
-            + Tambah varian
-          </button>
-          {others.length > 0 && (
-            <select
-              aria-label="Jadikan varian dari produk lain"
-              value=""
-              disabled={disabled}
-              onChange={(e) => e.target.value && onJoin(e.target.value)}
-            >
-              <option value="">Jadikan varian dari produk lain…</option>
-              {others.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      </section>
-    );
-  return (
-    <section className="admin-shop-variants" aria-label="Varian">
-      <h3>Varian ({family.length})</h3>
-      <p>
-        Tampil sebagai satu kartu di website. Tiap varian punya foto, harga,
-        stok, dan ukurannya sendiri. Beri nama produk yang berbeda untuk tiap
-        varian, misalnya Masker Poseidon Red Line dan Masker Poseidon Black
-        Line, supaya pesanan tidak tertukar.
-      </p>
-      <div className="admin-form-grid">
-        <Field
-          label="Nama varian produk ini"
-          hint="Tulisan di tombol varian, misalnya Merah atau Lensa minus."
-        >
-          <input
-            required
-            maxLength={40}
-            placeholder="Misalnya Merah"
-            value={product.variant ?? ""}
-            onChange={(e) => edit("variant", e.target.value)}
-          />
-        </Field>
-        <Field
-          label="Jenis pilihan"
-          hint="Judul di atas tombol varian, berlaku untuk semua varian. Misalnya Warna, Tipe, atau Ketebalan."
-        >
-          <input
-            maxLength={30}
-            placeholder="Warna"
-            value={lead.variantLabel ?? ""}
-            onChange={(e) => editLead("variantLabel", e.target.value)}
-          />
-        </Field>
-      </div>
-      <ul className="admin-shop-variant-list">
-        {family.map((p) => (
-          <li key={p.id}>
-            <button
-              type="button"
-              className={p.id === product.id ? "is-current" : ""}
-              aria-current={p.id === product.id ? "true" : undefined}
-              onClick={() => onOpen(p.id)}
-            >
-              <span className="admin-shop-thumbnail">
-                <ProductVisual product={productAs(p, kindOf(p))} />
-              </span>
-              <span>
-                <strong>{p.variant || "Belum diberi nama varian"}</strong>
-                <small>
-                  {p.name}
-                  {p === lead ? " · Produk utama" : ""}
-                </small>
-                <small>
-                  {priceText(p)} · {p.enabled ? "Tampil" : "Draft"}
-                </small>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="admin-shop-variant-actions">
-        <button
-          type="button"
-          className="admin-button secondary"
-          disabled={disabled || !canAdd}
-          onClick={onAdd}
-        >
-          + Tambah varian
-        </button>
-        <button
-          type="button"
-          className="admin-inline"
-          disabled={disabled}
-          onClick={onLeave}
-        >
-          Lepas produk ini dari varian
-        </button>
-      </div>
-    </section>
-  );
 }
 
 // The same model the other way, as its own product: open it, or make it
@@ -1496,58 +1404,6 @@ function ProductVideos({ videos, onChange }) {
 
 // Spec rows shown as a table in the product window, such as Merek and
 // Scubapro, or Bahan and Silikon.
-function SpecRows({ rows, onChange }) {
-  const set = (index, key, value) =>
-    onChange(
-      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
-    );
-  return (
-    <section className="admin-shop-specs" aria-label="Tabel spesifikasi">
-      <h3>Tabel spesifikasi</h3>
-      {rows.map((row, index) => (
-        <div className="admin-spec-row" key={index}>
-          <Field label={`Nama ${index + 1}`}>
-            <input
-              maxLength={40}
-              placeholder="Merek"
-              value={row.label}
-              onChange={(e) => set(index, "label", e.target.value)}
-            />
-          </Field>
-          <Field label={`Isi ${index + 1}`}>
-            <input
-              maxLength={160}
-              placeholder="Scubapro"
-              value={row.value}
-              onChange={(e) => set(index, "value", e.target.value)}
-            />
-          </Field>
-          <button
-            type="button"
-            className="admin-inline danger"
-            aria-label={`Hapus baris spesifikasi ${index + 1}`}
-            onClick={() => onChange(rows.filter((_, i) => i !== index))}
-          >
-            Hapus
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        className="admin-button secondary"
-        disabled={rows.length >= productLimits.specs}
-        onClick={() => onChange([...rows, { label: "", value: "" }])}
-      >
-        + Tambah baris spesifikasi
-      </button>
-      <p className="admin-subtle">
-        Contoh Merek, Bahan, Ukuran lensa, Berat, Garansi. Baris kosong
-        diabaikan.
-      </p>
-    </section>
-  );
-}
-
 // Pick-up at the dive center, delivery to an address in zones with their
 // fees, and what the guest reads about each.
 function DeliverySettings({ delivery, onChange }) {

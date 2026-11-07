@@ -4089,3 +4089,244 @@ strong.admin-overdue {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px 18px;
 }
+/* A text field with choices under it, searched as it is typed. */
+.admin-combo {
+  position: relative;
+  min-width: 0;
+}
+.admin-combo > input {
+  width: 100%;
+}
+.admin-combo-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid #d5e1e8;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 14px 30px #0b2a3a26;
+}
+.admin-combo-list li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #254961;
+  cursor: pointer;
+}
+.admin-combo-list li:hover,
+.admin-combo-list li.is-active {
+  background: #edf5f8;
+}
+.admin-combo-list li.is-new {
+  color: #0d6f73;
+  font-weight: 600;
+}
+/* Values as chips in one box, with a field to add more. */
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px solid #d5e1e8;
+  border-radius: 12px;
+  background: white;
+  cursor: text;
+}
+.admin-chips input {
+  flex: 1;
+  min-width: 140px;
+  height: 34px;
+  padding: 0 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+}
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 5px 6px 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #e6f2ef;
+  color: #164f61;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.admin-chip button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #4c7884;
+  font-size: 16px;
+  cursor: pointer;
+}
+.admin-chip button:hover {
+  background: #cfe6e1;
+}
+.admin-chip.is-link {
+  padding-right: 12px;
+  cursor: pointer;
+}
+.admin-chip.is-current {
+  background: #0d6f73;
+  color: white;
+}
+.admin-error-text {
+  display: block;
+  margin-top: 6px;
+  color: #b8321d;
+  font-size: 13px;
+}
+.admin-spec-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: 10px;
+  padding-right: 64px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4d6477;
+}
+.admin-shop-specs .admin-spec-row {
+  align-items: start;
+}
+.admin-shop-specs .admin-spec-row .admin-inline {
+  margin: 12px 0 0;
+}
+.admin-spec-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.admin-spec-quick {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d5e1e8;
+  border-radius: 999px;
+  background: white;
+  color: #254961;
+  font-size: 14px;
+  cursor: pointer;
+}
+.admin-spec-quick:disabled {
+  opacity: 0.5;
+}
+@media (max-width: 560px) {
+  .admin-spec-head {
+    display: none;
+  }
+}
+/* Every variant on one table: its name, price, stock and whether it
+   shows. */
+.admin-variant-table {
+  display: grid;
+  gap: 8px;
+}
+.admin-variant-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.4fr) 64px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  background: white;
+}
+.admin-variant-row.is-head {
+  padding: 0 10px;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4d6477;
+}
+.admin-variant-row.is-current {
+  box-shadow: 0 0 0 2px #82b7cb;
+}
+.admin-variant-row input[type="number"],
+.admin-variant-name input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+}
+.admin-variant-row input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+}
+.admin-variant-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.admin-variant-name .admin-shop-thumbnail {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+.admin-variant-stock {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-variant-stock label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 70px;
+  font-size: 13px;
+  color: #4d6477;
+}
+.admin-variant-total {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #4d6477;
+}
+@media (max-width: 760px) {
+  .admin-variant-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .admin-variant-row.is-head {
+    display: none;
+  }
+  .admin-variant-name {
+    grid-column: 1 / -1;
+  }
+}
+/* The field inside a chip box has no frame of its own; the box shows the
+   focus instead. */
+.admin-root .admin-chips input {
+  width: auto;
+  min-height: 34px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.admin-root .admin-chips input:focus-visible {
+  outline: 0;
+}
+.admin-chips:focus-within {
+  border-color: #82b7cb;
+  box-shadow: 0 0 0 2px #82b7cb66;
+}

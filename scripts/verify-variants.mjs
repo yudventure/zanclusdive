@@ -67,6 +67,7 @@ try {
     enabled: true,
     availability: "available",
     images: ["/assets/photos/gear.webp"],
+    specs: [{ label: "Warna", value: "Merah, Hitam, Putih" }],
   };
   const variant = (id, name, colour, salePrice, image) => {
     const copy = {
@@ -268,6 +269,36 @@ try {
   // The admin lists the variants under their lead and edits the family.
   await a.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   const listed = a.locator(".admin-shop-list .admin-shop-item");
+  // The spec table offers names and the values other products use.
+  await listed.filter({ hasText: "Open heel fins" }).click();
+  const specs = a.locator(".admin-shop-specs");
+  await specs.getByRole("button", { name: "+ Warna" }).click();
+  await specs.getByLabel("Isi 1", { exact: true }).click();
+  assert.deepEqual(
+    await specs.locator(".admin-combo-list li").allTextContents(),
+    ["Hitam", "Merah", "Putih"],
+  );
+  await specs.locator(".admin-combo-list li", { hasText: "Hitam" }).click();
+  await specs.locator(".admin-combo-list li", { hasText: "Putih" }).click();
+  await specs.getByRole("button", { name: "+ Tambah baris" }).click();
+  await specs.getByLabel("Nama 2", { exact: true }).fill("mer");
+  await specs.locator(".admin-combo-list li", { hasText: "Merek" }).click();
+  await specs.getByLabel("Isi 2", { exact: true }).fill("Scubapro");
+  await specs.getByLabel("Isi 2", { exact: true }).press("Enter");
+  shots && (await specs.screenshot({ path: `${shots}/spesifikasi-pilih.png` }));
+  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
+  await a
+    .getByRole("status")
+    .filter({ hasText: "Perubahan sudah tersimpan" })
+    .waitFor();
+  assert.deepEqual(
+    (await state()).content.shop.products.find((p) => p.id === "demo-fins")
+      .specs,
+    [
+      { label: "Warna", value: "Hitam, Putih" },
+      { label: "Merek", value: "Scubapro" },
+    ],
+  );
   const names = await listed.locator("strong").allTextContents();
   const leadAt = names.indexOf("Masker Line Merah");
   assert.deepEqual(names.slice(leadAt, leadAt + 3), [
@@ -281,46 +312,61 @@ try {
   assert.equal(await section.locator("h3").textContent(), "Varian (3)");
   assert.equal(await section.getByLabel("Jenis pilihan").inputValue(), "Warna");
   assert.equal(
-    await section.getByLabel("Nama varian produk ini").inputValue(),
+    await section.getByLabel("Nama varian Masker Line Merah").inputValue(),
     "Merah",
   );
-  shots &&
-    (await section.screenshot({ path: `${shots}/varian-admin-bagian.png` }));
-  // A new variant copies the product as a draft, without photos.
+  assert.deepEqual(
+    await section.locator(".admin-chips .admin-chip").allTextContents(),
+    ["Merah", "Hitam", "Putih"],
+  );
+  // A value typed in Pilihan warna becomes a new variant, a draft copy
+  // without photos, named after the lead.
   const saved0 = (await state()).content.shop.products.length;
-  await section.getByRole("button", { name: "+ Tambah varian" }).click();
-  await a
-    .locator(".admin-shop-item.selected", {
-      hasText: "Masker Line Merah (varian baru)",
-    })
-    .waitFor();
+  const values = section.getByLabel("Pilihan warna");
+  await values.fill("Biru");
+  await values.press("Enter");
+  await section.locator("h3", { hasText: "Varian (4)" }).waitFor();
   assert.equal(
-    await a.locator(".admin-shop-variants h3").textContent(),
-    "Varian (4)",
+    await a.locator(".admin-shop-item.selected strong").textContent(),
+    "Masker Line Merah",
   );
-  // The form asks for the new variant's name before it saves.
-  await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
-  assert.equal(
-    await a
-      .getByLabel("Nama varian produk ini")
-      .evaluate((input) => input.validity.valueMissing),
-    true,
+  // Price and stock of every variant on one table.
+  await section.getByLabel("Harga Biru").fill("700000");
+  for (const [colour, count] of [
+    ["Merah", "2"],
+    ["Hitam", "1"],
+    ["Putih", "2"],
+    ["Biru", "3"],
+  ])
+    await section.getByLabel(`Stok ${colour}`, { exact: true }).fill(count);
+  assert.match(
+    await section.locator(".admin-variant-total").textContent(),
+    /^Total stok 8 /,
   );
+  shots &&
+    (await section.screenshot({ path: `${shots}/varian-tabel-stok.png` }));
   assert.equal((await state()).content.shop.products.length, saved0);
-  await a.getByLabel("Nama produk").fill("Masker Line Biru");
-  await a.getByLabel("Nama varian produk ini").fill("Biru");
   await a.getByRole("button", { name: "Simpan katalog Dive Shop" }).click();
   await a
     .getByRole("status")
     .filter({ hasText: "Perubahan sudah tersimpan" })
     .waitFor();
+  const stockOf = async (id) =>
+    (await (await api("/api/admin/shop-stock")).json()).items.find(
+      (item) => item.productId === id && item.mode === "sale",
+    )?.stock;
+  assert.equal(await stockOf("demo-mask"), 2);
+  assert.equal(await stockOf("demo-mask-hitam"), 1);
+  assert.equal(await stockOf("demo-mask-putih"), 2);
   let saved = (await state()).content.shop.products;
   const blue = saved.find((p) => p.name === "Masker Line Biru");
   assert.equal(blue.variantOf, "demo-mask");
   assert.equal(blue.variant, "Biru");
   assert.equal(blue.enabled, false);
   assert.deepEqual(blue.images, []);
-  assert.equal(blue.salePrice, 650000);
+  assert.equal(blue.salePrice, 700000);
+  assert.equal(await stockOf(blue.id), 3);
+  assert.equal(blue.availability, "stock");
   // Right after the family in the catalog.
   assert.equal(
     saved.findIndex((p) => p.id === blue.id),

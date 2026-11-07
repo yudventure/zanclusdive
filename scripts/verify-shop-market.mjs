@@ -180,13 +180,15 @@ try {
     .fill(
       "Mask premium untuk penyelam dan snorkeler.\nNyaman dipakai lama.\n\nKelebihan\n- Lensa tempered jernih\n- Skirt silikon lembut",
     );
-  const addRow = a.getByRole("button", { name: "+ Tambah baris spesifikasi" });
+  const addRow = a.getByRole("button", { name: "+ Tambah baris" });
   await addRow.click();
   await addRow.click();
   await a.getByLabel("Nama 1", { exact: true }).fill("Merek");
   await a.getByLabel("Isi 1", { exact: true }).fill("Scubapro Crystalvu");
+  await a.getByLabel("Isi 1", { exact: true }).press("Enter");
   await a.getByLabel("Nama 2", { exact: true }).fill("Bahan");
   await a.getByLabel("Isi 2", { exact: true }).fill("Silikon, tempered glass");
+  await a.getByLabel("Isi 2", { exact: true }).press("Enter");
   shots && (await photos.screenshot({ path: `${shots}/77-foto-produk.png` }));
   // Delivery to two zones, besides pick-up.
   await a.getByLabel("Bisa diantar sampai rumah atau penginapan").check();
@@ -418,9 +420,13 @@ Quick, precise strap adjustments.
       "Terisi dari berkas untuk Indonesia, 2 baris spesifikasi. Judul di berkas SCUBAPRO Crystal Vu Plus Dive Mask.",
     )
     .waitFor();
-  assert.equal(
-    await a.getByLabel("Isi 2", { exact: true }).inputValue(),
-    "Approximately 250–270 g",
+  assert.deepEqual(
+    await a
+      .locator(".admin-shop-specs .admin-spec-row")
+      .nth(1)
+      .locator(".admin-chip")
+      .allTextContents(),
+    ["Approximately 250–270 g×"],
   );
   assert.match(
     await a.getByLabel("Deskripsi lengkap").inputValue(),
