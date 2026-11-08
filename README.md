@@ -39,17 +39,16 @@ Hero memakai font Plus Jakarta Sans (file lokal di `public/assets`, tanpa CDN) d
 
 Judul default memuat “Raja Ampat” untuk SEO (“Di bawah laut Raja Ampat, cerita dimulai.” / “Beneath the waters of Raja Ampat, the story begins.”), begitu juga judul dan deskripsi halaman. Dokumen CMS yang masih memakai judul default lama (“Di bawah laut,” / “Beneath the sea,”) diperbarui otomatis; judul yang sudah diubah pemilik tidak disentuh.
 
-
 ## Dua bahasa
 
 Website publik tersedia dalam bahasa Inggris sebagai default dan Bahasa Indonesia:
 
-| Halaman | English (default) | Bahasa Indonesia |
-| --- | --- | --- |
-| Beranda | `/` | `/id` |
+| Halaman   | English (default)                 | Bahasa Indonesia                           |
+| --------- | --------------------------------- | ------------------------------------------ |
+| Beranda   | `/`                               | `/id`                                      |
 | Aktivitas | `/diving`, `/snorkeling`, `/trip` | `/id/diving`, `/id/snorkeling`, `/id/trip` |
-| Dive Shop | `/dive-shop` | `/id/dive-shop` |
-| Kebijakan | `/terms`, `/privacy`, `/refund` | `/id/terms`, `/id/privacy`, `/id/refund` |
+| Dive Shop | `/dive-shop`                      | `/id/dive-shop`                            |
+| Kebijakan | `/terms`, `/privacy`, `/refund`   | `/id/terms`, `/id/privacy`, `/id/refund`   |
 
 Tombol **EN / ID** di header berpindah ke halaman yang sama dalam bahasa lain. `proxy.js` mengarahkan URL `/id` ke halaman yang sama dengan bahasa Indonesia; atribut `lang`, metadata, dan tautan `hreflang` mengikuti bahasa. Tautan internal, kalender, kuis, formulir booking, pesan WhatsApp, pesan pesanan Dive Shop, ringkasan unduhan, serta pesan error booking ikut bahasa halaman. Harga tetap dalam rupiah (IDR). CMS admin tetap berbahasa Indonesia.
 
@@ -73,16 +72,16 @@ Pesan untuk pengunjung (ID/EN) dan perkiraan selesai (WIT) tampil di halaman per
 
 Cara kerjanya: setiap halaman memeriksa kunci dan sesi admin. `proxy.js` juga menjawab halaman terkunci dengan 503 dari status kunci yang diingat proses server setiap kali konten dibaca atau disimpan. Setelah server baru menyala, permintaan pertama tetap mendapat halaman perawatan dari halaman itu sendiri.
 
-Halaman status memakai ilustrasi jendela kapal selam dengan ikan Moorish idol (*Zanclus cornutus*), dalam Bahasa Indonesia dan English:
+Halaman status memakai ilustrasi jendela kapal selam dengan ikan Moorish idol (_Zanclus cornutus_), dalam Bahasa Indonesia dan English:
 
-| Halaman | Kapan tampil | Alamat |
-| --- | --- | --- |
-| Perawatan | Mode developer mengunci website atau halaman | `/maintenance` (503) |
-| 404 | Alamat tidak ditemukan | otomatis, juga `/status/404.html` |
-| 403 | Akses ditolak | `/status/403.html` |
-| 500 | Halaman gagal dimuat | otomatis (`app/error.jsx`), juga `/status/500.html` |
+| Halaman       | Kapan tampil                                 | Alamat                                                     |
+| ------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| Perawatan     | Mode developer mengunci website atau halaman | `/maintenance` (503)                                       |
+| 404           | Alamat tidak ditemukan                       | otomatis, juga `/status/404.html`                          |
+| 403           | Akses ditolak                                | `/status/403.html`                                         |
+| 500           | Halaman gagal dimuat                         | otomatis (`app/error.jsx`), juga `/status/500.html`        |
 | 502, 503, 504 | Server Hostinger tidak menjawab dengan benar | `/status/502.html`, `/status/503.html`, `/status/504.html` |
-| Offline | Internet pengunjung terputus | `/status/offline.html` |
+| Offline       | Internet pengunjung terputus                 | `/status/offline.html`                                     |
 
 Tambahkan `?lang=id` untuk versi Indonesia. Service worker (`public/sw.js`) menyimpan halaman offline, 502, 503, dan 504 di browser pengunjung yang pernah membuka website. Saat internet pengunjung putus, halaman offline tampil dan dimuat ulang otomatis begitu koneksi kembali. Saat hosting menjawab 502, 503, atau 504, halaman Zanclus yang tampil. Service worker hanya menangani pemuatan halaman dan tidak menyimpan isi website. Halaman yang sedang terbuka juga menampilkan pemberitahuan kecil saat koneksi putus dan tersambung lagi.
 
@@ -115,7 +114,7 @@ Di beranda, banner **Servis alat selam** di bawah daftar Beli/Rental membuka `/s
 
 Seksi **Cara menuju ke sini** (`#getting-here`) berada di atas toko Waisai: ilustrasi rute Sorong → kapal cepat → Waisai, tiga langkah, dan tips perjalanan. Teksnya ada di `src/i18n.js` (`home.travel*`), belum diatur dari CMS; ilustrasinya di `src/components/TravelRoute.jsx`.
 
-Kelola katalog di `/admin/shop`: tambah/hapus maksimal 80 produk (barang jual dan barang sewa), atur harga, ketersediaan, tampilan publik, serta foto dari media library. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat tujuh barang jual contoh, versi sewanya masing-masing, dan tabung untuk disewa; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
+Kelola katalog di `/admin/shop`: tambah/hapus maksimal 80 produk (barang jual dan barang sewa), atur harga, ketersediaan, tampilan publik, serta foto dari media library. **Urutan tampil** mengikuti daftar di panel. Seret produk dengan mouse, atau tekan panah naik dan turun di kanan tiap produk (juga di HP), lalu tekan **Simpan katalog Dive Shop**. Varian ikut pindah bersama produk utamanya, dan urutan barang jual tidak mengubah urutan barang sewa (`placeFamily` di `src/admin/ShopEditor.jsx`). Halaman Dive Shop dan panel Dive Shop di beranda memakai urutan ini untuk **Urutan toko**, pilihan urutan bawaannya. Saat kolom cari diisi, panahnya disembunyikan karena daftarnya tidak lengkap. Harga kosong berarti perlu penawaran; alat tidak tersedia tidak dapat ditambahkan. Simpan katalog agar tampil di website tanpa rebuild. Ilustrasi SVG ringan dipakai saat foto belum diisi. Data demo mendapat tujuh barang jual contoh, versi sewanya masing-masing, dan tabung untuk disewa; dokumen demo lama ditambahkan katalog sekali tanpa menghapus perubahan sebelumnya. Dokumen MySQL lama mendapat katalog kosong tanpa harga demo.
 
 ### Dive Shop dan Gudang
 
@@ -214,6 +213,7 @@ Uji dengan `node scripts/verify-shop-market.mjs` pada server demo yang dijalanka
 Banner promosi foto yang lebar tampil di bagian **Temukan petualanganmu**, antara judul “Ada cerita untuk setiap level.” dan kartu Diving, Snorkeling, dan Trip laut. Banner selebar seksi lain, sejajar dengan judul dan kartu di bawahnya. Fotonya mengisi seluruh banner dan bergerak pelan. Di kirinya tampil label, tanggal, judul besar, lokasi, fakta trip, harga per orang, dan satu tombol. Banner tampil selama dinyalakan dan dalam rentang tanggalnya.
 
 **Cara mengatur.** Buka `/admin/events` → tab **Banner event**. Isi setiap banner:
+
 - **Foto banner**: mengisi seluruh banner, terbaik 2400 × 1200 px dengan objek utama di sisi kanan karena tulisannya di kiri. Di-upload dari PC atau HP, langsung terpasang dan tersimpan. Tanpa foto, banner memakai latar laut biru.
 - **Teks**: judul, keterangan singkat, catatan (mis. `Harga spesial`), dan label kecil (bawaan `EVENT`), dalam Indonesia dan English. Keterangan singkat yang dipisah tanda `·` dibaca sebagai lokasi lalu fakta, misalnya `Raja Ampat The Last Paradise · 8 hari 7 malam · 15 log dive` menjadi lokasi dengan ikon pin dan dua chip fakta, ditambah chip minimal peserta.
 - **Harga per orang (Rp)** dan **Minimal peserta**. Harga selalu tampil dalam rupiah (`Rp 27.500.000 / orang`, di English `IDR 27,500,000 / person`) dengan catatannya di atas, dan minimal peserta menjadi chip fakta.
@@ -222,16 +222,17 @@ Banner promosi foto yang lebar tampil di bagian **Temukan petualanganmu**, antar
 
 Simpan dengan **Simpan kalender**.
 
-**Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Tanpa tanggal selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil bersamaan, yang bertanggal lebih dulu. Label di admin menunjukkan statusnya: *Tampil sekarang*, *Terjadwal / selesai*, atau *Tidak tampil*.
+**Kapan banner tampil.** Banner hanya muncul bila **Tampilkan di beranda** dicentang. Banner tampil mulai **Mulai tampil** (atau langsung) sampai **Tanggal selesai** event, menurut tanggal WIT, lalu hilang sendiri. Tanpa tanggal selesai, banner tampil sampai dimatikan. Maksimal 2 banner tampil bersamaan, yang bertanggal lebih dulu. Label di admin menunjukkan statusnya: _Tampil sekarang_, _Terjadwal / selesai_, atau _Tidak tampil_.
 
 **Yang dilihat tamu.**
-- Satu tombol **Daftar sekarang** yang membuka formulir pendaftaran event (atau **Info lengkap** bila link diisi). Seluruh banner, fotonya juga, bisa diklik dan melakukan hal yang sama. Event tanpa tanggal menampilkan *Pilih tanggalmu sendiri*.
+
+- Satu tombol **Daftar sekarang** yang membuka formulir pendaftaran event (atau **Info lengkap** bila link diisi). Seluruh banner, fotonya juga, bisa diklik dan melakukan hal yang sama. Event tanpa tanggal menampilkan _Pilih tanggalmu sendiri_.
 - Formulir berisi nama, WhatsApp, email (opsional), jumlah peserta (paling sedikit minimal peserta), tanggal mulai bila event belum bertanggal, dan catatan, dengan perkiraan biaya harga per orang × peserta.
 - Pendaftaran tersimpan di **Kalender reservasi** sebagai **Trip laut** dari Website yang menunggu konfirmasi, dengan nilai harga × peserta dan catatan nama event (`/api/events`, `src/event-signup.js`). Harga, minimal peserta, dan tanggal diambil dari banner di server. Setelah terkirim, tamu mendapat kode pendaftaran dan tombol untuk mengabari tim lewat WhatsApp.
 
 **Ukuran.** Tinggi banner sekitar 380 px di desktop. Di HP fotonya di atas dan tulisan di bawahnya, dengan harga di atas tombol yang selebar banner.
 
-**Banner bawaan.** *Dive Trip with Zanclus* (8 hari 7 malam, 15 log dive) menyala sejak awal dengan harga spesial Rp 27.500.000 per orang, minimal 4 orang, dan foto penyelam dan penyu milik pemilik sebagai foto banner. Banner yang masih memakai flyer bawaan beralih ke foto itu sekali. Tanpa tanggal, tamu memilih tanggal mulainya. Konten lama dibawa sekali oleh `withCalendar`. Dive Trip yang masih memakai harga dolar mendapat harga rupiah dan minimal pesertanya, dan bila belum pernah diubah langsung dinyalakan. Dua banner foto yang sempat dipasang sehari diambil lagi bila belum diubah.
+**Banner bawaan.** _Dive Trip with Zanclus_ (8 hari 7 malam, 15 log dive) menyala sejak awal dengan harga spesial Rp 27.500.000 per orang, minimal 4 orang, dan foto penyelam dan penyu milik pemilik sebagai foto banner. Banner yang masih memakai flyer bawaan beralih ke foto itu sekali. Tanpa tanggal, tamu memilih tanggal mulainya. Konten lama dibawa sekali oleh `withCalendar`. Dive Trip yang masih memakai harga dolar mendapat harga rupiah dan minimal pesertanya, dan bila belum pernah diubah langsung dinyalakan. Dua banner foto yang sempat dipasang sehari diambil lagi bila belum diubah.
 
 ## Halaman aktivitas
 
@@ -241,7 +242,7 @@ Halaman `/diving`, `/snorkeling`, dan `/trip` menyediakan gambaran kegiatan, dur
 
 Di samping isi halaman (di ponsel: di bawahnya) ada **kalender tanggal kegiatan**. Panel formulir “Ayo susun rencana” dan kalender kegiatan di bawah halaman diving sudah dihapus.
 
-- **Slot per hari.** Setiap tanggal menampilkan sisa slot. Diving menerima **30 orang per hari**. Slot ini dipakai bersama oleh semua program diving dan kursus selam. Tanggal dengan ≤5 slot ditandai *Hampir penuh*. Tanggal penuh dan tanggal yang ditutup di kalender admin tidak bisa dipilih.
+- **Slot per hari.** Setiap tanggal menampilkan sisa slot. Diving menerima **30 orang per hari**. Slot ini dipakai bersama oleh semua program diving dan kursus selam. Tanggal dengan ≤5 slot ditandai _Hampir penuh_. Tanggal penuh dan tanggal yang ditutup di kalender admin tidak bisa dipilih.
 - **Yang mengurangi slot:** reservasi **Dikonfirmasi** dan pembayaran online yang sedang **Menunggu** pembayaran. Pengajuan tanpa pembayaran, pembayaran gagal/kedaluwarsa, dan reservasi batal tidak mengurangi slot.
 - **Kuota bisa diatur.** Ubah di `/admin/activities` → **Kuota peserta per hari** (0 = tanpa batas). Snorkeling dan Trip laut bawaannya tanpa batas.
 - **Server ikut memeriksa.** Pembayaran untuk tanggal penuh, atau yang pesertanya melebihi sisa slot, ditolak dengan pesan jelas. Pemeriksaan dilakukan di dalam kunci penyimpanan, sehingga dua tamu bersamaan tidak bisa melewati kuota.
@@ -328,7 +329,7 @@ API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan 
 `/admin/calendar` menampilkan bulan di kiri dan **Agenda** tanggal yang dipilih di kanan (`src/admin/MonthCalendar.jsx`, `src/calendar-day.js`). Di HP, agenda ada di bawah kalender dan digulir ke layar saat tanggal diketuk.
 
 - **Kalender.** Setiap tanggal menunjukkan jumlah orang yang berkegiatan dan nama tamunya, berwarna menurut status (Dikonfirmasi, Belum dikonfirmasi, Lunas, Agen, Tutup). Ketuk di mana saja pada tanggal untuk membukanya di Agenda. Mengetuk nama di kalender juga menandai orang itu di Agenda.
-- **Agenda.** Siapa saja yang berkegiatan pada hari itu, dikelompokkan per kegiatan (Diving, Snorkeling, Trip laut, Kursus, Dive Shop, Servis). Ada jumlah orang, hari ke berapa dari trip yang lebih dari sehari, sumber, status, dan tombol WhatsApp kalau nomornya ada. Ada juga kelompok **Sewa alat** (siapa menyewa apa, dari pesanan online, add-on aktivitas, atau alat yang dicatat tim), **Agen & OTA**, dan **Ditutup**. Mengetuk nama membuka reservasinya di formulir lengkap. Reservasi yang dibatalkan tidak tampil. Tampilan **Sewa alat** tetap menampilkan sisa alat sewa per hari di panel yang sama.
+- **Agenda.** Siapa saja yang berkegiatan pada hari itu, dikelompokkan per kegiatan (Diving, Snorkeling, Trip laut, Kursus, Sewa alat, Servis). Ada jumlah orang, hari ke berapa dari trip yang lebih dari sehari, sumber, status, dan tombol WhatsApp kalau nomornya ada. Ada juga kelompok **Alat yang disewa** (siapa menyewa apa, dari pesanan online, add-on aktivitas, atau alat yang dicatat tim), **Agen & OTA**, dan **Ditutup**. Mengetuk nama membuka reservasinya di formulir lengkap. Reservasi yang dibatalkan tidak tampil. Tampilan **Sewa alat** tetap menampilkan sisa alat sewa per hari di panel yang sama.
 - **Tamu, sudah dan akan datang.** Kartu di bawah Agenda (`src/admin/GuestFlow.jsx`, `guestFlow` di `src/calendar-day.js`) dengan tiga tab. **Sudah datang** berisi tamu yang tiba dalam 7 hari terakhir, mulai dari kemarin. **Hari ini** berisi tamu yang berkegiatan hari ini, yang baru tiba di urutan pertama, lalu yang sudah berjalan dengan hari ke berapa dari tripnya. **Akan datang** berisi tamu yang tiba dalam 7 hari ke depan, mulai dari besok. Isinya dikelompokkan per hari kedatangan, dengan Kemarin, Hari ini, atau Besok, dan jumlah orang. Tiap tamu tampil dengan kegiatan, jumlah orang, tanggal untuk trip lebih dari sehari, sumber, lunas, status, dan tombol WhatsApp. Jumlah reservasi ada di tiap tab. Trip beberapa hari dihitung di hari pertamanya. Reservasi yang dibatalkan dan tanggal tutup tidak tampil, acara agen dan OTA ikut tampil, dan pilihan kegiatan di atas kalender ikut menyaring daftar ini. Mengetuk nama membuka reservasinya di formulir lengkap. Agenda dan kartu ini berbagi kolom kanan yang tetap terlihat saat halaman digulir. Di HP, keduanya di bawah kalender.
 - **Catat booking tanggal ini.** Formulir singkat di Agenda untuk booking dari WhatsApp atau tamu yang datang langsung. Isinya nama tamu atau grup, kegiatan, jumlah orang, sampai tanggal, WhatsApp, status (bawaan Dikonfirmasi), sumber (bawaan WhatsApp), dan catatan. Booking langsung tersimpan dan tampil di Agenda. **Formulir lengkap** membawa isian itu ke formulir lengkap, untuk email tamu, nilai, alat sewa, dan tagihan. **Tutup tanggal ini** membuka formulir lengkap dengan status Ditutup.
 - **Formulir lengkap hanya saat diminta.** Halaman kalender tidak lagi menampilkan formulir lengkap di bawah kalender, karena booking biasa dicatat dari Agenda. Formulir muncul tepat di bawah kalender saat **Formulir lengkap**, **Tutup tanggal ini**, atau **Catat sewa tanggal ini** ditekan, atau saat nama tamu diketuk untuk mengubah reservasinya, lalu hilang lagi setelah disimpan atau ditutup dengan **Tutup**. Isinya dikelompokkan menjadi Kegiatan dan tanggal, Tamu, Nilai dan catatan, Alat sewa, lalu Pembayaran & email tamu.
@@ -340,6 +341,17 @@ API publik `/api/bookings` hanya mengembalikan rentang tanggal yang ditutup dan 
 - **Menu di pojok kanan atas.** Notifikasi dan menu akun tertutup saat mengetuk di mana saja di luarnya, atau dengan tombol Esc (`src/admin/useOutsideClose.js`).
 
 Uji dengan `node scripts/verify-calendar-day.mjs` dan `node scripts/verify-guest-flow.mjs` pada server demo.
+
+### Reservasi dan pembelian barang terpisah
+
+Diving, snorkeling, trip laut, kursus, servis, dan **sewa alat** punya tanggal, jadi masuk Kalender reservasi. Pesanan Dive Shop yang hanya membeli barang tidak punya jadwal, jadi tidak masuk reservasi (`isPurchase` di `src/booking-kind.js`). Pesanan yang membeli sekaligus menyewa tetap reservasi karena sewanya bertanggal.
+
+- **Sewa alat, bukan Dive Shop.** Di kalender, Agenda, Daftar reservasi, formulir, dan Tempel jadwal, reservasi Dive Shop sekarang bernama **Sewa alat** (`orderPrograms.shop` di `src/cms-model.js`), jadi tamu sewa alat terlihat beda dari tamu diving.
+- **Pembelian barang.** Menu baru di bawah Kalender reservasi (`/admin/orders`, `src/admin/PurchaseOrders.jsx`, peran yang membuka reservasi). Isinya tiap pembelian, terbaru di atas, dengan tamu, tanggal pesan, kode, barang dan jumlahnya, diambil sendiri atau diantar, total, dan status pembayaran **Belum dibayar**, **Sudah dibayar**, **Tidak dibayar** (batas lewat), atau **Dibatalkan** (`purchaseState`). Penyaring Belum dibayar, Sudah dibayar, dan Semua menyebut jumlahnya, ditambah kolom cari nama, telepon, barang, atau kode. Transfer bank ditandai lewat **Sudah dibayar** setelah uangnya masuk, lalu pembelian tercatat lunas, invoice terkirim bila ada email, dan barang keluar dari gudang. Pembayaran Midtrans dan PayPal tercatat sendiri. Pembelian yang belum dibayar bisa **Batalkan**, dan tiap baris punya **WhatsApp** dan **Hapus**.
+- **Hitungan.** Catatan Status hari ini dan kartu Menunggu konfirmasi hanya menghitung reservasi, ditambah "N pembelian barang belum dibayar" bila ada. Ringkasan cepat punya kartu **Pembelian belum dibayar** dan **Pembelian lunas** bulan ini. Halaman Tamu menghitung **Reservasi** dan **Pembelian** di kolom terpisah.
+- **Lonceng dan email tim.** Pembelian yang menunggu tetap muncul di lonceng, bertanda Pembelian barang. Pemberitahuannya menyebut barang dan pengirimannya, dan tombolnya **Lihat di Pembelian barang** (`/admin/orders?lihat=<id>`, barisnya disorot). Email tim berjudul **Pembelian baru** dan tombol **Buka di panel** membuka `/admin/orders?booking=<id>`.
+
+Uji dengan `node scripts/verify-purchases.mjs` pada server demo.
 
 ### Tempel jadwal dari WhatsApp
 
@@ -367,6 +379,7 @@ Saat pembayaran online aktif, **semua pemesanan dibayar lewat Midtrans**:
   - **Perlengkapan & penjemputan**: ukuran wetsuit dan kaki, penginapan, bahasa pengantar, dan catatan.
 
   Setelah ringkasan, tamu yang yakin memilih **Yakin? Bayar penuh Rp …**. Yang belum yakin memilih **Belum yakin? Tanya dulu lewat WhatsApp**. Jawaban pendaftaran ikut tersimpan di catatan reservasi.
+
 - **Servis alat** (`/service`): jumlah harga servis yang dipilih.
 
 Setiap formulir menampilkan ringkasan dan tombol **Bayar Rp …** yang membuka halaman pembayaran Midtrans (QRIS, e-wallet, virtual account, kartu, dll. sesuai akun Midtrans). Tamu yang masih ragu memilih **Masih ragu? Kirim lewat WhatsApp** dengan ringkasan yang sama. Selama pembayaran online belum aktif, semua formulir tetap berakhir di WhatsApp seperti sebelumnya. Harga selalu dihitung ulang di server dari CMS, bukan dari browser. Pesanan Dive Shop, kursus, dan servis tercatat sebagai reservasi **Dive Shop**, **Kursus selam**, dan **Servis alat** pada tanggalnya (sewa: tanggal mulai sampai selesai; beli saja: tanggal pemesanan); pesanan Dive Shop dan servis tidak dikirim ke kalender travel agent.
@@ -375,12 +388,12 @@ Saat tombol bayar ditekan, reservasi tersimpan dengan status **Belum dikonfirmas
 
 Aktifkan dari `/admin/payments` setelah environment berikut diisi di hPanel (lalu deploy ulang):
 
-| Variabel | Isi |
-| --- | --- |
-| `MIDTRANS_SERVER_KEY` | Server key dari dashboard Midtrans (Settings → Access Keys), dan hanya key itu. Mulai dengan key sandbox `SB-Mid-server-…`. Di akun dengan Access Keys berizin, buat satu server key dengan Snap Checkout **Write** dan Core API **Read**, sisanya None. Key seperti ini bisa berisi titik dan tilde (`Mid-server-AbC.~dEf`), jadi salin utuh. |
-| `MIDTRANS_SIGNATURE_KEY` | Opsional. **Signature Secret Key** dari halaman Access Keys yang sama, bila akun Midtrans menampilkannya. Notifikasi pembayaran dicek dengan key ini atau dengan server key. Tanpa key ini, notifikasi yang tanda tangannya tidak cocok tetap diproses dengan menanyakan statusnya langsung ke Midtrans. |
-| `MIDTRANS_PRODUCTION` | Variabel tersendiri berisi `true`, hanya saat memakai server key production (`Mid-server-…`). Kosongkan untuk sandbox. Jangan ditulis di belakang server key. |
-| `NEXT_PUBLIC_SITE_URL` | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar. |
+| Variabel                 | Isi                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MIDTRANS_SERVER_KEY`    | Server key dari dashboard Midtrans (Settings → Access Keys), dan hanya key itu. Mulai dengan key sandbox `SB-Mid-server-…`. Di akun dengan Access Keys berizin, buat satu server key dengan Snap Checkout **Write** dan Core API **Read**, sisanya None. Key seperti ini bisa berisi titik dan tilde (`Mid-server-AbC.~dEf`), jadi salin utuh. |
+| `MIDTRANS_SIGNATURE_KEY` | Opsional. **Signature Secret Key** dari halaman Access Keys yang sama, bila akun Midtrans menampilkannya. Notifikasi pembayaran dicek dengan key ini atau dengan server key. Tanpa key ini, notifikasi yang tanda tangannya tidak cocok tetap diproses dengan menanyakan statusnya langsung ke Midtrans.                                       |
+| `MIDTRANS_PRODUCTION`    | Variabel tersendiri berisi `true`, hanya saat memakai server key production (`Mid-server-…`). Kosongkan untuk sandbox. Jangan ditulis di belakang server key.                                                                                                                                                                                  |
+| `NEXT_PUBLIC_SITE_URL`   | Disarankan, mis. `https://zanclusdivecenter.com`, agar Midtrans kembali ke domain yang benar.                                                                                                                                                                                                                                                  |
 
 Di dashboard Midtrans isi **Payment Notification URL** dengan `https://domain-kamu/api/payments/midtrans`. Halaman kembali `/payment/finish` dikirim otomatis pada setiap transaksi; mengisinya juga sebagai Finish Redirect URL tidak masalah. Pembayaran sungguhan (`MIDTRANS_PRODUCTION=true`) ditawarkan dengan `CMS_MODE=mysql`, atau dengan penyimpanan demo di folder akun hosting (`~/zanclus-cms-data`, tetap ada saat deploy ulang). Bila penyimpanan demo jatuh ke folder sementara (`/tmp`), tombol bayar disembunyikan dan `/admin/payments` menjelaskan alasannya. Halaman itu juga menyebut folder tempat pesanan dan pembayaran disimpan, yang sebaiknya dicadangkan berkala. Tidak ada tabel baru; data pembayaran tersimpan di catatan reservasi.
 
@@ -407,11 +420,11 @@ Uji tanpa menghubungi Midtrans, PayPal, atau kotak surat: jalankan server demo s
 
 Paket Diving, Snorkeling, Trip laut, dan sewa alat Dive Shop yang dipesan lewat website punya tiga tarif. Tamu memilih saat checkout, dan kenaikan dihitung dari harga paket atau sewa (tidak dari add-on dan pembelian alat).
 
-| Tarif | Harga | Yang boleh |
-| --- | --- | --- |
-| Standard | harga dasar | Tanggal hanya diganti tim bila cuaca atau kondisi laut tidak memungkinkan (lewat kolom tanggal di Reservasi). Tanpa refund. |
-| Comfort | +10% | Tamu mengganti tanggal sendiri paling lambat 2 hari sebelum tanggal kegiatan. Tanpa refund. |
-| Flexi | +20% | Ganti tanggal seperti Comfort, atau batalkan dan dapat refund paling lambat 7 hari sebelumnya. Refund sebesar harga dasar, kenaikan Flexi ditahan (aturan yang sama dengan DAMPIER). |
+| Tarif    | Harga       | Yang boleh                                                                                                                                                                           |
+| -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Standard | harga dasar | Tanggal hanya diganti tim bila cuaca atau kondisi laut tidak memungkinkan (lewat kolom tanggal di Reservasi). Tanpa refund.                                                          |
+| Comfort  | +10%        | Tamu mengganti tanggal sendiri paling lambat 2 hari sebelum tanggal kegiatan. Tanpa refund.                                                                                          |
+| Flexi    | +20%        | Ganti tanggal seperti Comfort, atau batalkan dan dapat refund paling lambat 7 hari sebelumnya. Refund sebesar harga dasar, kenaikan Flexi ditahan (aturan yang sama dengan DAMPIER). |
 
 - **Pengaturan** di **Situs web → Daftar harga → Tarif Standard, Comfort, Flexi**: tawarkan atau tidak, kenaikan Comfort dan Flexi (1–100%), batas refund (1–60 hari), dan batas ganti tanggal (0–30 hari). Di bawahnya tampil teks yang dibaca tamu. Dimatikan, semua pesanan memakai Standard.
 - **Server** menghitung tarif dari CMS (`src/fare-model.js`, `priceOrder`). Kenaikan menjadi baris tersendiri di Midtrans (`fare-comfort`, `fare-flexi`). Tarif dan aturannya dibekukan di pesanan (`payment.fare`), jadi perubahan pengaturan tidak mengubah pesanan lama.
@@ -423,11 +436,11 @@ Paket Diving, Snorkeling, Trip laut, dan sewa alat Dive Shop yang dipesan lewat 
 
 Tiga halaman yang tautannya ada di kaki setiap halaman, di sebelah hak cipta.
 
-| Halaman | English | Bahasa Indonesia |
-| --- | --- | --- |
-| Syarat dan ketentuan | `/terms` | `/id/terms` |
-| Kebijakan privasi | `/privacy` | `/id/privacy` |
-| Kebijakan reschedule & refund | `/refund` | `/id/refund` |
+| Halaman                       | English    | Bahasa Indonesia |
+| ----------------------------- | ---------- | ---------------- |
+| Syarat dan ketentuan          | `/terms`   | `/id/terms`      |
+| Kebijakan privasi             | `/privacy` | `/id/privacy`    |
+| Kebijakan reschedule & refund | `/refund`  | `/id/refund`     |
 
 - **Isi** di `content.legal` (`src/legal-model.js`). Setiap halaman punya judul, pengantar, dan sampai 16 bagian. Isi bagian dipisah per paragraf dengan baris kosong, dan baris yang diawali `- ` menjadi daftar berpoin. Tanggal **Terakhir diperbarui** dipakai bersama oleh ketiganya. Teks awalnya draf yang mengikuti cara kerja website (pembayaran Midtrans, transfer, PayPal, tarif, Kelola pesanan, UU PDP) dan perlu diperiksa pemilik, bukan nasihat hukum.
 - **Admin** di **Situs web → Halaman kebijakan**. Pilih halamannya, ubah judul, pengantar, dan bagian (tambah, naik, turun, hapus), lalu **Simpan halaman kebijakan**. **Kembalikan teks awal** mengisi ulang halaman yang dipilih dengan draf bawaan sebelum disimpan.
@@ -441,8 +454,8 @@ Tiga halaman yang tautannya ada di kaki setiap halaman, di sebelah hak cipta.
 Di `/admin/agents` (**Agen & kalender**) tambahkan setiap travel agent. Kalender tersambung dua arah:
 
 - **Zanclus → agen.** Setiap agen mendapat halaman partner pribadi (`/partner/<token>`) dengan tombol **Tambahkan ke Google Calendar**, link Apple Calendar/Outlook (`webcal://`), dan link `.ics`. Kalender berisi reservasi Zanclus sebagai jumlah tamu (tanpa nama atau nomor), tanggal tutup, dan kegiatan dari kalender kegiatan; reservasi pembayaran online baru muncul setelah lunas. Aplikasi kalender agen memperbaruinya sendiri (Google biasanya beberapa jam sekali).
-- **Agen → Zanclus.** Isi link kalender agen (Google Calendar: Setelan kalender → *Alamat rahasia dalam format iCal*, atau link `.ics` dari Outlook/Apple). Kalender dibaca saat disimpan, lalu setiap 30 menit saat admin atau feed dibuka, dan tampil sebagai baris **Agen & partner** di kalender reservasi.
-- **Antaragen.** Agen yang mengaktifkan *Bagikan hari sibuk* tampil sebagai “Nama agen · terisi” di kalender agen lain, tanpa detail acara.
+- **Agen → Zanclus.** Isi link kalender agen (Google Calendar: Setelan kalender → _Alamat rahasia dalam format iCal_, atau link `.ics` dari Outlook/Apple). Kalender dibaca saat disimpan, lalu setiap 30 menit saat admin atau feed dibuka, dan tampil sebagai baris **Agen & partner** di kalender reservasi.
+- **Antaragen.** Agen yang mengaktifkan _Bagikan hari sibuk_ tampil sebagai “Nama agen · terisi” di kalender agen lain, tanpa detail acara.
 
 ### OTA dengan sinkron iCal / ICS
 
@@ -453,12 +466,14 @@ Pilih **Jenis: OTA** saat menambah. Sinkron berjalan dua arah:
    - tanggal dengan sisa slot di bawah **Tandai penuh bila sisa slot kurang dari** (bawaan 4, supaya OTA tidak menjual grup yang tidak muat).
 
    Pesanan dari OTA itu sendiri tidak dikirim balik kepadanya. Link ini tidak memuat nama atau jumlah tamu.
+
 2. **OTA → Zanclus.** Ambil link ekspor iCal / ICS dari extranet OTA, lalu isi di **Link iCal / ICS dari extranet OTA**. Atur **Acara dari link ini**:
    - **Memakai slot harian**: setiap pesanan memakai slot sejumlah tamu yang tertulis di judul atau catatan acara (mis. “3 pax”, “Guests: 2”). Bila tidak tertulis, dipakai **Slot per acara** (bawaan 2).
    - **Menutup tanggal (penuh)**: setiap tanggal di kalender OTA dianggap penuh.
    - **Hanya tampil di kalender reservasi**: acara hanya tampil, tidak memakai slot.
 
 Slot yang dipakai OTA ikut dihitung di kalender halaman aktivitas dan kursus, di pembayaran online, dan di permintaan booking website. Jadi gabungan tamu website dan OTA tidak melewati kuota harian (diving 30 orang). Format yang dibaca:
+
 - acara seharian dengan tanggal akhir eksklusif (gaya Airbnb / Booking.com);
 - acara berjam (dengan TZID atau UTC), termasuk yang berakhir tepat tengah malam;
 - `DURATION`;
@@ -466,6 +481,7 @@ Slot yang dipakai OTA ikut dihitung di kalender halaman aktivitas dan kursus, di
 - acara batal (`STATUS:CANCELLED`, diabaikan).
 
 Batas sinkron iCal:
+
 - **Tidak seketika.** Zanclus membaca kalender OTA setiap 30 menit (atau lewat **Baca kalender sekarang**). OTA membaca link Zanclus menurut jadwalnya sendiri, biasanya setiap beberapa jam.
 - **Tidak membawa sisa slot.** iCal hanya mengirim tanggal buka atau tutup, karena itu ada batas **Tandai penuh**.
 - **Tidak semua OTA punya iCal.** Cek di extranet tiap OTA apakah ada menu impor/ekspor iCal / ICS. Yang tidak punya perlu channel manager atau API.

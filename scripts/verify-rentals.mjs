@@ -247,8 +247,8 @@ try {
   assert.match(await masks.textContent(), /^MaskerPenuh, 3 dari 3 disewa/);
   // The walk-in and the online order hold them.
   assert.deepEqual((await masks.locator("button").allTextContents()).sort(), [
-    "Tamu Datang · Dive Shop",
-    "Tamu Sewa · Dive Shop",
+    "Tamu Datang · Sewa alat",
+    "Tamu Sewa · Sewa alat",
   ]);
   shots &&
     (await page
@@ -275,7 +275,7 @@ try {
     "Penuh pada tanggal ini.",
   );
   // Opening the walk-in from the panel shows its gear.
-  await masks.getByRole("button", { name: "Tamu Datang · Dive Shop" }).click();
+  await masks.getByRole("button", { name: "Tamu Datang · Sewa alat" }).click();
   assert.equal(await gear.getByLabel("Jumlah 1").inputValue(), "2");
   // Its own masks do not count against it.
   assert.equal(

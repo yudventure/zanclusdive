@@ -577,10 +577,13 @@ function DayAgenda({
         </section>
       ))}
       {day.rentals.length > 0 && (
-        <section className="admin-day-group is-gear" aria-label="Sewa alat">
+        <section
+          className="admin-day-group is-gear"
+          aria-label="Alat yang disewa"
+        >
           <h3>
             <i aria-hidden="true" />
-            Sewa alat
+            Alat yang disewa
             <small>{day.rentals.length} penyewa</small>
           </h3>
           <ul>

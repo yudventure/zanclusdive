@@ -54,6 +54,7 @@ import MonthCalendar from "./MonthCalendar.jsx";
 import BookingGear from "./BookingGear.jsx";
 import SchedulePaste from "./SchedulePaste.jsx";
 import BookingPackages from "./BookingPackages.jsx";
+import PurchaseOrders from "./PurchaseOrders.jsx";
 import { useOutsideClose } from "./useOutsideClose.js";
 import EmployeesEditor from "./hr/EmployeesEditor.jsx";
 import AttendanceEditor from "./hr/AttendanceEditor.jsx";
@@ -70,6 +71,12 @@ import { defaultCalendar } from "../calendar-model.js";
 import { galleryLimit } from "../gallery.js";
 import { socialPlatforms, defaultMapQuery } from "../contact-model.js";
 import { bookingReference } from "../booking-model.js";
+import {
+  bookingTitle,
+  isPurchase,
+  isReservation,
+  purchaseState,
+} from "../booking-kind.js";
 import { siteImageFields, builtInPhotos } from "../photography.js";
 import { localizeContent, applyEnglishEdit } from "../content-i18n.js";
 import {
@@ -422,9 +429,15 @@ export default function Dashboard({ section, account, today }) {
       at: Date.now(),
     });
   }
+  // A purchase has no date in the calendar: "Lihat di Pembelian barang"
+  // lights its row in that list instead.
+  const [orderFocus, setOrderFocus] = useState(null);
   function showInCalendar(booking) {
     setNoticeId(null);
-    if (section === "calendar") focusCalendar(booking);
+    if (isPurchase(booking)) {
+      if (section === "orders") setOrderFocus(booking.id);
+      else router.push("/admin/orders?lihat=" + booking.id);
+    } else if (section === "calendar") focusCalendar(booking);
     else router.push("/admin/calendar?lihat=" + booking.id);
   }
   async function confirmNotice(booking, kind) {
@@ -482,9 +495,16 @@ export default function Dashboard({ section, account, today }) {
   ].includes(section);
   const view =
     bilingual && editLocale === "en" ? localizeContent(content, "en") : content;
-  const pending = data?.bookings.filter((b) => b.status === "pending") || [];
+  // Reservations have a date and live in the calendar; Dive Shop
+  // purchases only need to be paid (booking-kind.js). The bell lists both
+  // when they wait on the team.
+  const waiting = data?.bookings.filter((b) => b.status === "pending") || [];
+  const pending = waiting.filter(isReservation);
+  const unpaidPurchases = (data?.bookings ?? []).filter(
+    (b) => isPurchase(b) && purchaseState(b) === "unpaid",
+  );
   const todayGuests = data
-    ? dailySchedule(data.bookings, today, 1)[0].guests
+    ? dailySchedule(data.bookings.filter(isReservation), today, 1)[0].guests
     : 0;
   const ownerName =
     account.name ||
@@ -527,6 +547,17 @@ export default function Dashboard({ section, account, today }) {
   // reservation in the full form, #daftar-reservasi goes to the list.
   const loaded = Boolean(data);
   const shownId = useSearchParams().get("lihat");
+  useEffect(() => {
+    if (section !== "orders" || !loaded) return;
+    const url = new URL(window.location.href);
+    const noticeFor = url.searchParams.get("booking");
+    const noted = noticeFor && data.bookings.find((b) => b.id === noticeFor);
+    if (noted) openNotice(noted);
+    if (shownId || noted) {
+      setOrderFocus(shownId || noted.id);
+      window.history.replaceState(null, "", "/admin/orders");
+    }
+  }, [section, loaded, shownId]);
   useEffect(() => {
     if (section !== "calendar" || !loaded || !shownId) return;
     const shown = data.bookings.find((b) => b.id === shownId);
@@ -754,10 +785,35 @@ export default function Dashboard({ section, account, today }) {
     setEditing(item.id);
     openCalendarForm();
   }
+  // A purchase marked paid or cancelled from Pembelian barang, saved as it
+  // is with only its status and payment changed.
+  async function savePurchase(item, patch, done) {
+    setBusy(true);
+    setNotice("");
+    setError("");
+    try {
+      const saved = await request("/api/admin/bookings/" + item.id, "PUT", {
+        ...item,
+        email: item.email ?? "",
+        lang: item.lang ?? "id",
+        ...patch,
+      });
+      alerts.markSeen(saved);
+      await refresh();
+      if (saved.mail && !saved.mail.ok) setError(saved.mail.error);
+      setNotice(done(saved));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function removeReservation(item) {
     if (
       !window.confirm(
-        `Hapus reservasi ${item.guestName || "penutupan tanggal"}?`,
+        isPurchase(item)
+          ? `Hapus pembelian ${item.guestName || "tamu"}?`
+          : `Hapus reservasi ${item.guestName || "penutupan tanggal"}?`,
       )
     )
       return;
@@ -771,7 +827,7 @@ export default function Dashboard({ section, account, today }) {
         setBooking(blankBooking(today));
         closeCalendarForm();
       }
-      setNotice("Reservasi dihapus.");
+      setNotice(isPurchase(item) ? "Pembelian dihapus." : "Reservasi dihapus.");
     } catch (e) {
       setError(e.message);
     } finally {
@@ -832,7 +888,9 @@ export default function Dashboard({ section, account, today }) {
     d.setMonth(d.getMonth() + delta);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   }
-  const bookings = data?.bookings || [];
+  const allBookings = data?.bookings || [];
+  const bookings = allBookings.filter(isReservation);
+  const purchases = allBookings.filter(isPurchase);
   const filtered = bookings.filter(
     (b) =>
       (statusFilter === "all" || b.status === statusFilter) &&
@@ -840,13 +898,21 @@ export default function Dashboard({ section, account, today }) {
         .toLowerCase()
         .includes(filter.toLowerCase()),
   );
+  // Guests from reservations and Dive Shop purchases, each counted apart.
   const customers = Object.values(
-    bookings
+    allBookings
       .filter((b) => b.status !== "closed")
       .reduce((map, b) => {
         const key = b.phone || b.guestName.toLowerCase();
-        map[key] ??= { name: b.guestName, phone: b.phone, count: 0, total: 0 };
-        map[key].count++;
+        map[key] ??= {
+          name: b.guestName,
+          phone: b.phone,
+          count: 0,
+          purchases: 0,
+          total: 0,
+        };
+        if (isPurchase(b)) map[key].purchases++;
+        else map[key].count++;
         map[key].total += b.status === "confirmed" ? b.amount : 0;
         return map;
       }, {}),
@@ -1026,16 +1092,16 @@ export default function Dashboard({ section, account, today }) {
                   }}
                 >
                   <AdminIcon name="bell" />
-                  {pending.length > 0 && (
+                  {waiting.length > 0 && (
                     <span className="admin-notification-count">
-                      {pending.length}
+                      {waiting.length}
                     </span>
                   )}
                 </button>
                 {notification && (
                   <div className="admin-popover admin-bell-popover">
                     <PendingBookings
-                      bookings={pending}
+                      bookings={waiting}
                       content={content}
                       onOpen={(b) => {
                         setNotification(false);
@@ -1147,7 +1213,10 @@ export default function Dashboard({ section, account, today }) {
           </div>
           {can("bookings") ? (
             <div
-              className={"admin-sidebar-note" + (pending.length ? " warn" : "")}
+              className={
+                "admin-sidebar-note" +
+                (pending.length || unpaidPurchases.length ? " warn" : "")
+              }
             >
               <strong>STATUS HARI INI</strong>
               <p>
@@ -1156,6 +1225,8 @@ export default function Dashboard({ section, account, today }) {
                   : pending.length
                     ? `${pending.length} reservasi menunggu konfirmasi.`
                     : "Semua reservasi sudah dikonfirmasi."}{" "}
+                {unpaidPurchases.length > 0 &&
+                  `${unpaidPurchases.length} pembelian barang belum dibayar. `}
                 {todayGuests
                   ? `${todayGuests} tamu ke laut hari ini.`
                   : data
@@ -1230,6 +1301,7 @@ export default function Dashboard({ section, account, today }) {
                 (can("bookings") ? (
                   <Overview
                     bookings={bookings}
+                    purchases={purchases}
                     content={content}
                     customers={customers}
                     pending={pending}
@@ -1335,11 +1407,47 @@ export default function Dashboard({ section, account, today }) {
                   />
                 </>
               )}
+              {section === "orders" && (
+                <PurchaseOrders
+                  purchases={purchases}
+                  busy={busy}
+                  focusId={orderFocus}
+                  onMarkPaid={(b) =>
+                    savePurchase(
+                      b,
+                      {
+                        status: "confirmed",
+                        billing: {
+                          action: "paid",
+                          method: "transfer",
+                          paidOn: today,
+                          notify: true,
+                        },
+                      },
+                      (saved) =>
+                        saved.mail?.ok
+                          ? `Pembelian ${b.guestName || "tamu"} tercatat sudah dibayar. Invoice terkirim ke ${saved.mail.to}.`
+                          : `Pembelian ${b.guestName || "tamu"} tercatat sudah dibayar.`,
+                    )
+                  }
+                  onCancel={(b) =>
+                    window.confirm(
+                      `Batalkan pembelian ${b.guestName || "tamu"}? Barangnya kembali tersedia di stok.`,
+                    ) &&
+                    savePurchase(
+                      b,
+                      { status: "cancelled", billing: { action: "keep" } },
+                      () => `Pembelian ${b.guestName || "tamu"} dibatalkan.`,
+                    )
+                  }
+                  onRemove={removeReservation}
+                />
+              )}
               {section === "customers" && (
                 <section className="admin-card">
                   <h2>Daftar tamu</h2>
                   <p className="admin-subtle">
-                    Dihimpun dari catatan reservasi.
+                    Dihimpun dari catatan reservasi dan pembelian barang.
                   </p>
                   <div className="admin-table-scroll">
                     <table className="admin-table">
@@ -1347,7 +1455,8 @@ export default function Dashboard({ section, account, today }) {
                         <tr>
                           <th>Nama</th>
                           <th>Telepon</th>
-                          <th>Catatan reservasi</th>
+                          <th>Reservasi</th>
+                          <th>Pembelian</th>
                           <th>Nilai terkonfirmasi</th>
                         </tr>
                       </thead>
@@ -1361,6 +1470,7 @@ export default function Dashboard({ section, account, today }) {
                               <td>{c.name}</td>
                               <td>{c.phone || "–"}</td>
                               <td>{c.count}</td>
+                              <td>{c.purchases}</td>
                               <td>{money(c.total)}</td>
                             </tr>
                           ))}
@@ -1644,7 +1754,7 @@ export default function Dashboard({ section, account, today }) {
                 <PaymentsEditor
                   payments={content.payments ?? { enabled: false }}
                   status={data.payments}
-                  bookings={bookings}
+                  bookings={allBookings}
                   content={content}
                   update={(enabled) =>
                     setContent((current) => ({
@@ -2046,7 +2156,7 @@ export default function Dashboard({ section, account, today }) {
         alerts={alerts.alerts}
         onClose={alerts.dismiss}
         label={(b) =>
-          `${b.guestName} · ${programTitle(content, b.experience)} · ${dateLabel(b.startDate)}`
+          `${b.guestName} · ${bookingTitle(content, b)} · ${dateLabel(b.startDate)}`
         }
         onOpen={(event, b) => {
           event.preventDefault();

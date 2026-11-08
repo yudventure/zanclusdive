@@ -3,7 +3,17 @@ import Link from "next/link";
 import { programTitle } from "../cms-model.js";
 import { bookingReference } from "../booking-model.js";
 import { paymentText, teamDates } from "../team-mail.js";
-import { noticeKind, noticeTags, noticeTexts } from "../booking-notice.js";
+import {
+  noticeKind,
+  noticeTags,
+  noticeTexts,
+  purchaseNoticeTexts,
+} from "../booking-notice.js";
+import {
+  isPurchase,
+  purchaseDelivery,
+  purchaseItems,
+} from "../booking-kind.js";
 import { useOutsideClose } from "./useOutsideClose.js";
 
 const money = (n) =>
@@ -27,13 +37,22 @@ export default function BookingNotice({
 }) {
   const card = useOutsideClose(true, () => !busy && onClose());
   const kind = noticeKind(booking);
-  const texts = noticeTexts[kind];
+  const purchase = isPurchase(booking);
+  const texts = (purchase ? purchaseNoticeTexts : noticeTexts)[kind];
   const amount = Number(booking.payment?.amount ?? booking.amount) || 0;
   const phone = String(booking.phone ?? "").replace(/\D/g, "");
   const rows = [
-    ["Kegiatan", programTitle(content, booking.experience)],
-    ["Tanggal", teamDates(booking)],
-    ["Peserta", `${booking.participants} orang`],
+    ...(purchase
+      ? [
+          ["Barang", purchaseItems(booking).join("\n")],
+          ["Dipesan", teamDates(booking)],
+          ["Pengiriman", purchaseDelivery(booking)],
+        ]
+      : [
+          ["Kegiatan", programTitle(content, booking.experience)],
+          ["Tanggal", teamDates(booking)],
+          ["Peserta", `${booking.participants} orang`],
+        ]),
     ["WhatsApp", booking.phone ?? ""],
     ["Email", booking.email ?? ""],
     ["Nilai", amount ? money(amount) : ""],
@@ -94,7 +113,7 @@ export default function BookingNotice({
               disabled={busy}
               onClick={() => onShowCalendar(booking)}
             >
-              Lihat di kalender
+              {purchase ? "Lihat di Pembelian barang" : "Lihat di kalender"}
             </button>
           )}
           <button
@@ -131,16 +150,23 @@ export function PendingBookings({ bookings, content, onOpen, onMore }) {
           {bookings.slice(0, 5).map((b) => {
             const start = day(b.startDate);
             const kind = noticeKind(b);
-            const details = [
-              programTitle(content, b.experience),
-              `${b.participants} orang`,
-            ];
-            if (b.endDate && b.endDate !== b.startDate)
+            const purchase = isPurchase(b);
+            const details = purchase
+              ? ["Pembelian barang", purchaseItems(b)[0]]
+              : [
+                  programTitle(content, b.experience),
+                  `${b.participants} orang`,
+                ];
+            if (!purchase && b.endDate && b.endDate !== b.startDate)
               details.push("s/d " + shortDate(b.endDate));
             return (
               <li key={b.id}>
                 <Link
-                  href={"/admin/calendar?booking=" + b.id}
+                  href={
+                    (purchase ? "/admin/orders" : "/admin/calendar") +
+                    "?booking=" +
+                    b.id
+                  }
                   className={"admin-bell-item is-" + kind}
                   onClick={(event) => {
                     event.preventDefault();

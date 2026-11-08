@@ -5,6 +5,7 @@
 import { bookingReference } from "./booking-model.js";
 import { formatIDR } from "./i18n.js";
 import { methodLabel, programName, witDateTime } from "./booking-mail.js";
+import { isPurchase, purchaseDelivery, purchaseItems } from "./booking-kind.js";
 
 const esc = (s) =>
   String(s ?? "")
@@ -39,7 +40,13 @@ export function paymentText(b) {
 
 export function teamMail(kind, booking, { content, base }) {
   const reference = booking.reference ?? bookingReference(booking.id);
-  const program = programName(content, booking.experience, "id");
+  // A Dive Shop purchase has no date in the calendar, only its payment.
+  const purchase = isPurchase(booking);
+  const program = purchase
+    ? "Pembelian barang"
+    : booking.experience === "shop"
+      ? "Sewa alat"
+      : programName(content, booking.experience, "id");
   const money = formatIDR(
     Number(booking.payment?.amount ?? booking.amount) || 0,
     "id",
@@ -48,25 +55,42 @@ export function teamMail(kind, booking, { content, base }) {
   const paid = kind === "paid";
   const subject = paid
     ? `Lunas · ${who} · ${money} · ${program}`
-    : `Booking baru · ${who} · ${program} · ${teamDates(booking)}`;
-  const intro = paid
-    ? `${who} sudah membayar ${money}. Reservasinya kini Dikonfirmasi.`
-    : booking.payment
-      ? `${who} memesan lewat website dan sedang membayar. Pesanan sudah masuk di Kalender reservasi.`
-      : `${who} mengirim permintaan booking lewat website. Hubungi tamu untuk memastikan jadwal dan harga.`;
+    : purchase
+      ? `Pembelian baru · ${who} · ${money}`
+      : `Booking baru · ${who} · ${program} · ${teamDates(booking)}`;
+  const intro = purchase
+    ? paid
+      ? `${who} sudah membayar ${money}. Siapkan barangnya untuk diambil atau diantar.`
+      : `${who} membeli barang di Dive Shop dan sedang membayar. Pembeliannya ada di Pembelian barang.`
+    : paid
+      ? `${who} sudah membayar ${money}. Reservasinya kini Dikonfirmasi.`
+      : booking.payment
+        ? `${who} memesan lewat website dan sedang membayar. Pesanan sudah masuk di Kalender reservasi.`
+        : `${who} mengirim permintaan booking lewat website. Hubungi tamu untuk memastikan jadwal dan harga.`;
   const phone = String(booking.phone ?? "").replace(/\D/g, "");
   const wa = phone ? `https://wa.me/${phone}` : "";
+  const page = purchase ? "orders" : "calendar";
   const link = booking.id
-    ? `${base}/admin/calendar?booking=${encodeURIComponent(booking.id)}`
-    : `${base}/admin/calendar#daftar-reservasi`;
+    ? `${base}/admin/${page}?booking=${encodeURIComponent(booking.id)}`
+    : purchase
+      ? `${base}/admin/orders`
+      : `${base}/admin/calendar#daftar-reservasi`;
   const rows = [
     ["Kode", reference],
     ["Tamu", who],
     ["WhatsApp", booking.phone ?? ""],
     ["Email", booking.email ?? ""],
-    ["Kegiatan", program],
-    ["Tanggal", teamDates(booking)],
-    ["Peserta", `${booking.participants} orang`],
+    ...(purchase
+      ? [
+          ["Barang", purchaseItems(booking).join("\n")],
+          ["Dipesan", teamDates(booking)],
+          ["Pengiriman", purchaseDelivery(booking)],
+        ]
+      : [
+          ["Kegiatan", program],
+          ["Tanggal", teamDates(booking)],
+          ["Peserta", `${booking.participants} orang`],
+        ]),
     ["Nilai", money],
     ["Pembayaran", paymentText(booking)],
     ["Catatan", booking.notes ?? ""],
@@ -75,7 +99,7 @@ export function teamMail(kind, booking, { content, base }) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef4f7;padding:24px 12px;"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;padding:26px 24px;">
 <tr><td>
-<p style="margin:0 0 6px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;color:${paid ? "#1e7a4f" : "#1f6fa8"};">${paid ? "Pembayaran masuk" : "Booking masuk"}</p>
+<p style="margin:0 0 6px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;color:${paid ? "#1e7a4f" : "#1f6fa8"};">${paid ? "Pembayaran masuk" : purchase ? "Pembelian masuk" : "Booking masuk"}</p>
 <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#14324a;">${esc(subject)}</h1>
 <p style="margin:0 0 18px;font-size:15px;line-height:1.6;">${esc(intro)}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 20px;">

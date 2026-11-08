@@ -178,12 +178,16 @@ export default function OptionsStock({
   const stockInputs = (p) =>
     sizesOf(p).map((size) => {
       const note = heldNote(itemOf(p, size), mode);
+      // Paid sales beyond the counted stock show as minus. That shown
+      // number does not stop the catalog from saving; a typed one must be
+      // 0 or more.
+      const typed = p.stockCounts?.[modeOf(p)]?.[size];
       return (
         <label key={size || "all"} className="admin-stock-cell">
           {size && <span>{size}</span>}
           <input
             type="number"
-            min={0}
+            min={typed !== undefined && typed !== "" ? 0 : undefined}
             max={100000}
             step={1}
             placeholder="0"

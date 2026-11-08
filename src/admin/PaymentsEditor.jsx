@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { programTitle } from "../cms-model.js";
+import { bookingTitle } from "../booking-kind.js";
 import {
   paymentStatusLabels,
   paymentItemLabel,
@@ -285,7 +285,7 @@ export default function PaymentsEditor({
                       <small>{bookingReference(b.id)}</small>
                     </td>
                     <td>
-                      {programTitle(content, b.experience)}
+                      {bookingTitle(content, b)}
                       <small>{paymentItemLabel(b.payment)}</small>
                     </td>
                     <td>

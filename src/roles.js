@@ -2,7 +2,7 @@
 // every admin page and every admin API route belongs to one, and a role is
 // a list of areas. Shared by the server (checks) and the admin (menu).
 export const areas = {
-  bookings: "Reservasi, kalender reservasi dan tamu",
+  bookings: "Reservasi, kalender reservasi, pembelian barang dan tamu",
   payments: "Pembayaran online",
   website: "Isi website: teks, foto, harga, kegiatan dan banner",
   agents: "Agen, OTA dan sinkron kalender",
@@ -55,6 +55,12 @@ export const sections = {
     area: "bookings",
     intro:
       "Reservasi, tanggal tutup, kalender agen, dan alat sewa dalam satu bulan. Klik tanggalnya untuk melihat rinciannya, atau buka Sewa alat untuk melihat sisa alat per hari. Daftar semua reservasi ada di bawah kalender.",
+  },
+  orders: {
+    title: "Pembelian barang",
+    area: "bookings",
+    intro:
+      "Barang yang dibeli dari Dive Shop. Tidak masuk Kalender reservasi karena tidak punya jadwal, cukup dicatat sudah dibayar atau belum. Sewa alat tetap di Kalender reservasi.",
   },
   customers: {
     title: "Tamu",
@@ -212,7 +218,7 @@ export const sectionAllowed = (role, key) =>
 // group without one is a run of top-level links (the daily desk, and the
 // users page at the end).
 export const menuGroups = [
-  { key: "desk", items: ["overview", "calendar", "customers"] },
+  { key: "desk", items: ["overview", "calendar", "orders", "customers"] },
   {
     key: "website",
     title: "Situs web",

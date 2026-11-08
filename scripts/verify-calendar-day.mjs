@@ -140,8 +140,8 @@ try {
       "Diving1 reservasi, 12 orang",
       "Snorkeling1 reservasi, 4 orang",
       "Trip laut1 reservasi, 9 orang",
-      "Dive Shop1 reservasi, 1 orang",
-      "Sewa alat1 penyewa",
+      "Sewa alat1 reservasi, 1 orang",
+      "Alat yang disewa1 penyewa",
     ],
   );
   assert.match(
@@ -159,7 +159,7 @@ try {
     /Rombongan Sorong.*Belum dikonfirmasi/,
   );
   assert.match(
-    await group("Sewa alat").textContent(),
+    await group("Alat yang disewa").textContent(),
     /Tamu Datang.*Masker × 2/,
   );
   assert.doesNotMatch(await side.textContent(), /Batal/);

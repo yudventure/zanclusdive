@@ -4382,3 +4382,105 @@ strong.admin-overdue {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Pembelian barang: Dive Shop purchases, paid or not. */
+.admin-purchases .admin-month-views {
+  margin: 0;
+}
+.admin-purchase-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-purchase-items li + li {
+  margin-top: 4px;
+}
+.admin-purchases .admin-pay-badge {
+  margin-top: 0;
+}
+.admin-purchase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-purchases tr.is-focus td {
+  background: #eef7fb;
+}
+.admin-purchases td {
+  vertical-align: top;
+}
+.admin-purchases td:last-child {
+  min-width: 130px;
+}
+
+/* The Dive Shop list sets the order of the website: a family moves up or
+   down with the arrows, or is dragged with a mouse. */
+.admin-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  border-radius: 12px;
+}
+.admin-shop-row .admin-shop-item {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+.admin-shop-row.is-variant {
+  margin-left: 22px;
+  margin-top: 6px;
+}
+.admin-shop-row.is-variant .admin-shop-item.is-variant {
+  width: auto;
+  margin: 0;
+}
+.admin-shop-row.can-sort {
+  cursor: grab;
+}
+.admin-shop-row.is-dragging {
+  opacity: 0.5;
+}
+.admin-shop-row.is-drop {
+  box-shadow: 0 0 0 2px #82b7cb;
+}
+.admin-shop-order {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-shop-order button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid #d8e4ea;
+  border-radius: 8px;
+  background: white;
+  color: #3e5b70;
+  cursor: pointer;
+}
+.admin-shop-order button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.admin-shop-order .is-up {
+  transform: rotate(180deg);
+}
+.admin-shop-order-hint {
+  margin: 4px 0 0;
+}
+@media (max-width: 1100px) {
+  .admin-shop-row {
+    margin-top: 0;
+  }
+  .admin-shop-order-hint {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 600px) {
+  .admin-shop-row {
+    margin-top: 10px;
+  }
+}

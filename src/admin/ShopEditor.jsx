@@ -29,6 +29,7 @@ import {
 import ProductStory from "../shop/ProductStory.jsx";
 import SpecTable from "./SpecTable.jsx";
 import OptionsStock from "./OptionsStock.jsx";
+import { AdminIcon } from "./icons.jsx";
 import { sizesOf, unitForProduct, variantKey } from "../shop-stock.js";
 import {
   cleanCode,
@@ -110,12 +111,28 @@ export default function ShopEditor({
   // The list of one kind, searched by name.
   const [find, setFind] = useState("");
   const ofKind = shop.products.filter((p) => kindOf(p) === kind);
-  // Variants listed right under their family's lead.
-  const ordered = ofKind.flatMap((p) =>
-    p.variantOf && ofKind.some((q) => q.id === p.variantOf)
-      ? []
-      : [p, ...ofKind.filter((q) => q.variantOf === p.id)],
-  );
+  // The families of this kind, each its lead with its variants right under
+  // it, in the order the website lists them ("Urutan toko").
+  const blocks = ofKind
+    .filter((p) => !(p.variantOf && ofKind.some((q) => q.id === p.variantOf)))
+    .map((p) => [p, ...ofKind.filter((q) => q.variantOf === p.id)]);
+  const ordered = blocks.flat();
+  // Moves a family, variants and all, to another place in the list. The
+  // other kind's products keep their places.
+  function placeFamily(from, to) {
+    if (from === to || to < 0 || to >= blocks.length) return;
+    const next = [...blocks];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    const sequence = next.flat();
+    let i = 0;
+    update(
+      "products",
+      shop.products.map((p) => (kindOf(p) === kind ? sequence[i++] : p)),
+    );
+  }
+  const [dragFrom, setDragFrom] = useState(null);
+  const [dropAt, setDropAt] = useState(null);
   const listed = ordered.filter((p) =>
     [p.name, p.variant ?? ""].some((text) =>
       text.toLowerCase().includes(find.trim().toLowerCase()),
@@ -435,33 +452,105 @@ export default function ShopEditor({
               />
             </div>
           )}
-          {listed.map((p) => (
-            <button
-              type="button"
-              className={
-                "admin-shop-item " +
-                (product?.id === p.id ? "selected" : "") +
-                (p.variantOf ? " is-variant" : "")
-              }
-              key={p.id}
-              onClick={() => setSelectedID(p.id)}
-              aria-pressed={product?.id === p.id}
-            >
-              <div className="admin-shop-thumbnail">
-                <ProductVisual product={productAs(p, kind)} />
+          {blocks.length > 1 && (
+            <p className="admin-subtle admin-shop-order-hint">
+              {find.trim()
+                ? "Kosongkan pencarian untuk mengubah urutan."
+                : "Urutan di sini sama dengan urutan di website. Seret produk atau pakai tombol panah untuk memindahkannya, lalu simpan. Varian ikut pindah bersama produknya."}
+            </p>
+          )}
+          {listed.map((p) => {
+            const place = blocks.findIndex((b) => b[0].id === p.id);
+            const sortable = place >= 0 && blocks.length > 1 && !find.trim();
+            return (
+              <div
+                key={p.id}
+                className={
+                  "admin-shop-row" +
+                  (place < 0 ? " is-variant" : "") +
+                  (sortable ? " can-sort" : "") +
+                  (dropAt === place && dragFrom !== null && dragFrom !== place
+                    ? " is-drop"
+                    : "") +
+                  (dragFrom === place && place >= 0 ? " is-dragging" : "")
+                }
+                draggable={sortable && !busy}
+                onDragStart={(e) => {
+                  if (!sortable) return;
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", p.id);
+                  setDragFrom(place);
+                }}
+                onDragOver={(e) => {
+                  if (dragFrom === null || !sortable) return;
+                  e.preventDefault();
+                  setDropAt(place);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragFrom !== null && sortable)
+                    placeFamily(dragFrom, place);
+                  setDragFrom(null);
+                  setDropAt(null);
+                }}
+                onDragEnd={() => {
+                  setDragFrom(null);
+                  setDropAt(null);
+                }}
+              >
+                <button
+                  type="button"
+                  className={
+                    "admin-shop-item " +
+                    (product?.id === p.id ? "selected" : "") +
+                    (place < 0 ? " is-variant" : "")
+                  }
+                  onClick={() => setSelectedID(p.id)}
+                  aria-pressed={product?.id === p.id}
+                >
+                  <div className="admin-shop-thumbnail">
+                    <ProductVisual product={productAs(p, kind)} />
+                  </div>
+                  <span>
+                    <strong>{p.name}</strong>
+                    <small>
+                      {p.variantOf
+                        ? `Varian ${p.variant || "tanpa nama"} · `
+                        : ""}
+                      {priceText(p)} · {p.enabled ? "Tampil" : "Draft"}
+                      {!p.variantOf && ofKind.some((q) => q.variantOf === p.id)
+                        ? ` · ${ofKind.filter((q) => q.variantOf === p.id).length + 1} varian`
+                        : ""}
+                    </small>
+                  </span>
+                </button>
+                {sortable && (
+                  <span
+                    className="admin-shop-order"
+                    role="group"
+                    aria-label={`Urutan ${p.name}`}
+                  >
+                    <button
+                      type="button"
+                      aria-label="Naikkan"
+                      disabled={busy || place === 0}
+                      onClick={() => placeFamily(place, place - 1)}
+                    >
+                      <AdminIcon name="chevron" size={16} className="is-up" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Turunkan"
+                      disabled={busy || place === blocks.length - 1}
+                      onClick={() => placeFamily(place, place + 1)}
+                    >
+                      <AdminIcon name="chevron" size={16} />
+                    </button>
+                  </span>
+                )}
               </div>
-              <span>
-                <strong>{p.name}</strong>
-                <small>
-                  {p.variantOf ? `Varian ${p.variant || "tanpa nama"} · ` : ""}
-                  {priceText(p)} · {p.enabled ? "Tampil" : "Draft"}
-                  {!p.variantOf && ofKind.some((q) => q.variantOf === p.id)
-                    ? ` · ${ofKind.filter((q) => q.variantOf === p.id).length + 1} varian`
-                    : ""}
-                </small>
-              </span>
-            </button>
-          ))}
+            );
+          })}
           {!ofKind.length ? (
             <p className="admin-subtle">{t.empty}</p>
           ) : (

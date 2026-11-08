@@ -47,6 +47,36 @@ export const noticeTexts = {
   },
 };
 
+// A Dive Shop purchase has no date in the calendar: only its payment is
+// confirmed.
+export const purchaseNoticeTexts = {
+  request: {
+    eyebrow: "Pembelian baru",
+    text: "Pastikan barang dan pembayarannya dengan tamu lewat WhatsApp.",
+    confirm: "",
+  },
+  transfer: {
+    eyebrow: "Pembelian, menunggu transfer bank",
+    text: "Tamu memilih transfer bank. Konfirmasi setelah uangnya masuk ke rekening. Pembelian tercatat sudah dibayar dan tamu menerima invoice.",
+    confirm: "Transfer sudah masuk, konfirmasi",
+  },
+  online: {
+    eyebrow: "Pembelian, sedang membayar online",
+    text: "Tamu sedang membayar lewat Midtrans atau PayPal. Pembelian tercatat sudah dibayar begitu lunas, tidak perlu apa-apa.",
+    confirm: "",
+  },
+  confirmed: {
+    eyebrow: "Pembelian sudah dibayar",
+    text: "Siapkan barangnya untuk diambil atau diantar.",
+    confirm: "",
+  },
+  closed: {
+    eyebrow: "Pembelian dibatalkan",
+    text: "Pembelian ini sudah dibatalkan.",
+    confirm: "",
+  },
+};
+
 // The tag beside a booking in the bell's list, when it is more than a
 // plain request.
 export const noticeTags = {

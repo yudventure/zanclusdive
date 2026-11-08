@@ -55,8 +55,10 @@ import {
 } from "./photography.js";
 export const experienceKeys = ["beginner", "explorer", "specialty"];
 // Reservations are for a diving program or, when booked and paid from an
-// activity page, for the activity itself. Paid Dive Shop orders, courses
-// and gear servicing are kept as reservations on their date too.
+// activity page, for the activity itself. Dive Shop rentals, courses and
+// gear servicing are kept as reservations on their date too. A Dive Shop
+// order that only buys goods is a purchase (booking-kind.js), listed in
+// Pembelian barang, not in the reservation calendar.
 export const activityPrograms = {
   diving: "Diving",
   snorkeling: "Snorkeling",
@@ -64,7 +66,7 @@ export const activityPrograms = {
 };
 export const orderPrograms = {
   course: "Kursus selam",
-  shop: "Dive Shop",
+  shop: "Sewa alat",
   service: "Servis alat",
 };
 export const bookingPrograms = [
