@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect from "./SearchSelect.jsx";
 import { useId, useState } from "react";
 import ProductVisual from "../shop/ProductVisual.jsx";
 import {
@@ -384,19 +385,15 @@ export default function OptionsStock({
           </a>
         )}
         {!many && others.length > 0 && (
-          <select
-            aria-label="Jadikan varian dari produk lain"
-            value=""
+          <SearchSelect
+            label="Jadikan varian dari produk lain"
+            adds
+            className="admin-join-family"
             disabled={disabled}
-            onChange={(e) => e.target.value && onJoin(e.target.value)}
-          >
-            <option value="">Jadikan varian dari produk lain…</option>
-            {others.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            placeholder="Jadikan varian dari produk lain…"
+            options={others.map((p) => ({ value: p.id, label: p.name }))}
+            onChange={(value) => value && onJoin(value)}
+          />
         )}
         {many && (
           <button

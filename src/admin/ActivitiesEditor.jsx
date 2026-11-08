@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useId, useState } from "react";
@@ -194,24 +195,12 @@ export default function ActivitiesEditor({
             />
           </Field>
           <Field label="Atau pilih dari koleksi">
-            <select
-              value=""
-              onChange={(e) =>
-                e.target.value && change("image", e.target.value)
-              }
-            >
-              <option value="">Pilih foto…</option>
-              {builtInPhotos.map(([url, label]) => (
-                <option value={url} key={url}>
-                  {label}
-                </option>
-              ))}
-              {media.map((item) => (
-                <option value={item.url} key={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              adds
+              placeholder="Cari foto…"
+              options={photoOptions(media, builtInPhotos)}
+              onChange={(url) => url && change("image", url)}
+            />
           </Field>
           <Field label="Deskripsi foto / caption">
             <input
@@ -253,24 +242,12 @@ export default function ActivitiesEditor({
             />
           </Field>
           <Field label="Atau pilih foto kartu dari koleksi">
-            <select
-              value=""
-              onChange={(e) =>
-                e.target.value && change("cardImage", e.target.value)
-              }
-            >
-              <option value="">Pilih foto…</option>
-              {builtInPhotos.map(([url, label]) => (
-                <option value={url} key={url}>
-                  {label}
-                </option>
-              ))}
-              {media.map((item) => (
-                <option value={item.url} key={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              adds
+              placeholder="Cari foto…"
+              options={photoOptions(media, builtInPhotos)}
+              onChange={(url) => url && change("cardImage", url)}
+            />
           </Field>
           <Field label="Deskripsi foto kartu">
             <input

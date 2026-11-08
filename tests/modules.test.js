@@ -12,6 +12,8 @@ import {
   validateMovement,
   stockOf,
   stockTable,
+  stockCard,
+  opnameChange,
 } from "../src/inventory-model.js";
 import { validatePost, monthSummary } from "../src/content-plan-model.js";
 
@@ -273,4 +275,35 @@ test("content is planned per platform and summed once it is out", () => {
   // Ideas do not count towards the numbers.
   assert.equal(summary.metrics.views, 15000);
   assert.equal(summary.metrics.likes, 940);
+});
+
+test("an item's stock card for a month, as in a kartu stok", () => {
+  const moves = [
+    { itemId: "a", date: "2026-10-30", kind: "in", qty: 4 },
+    { itemId: "a", date: "2026-11-02", kind: "out", qty: 1, createdAt: "1" },
+    { itemId: "b", date: "2026-11-03", kind: "in", qty: 9 },
+    { itemId: "a", date: "2026-11-05", kind: "adjust", qty: 3 },
+    { itemId: "a", date: "2026-11-02", kind: "in", qty: 2, createdAt: "2" },
+    { itemId: "a", date: "2026-12-01", kind: "out", qty: 2 },
+  ];
+  const card = stockCard(moves, "a", "2026-11");
+  assert.equal(card.opening, 4);
+  assert.deepEqual(
+    card.movements.map((m) => [m.date, m.kind, m.balance]),
+    [
+      ["2026-11-02", "out", 3],
+      ["2026-11-02", "in", 5],
+      ["2026-11-05", "adjust", 8],
+    ],
+  );
+  assert.equal(card.closing, 8);
+  // A month without movements keeps the stock it started with.
+  assert.deepEqual(stockCard(moves, "a", "2026-09"), {
+    opening: 0,
+    closing: 0,
+    movements: [],
+  });
+  // A stock opname records the counted quantity minus the stock on record.
+  assert.equal(opnameChange("5", 2), 3);
+  assert.equal(opnameChange(0, 4), -4);
 });

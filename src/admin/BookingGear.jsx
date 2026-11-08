@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect from "./SearchSelect.jsx";
 import { useId } from "react";
 import { bookingGearLimit } from "../cms-model.js";
 import { holdsPlaces } from "../booking-model.js";
@@ -93,24 +94,22 @@ export default function BookingGear({ value, setValue, gear, bookings }) {
                   <label htmlFor={`${id}-gear-${index}`}>
                     Alat sewa {index + 1}
                   </label>
-                  <select
+                  <SearchSelect
                     id={`${id}-gear-${index}`}
                     value={keyOf(line)}
-                    onChange={(e) => {
-                      const g = info.get(e.target.value);
+                    placeholder="Cari alat sewa…"
+                    options={[
+                      ...(info.has(keyOf(line))
+                        ? []
+                        : [{ value: keyOf(line), label: line.product }]),
+                      ...gear.map((g) => ({ value: g.key, label: g.name })),
+                    ]}
+                    onChange={(value) => {
+                      const g = info.get(value);
                       if (g)
                         change(index, { product: g.productId, size: g.size });
                     }}
-                  >
-                    {!info.has(keyOf(line)) && (
-                      <option value={keyOf(line)}>{line.product}</option>
-                    )}
-                    {gear.map((g) => (
-                      <option key={g.key} value={g.key}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div className="admin-field">
                   <label htmlFor={`${id}-qty-${index}`}>

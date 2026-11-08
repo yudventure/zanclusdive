@@ -51,6 +51,12 @@ const api = (path, method = "GET", data) =>
     headers: { Origin: base },
     ...(data ? { data } : {}),
   });
+// A row of Barang & stok: the product, then the tags beside it.
+const stockRow = (...words) =>
+  words.reduce(
+    (rows, word) => rows.filter({ hasText: word }),
+    a.locator(".admin-stock tbody tr"),
+  );
 const stockList = async () =>
   (await (await api("/api/admin/inventory/items")).json()).items;
 const itemFor = async (productId, mode, size = "") =>
@@ -296,16 +302,10 @@ try {
 
   // Gudang shows the same items, one per way and size.
   await a.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  const suitM = a.locator(".admin-stock tbody tr", {
-    hasText: "Dive Shop · Wetsuit 3 mm · Jual · M",
-  });
+  const suitM = stockRow("Wetsuit 3 mm", "Barang jual", "Ukuran M");
   assert.match(await suitM.textContent(), /2 pcs[\s\S]*Cukup/);
   assert.equal(
-    await a
-      .locator(".admin-stock tbody tr", {
-        hasText: "Dive Shop · Wetsuit 3 mm · Sewa · M",
-      })
-      .count(),
+    await stockRow("Wetsuit 3 mm", "Barang sewa", "Ukuran M").count(),
     1,
   );
   shots &&
@@ -578,38 +578,10 @@ try {
 
   // The warehouse list says what the shop holds.
   await a.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  const suitXXL = a.locator(".admin-stock tbody tr", {
-    hasText: "Dive Shop · Wetsuit 3 mm · Sewa · XXL",
-  });
+  const suitXXL = stockRow("Wetsuit 3 mm", "Barang sewa", "Ukuran XXL");
   assert.match(
     await suitXXL.textContent(),
     /1 pcs[\s\S]*3 dipesan untuk sewa nanti/,
-  );
-  // The item form moves a product to an item the team already has.
-  const own = await (
-    await api("/api/admin/inventory/items", "POST", {
-      name: "Scuba Pro Dive Mask - Zanclus Dive Shop",
-      sku: "SP-DM-001",
-      category: "alat",
-      unit: "pcs",
-    })
-  ).json();
-  const before = await itemFor("demo-mask", "sale");
-  await a.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  const ownRow = a.locator(".admin-stock tbody tr", {
-    hasText: "Scuba Pro Dive Mask",
-  });
-  await ownRow.getByRole("button", { name: "Ubah" }).click();
-  await a.getByLabel("Produk Dive Shop").selectOption("demo-mask::sale::");
-  await a.getByRole("button", { name: "Simpan perubahan" }).click();
-  await a.locator(".admin-success").waitFor();
-  assert.equal((await itemFor("demo-mask", "sale")).id, own.id);
-  // The old item has movements, so it stays as a plain item.
-  const old = (await stockList()).find((i) => i.id === before.id);
-  assert.equal(old.shop, null);
-  assert.match(
-    await ownRow.textContent(),
-    /Dive Shop · Mask & snorkel set · Jual/,
   );
   // The rental item stays where it was.
   assert.equal((await itemFor("demo-mask-sewa", "rental")).stock, 2);

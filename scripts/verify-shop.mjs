@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
 import { mkdir, readFile } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { demoAccount } from "../src/demo-data.js";
@@ -337,7 +338,7 @@ try {
   await salePhotos
     .locator("summary", { hasText: "Pilih foto lain atau tempel URL" })
     .click();
-  await salePhotos.getByLabel("Tambah dari koleksi").selectOption(picture.url);
+  await choose(salePhotos.getByLabel("Tambah dari koleksi"), picture.name);
   await page
     .getByRole("button", { name: "Simpan katalog Dive Shop", exact: true })
     .click();

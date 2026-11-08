@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import { cloneElement, useId } from "react";
 import { courseLimit, defaultCourses, partnerLimit } from "../course-model.js";
@@ -218,30 +219,12 @@ export default function CourseEditor({
                 {includes(index, "en")}
                 {both(index, "requirements", "Syarat", 300, true)}
                 <Field label="Foto dari koleksi atau URL">
-                  <select
-                    value=""
-                    onChange={(e) =>
-                      e.target.value && change(index, { image: e.target.value })
-                    }
-                  >
-                    <option value="">Pilih foto…</option>
-                    {media.length > 0 && (
-                      <optgroup label="Foto yang diunggah">
-                        {media.map((m) => (
-                          <option value={m.url} key={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                    <optgroup label="Foto bawaan website">
-                      {builtInPhotos.map(([url, title]) => (
-                        <option value={url} key={url}>
-                          {title}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
+                  <SearchSelect
+                    adds
+                    placeholder="Cari foto…"
+                    options={photoOptions(media, builtInPhotos)}
+                    onChange={(url) => url && change(index, { image: url })}
+                  />
                 </Field>
               </div>
             </div>

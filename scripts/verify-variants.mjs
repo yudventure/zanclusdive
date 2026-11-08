@@ -5,6 +5,7 @@
 // detaches variants. Run against a demo server started with
 // CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false.
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
 import { chromium } from "playwright";
 import { demoAccount } from "../src/demo-data.js";
 
@@ -406,9 +407,11 @@ try {
   assert.equal(byId(blue.id).variantOf, "demo-mask-hitam");
   // A product alone joins a family from the list of other products.
   await listed.filter({ hasText: "Masker Line Merah" }).click();
-  await a
-    .getByLabel("Jadikan varian dari produk lain")
-    .selectOption({ label: "Masker Line Hitam" });
+  await choose(
+    a.getByLabel("Jadikan varian dari produk lain"),
+    "Masker Line Hitam",
+    { exact: true },
+  );
   assert.equal(
     await section.locator(".admin-variant-row:not(.is-head)").count(),
     4,

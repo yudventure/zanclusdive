@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect from "./SearchSelect.jsx";
 import { useId, useMemo } from "react";
 import { formatIDR } from "../i18n.js";
 import {
@@ -74,23 +75,21 @@ export default function BookingPackages({ value, setValue, content }) {
       {groups.length > 0 && (
         <div className="admin-field">
           <label htmlFor={id + "-pick"}>Paket dari daftar harga</label>
-          <select
+          <SearchSelect
             id={id + "-pick"}
-            value=""
+            adds
             disabled={lines.length >= packageLimit}
-            onChange={(e) => add(e.target.value)}
-          >
-            <option value="">Pilih paket untuk ditambahkan…</option>
-            {groups.map((group) => (
-              <optgroup key={group.key} label={group.label}>
-                {group.items.map((item) => (
-                  <option key={item.key} value={item.key}>
-                    {item.name} · {rupiah(item.price)} {item.unit}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+            placeholder="Cari paket untuk ditambahkan…"
+            options={groups.flatMap((group) =>
+              group.items.map((item) => ({
+                value: item.key,
+                label: item.name,
+                note: `${rupiah(item.price)} ${item.unit}`.trim(),
+                group: group.label,
+              })),
+            )}
+            onChange={add}
+          />
         </div>
       )}
       {lines.length > 0 && (

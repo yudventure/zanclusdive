@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import { cloneElement, useEffect, useId, useRef, useState } from "react";
 import { builtInPhotos } from "../photography.js";
@@ -388,30 +389,12 @@ export default function GalleryEditor({
                     />
                   </Field>
                   <Field label="Atau pilih dari koleksi">
-                    <select
-                      value=""
-                      onChange={(e) =>
-                        e.target.value && change(index, { src: e.target.value })
-                      }
-                    >
-                      <option value="">Pilih foto…</option>
-                      {media.length > 0 && (
-                        <optgroup label="Media library">
-                          {media.map((m) => (
-                            <option value={m.url} key={m.id}>
-                              {m.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
-                      <optgroup label="Visual konsep bawaan">
-                        {builtInPhotos.map(([url, title]) => (
-                          <option value={url} key={url}>
-                            {title}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
+                    <SearchSelect
+                      adds
+                      placeholder="Cari foto…"
+                      options={photoOptions(media, builtInPhotos)}
+                      onChange={(url) => url && change(index, { src: url })}
+                    />
                   </Field>
                   <Field label="Keterangan (Indonesia)">
                     <input

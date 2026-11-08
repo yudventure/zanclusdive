@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
@@ -994,20 +995,13 @@ function ProductPhotos({
       <details className="admin-more">
         <summary>Pilih foto lain atau tempel URL</summary>
         <Field label="Tambah dari koleksi">
-          <select
-            value=""
+          <SearchSelect
+            adds
             disabled={full}
-            onChange={(e) =>
-              e.target.value && onChange([...images, e.target.value])
-            }
-          >
-            <option value="">Pilih foto…</option>
-            {media.map((m) => (
-              <option key={m.id} value={m.url}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+            placeholder="Cari di koleksi foto…"
+            options={photoOptions(media)}
+            onChange={(url) => url && onChange([...images, url])}
+          />
         </Field>
         <div className="admin-size-row">
           <Field label="URL foto">

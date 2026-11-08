@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import { cloneElement, useEffect, useId, useState } from "react";
 import Link from "next/link";
@@ -2056,32 +2057,18 @@ export default function Dashboard({ section, account, today }) {
                                   }
                                 />
                               </Field>
-                              <select
-                                aria-label={"Pilih gambar " + key}
-                                value=""
-                                onChange={(e) =>
-                                  e.target.value &&
-                                  mutateContent("images", key, e.target.value)
-                                }
-                              >
-                                <option value="">Pilih dari koleksi…</option>
-                                {data.media.length > 0 && (
-                                  <optgroup label="Foto yang diunggah">
-                                    {data.media.map((m) => (
-                                      <option value={m.url} key={m.id}>
-                                        {m.name}
-                                      </option>
-                                    ))}
-                                  </optgroup>
+                              <SearchSelect
+                                label={"Pilih gambar " + key}
+                                adds
+                                placeholder="Cari di koleksi foto…"
+                                options={photoOptions(
+                                  data.media,
+                                  builtInPhotos,
                                 )}
-                                <optgroup label="Foto bawaan website">
-                                  {builtInPhotos.map(([url, title]) => (
-                                    <option value={url} key={url}>
-                                      {title}
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              </select>
+                                onChange={(url) =>
+                                  url && mutateContent("images", key, url)
+                                }
+                              />
                             </details>
                           </div>
                         ))}

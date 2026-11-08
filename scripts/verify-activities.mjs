@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
+import { builtInPhotos } from "../src/photography.js";
+const photoTitle = (url) => builtInPhotos.find(([u]) => u === url)[1];
 import { mkdir } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { activityKeys, activityLabels } from "../src/activity-model.js";
@@ -499,14 +502,14 @@ try {
   await page
     .getByLabel("Titik temu", { exact: true })
     .fill("Titik temu contoh dari CMS");
-  await page
-    .getByLabel("Atau pilih dari koleksi", { exact: true })
-    .selectOption("/assets/photos/fan-beach.webp");
-  await page
-    .getByLabel("Atau pilih foto kartu dari koleksi", {
-      exact: true,
-    })
-    .selectOption("/assets/reef.webp");
+  await choose(
+    page.getByLabel("Atau pilih dari koleksi", { exact: true }),
+    photoTitle("/assets/photos/fan-beach.webp"),
+  );
+  await choose(
+    page.getByLabel("Atau pilih foto kartu dari koleksi", { exact: true }),
+    photoTitle("/assets/reef.webp"),
+  );
   await page
     .getByLabel("Deskripsi foto / caption", { exact: true })
     .fill("Caption konsep yang diedit dari CMS");

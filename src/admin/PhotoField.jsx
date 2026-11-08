@@ -1,4 +1,5 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
 import Thumb from "./Thumb.jsx";
 import { useId } from "react";
 import ImageUpload from "./ImageUpload.jsx";
@@ -34,29 +35,13 @@ export default function PhotoField({
             onChange={(e) => onChange(e.target.value)}
           />
         </div>
-        <select
-          aria-label={"Pilih foto " + label}
-          value=""
-          onChange={(e) => e.target.value && onChange(e.target.value)}
-        >
-          <option value="">Pilih dari koleksi…</option>
-          {media.length > 0 && (
-            <optgroup label="Foto yang diunggah">
-              {media.map((m) => (
-                <option value={m.url} key={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label="Foto bawaan website">
-            {builtInPhotos.map(([url, title]) => (
-              <option value={url} key={url}>
-                {title}
-              </option>
-            ))}
-          </optgroup>
-        </select>
+        <SearchSelect
+          label={"Pilih foto " + label}
+          adds
+          placeholder="Cari di koleksi foto…"
+          options={photoOptions(media, builtInPhotos)}
+          onChange={(url) => url && onChange(url)}
+        />
       </details>
     </div>
   );

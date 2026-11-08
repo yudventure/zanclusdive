@@ -3,6 +3,7 @@
 // panel, and the header menus closing on a tap anywhere else. Run against
 // a demo server started with CMS_DEMO_LOGIN=true CMS_COOKIE_SECURE=false.
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
 import { chromium } from "playwright";
 import { demoAccount } from "../src/demo-data.js";
 
@@ -402,13 +403,14 @@ try {
   await list.getByLabel("Filter status").selectOption("all");
   await list.getByRole("button", { name: "Edit" }).click();
   const pick = form.getByLabel("Paket dari daftar harga");
+  await pick.click();
   assert.equal(
-    await pick.locator("optgroup").first().getAttribute("label"),
+    await form.locator(".admin-search-group").first().textContent(),
     "Diving",
     "a diving reservation lists the diving prices first",
   );
-  await pick.selectOption("price:diving-discovery-dive");
-  await pick.selectOption("price:diving-pemandu-selam");
+  await choose(pick, "Discovery Dive");
+  await choose(pick, "Pemandu selam");
   assert.equal(
     await form.getByLabel("Jumlah Discovery Dive").inputValue(),
     "12",

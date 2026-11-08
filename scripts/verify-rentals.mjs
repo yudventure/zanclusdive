@@ -7,6 +7,7 @@
 // CMS_COOKIE_SECURE=false MIDTRANS_SERVER_KEY=SB-Mid-server-TEST
 // MIDTRANS_SNAP_URL=http://127.0.0.1:3499 MIDTRANS_API_URL=http://127.0.0.1:3499
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
 import { chromium } from "playwright";
 import { demoAccount } from "../src/demo-data.js";
 import { startMockMidtrans } from "./mock-midtrans.mjs";
@@ -169,9 +170,9 @@ try {
   await form.getByLabel("Nama tamu").fill("Tamu Datang");
   const gear = form.locator(".admin-booking-gear");
   await gear.getByRole("button", { name: "+ Tambah alat sewa" }).click();
-  await gear
-    .getByLabel("Alat sewa 1", { exact: true })
-    .selectOption({ label: "Masker" });
+  await choose(gear.getByLabel("Alat sewa 1", { exact: true }), "Masker", {
+    exact: true,
+  });
   await gear.getByLabel("Jumlah 1").fill("4");
   assert.equal(
     await gear.locator(".admin-gear-line small").textContent(),
@@ -267,9 +268,9 @@ try {
   await panel.getByRole("button", { name: "Catat sewa tanggal ini" }).click();
   assert.equal(await form.getByLabel("Pengalaman").inputValue(), "shop");
   await gear.getByRole("button", { name: "+ Tambah alat sewa" }).click();
-  await gear
-    .getByLabel("Alat sewa 1", { exact: true })
-    .selectOption({ label: "Masker" });
+  await choose(gear.getByLabel("Alat sewa 1", { exact: true }), "Masker", {
+    exact: true,
+  });
   assert.equal(
     await gear.locator(".admin-gear-line small").textContent(),
     "Penuh pada tanggal ini.",

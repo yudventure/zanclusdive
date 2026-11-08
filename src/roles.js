@@ -186,12 +186,13 @@ export const sections = {
     title: "Barang & stok",
     area: "gudang",
     intro:
-      "Stok tiap barang dari catatan masuk dan keluar, dengan peringatan stok menipis.",
+      "Stok setiap barang Dive Shop, jual dan sewa per ukuran, dengan peringatan habis dan menipis. Barang baru ditambah di Dive Shop.",
   },
   movements: {
     title: "Keluar masuk",
     area: "gudang",
-    intro: "Catatan barang masuk, keluar, dan koreksi stok per bulan.",
+    intro:
+      "Satu tempat untuk barang masuk, barang keluar, dan stock opname, dengan kartu stok tiap barang.",
   },
   users: {
     title: "Pengguna & peran",

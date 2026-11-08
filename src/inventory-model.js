@@ -13,7 +13,7 @@ export const units = ["pcs", "set", "pasang", "botol", "liter", "kg", "lusin"];
 export const movementKinds = {
   in: "Masuk",
   out: "Keluar",
-  adjust: "Koreksi stok",
+  adjust: "Stock opname",
 };
 export const movementReasons = {
   in: { beli: "Pembelian", kembali: "Sewa kembali", lainnya: "Lainnya" },
@@ -142,3 +142,28 @@ export function stockTable(items, movements) {
     };
   });
 }
+
+// An item's stock card for a month, as in a kartu stok: the stock at the
+// start of the month, then each movement oldest first with the stock after
+// it ("balance"), and the stock at the end of the month.
+export function stockCard(movements, itemId, month) {
+  const first = month + "-01";
+  const mine = movements
+    .filter((m) => m.itemId === itemId)
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
+    );
+  const opening = mine
+    .filter((m) => m.date < first)
+    .reduce((total, m) => total + delta(m), 0);
+  let balance = opening;
+  const rows = mine
+    .filter((m) => m.date.startsWith(month + "-"))
+    .map((m) => ({ ...m, balance: (balance += delta(m)) }));
+  return { opening, closing: balance, movements: rows };
+}
+// The change a stock opname records: the counted quantity minus the stock
+// on record.
+export const opnameChange = (counted, stock) => Number(counted) - stock;

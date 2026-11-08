@@ -4484,3 +4484,153 @@ strong.admin-overdue {
     margin-top: 10px;
   }
 }
+
+/* A dropdown for long lists, searched as it is typed (SearchSelect). */
+.admin-search-select {
+  position: relative;
+  min-width: 0;
+}
+.admin-search-select > input {
+  width: 100%;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233e5b70' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.admin-search-select > input::placeholder {
+  color: #7f93a1;
+}
+.admin-search-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid #d5e1e8;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 12px 28px #1c3b5124;
+}
+.admin-search-list li[role="option"] {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #254961;
+  cursor: pointer;
+}
+.admin-search-list li[role="option"] small {
+  flex: none;
+  font-size: 13px;
+  color: #718394;
+}
+.admin-search-list li.is-active {
+  background: #edf5f8;
+}
+.admin-search-list li.is-chosen {
+  font-weight: 700;
+}
+.admin-search-group {
+  padding: 10px 12px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5f7a8c;
+}
+.admin-search-none {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #718394;
+}
+
+/* Gudang: the stock list and the movements page. */
+.admin-stock-tools {
+  align-items: center;
+}
+.admin-stock-tools input[type="search"] {
+  flex: 1;
+  min-width: 220px;
+}
+.admin-stock-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.admin-stock-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e6f4f4;
+  color: #0d5f63;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-stock-tag.is-other {
+  background: #f1f4f6;
+  color: #5f7a8c;
+}
+.admin-move-kinds {
+  margin: 4px 0 10px;
+}
+.admin-move-tools {
+  align-items: center;
+}
+.admin-move-item {
+  flex: 1;
+  min-width: 240px;
+  max-width: 420px;
+}
+.admin-stock-card-head {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f4f9fb;
+}
+.admin-stock-card-head h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.admin-stock-card-head p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 0;
+  color: #4b6577;
+}
+.admin-moves td small {
+  display: block;
+  color: #718394;
+}
+@media (max-width: 600px) {
+  .admin-move-kinds button,
+  .admin-stock-tools .admin-month-views button {
+    flex: 1;
+    padding: 7px 8px;
+  }
+  .admin-move-item {
+    max-width: none;
+  }
+}
+@media (max-width: 760px) {
+  .admin-stock-tools .admin-month-views,
+  .admin-purchases .admin-month-views {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    border-radius: 18px;
+  }
+}
+.admin-join-family {
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+}
