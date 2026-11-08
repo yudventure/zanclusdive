@@ -4634,3 +4634,33 @@ strong.admin-overdue {
   min-width: 240px;
   max-width: 380px;
 }
+
+/* The place of a product in the list, typed to move it there. */
+.admin-root .admin-shop-place {
+  flex: none;
+  width: 52px;
+  height: 44px;
+  padding: 0 4px;
+  border: 1px solid #d8e4ea;
+  border-radius: 10px;
+  background: white;
+  color: #1b3a4b;
+  font-weight: 700;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.admin-root .admin-shop-place::-webkit-inner-spin-button,
+.admin-root .admin-shop-place::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.admin-root .admin-shop-place:disabled {
+  background: #f4f7f9;
+  color: #5f7a8c;
+}
+@media (max-width: 600px) {
+  .admin-root .admin-shop-place {
+    width: 44px;
+  }
+}

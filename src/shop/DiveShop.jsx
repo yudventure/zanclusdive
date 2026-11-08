@@ -413,7 +413,16 @@ export default function DiveShop({
               <p className="shop-add-notice" role="status">
                 {notice || t.pick}
               </p>
-              <div className="shop-product-grid">
+              <div
+                className={
+                  "shop-product-grid" +
+                  // A crossed-out price on one card keeps room for it on
+                  // every card, so the prices line up across a row.
+                  (cards.some((p) => discountOf(p, mode))
+                    ? " has-discount"
+                    : "")
+                }
+              >
                 {cards.map((product) => {
                   const locked = itemLocked(locks, "product", product.id);
                   const family = locked
@@ -506,10 +515,17 @@ export default function DiveShop({
                             {mode === "rental" && price !== null && (
                               <small>{t.perDay}</small>
                             )}
-                            {off && (
+                            {off ? (
                               <span className="shop-price-off">
                                 <del>{money(off.compare)}</del>
                                 <span>{t.detail.save(off.percent)}</span>
+                              </span>
+                            ) : (
+                              <span
+                                className="shop-price-off is-blank"
+                                aria-hidden="true"
+                              >
+                                <span>&nbsp;</span>
                               </span>
                             )}
                           </p>

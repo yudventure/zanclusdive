@@ -2389,3 +2389,39 @@
 .shop-checkout-totals div.is-discount dd {
   color: #b8321d;
 }
+
+/* Prices line up across a row of cards. The price and the button keep to
+   the bottom of each card, whatever the length of the name and summary,
+   and when one card in the list has a crossed-out price every card keeps
+   the room for that line (an invisible line where there is none). */
+.shop-item-price {
+  margin: auto 0 14px;
+  padding-top: 12px;
+}
+.shop-item-price + .shop-item-add,
+.shop-item-price + .shop-item-stepper,
+.shop-item-price + .shop-item-out {
+  margin-top: 0;
+}
+.shop-price-off.is-blank {
+  display: none;
+}
+.has-discount .shop-price-off.is-blank {
+  display: flex;
+  visibility: hidden;
+}
+.shop-product-bottom {
+  align-items: flex-end;
+}
+@container (min-width: 560px) {
+  .shop-item:nth-child(3n + 1):last-child .shop-item-price {
+    margin-top: 12px;
+    padding-top: 0;
+  }
+}
+@container (max-width: 559px) {
+  .shop-item:nth-child(odd):last-child .shop-item-price {
+    margin-top: 12px;
+    padding-top: 0;
+  }
+}

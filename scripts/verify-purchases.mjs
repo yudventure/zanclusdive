@@ -284,6 +284,29 @@ try {
     "Mask & snorkel set",
   ]);
   assert.deepEqual(after.slice(-2), ["Dive torch", "Dive computer"]);
+  // A number typed in a product's place moves it there.
+  const places = () =>
+    shopList
+      .locator(".admin-shop-place")
+      .evaluateAll((fields) => fields.map((f) => f.value));
+  assert.deepEqual(await places(), ["1", "2", "3", "4", "5", "6", "7"]);
+  const torchPlace = shopList.getByLabel("Nomor urut Dive torch");
+  await torchPlace.fill("2");
+  await torchPlace.press("Enter");
+  assert.deepEqual((await names()).slice(0, 3), [
+    "Regulator set",
+    "Dive torch",
+    "Open heel fins",
+  ]);
+  assert.deepEqual(await places(), ["1", "2", "3", "4", "5", "6", "7"]);
+  // A number past the end goes last.
+  const regPlace = shopList.getByLabel("Nomor urut Regulator set");
+  await regPlace.fill("99");
+  await regPlace.press("Enter");
+  assert.equal((await names()).at(-1), "Regulator set");
+  await shopList.getByLabel("Nomor urut Regulator set").fill("1");
+  await shopList.getByLabel("Nomor urut Regulator set").press("Enter");
+  assert.equal((await names())[0], "Regulator set");
   if (shots) await shopList.screenshot({ path: shots + "/urutan-produk.png" });
   // Searching hides the arrows: the order is the whole list's.
   await shopList.getByLabel("Cari produk").fill("fins");
@@ -303,8 +326,8 @@ try {
     .map((p) => p.id);
   assert.deepEqual(saved.slice(0, 3), [
     "demo-regulator",
+    "demo-light",
     "demo-fins",
-    "demo-mask",
   ]);
   // The rental products keep their own order.
   assert.deepEqual(
@@ -321,8 +344,8 @@ try {
     .evaluateAll((cards) => cards.map((c) => c.dataset.product));
   assert.deepEqual(shown.slice(0, 3), [
     "demo-regulator",
+    "demo-light",
     "demo-fins",
-    "demo-mask",
   ]);
   assert.deepEqual(errors, []);
   console.log(

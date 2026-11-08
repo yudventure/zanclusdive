@@ -77,6 +77,33 @@ const voucher = (patch) => ({
   ...patch,
 });
 
+// The price of every card in a row starts at the same height, measured
+// from the top of its card (rows by the cards' place in the layout, so a
+// card still sliding in does not count as another row).
+async function pricesInRows(page, cards, price) {
+  const found = await page.locator(cards).evaluateAll(
+    (list, sel) =>
+      list.map((card) => ({
+        row: card.offsetTop,
+        at: Math.round(
+          card.querySelector(sel).getBoundingClientRect().top -
+            card.getBoundingClientRect().top,
+        ),
+      })),
+    price,
+  );
+  const rows = new Map();
+  for (const { row, at } of found)
+    rows.set(row, [...(rows.get(row) ?? []), at]);
+  const full = [...rows.values()].filter((row) => row.length > 1);
+  assert.ok(full.length > 0, "a row with more than one card");
+  for (const row of full)
+    assert.ok(
+      Math.max(...row) - Math.min(...row) <= 1,
+      `prices in one row start at ${row.join(", ")}`,
+    );
+}
+
 try {
   assert.equal(
     (await api("/api/admin/login", "POST", demoAccount)).status(),
@@ -132,6 +159,8 @@ try {
     "Rp 1.600.000Hemat 21%",
   );
   assert.equal(await finsCard.locator(".shop-price-off del").count(), 1);
+  // Prices line up across each row, with or without a crossed-out price.
+  await pricesInRows(page, ".shop-product-card", ".shop-price");
   await finsCard.getByRole("button", { name: /Pilih ukuran/ }).click();
   const detail = page.locator("dialog.shop-detail");
   assert.match(
@@ -262,6 +291,7 @@ try {
   home.on("pageerror", (error) => errors.push("home: " + error.message));
   await home.goto(base + "/id", { waitUntil: "networkidle" });
   const panel = home.locator("#dive-shop .shop-service-panel");
+  await pricesInRows(home, "#dive-shop .shop-item", ".shop-item-price");
   await panel
     .locator(".shop-item", { hasText: "Mask & snorkel set" })
     .getByRole("button", { name: /Tambah/ })

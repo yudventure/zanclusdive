@@ -457,7 +457,7 @@ export default function ShopEditor({
             <p className="admin-subtle admin-shop-order-hint">
               {find.trim()
                 ? "Kosongkan pencarian untuk mengubah urutan."
-                : "Urutan di sini sama dengan urutan di website. Seret produk atau pakai tombol panah untuk memindahkannya, lalu simpan. Varian ikut pindah bersama produknya."}
+                : "Urutan di sini sama dengan urutan di website. Ketik nomor urut untuk memindahkan produk langsung ke urutan itu, atau seret produk dan pakai tombol panah, lalu simpan. Varian ikut pindah bersama produknya."}
             </p>
           )}
           {listed.map((p) => {
@@ -466,6 +466,7 @@ export default function ShopEditor({
             return (
               <div
                 key={p.id}
+                data-row={p.id}
                 className={
                   "admin-shop-row" +
                   (place < 0 ? " is-variant" : "") +
@@ -499,6 +500,54 @@ export default function ShopEditor({
                   setDropAt(null);
                 }}
               >
+                {place >= 0 && blocks.length > 1 && (
+                  <input
+                    // A new place gives a fresh field showing it.
+                    key={`${p.id}:${place}`}
+                    type="number"
+                    inputMode="numeric"
+                    className="admin-shop-place"
+                    min={1}
+                    max={blocks.length}
+                    step={1}
+                    defaultValue={place + 1}
+                    disabled={busy || !sortable}
+                    aria-label={`Nomor urut ${p.name}`}
+                    title="Ketik nomor urut, lalu Enter"
+                    onFocus={(e) => e.target.select()}
+                    onKeyDown={(e) => {
+                      // Enter moves it, without saving the catalog.
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.currentTarget.blur();
+                      } else if (e.key === "Escape") {
+                        e.currentTarget.value = place + 1;
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const wanted = Math.round(Number(e.target.value));
+                      if (!e.target.value || !Number.isFinite(wanted)) {
+                        e.target.value = place + 1;
+                        return;
+                      }
+                      const to =
+                        Math.min(Math.max(wanted, 1), blocks.length) - 1;
+                      if (to === place) {
+                        e.target.value = place + 1;
+                        return;
+                      }
+                      placeFamily(place, to);
+                      setTimeout(
+                        () =>
+                          document
+                            .querySelector(`[data-row="${p.id}"]`)
+                            ?.scrollIntoView({ block: "nearest" }),
+                        30,
+                      );
+                    }}
+                  />
+                )}
                 <button
                   type="button"
                   className={

@@ -574,7 +574,18 @@ export default function ShopTeaser({
           {items.length > 0 && !shown.length ? (
             <p className="shop-finder-empty">{s.noMatch}</p>
           ) : items.length ? (
-            <ul className="shop-item-grid">
+            <ul
+              className={
+                "shop-item-grid" +
+                // A crossed-out price on one card keeps room for it on
+                // every card, so the prices line up across a row.
+                (cards.some(
+                  (item) => item.product && discountOf(item.product, item.mode),
+                )
+                  ? " has-discount"
+                  : "")
+              }
+            >
               {cards.map((item) => {
                 const count = quantity(item.key);
                 const family = item.locked
@@ -655,10 +666,17 @@ export default function ShopTeaser({
                         )}
                         {price === null ? s.askPrice : rupiah(price, locale)}
                         {item.unit && <small> {item.unit}</small>}
-                        {off && (
+                        {off ? (
                           <span className="shop-price-off">
                             <del>{rupiah(off.compare, locale)}</del>
                             <span>{t.detail.save(off.percent)}</span>
+                          </span>
+                        ) : (
+                          <span
+                            className="shop-price-off is-blank"
+                            aria-hidden="true"
+                          >
+                            <span>&nbsp;</span>
                           </span>
                         )}
                       </p>
