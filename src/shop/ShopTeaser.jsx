@@ -15,6 +15,7 @@ import {
   rentalTabOf,
   familyOf,
   familyPrice,
+  familyTitle,
   oneEach,
   discountOf,
 } from "../shop-model.js";
@@ -602,6 +603,8 @@ export default function ShopTeaser({
                 const ids = family.map((v) => v.id);
                 // The normal price crossed out, when one price shows.
                 const off = varies ? null : discountOf(item.product, item.mode);
+                // A family shows one name; the window lists its choices.
+                const title = variants ? familyTitle(family) : item.name;
                 return (
                   <li
                     className={"shop-item" + (item.locked ? " is-locked" : "")}
@@ -632,7 +635,7 @@ export default function ShopTeaser({
                           <button
                             type="button"
                             className="shop-product-open"
-                            aria-label={t.detail.open(item.name)}
+                            aria-label={t.detail.open(title)}
                             onClick={() =>
                               setDetail({
                                 product: item.product,
@@ -641,10 +644,10 @@ export default function ShopTeaser({
                               })
                             }
                           >
-                            {item.name}
+                            {title}
                           </button>
                         ) : (
-                          item.name
+                          title
                         )}
                       </h4>
                       {item.info && (

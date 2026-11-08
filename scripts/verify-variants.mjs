@@ -119,11 +119,13 @@ try {
     200,
   );
 
-  // The Dive Shop shows the family as one card, from its lowest price.
+  // The Dive Shop shows the family as one card, from its lowest price,
+  // under one name without the colour: the colours are its choices.
   await page.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });
   const card = page.locator(".shop-product-card", {
-    hasText: "Masker Line Merah",
+    hasText: "Masker Line",
   });
+  assert.equal((await card.locator("h3").textContent()).trim(), "Masker Line");
   assert.equal(
     await page
       .locator(".shop-product-card h3")
@@ -140,7 +142,7 @@ try {
   // Searching a variant's name finds the family's card.
   await page.getByRole("searchbox").first().fill("hitam");
   await page
-    .locator(".shop-product-card h3", { hasText: "Masker Line Hitam" })
+    .locator(".shop-product-card h3", { hasText: "Masker Line" })
     .waitFor();
   assert.equal(await page.locator(".shop-product-card").count(), 1);
   await page.getByRole("searchbox").first().fill("");
@@ -164,8 +166,17 @@ try {
   assert.equal(await variants.locator("label img").count(), 3);
   shots &&
     (await detail.screenshot({ path: `${shots}/varian-jendela-merah.png` }));
+  assert.equal(
+    (await detail.locator("h2").textContent()).trim(),
+    "Masker Line",
+  );
   await variants.getByText("Hitam", { exact: true }).click();
-  await detail.locator("h2", { hasText: "Masker Line Hitam" }).waitFor();
+  await variants.locator("legend", { hasText: "Warna Hitam" }).waitFor();
+  // The name stays; the choice, photo and price change.
+  assert.equal(
+    (await detail.locator("h2").textContent()).trim(),
+    "Masker Line",
+  );
   assert.match(
     await detail.locator(".shop-detail-price strong").textContent(),
     /700\.000/,
@@ -212,7 +223,7 @@ try {
   // The homepage Dive Shop: one card, picked in the window.
   await page.goto(base + "/id", { waitUntil: "networkidle" });
   const panel = page.locator("#dive-shop .shop-service-panel");
-  const item = panel.locator(".shop-item", { hasText: "Masker Line Merah" });
+  const item = panel.locator(".shop-item", { hasText: "Masker Line" });
   assert.equal(
     await panel
       .locator(".shop-item h4")
@@ -234,7 +245,9 @@ try {
     .locator(".shop-variants")
     .getByText("Putih", { exact: true })
     .click();
-  await homeDetail.locator("h2", { hasText: "Masker Line Putih" }).waitFor();
+  await homeDetail
+    .locator(".shop-variants legend", { hasText: "Warna Putih" })
+    .waitFor();
   await homeDetail
     .getByRole("button", { name: "Masukkan ke keranjang" })
     .click();
@@ -255,7 +268,7 @@ try {
   p.on("pageerror", (error) => errors.push("phone: " + error.message));
   await p.goto(base + "/id/dive-shop", { waitUntil: "networkidle" });
   await p
-    .locator(".shop-product-card", { hasText: "Masker Line Merah" })
+    .locator(".shop-product-card", { hasText: "Masker Line" })
     .getByRole("button", { name: /Pilih varian/ })
     .click();
   const phoneDetail = p.locator("dialog.shop-detail");
@@ -308,7 +321,27 @@ try {
     "Masker Line Putih",
   ]);
   assert.equal(await a.locator(".admin-shop-item.is-variant").count(), 2);
-  await listed.filter({ hasText: "Masker Line Merah" }).click();
+  // A variant shares its lead's texts: its own detail has no description
+  // fields, only a note that leads back to the lead.
+  await listed.filter({ hasText: "Masker Line Hitam" }).click();
+  const detailCard = a.locator(".admin-shop-detail");
+  assert.equal(await detailCard.getByLabel("Deskripsi singkat").count(), 0);
+  assert.equal(
+    await detailCard
+      .getByRole("heading", { name: "Tabel spesifikasi" })
+      .count(),
+    0,
+  );
+  assert.match(
+    await detailCard.locator(".admin-variant-note").first().textContent(),
+    /sama dengan produk utama Masker Line Merah/,
+  );
+  await detailCard.getByRole("button", { name: "Buka produk utama" }).click();
+  await detailCard.getByLabel("Deskripsi singkat").waitFor();
+  assert.equal(
+    await a.locator(".admin-shop-item.selected strong").textContent(),
+    "Masker Line Merah",
+  );
   // Options and stock are one section of the price block.
   const section = a.locator(".admin-shop-mode .admin-options-stock");
   assert.equal(

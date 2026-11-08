@@ -28,6 +28,7 @@ import {
   withSplitProducts,
   variantLimit,
   familyId,
+  sharedVariantFields,
 } from "./shop-model.js";
 import { validateVouchers } from "./voucher-model.js";
 import {
@@ -440,87 +441,102 @@ export function validateShop(shop) {
     ...(shop.vouchers?.length
       ? { vouchers: validateVouchers(shop.vouchers) }
       : {}),
-    products: checkFamilies(
-      shop.products.map((p) => {
-        if (
-          !p ||
-          typeof p.id !== "string" ||
-          !/^[a-z0-9-]{1,50}$/.test(p.id) ||
-          ids.has(p.id) ||
-          !Object.hasOwn(shopCategories, p.category) ||
-          !Object.hasOwn(availabilityLabels, p.availability) ||
-          [p.enabled, p.saleEnabled, p.rentalEnabled].some(
-            (v) => typeof v !== "boolean",
+    products: withSharedTexts(
+      checkFamilies(
+        shop.products.map((p) => {
+          if (
+            !p ||
+            typeof p.id !== "string" ||
+            !/^[a-z0-9-]{1,50}$/.test(p.id) ||
+            ids.has(p.id) ||
+            !Object.hasOwn(shopCategories, p.category) ||
+            !Object.hasOwn(availabilityLabels, p.availability) ||
+            [p.enabled, p.saleEnabled, p.rentalEnabled].some(
+              (v) => typeof v !== "boolean",
+            )
           )
-        )
-          throw new Error(
-            "Produk, kategori, atau pilihan jual/rental tidak valid.",
-          );
-        // Gear for sale and rental gear are different products.
-        if (p.saleEnabled === p.rentalEnabled)
-          throw new Error(
-            `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
-          );
-        ids.add(p.id);
-        // Rental gear may name the same model for sale, one rental gear each.
-        const pair =
-          p.rentalEnabled &&
-          typeof p.pair === "string" &&
-          /^[a-z0-9-]{1,50}$/.test(p.pair) &&
-          p.pair !== p.id &&
-          !pairs.has(p.pair)
-            ? p.pair
-            : "";
-        if (pair) pairs.add(pair);
-        function price(value) {
-          if (value === null || value === "" || value === undefined)
-            return null;
-          if (typeof value !== "number" && typeof value !== "string")
-            throw new Error("Harga produk tidak valid.");
-          const n = Number(value);
-          if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
             throw new Error(
-              "Harga produk harus berupa rupiah positif, maksimal 1 miliar. Kosongkan untuk penawaran.",
+              "Produk, kategori, atau pilihan jual/rental tidak valid.",
             );
-          return n;
-        }
-        return {
-          id: p.id,
-          category: p.category,
-          availability: p.availability,
-          enabled: p.enabled,
-          saleEnabled: p.saleEnabled,
-          rentalEnabled: p.rentalEnabled,
-          ...(pair ? { pair } : {}),
-          name: plain(p.name, "Nama produk", 100),
-          description: plain(p.description, "Deskripsi produk", 500),
-          specification: plain(
-            p.specification || "",
-            "Spesifikasi produk",
-            300,
-            false,
-          ),
-          ...productMedia(p),
-          details: plain(
-            p.details ?? "",
-            "Deskripsi lengkap",
-            productLimits.details,
-            false,
-          ),
-          specs: specRows(p.specs),
-          // Only the price of its own way.
-          salePrice: p.saleEnabled ? price(p.salePrice) : null,
-          rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
-          sizes: cleanSizes(p.sizes),
-          ...comparePrice(
-            p,
-            price(p.saleEnabled ? p.salePrice : p.rentalPrice),
-          ),
-          ...variantFields(p),
-        };
-      }),
+          // Gear for sale and rental gear are different products.
+          if (p.saleEnabled === p.rentalEnabled)
+            throw new Error(
+              `${String(p.name ?? "Produk").slice(0, 100)} harus barang jual atau barang sewa.`,
+            );
+          ids.add(p.id);
+          // Rental gear may name the same model for sale, one rental gear each.
+          const pair =
+            p.rentalEnabled &&
+            typeof p.pair === "string" &&
+            /^[a-z0-9-]{1,50}$/.test(p.pair) &&
+            p.pair !== p.id &&
+            !pairs.has(p.pair)
+              ? p.pair
+              : "";
+          if (pair) pairs.add(pair);
+          function price(value) {
+            if (value === null || value === "" || value === undefined)
+              return null;
+            if (typeof value !== "number" && typeof value !== "string")
+              throw new Error("Harga produk tidak valid.");
+            const n = Number(value);
+            if (!Number.isSafeInteger(n) || n <= 0 || n > 1e9)
+              throw new Error(
+                "Harga produk harus berupa rupiah positif, maksimal 1 miliar. Kosongkan untuk penawaran.",
+              );
+            return n;
+          }
+          return {
+            id: p.id,
+            category: p.category,
+            availability: p.availability,
+            enabled: p.enabled,
+            saleEnabled: p.saleEnabled,
+            rentalEnabled: p.rentalEnabled,
+            ...(pair ? { pair } : {}),
+            name: plain(p.name, "Nama produk", 100),
+            description: plain(p.description, "Deskripsi produk", 500),
+            specification: plain(
+              p.specification || "",
+              "Spesifikasi produk",
+              300,
+              false,
+            ),
+            ...productMedia(p),
+            details: plain(
+              p.details ?? "",
+              "Deskripsi lengkap",
+              productLimits.details,
+              false,
+            ),
+            specs: specRows(p.specs),
+            // Only the price of its own way.
+            salePrice: p.saleEnabled ? price(p.salePrice) : null,
+            rentalPrice: p.rentalEnabled ? price(p.rentalPrice) : null,
+            sizes: cleanSizes(p.sizes),
+            ...comparePrice(
+              p,
+              price(p.saleEnabled ? p.salePrice : p.rentalPrice),
+            ),
+            ...variantFields(p),
+          };
+        }),
+      ),
     ),
   };
+}
+// Every variant shows its lead's texts, spec table and videos, so the
+// description is written once for all colours or types.
+function withSharedTexts(products) {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  return products.map((p) => {
+    const lead = p.variantOf && byId.get(p.variantOf);
+    if (!lead) return p;
+    const shared = Object.fromEntries(
+      sharedVariantFields.map((key) => [key, structuredClone(lead[key])]),
+    );
+    return { ...p, ...shared };
+  });
 }
 // The normal price crossed out above the price of the product's own way
 // (discountOf in shop-model.js). It must be higher than that price.

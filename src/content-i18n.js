@@ -539,8 +539,23 @@ export function localizeContent(content, locale) {
         heading: en.shop.heading,
         description: en.shop.description,
       }),
+      // A variant shows its lead's English texts, as it shows its
+      // Indonesian ones (sharedVariantFields in shop-model.js).
       products: base.shop.products.map((p) =>
-        overlay(p, en.shop.products[p.id]),
+        overlay(
+          p,
+          p.variantOf && en.shop.products[p.variantOf]
+            ? {
+                ...en.shop.products[p.id],
+                ...pick(en.shop.products[p.variantOf], [
+                  "description",
+                  "specification",
+                  "details",
+                  "specs",
+                ]),
+              }
+            : en.shop.products[p.id],
+        ),
       ),
     },
   };

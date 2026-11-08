@@ -4,6 +4,7 @@ import {
   demoShop,
   familyOf,
   familyPrice,
+  familyTitle,
   oneEach,
   quoteOrder,
   variantLimit,
@@ -228,5 +229,91 @@ test("variant names have an English text like the other product texts", () => {
   assert.equal(
     english.shop.products.find((p) => p.id === "demo-mask").variantLabel,
     "Colour",
+  );
+});
+
+test("variants show their lead's texts, spec table and videos", () => {
+  const shop = maskFamily({
+    black: {
+      description: "Teks lama varian hitam",
+      details: "# Cerita lama",
+      specs: [{ label: "Warna", value: "Hitam" }],
+      category: "fins",
+      videos: [],
+    },
+  });
+  const at = shop.products.findIndex((p) => p.id === "demo-mask");
+  shop.products[at] = {
+    ...shop.products[at],
+    description: "Masker silikon dengan pandangan luas.",
+    details: "# Masker Line\n\nSatu cerita untuk semua warna.",
+    specs: [{ label: "Lensa", value: "Kaca tempered" }],
+  };
+  const products = validateShop(shop).products;
+  const lead = products.find((p) => p.id === "demo-mask");
+  const black = products.find((p) => p.id === "demo-mask-hitam");
+  for (const key of [
+    "description",
+    "details",
+    "specs",
+    "category",
+    "specification",
+  ])
+    assert.deepEqual(black[key], lead[key], key);
+  // What sets it apart stays its own.
+  assert.equal(black.variant, "Hitam");
+  assert.equal(black.salePrice, 700000);
+  assert.equal(black.name, "Masker Line Hitam");
+  // In English too, a variant shows its lead's texts.
+  const content = {
+    ...defaultContent,
+    shop: { ...defaultContent.shop, products },
+    en: {
+      ...defaultContent.en,
+      shop: {
+        ...defaultContent.en.shop,
+        products: {
+          "demo-mask": { description: "A silicone mask with a wide view." },
+          "demo-mask-hitam": {
+            name: "Line Mask Black",
+            description: "Old black text",
+          },
+        },
+      },
+    },
+  };
+  const en = localizeContent(content, "en").shop.products.find(
+    (p) => p.id === "demo-mask-hitam",
+  );
+  assert.equal(en.description, "A silicone mask with a wide view.");
+  assert.equal(en.name, "Line Mask Black");
+});
+
+test("a family keeps one name on its card and window", () => {
+  const products = validateShop(maskFamily()).products;
+  const family = familyOf(
+    products,
+    products.find((p) => p.id === "demo-mask"),
+  );
+  assert.equal(familyTitle(family), "Masker Line");
+  // A name without the colour in it stays whole.
+  assert.equal(
+    familyTitle([
+      { name: "Masker Selam Poseidon Red Line", variant: "Merah" },
+      { name: "Masker Selam Poseidon Red Line Hitam", variant: "Hitam" },
+    ]),
+    "Masker Selam Poseidon Red Line",
+  );
+  assert.equal(
+    familyTitle([
+      { name: "Fins Go Sport - Putih", variant: "Putih" },
+      { name: "Fins Go Sport - Hitam", variant: "Hitam" },
+    ]),
+    "Fins Go Sport",
+  );
+  // A product alone keeps its own name.
+  assert.equal(
+    familyTitle([{ name: "Masker Line Merah", variant: "Merah" }]),
+    "Masker Line Merah",
   );
 });

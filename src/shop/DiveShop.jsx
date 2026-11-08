@@ -22,6 +22,7 @@ import {
   productAs,
   familyOf,
   familyPrice,
+  familyTitle,
   oneEach,
   discountOf,
 } from "../shop-model.js";
@@ -448,6 +449,8 @@ export default function DiveShop({
                     ) ?? badges[0];
                   // The normal price crossed out, when one price shows.
                   const off = varies ? null : discountOf(product, mode);
+                  // A family shows one name; the window lists its choices.
+                  const title = variants ? familyTitle(family) : product.name;
                   return (
                     <article
                       className={
@@ -476,15 +479,15 @@ export default function DiveShop({
                         </p>
                         <h3>
                           {locked ? (
-                            product.name
+                            title
                           ) : (
                             <button
                               type="button"
                               className="shop-product-open"
-                              aria-label={t.detail.open(product.name)}
+                              aria-label={t.detail.open(title)}
                               onClick={() => openDetail(product)}
                             >
-                              {product.name}
+                              {title}
                             </button>
                           )}
                         </h3>

@@ -71,6 +71,33 @@ export const pairOf = (products, product) =>
 // pick the variant in its window.
 export const variantLimit = 12;
 export const familyId = (product) => product?.variantOf || product?.id;
+// What every variant of a family shares with its lead: the texts, the spec
+// table and the videos. A variant differs only in its choice (a colour or
+// a type), photos, price and stock, so its description is the lead's.
+export const sharedVariantFields = [
+  "category",
+  "description",
+  "specification",
+  "details",
+  "specs",
+  "videos",
+];
+// The name a family shows on its card and in its window: the lead's name,
+// without the lead's own choice when the name carries it ("Masker Line
+// Merah" shows as "Masker Line"), so the choices below tell them apart.
+export function familyTitle(family) {
+  const lead = family?.[0];
+  if (!lead) return "";
+  const word = String(lead.variant ?? "").trim();
+  if (family.length < 2 || !word) return lead.name;
+  const at = lead.name.toLocaleLowerCase().indexOf(word.toLocaleLowerCase());
+  if (at < 0) return lead.name;
+  const title = (lead.name.slice(0, at) + lead.name.slice(at + word.length))
+    .replace(/\s*[-·/,]\s*$/, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  return title || lead.name;
+}
 // The family of a product among these products, the lead first.
 export function familyOf(products, product) {
   const id = familyId(product);

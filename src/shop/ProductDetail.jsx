@@ -7,6 +7,7 @@ import {
   stockBadge,
   productImages,
   familyOf,
+  familyTitle,
   pairOf,
   variantName,
   discountOf,
@@ -212,7 +213,10 @@ export default function ProductDetail({
         </div>
         <div className="shop-detail-info">
           <p className="eyebrow">{category}</p>
-          <h2 id={`${id}-title`}>{product.name}</h2>
+          {/* A family keeps one name; its choices tell them apart. */}
+          <h2 id={`${id}-title`}>
+            {family.length > 1 ? familyTitle(family) : product.name}
+          </h2>
           <p className="shop-detail-price">
             <span>{mode === "sale" ? t.buyPrice : t.rentPrice}</span>
             <strong>

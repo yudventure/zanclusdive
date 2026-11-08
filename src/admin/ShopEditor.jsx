@@ -18,6 +18,7 @@ import {
   deliveryZoneLimit,
   familyId,
   familyOf,
+  familyTitle,
   variantLimit,
   discountOf,
 } from "../shop-model.js";
@@ -156,6 +157,9 @@ export default function ShopEditor({
   const product = ofKind.find((p) => p.id === selectedID) || ofKind[0];
   const pair = product && pairOf(shop.products, product);
   const family = product ? familyOf(ofKind, product) : [];
+  // A variant shares its lead's texts, spec table and videos
+  // (sharedVariantFields): they are written on the lead only.
+  const sharesTexts = family.length > 1 && family[0].id !== product?.id;
   const full = shop.products.length >= shopProductLimit;
   function show(next, id) {
     setKind(next);
@@ -623,7 +627,14 @@ export default function ShopEditor({
               </label>
             </div>
             <div className="admin-form-grid">
-              <Field label="Nama produk">
+              <Field
+                label="Nama produk"
+                hint={
+                  sharesTexts
+                    ? `Dipakai di keranjang, pesanan, dan Gudang. Di website judulnya tetap ${familyTitle(family)}, dengan ${product.variant || "pilihan ini"} sebagai pilihannya.`
+                    : undefined
+                }
+              >
                 <input
                   required
                   maxLength={100}
@@ -631,42 +642,71 @@ export default function ShopEditor({
                   onChange={(e) => edit("name", e.target.value)}
                 />
               </Field>
-              <Field label="Kategori produk">
-                <select
-                  value={product.category}
-                  onChange={(e) => edit("category", e.target.value)}
-                >
-                  {Object.entries(shopCategories).map(([k, label]) => (
-                    <option key={k} value={k}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field
-                label="Deskripsi singkat"
-                hint="Tampil di kartu produk, satu sampai dua kalimat."
-              >
-                <textarea
-                  required
-                  rows={3}
-                  maxLength={500}
-                  value={product.description}
-                  onChange={(e) => edit("description", e.target.value)}
-                />
-              </Field>
-              <Field
-                label="Ringkasan spesifikasi"
-                hint="Satu baris di kartu, misalnya Mask + snorkel, lensa tempered."
-              >
-                <textarea
-                  rows={3}
-                  maxLength={300}
-                  value={product.specification}
-                  onChange={(e) => edit("specification", e.target.value)}
-                />
-              </Field>
+              {!sharesTexts && (
+                <>
+                  <Field label="Kategori produk">
+                    <select
+                      value={product.category}
+                      onChange={(e) => edit("category", e.target.value)}
+                    >
+                      {Object.entries(shopCategories).map(([k, label]) => (
+                        <option key={k} value={k}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field
+                    label="Deskripsi singkat"
+                    hint="Tampil di kartu produk, satu sampai dua kalimat."
+                  >
+                    <textarea
+                      required
+                      rows={3}
+                      maxLength={500}
+                      value={product.description}
+                      onChange={(e) => edit("description", e.target.value)}
+                    />
+                  </Field>
+                  <Field
+                    label="Ringkasan spesifikasi"
+                    hint="Satu baris di kartu, misalnya Mask + snorkel, lensa tempered."
+                  >
+                    <textarea
+                      rows={3}
+                      maxLength={300}
+                      value={product.specification}
+                      onChange={(e) => edit("specification", e.target.value)}
+                    />
+                  </Field>
+                </>
+              )}
             </div>
+            {sharesTexts ? (
+              <p className="admin-variant-note">
+                Deskripsi, ringkasan, kategori, cerita produk, tabel
+                spesifikasi, dan video sama dengan produk utama{" "}
+                <b>{family[0].name}</b>, jadi cukup ditulis sekali di sana. Yang
+                berbeda di sini hanya{" "}
+                {(family[0].variantLabel || "pilihan").toLocaleLowerCase("id")},
+                foto, harga, dan stok.{" "}
+                <button
+                  type="button"
+                  className="admin-text-button"
+                  onClick={() => setSelectedID(family[0].id)}
+                >
+                  Buka produk utama
+                </button>
+              </p>
+            ) : (
+              family.length > 1 && (
+                <p className="admin-subtle">
+                  Deskripsi, ringkasan, kategori, cerita produk, tabel
+                  spesifikasi, dan video di produk ini dipakai juga oleh{" "}
+                  {family.length - 1} varian lainnya.
+                </p>
+              )
+            )}
             <ModeSection
               mode={kind}
               product={product}
@@ -715,23 +755,27 @@ export default function ShopEditor({
                 )
               }
             />
-            <ProductStoryField
-              product={product}
-              locale={locale}
-              edit={edit}
-              onImport={(texts, shared) =>
-                onImport?.(product.id, texts, shared)
-              }
-            />
-            <SpecTable
-              rows={product.specs ?? []}
-              catalog={shop.products}
-              onChange={(rows) => edit("specs", rows)}
-            />
-            <ProductVideos
-              videos={product.videos ?? []}
-              onChange={(videos) => edit("videos", videos)}
-            />
+            {!sharesTexts && (
+              <>
+                <ProductStoryField
+                  product={product}
+                  locale={locale}
+                  edit={edit}
+                  onImport={(texts, shared) =>
+                    onImport?.(product.id, texts, shared)
+                  }
+                />
+                <SpecTable
+                  rows={product.specs ?? []}
+                  catalog={shop.products}
+                  onChange={(rows) => edit("specs", rows)}
+                />
+                <ProductVideos
+                  videos={product.videos ?? []}
+                  onChange={(videos) => edit("videos", videos)}
+                />
+              </>
+            )}
             <ProductPair
               mode={kind}
               pair={pair}
