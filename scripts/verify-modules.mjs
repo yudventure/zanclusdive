@@ -409,7 +409,7 @@ try {
   const gp = await gudang.newPage();
   gp.on("pageerror", (error) => errors.push(error.message));
   await gp.goto(base + "/admin/stock", { waitUntil: "networkidle" });
-  await gp.getByText("BCD ukuran M").first().waitFor();
+  await gp.getByText("BCD jacket").first().waitFor();
   assert.ok(
     await gp.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
     "no sideways scroll at 390px",
