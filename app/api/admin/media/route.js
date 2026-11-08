@@ -1,7 +1,7 @@
 import { requireAdmin, apiFailure } from "../../../../src/server/auth.js";
 import { addMedia } from "../../../../src/server/store.js";
 export async function POST(request) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "website");
   if (denied) return denied;
   if (Number(request.headers.get("content-length") || 0) > 4.5 * 1024 * 1024)
     return Response.json(

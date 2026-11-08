@@ -80,12 +80,58 @@ try {
     uploaded.name,
     "IMG_2041." + (uploaded.mime === "image/webp" ? "webp" : "jpg"),
   );
+  // The admin preview is the small copy, loaded when it comes into view,
+  // not the full upload.
+  const preview = slot.locator("img");
+  assert.equal(await preview.getAttribute("src"), hero + "?w=480");
+  assert.equal(await preview.getAttribute("loading"), "lazy");
+  assert.match(await preview.getAttribute("srcset"), /\?w=828 828w/);
   const visitor = await context.newPage();
   await visitor.goto(base + "/id", { waitUntil: "networkidle" });
   assert.equal(await visitor.locator(".hero-photo").getAttribute("src"), hero);
   const served = await context.request.get(base + hero);
   assert.equal(served.status(), 200);
   assert.equal(served.headers()["content-type"], uploaded.mime);
+  // Smaller copies for smaller screens: the hero lists them in srcset and
+  // the server makes WebP copies once, kept a year like the original.
+  assert.equal(
+    await visitor.locator(".hero-photo").getAttribute("srcset"),
+    [480, 828, 1280, 1920].map((w) => `${hero}?w=${w} ${w}w`).join(", "),
+  );
+  const copy = await context.request.get(base + hero + "?w=480");
+  assert.equal(copy.status(), 200);
+  assert.equal(copy.headers()["content-type"], "image/webp");
+  assert.match(copy.headers()["cache-control"], /max-age=31536000, immutable/);
+  const copyBytes = (await copy.body()).length;
+  assert.ok(
+    copyBytes * 4 < uploaded.bytes,
+    `480 px copy ${copyBytes} B is far below the upload ${uploaded.bytes} B`,
+  );
+  // An odd width gets the next size up; too wide gets the original.
+  const odd = await context.request.get(base + hero + "?w=700");
+  assert.ok((await odd.body()).length > copyBytes);
+  assert.equal(
+    (await (await context.request.get(base + hero + "?w=5000")).body()).length,
+    uploaded.bytes,
+  );
+  // A phone picks a small copy.
+  const phone = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+  });
+  await phone.goto(base + "/id", { waitUntil: "networkidle" });
+  assert.match(
+    await phone.locator(".hero-photo").evaluate((img) => img.currentSrc),
+    /\?w=828$/,
+  );
+  await phone.close();
+  // The website's own photos are kept by the browser for a day.
+  assert.match(
+    (await context.request.get(base + "/assets/hero.webp")).headers()[
+      "cache-control"
+    ],
+    /max-age=86400/,
+  );
   // Stored as its own file, not inside state.json.
   if (dataDir) {
     assert.ok((await readdir(join(dataDir, "media"))).includes(uploaded.id));
@@ -126,7 +172,7 @@ try {
   await page.goto(base + "/admin/shop", { waitUntil: "networkidle" });
   await page
     .locator(".admin-upload-drop")
-    .filter({ hasText: /foto produk/ })
+    .filter({ hasText: /foto barang jual/ })
     .locator('input[type="file"]')
     .setInputFiles({
       name: "mask.png",
@@ -159,6 +205,41 @@ try {
     /^\/api\/media\//,
   );
 
+  // A package photo in the price list: placed at once, then shown on the
+  // package's card on the activity page.
+  await page.goto(base + "/admin/prices", { waitUntil: "networkidle" });
+  const versionBefore = (await state()).version;
+  await page
+    .locator(".admin-price-photo .admin-image-slot")
+    .filter({
+      has: page.locator(":scope > strong", {
+        hasText: /^Foto Fun Dive Piaynemo$/,
+      }),
+    })
+    .locator('input[type="file"]')
+    .setInputFiles({
+      name: "piaynemo.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(small),
+    });
+  await page
+    .getByText("Foto terpasang dan sudah tampil di website.", { exact: true })
+    .waitFor({ timeout: 60000 });
+  const priced = await state();
+  assert.equal(priced.version, versionBefore + 1, "package photo saved");
+  const packagePhoto = priced.content.priceList.diving.find(
+    (item) => item.id === "diving-fun-dive-piaynemo",
+  ).image;
+  assert.match(packagePhoto, /^\/api\/media\//);
+  await visitor.goto(base + "/id/diving", { waitUntil: "networkidle" });
+  assert.equal(
+    await visitor
+      .locator(".activity-prices > li", { hasText: "Fun Dive Piaynemo" })
+      .locator(".activity-price-photo")
+      .getAttribute("src"),
+    packagePhoto,
+  );
+
   // Mobile: the upload control is a large tap target.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/admin/media", { waitUntil: "networkidle" });
@@ -172,7 +253,7 @@ try {
   await page.screenshot({ path: "artifacts/upload-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS upload: camera photo shrunk below 4 MB, placed and saved in one step, live on the homepage, stored as a file; multi-photo gallery upload; shop and activity photos; mobile tap target.",
+    "PASS upload: camera photo shrunk below 4 MB, placed and saved in one step, live on the homepage, stored as a file; smaller WebP copies at 480, 828, 1280 and 1920 px in srcset, kept a year, a phone loading the 828 px copy; site photos cached a day; multi-photo gallery upload; shop, activity and package photos; mobile tap target.",
   );
 } finally {
   await browser.close();

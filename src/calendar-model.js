@@ -15,7 +15,7 @@ export const seasonRatingLabels = {
   good: "Baik",
   windy: "Berangin",
 };
-export const calendarLimits = { events: 60, spots: 12, eco: 8 };
+export const calendarLimits = { events: 60, spots: 12, eco: 8, banners: 4 };
 
 const t = (id, en) => ({ id, en });
 const event = (date, type, place, title, description) => ({
@@ -26,6 +26,47 @@ const event = (date, type, place, title, description) => ({
   description,
 });
 
+// Wide banners above the experience cards on the homepage, shown only while
+// an event is on: from showFrom (or at once) until the event's endDate.
+// The price is in rupiah per person; the one button opens a sign-up form,
+// or the link when one is set. The background photo fills the banner, its
+// subject on the right with the words on the left. "image" held a flyer
+// before the banner was the design itself; it is no longer shown.
+export const blankBanner = () => ({
+  enabled: false,
+  badge: { id: "EVENT", en: "EVENT" },
+  title: { id: "", en: "" },
+  subtitle: { id: "", en: "" },
+  amount: 0,
+  minPeople: 1,
+  note: { id: "", en: "" },
+  startDate: "",
+  endDate: "",
+  showFrom: "",
+  image: "",
+  background: "",
+  link: "",
+});
+// The Zanclus dive trip, on from the start at its special price. Without
+// dates it shows until switched off and guests pick their date.
+export const diveTripPrice = 27500000;
+// The owner's photo of a diver and a turtle in the Dampier Strait.
+export const tripPhoto = "/assets/photos/banner-penyu.webp";
+const shippedFlyer = "/assets/photos/event-dive-trip.webp";
+export const sampleBanner = () => ({
+  ...blankBanner(),
+  enabled: true,
+  title: t("Dive Trip with Zanclus", "Dive Trip with Zanclus"),
+  subtitle: t(
+    "Raja Ampat The Last Paradise · 8 hari 7 malam · 15 log dive",
+    "Raja Ampat, The Last Paradise · 8 days 7 nights · 15 logged dives",
+  ),
+  amount: diveTripPrice,
+  minPeople: 4,
+  note: t("Harga spesial", "Special price"),
+  background: tripPhoto,
+});
+export const defaultBanners = () => [sampleBanner()];
 export const defaultCalendar = {
   events: [
     event(
@@ -269,13 +310,149 @@ export const defaultCalendar = {
       ),
     ],
   ].map(([title, when, description]) => ({ title, when, description })),
+  banners: defaultBanners(),
 };
 
 // Older CMS documents gain the calendar defaults.
+// An event's dates in the page language: "1–8 Jun 2030" or "Jun 1 – 8,
+// 2030"; one day, or nothing without dates.
+export function eventDates(start, end, locale) {
+  if (!start) return "";
+  const format = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const day = (date) => new Date(date + "T12:00:00Z");
+  // Ranges are written tight ("Jun 1–8, 2030"), without spaces round the dash.
+  return !end || end === start
+    ? format.format(day(start))
+    : format.formatRange(day(start), day(end)).replace(/\s*–\s*/g, "–");
+}
+// Banners to show on a day, earliest event first; at most two.
+export function activeBanners(calendar, today) {
+  return (calendar?.banners ?? [])
+    .filter(
+      (b) =>
+        b.enabled &&
+        (!b.showFrom || today >= b.showFrom) &&
+        (!b.endDate || today <= b.endDate),
+    )
+    .sort((a, b) =>
+      (a.startDate || "9999").localeCompare(b.startDate || "9999"),
+    )
+    .slice(0, 2);
+}
+function bannerURL(value, label, internal) {
+  const url = String(value ?? "").trim();
+  if (
+    url.length > 1200 ||
+    (url &&
+      !url.startsWith("https://") &&
+      !(internal
+        ? url.startsWith("/") && !url.startsWith("//")
+        : url.startsWith("/assets/") || url.startsWith("/api/media/")))
+  )
+    throw new Error(`${label} pada banner event tidak valid.`);
+  return url;
+}
+// Whole rupiah or people; an empty field is 0.
+function whole(value, min, max, label) {
+  const n =
+    value === "" || value === undefined || value === null ? 0 : Number(value);
+  if (!Number.isSafeInteger(n) || n < min || n > max)
+    throw new Error(`${label} pada banner event tidak valid.`);
+  return n;
+}
+function validateBanner(b) {
+  const date = (value, label) => {
+    const out = String(value ?? "").trim();
+    if (out && !validDate(out))
+      throw new Error(`${label} pada banner event tidak valid.`);
+    return out;
+  };
+  const banner = {
+    enabled: b?.enabled === true,
+    badge: text(b?.badge, "Label banner", 24, false),
+    title: text(b?.title, "Judul banner", 80, true),
+    subtitle: text(b?.subtitle, "Keterangan banner", 140, false),
+    amount: whole(b?.amount, 0, 1e9, "Harga per orang"),
+    minPeople: whole(b?.minPeople ?? 1, 1, 30, "Minimal peserta"),
+    note: text(b?.note, "Catatan banner", 60, false),
+    startDate: date(b?.startDate, "Tanggal mulai"),
+    endDate: date(b?.endDate, "Tanggal selesai"),
+    showFrom: date(b?.showFrom, "Mulai tampil"),
+    image: bannerURL(b?.image, "Foto", false),
+    background: bannerURL(b?.background, "Foto latar", false),
+    link: bannerURL(b?.link, "Link tombol", true),
+  };
+  if (banner.startDate && banner.endDate && banner.endDate < banner.startDate)
+    throw new Error("Tanggal selesai banner event sebelum tanggal mulai.");
+  return banner;
+}
+
+// Older CMS documents gain the calendar defaults. Saved banners are brought
+// up to date once:
+// - the two photo banners shipped for a day, untouched, are taken out
+//   (the owner wanted the photos in the flyer, not new banners);
+// - the dive trip, priced in dollars as text before, gets its rupiah price
+//   and minimum group. Left as the untouched draft, it is switched on;
+// - a banner with the flyer that shipped shows the owner's photo instead,
+//   the banner being the design now.
+const retiredBanners = [
+  "Menyelam pertama di Raja Ampat",
+  "Jelajahi gua dan dinding karang",
+];
+const retired = (b) =>
+  retiredBanners.includes(b?.title?.id) &&
+  /^\/assets\/photos\/banner-/.test(b?.background ?? "") &&
+  !b.startDate &&
+  !b.endDate;
+function upgradeTrip(b) {
+  const sample = sampleBanner();
+  const untouched = !b.enabled && !b.startDate && !b.endDate && !b.showFrom;
+  const rest = { ...b };
+  delete rest.price;
+  return {
+    ...rest,
+    enabled: b.enabled || untouched,
+    amount: diveTripPrice,
+    minPeople: 4,
+    // "Minimal 4 pax" now comes from the minimum group.
+    note: !b.note || b.note.id === "Minimal 4 pax" ? sample.note : b.note,
+  };
+}
+function upgradeBanners(banners) {
+  let changed = false;
+  const list = [];
+  for (let b of banners) {
+    if (retired(b)) {
+      changed = true;
+      continue;
+    }
+    if (b?.title?.id === sampleBanner().title.id && !(b.amount > 0)) {
+      changed = true;
+      b = upgradeTrip(b);
+    }
+    if (b?.image === shippedFlyer) {
+      changed = true;
+      b = { ...b, image: "", background: b.background || tripPhoto };
+    }
+    list.push(b);
+  }
+  return changed ? list : banners;
+}
 export function withCalendar(content) {
-  return content.calendar
+  const calendar = content.calendar;
+  if (!calendar)
+    return { ...content, calendar: structuredClone(defaultCalendar) };
+  const banners = calendar.banners
+    ? upgradeBanners(calendar.banners)
+    : defaultBanners();
+  return banners === calendar.banners
     ? content
-    : { ...content, calendar: structuredClone(defaultCalendar) };
+    : { ...content, calendar: { ...calendar, banners } };
 }
 
 function text(value, label, max, required) {
@@ -359,7 +536,12 @@ export function validateCalendar(input) {
     when: text(e.when, "Waktu rencana", 60, false),
     description: text(e.description, "Keterangan rencana", 300, false),
   }));
-  return { events, seasons, spots, eco };
+  const banners = list(
+    input.banners ?? [],
+    "Banner event",
+    calendarLimits.banners,
+  ).map(validateBanner);
+  return { events, seasons, spots, eco, banners };
 }
 
 // A text in the visitor's language, falling back to Indonesian.

@@ -1,0 +1,378 @@
+/* Event banners above the experience cards, only while an event is on.
+   Each is a photo banner as wide as the section, lined up with its title
+   and cards: the owner's photo fills it with its subject on the right, the
+   event, its facts, the price and one button on the left. */
+.event-banners {
+  display: grid;
+  gap: 16px;
+  margin: 4px 0 40px;
+}
+.event-banner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 660px) minmax(0, 1fr);
+  align-content: center;
+  gap: 26px 0;
+  min-height: 380px;
+  padding: 52px 60px;
+  overflow: hidden;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 82% -10%, #4fd1e866, transparent 46%),
+    radial-gradient(circle at 10% 120%, #c8f28a40, transparent 42%),
+    linear-gradient(110deg, #031d2f 0%, #0a4a68 55%, #0f7287 100%);
+  color: #fff;
+  box-shadow: 0 30px 70px #062b3b3d;
+  cursor: pointer;
+  isolation: isolate;
+}
+.event-banner > .event-banner-text,
+.event-banner > .event-banner-offer {
+  position: relative;
+  z-index: 2;
+  grid-column: 1;
+}
+.event-banner-sea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* The photo drifts slowly, like the sea. */
+.event-banner-bg {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 68% 46%;
+  transform-origin: 70% 40%;
+  animation: event-drift 22s ease-in-out infinite alternate;
+}
+@keyframes event-drift {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.1) translateX(-1.5%);
+  }
+}
+/* Dark on the side the words sit on, the photo clear on the other. */
+.event-banner.has-photo::before,
+.event-banner.has-photo::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+.event-banner.has-photo::before {
+  background: linear-gradient(
+    90deg,
+    #021827f5 0%,
+    #021827e0 32%,
+    #0218278c 52%,
+    #02182724 72%,
+    #02182700 100%
+  );
+}
+.event-banner.has-photo::after {
+  background: linear-gradient(0deg, #0218278a 0%, #02182700 38%);
+}
+.event-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.event-banner-badge {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #c8f28a;
+  color: #062b3b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+.event-banner-dates {
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: #ffffff1f;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e3f6fb;
+}
+.event-banner h3 {
+  margin: 16px 0 12px;
+  font-size: clamp(36px, 4.2vw, 64px);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-shadow: 0 2px 24px #02182766;
+}
+.event-banner-place {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #d9f2f7;
+}
+.event-banner-place svg,
+.event-banner-facts svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: #c8f28a;
+}
+.event-banner-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.event-banner-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px 8px 11px;
+  border: 1px solid #ffffff2e;
+  border-radius: 999px;
+  background: #ffffff14;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f2fbfd;
+}
+.event-banner-facts svg {
+  width: 16px;
+  height: 16px;
+}
+.event-banner-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 28px;
+}
+.event-banner-price {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  align-items: baseline;
+  column-gap: 8px;
+  margin: 0;
+}
+.event-banner-price small {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c8f28a;
+}
+.event-banner-price strong {
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.event-banner-price span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cde9f0;
+}
+.event-banner-actions {
+  display: flex;
+}
+/* The one button: large, bright, and gently glowing. */
+.event-banner-cta.button {
+  padding: 17px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #062b3b;
+  white-space: nowrap;
+  box-shadow: 0 12px 30px #c8f28a40;
+  animation: event-glow 2.8s ease-in-out infinite;
+}
+.event-banner-cta span {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+.event-banner:hover .event-banner-cta span {
+  transform: translateX(5px);
+}
+.event-banner:hover .event-banner-cta.button {
+  box-shadow: 0 14px 36px #c8f28a73;
+}
+@keyframes event-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 12px 30px #c8f28a40,
+      0 0 0 0 #c8f28a66;
+  }
+  55% {
+    box-shadow:
+      0 12px 30px #c8f28a40,
+      0 0 0 12px #c8f28a00;
+  }
+}
+.event-banner-cta:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .event-banner {
+    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+    min-height: 340px;
+    padding: 44px 44px;
+  }
+}
+/* Tablets and phones: the photo on top, the words below on deep blue. */
+@media (max-width: 760px) {
+  .event-banners {
+    margin-bottom: 30px;
+  }
+  .event-banner {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: end;
+    gap: 20px;
+    min-height: 0;
+    padding: 24px 20px 22px;
+    border-radius: 26px;
+  }
+  .event-banner.has-photo {
+    padding-top: 190px;
+    background: #021827;
+  }
+  .event-banner-bg {
+    height: 280px;
+    object-position: 74% 62%;
+  }
+  .event-banner.has-photo::before {
+    background: linear-gradient(
+      180deg,
+      #02182700 0%,
+      #02182733 110px,
+      #021827d9 210px,
+      #021827 270px
+    );
+  }
+  .event-banner.has-photo::after {
+    display: none;
+  }
+  .event-banner h3 {
+    margin: 12px 0 10px;
+    font-size: clamp(30px, 8.6vw, 40px);
+  }
+  .event-banner-place {
+    font-size: 14px;
+  }
+  .event-banner-facts {
+    margin-top: 14px;
+  }
+  .event-banner-facts li {
+    padding: 6px 11px 6px 9px;
+    font-size: 12.5px;
+  }
+  .event-banner-offer {
+    display: grid;
+    gap: 14px;
+  }
+  .event-banner-actions,
+  .event-banner-cta.button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-banner-bg,
+  .event-banner-cta.button {
+    animation: none;
+  }
+  .event-banner-cta span {
+    transition: none;
+  }
+}
+
+/* The event sign-up window: what the event is, then the guest's details. */
+.event-signup-offer {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #eef6f2;
+}
+.event-signup-offer:not(:has(img)) {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 14px 16px;
+}
+.event-signup-offer img {
+  width: 96px;
+  height: 120px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 12px;
+}
+.event-signup-offer dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.event-signup-offer dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #57717a;
+}
+.event-signup-offer dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #062b3b;
+}
+.event-signup-offer dd strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+.event-signup-offer dd small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f8f8a;
+}
+.event-signup .activity-form .button[type="submit"] {
+  width: 100%;
+  justify-content: center;
+}
+.event-signup-done {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #e5f4ea;
+}
+.event-signup-done h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.event-signup-done p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #33525a;
+}
+.event-signup-done .button {
+  justify-self: start;
+}

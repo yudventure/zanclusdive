@@ -3,29 +3,28 @@ import {
   jsonBody,
   apiFailure,
 } from "../../../../../src/server/auth.js";
-import { saveBooking, deleteBooking } from "../../../../../src/server/store.js";
+import { deleteBooking } from "../../../../../src/server/store.js";
 import { validateBooking } from "../../../../../src/cms-model.js";
+import { saveWithBilling } from "../../../../../src/server/admin-booking.js";
 export async function PUT(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
   const { id } = await params;
-  let payload;
+  let body, payload;
   try {
-    payload = validateBooking(await jsonBody(request));
+    body = await jsonBody(request);
+    payload = validateBooking(body);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 400 });
   }
   try {
-    const result = await saveBooking(payload, id);
-    return result
-      ? Response.json(result)
-      : Response.json({ error: "Reservasi tidak ditemukan." }, { status: 404 });
+    return await saveWithBilling({ request, payload, body, id });
   } catch (error) {
     return apiFailure(error);
   }
 }
 export async function DELETE(request, { params }) {
-  const denied = await requireAdmin(request);
+  const denied = await requireAdmin(request, "bookings");
   if (denied) return denied;
   const { id } = await params;
   try {

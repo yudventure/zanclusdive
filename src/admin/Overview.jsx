@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { statuses } from "../cms-model.js";
+import { statuses, programTitle } from "../cms-model.js";
+import { purchaseState } from "../booking-kind.js";
 import { AdminIcon } from "./icons.jsx";
 
 const zone = "Asia/Jayapura";
@@ -222,7 +223,10 @@ function ScheduleChart({ bookings, content, today }) {
               <li key={b.id}>
                 <span>
                   {b.guestName || "Penutupan tanggal"}
-                  <small>{content.experiences[b.experience]?.title}</small>
+                  <small>
+                    {programTitle(content, b.experience)}
+                    {b.payment?.status === "paid" && " · Lunas"}
+                  </small>
                 </span>
                 <em className={"admin-status " + b.status}>
                   {statuses[b.status]}
@@ -241,6 +245,7 @@ function ScheduleChart({ bookings, content, today }) {
 
 export default function Overview({
   bookings,
+  purchases = [],
   content,
   customers,
   pending,
@@ -268,6 +273,20 @@ export default function Overview({
     .filter((e) => e.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const experiences = Object.values(content.experiences);
+  // Dive Shop purchases are not reservations: only whether they are paid.
+  const unpaid = purchases.filter((b) => purchaseState(b) === "unpaid");
+  const paidInMonth = purchases.filter(
+    (b) =>
+      purchaseState(b) === "paid" &&
+      (b.payment?.paidAt
+        ? new Date(b.payment.paidAt).toLocaleDateString("en-CA", {
+            timeZone: zone,
+          })
+        : b.startDate
+      ).slice(0, 7) === month,
+  );
+  const purchaseTotal = (list) =>
+    list.reduce((n, b) => n + (Number(b.payment?.amount ?? b.amount) || 0), 0);
   const todayGuests = dailySchedule(bookings, today, 1)[0];
   const cards = [
     {
@@ -279,7 +298,7 @@ export default function Overview({
       label: "Menunggu konfirmasi",
       value: pending.length,
       note: pending.length ? "Balas lewat WhatsApp" : "Semua sudah dijawab",
-      href: "/admin/reservations",
+      href: "/admin/calendar#daftar-reservasi",
       tone: pending.length ? "warn" : "ok",
     },
     {
@@ -293,6 +312,22 @@ export default function Overview({
       value: customers.length,
       note: `${customers.filter((c) => c.count > 1).length} tamu datang lagi`,
       href: "/admin/customers",
+    },
+    {
+      label: "Pembelian belum dibayar",
+      value: unpaid.length,
+      note: unpaid.length
+        ? `${money(purchaseTotal(unpaid))} menunggu`
+        : "Semua pembelian sudah dibayar",
+      href: "/admin/orders",
+      tone: unpaid.length ? "warn" : "ok",
+    },
+    {
+      label: `Pembelian lunas · ${monthName}`,
+      value: money(purchaseTotal(paidInMonth)),
+      note: `${paidInMonth.length} pembelian barang`,
+      href: "/admin/orders",
+      small: true,
     },
     {
       label: "Kegiatan mendatang",

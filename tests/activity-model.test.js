@@ -151,3 +151,31 @@ test("WhatsApp inquiries retain the selected activity and guest details without 
     ),
   );
 });
+
+test("the WhatsApp message carries the chosen package and estimate", () => {
+  const message = activityInquiry(
+    "diving",
+    defaultActivities.diving,
+    {
+      name: "Rina",
+      whatsapp: "+62 812 3456 7890",
+      date: "2030-01-10",
+      participants: 2,
+    },
+    "2030-01-01",
+    false,
+    "id",
+    {
+      lines: [
+        { item: "Discovery Dive", quantity: 2, unit: "orang" },
+        { item: "Dokumentasi", quantity: 1, unit: "hari" },
+      ],
+      total: 2900000,
+    },
+  );
+  assert.match(
+    message,
+    /Paket: Discovery Dive × 2 orang, Dokumentasi × 1 hari\n/,
+  );
+  assert.match(message, /Perkiraan biaya: Rp\s?2\.900\.000\n/);
+});

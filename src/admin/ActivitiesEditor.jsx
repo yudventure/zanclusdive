@@ -1,4 +1,6 @@
 "use client";
+import SearchSelect, { photoOptions } from "./SearchSelect.jsx";
+import Thumb from "./Thumb.jsx";
 import ImageUpload from "./ImageUpload.jsx";
 import { cloneElement, useId, useState } from "react";
 import { activityKeys, activityLabels } from "../activity-model.js";
@@ -125,6 +127,18 @@ export default function ActivitiesEditor({
                 onChange={(e) => change("meetingPoint", e.target.value)}
               />
             </Field>
+            <Field label="Kuota peserta per hari (0 = tanpa batas)">
+              <input
+                type="number"
+                min="0"
+                max="500"
+                step="1"
+                value={activity.capacity ?? 0}
+                onChange={(e) =>
+                  change("capacity", Math.max(0, Number(e.target.value) || 0))
+                }
+              />
+            </Field>
             <Field label="Harga mulai per orang (Rp, kosong = penawaran)">
               <input
                 type="number"
@@ -165,8 +179,9 @@ export default function ActivitiesEditor({
         <h2>Sampul halaman detail</h2>
         <div className="admin-form">
           <div className="admin-image-slot wide">
-            <img src={activity.image} alt="Preview sampul" />
+            <Thumb src={activity.image} alt="Preview sampul" />
             <ImageUpload
+              guide="activityCover"
               label="Ganti foto sampul"
               onFile={(file) => placePhoto(file, (url) => change("image", url))}
             />
@@ -180,24 +195,12 @@ export default function ActivitiesEditor({
             />
           </Field>
           <Field label="Atau pilih dari koleksi">
-            <select
-              value=""
-              onChange={(e) =>
-                e.target.value && change("image", e.target.value)
-              }
-            >
-              <option value="">Pilih foto…</option>
-              {builtInPhotos.map(([url, label]) => (
-                <option value={url} key={url}>
-                  {label}
-                </option>
-              ))}
-              {media.map((item) => (
-                <option value={item.url} key={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              adds
+              placeholder="Cari foto…"
+              options={photoOptions(media, builtInPhotos)}
+              onChange={(url) => url && change("image", url)}
+            />
           </Field>
           <Field label="Deskripsi foto / caption">
             <input
@@ -221,8 +224,9 @@ export default function ActivitiesEditor({
         </p>
         <div className="admin-form">
           <div className="admin-image-slot wide">
-            <img src={activity.cardImage} alt="Preview foto kartu" />
+            <Thumb src={activity.cardImage} alt="Preview foto kartu" />
             <ImageUpload
+              guide="activityCard"
               label="Ganti foto kartu"
               onFile={(file) =>
                 placePhoto(file, (url) => change("cardImage", url))
@@ -238,24 +242,12 @@ export default function ActivitiesEditor({
             />
           </Field>
           <Field label="Atau pilih foto kartu dari koleksi">
-            <select
-              value=""
-              onChange={(e) =>
-                e.target.value && change("cardImage", e.target.value)
-              }
-            >
-              <option value="">Pilih foto…</option>
-              {builtInPhotos.map(([url, label]) => (
-                <option value={url} key={url}>
-                  {label}
-                </option>
-              ))}
-              {media.map((item) => (
-                <option value={item.url} key={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              adds
+              placeholder="Cari foto…"
+              options={photoOptions(media, builtInPhotos)}
+              onChange={(url) => url && change("cardImage", url)}
+            />
           </Field>
           <Field label="Deskripsi foto kartu">
             <input

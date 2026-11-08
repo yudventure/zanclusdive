@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
+import { choose } from "./pick.mjs";
 import { readFile, mkdir } from "node:fs/promises";
 import mysql from "mysql2/promise";
 const baseURL = process.env.BASE_URL || "http://127.0.0.1:3005";
@@ -168,9 +169,7 @@ assert.equal(
   (await response.body()).length,
   (await readFile("public/assets/reef.webp")).length,
 );
-await page
-  .getByLabel("Pilih gambar hero", { exact: true })
-  .selectOption(asset.url);
+await choose(page.getByLabel("Pilih gambar hero", { exact: true }), asset.name);
 await page.getByRole("button", { name: "Simpan gambar website" }).click();
 await page
   .getByRole("status")
@@ -310,7 +309,9 @@ assert.equal(
   false,
 );
 await page.getByRole("button", { name: "Menu admin", exact: true }).click();
-await page.getByRole("link", { name: "Reservasi", exact: true }).click();
+await page
+  .getByRole("link", { name: "Kalender reservasi", exact: true })
+  .click();
 await page.getByLabel("Cari reservasi").fill("Raka");
 assert.ok(
   await page

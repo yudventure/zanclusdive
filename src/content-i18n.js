@@ -6,6 +6,7 @@ import {
   defaultActivities,
   legacyActivityDefaults,
 } from "./activity-model.js";
+import { demoShop, productLimits } from "./shop-model.js";
 
 export const translatableFields = {
   experiences: ["title", "description", "cardDescription", "duration", "items"],
@@ -23,7 +24,15 @@ export const translatableFields = {
     "itinerary",
     "faqs",
   ],
-  products: ["name", "description", "specification"],
+  products: [
+    "name",
+    "description",
+    "specification",
+    "details",
+    "specs",
+    "variant",
+    "variantLabel",
+  ],
 };
 const experienceKeys = ["beginner", "explorer", "specialty"];
 const textKeys = [
@@ -359,6 +368,12 @@ export const englishDefaults = {
     },
   },
 };
+// The demo gear for sale and the same gear for rent share their English.
+for (const p of demoShop().products)
+  if (p.pair)
+    englishDefaults.shop.products[p.id] = {
+      ...englishDefaults.shop.products[p.pair],
+    };
 
 const pick = (object, keys) =>
   Object.fromEntries(
@@ -524,8 +539,23 @@ export function localizeContent(content, locale) {
         heading: en.shop.heading,
         description: en.shop.description,
       }),
+      // A variant shows its lead's English texts, as it shows its
+      // Indonesian ones (sharedVariantFields in shop-model.js).
       products: base.shop.products.map((p) =>
-        overlay(p, en.shop.products[p.id]),
+        overlay(
+          p,
+          p.variantOf && en.shop.products[p.variantOf]
+            ? {
+                ...en.shop.products[p.id],
+                ...pick(en.shop.products[p.variantOf], [
+                  "description",
+                  "specification",
+                  "details",
+                  "specs",
+                ]),
+              }
+            : en.shop.products[p.id],
+        ),
       ),
     },
   };
@@ -557,10 +587,13 @@ export function applyEnglishEdit(content, group, key, value) {
     };
   }
   if (group === "shop") {
-    if (key !== "products") {
+    if (["heading", "description"].includes(key)) {
       en.shop[key] = value;
       return { ...current, en };
     }
+    // Delivery settings carry both languages themselves.
+    if (key !== "products")
+      return { ...current, shop: { ...current.shop, [key]: value } };
     const fields = translatableFields.products;
     en.shop.products = Object.fromEntries(
       value.map((p) => [p.id, pick(p, fields)]),
@@ -582,6 +615,18 @@ function optional(value, label, max) {
   if (typeof value !== "string" || value.length > max)
     throw new Error(`${label} (English) tidak valid.`);
   return value.trim();
+}
+// English spec rows; empty rows are dropped, as in Indonesian.
+function specList(value) {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || value.length > 16)
+    throw new Error("Spesifikasi (English) tidak valid.");
+  return value
+    .map((row) => ({
+      label: optional(row?.label, "Nama spesifikasi", 40),
+      value: optional(row?.value, "Isi spesifikasi", 160),
+    }))
+    .filter((row) => row.label && row.value);
 }
 function list(value, label, max, limit) {
   if (value === undefined || value === null) return [];
@@ -679,6 +724,18 @@ export function validateTranslations(input, products = []) {
                 t.specification,
                 "Spesifikasi produk",
                 300,
+              ),
+              details: optional(
+                t.details,
+                "Deskripsi lengkap",
+                productLimits.details,
+              ),
+              specs: specList(t.specs),
+              variant: optional(t.variant, "Nama varian", 40),
+              variantLabel: optional(
+                t.variantLabel,
+                "Jenis pilihan varian",
+                30,
               ),
             },
           ];

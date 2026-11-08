@@ -1,4 +1,4 @@
-import { authConfigured, sameOrigin, jsonBody, passwordMatches } from "../../../../src/server/auth.js";
+import { authConfigured, sameOrigin, jsonBody, passwordMatches, basePasswordMatches } from "../../../../src/server/auth.js";
 import { checkDatabase } from "../../../../src/server/database-check.js";
 import { isDemo } from "../../../../src/cms-mode.js";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,12 @@ export async function POST(request) {
   try { data = await jsonBody(request); } catch { return respond({ error: "Data tidak valid." }, 400); }
   if (typeof data.email !== "string" || typeof data.password !== "string" || data.email.length > 250 || data.password.length > 500)
     return respond({ error: "Data tidak valid." }, 400);
-  if (!passwordMatches(data.email, data.password)) return respond({ error: "Email atau password admin tidak sesuai." }, 401);
+  // A password changed in the admin lives in the database; while it cannot be
+  // read, the hosting-panel password is checked instead.
+  let account;
+  try { account = await passwordMatches(data.email, data.password); }
+  catch { account = basePasswordMatches(data.email, data.password); }
+  if (!account) return respond({ error: "Email atau password admin tidak sesuai." }, 401);
   if (data.mysqlPassword !== undefined && (typeof data.mysqlPassword !== "string" || data.mysqlPassword.length > 500))
     return respond({ error: "Password uji MySQL tidak valid." }, 400);
   const result = await checkDatabase(data.mysqlPassword || undefined);

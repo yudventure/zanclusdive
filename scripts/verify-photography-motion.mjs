@@ -280,12 +280,12 @@ try {
   await page
     .locator(".admin-image-slot")
     .filter({
-      has: page.locator(":scope > strong", { hasText: /^Galeri — penyu$/ }),
+      has: page.locator(":scope > strong", { hasText: /^Galeri, penyu$/ }),
     })
     .locator("summary")
     .click();
   await page
-    .getByLabel("URL foto Galeri — penyu", { exact: true })
+    .getByLabel("URL foto Galeri, penyu", { exact: true })
     .fill("/assets/photos/fan-coral.webp");
   await page
     .getByRole("button", { name: "Simpan gambar website", exact: true })
@@ -298,7 +298,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(
     await page
-      .getByLabel("URL foto Galeri — penyu", { exact: true })
+      .getByLabel("URL foto Galeri, penyu", { exact: true })
       .inputValue(),
     "/assets/photos/fan-coral.webp",
   );

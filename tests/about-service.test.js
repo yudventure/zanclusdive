@@ -12,6 +12,7 @@ import {
   validateAbout,
   paragraphs,
   withAbout,
+  defaultCompany,
 } from "../src/about-model.js";
 
 test("about and service content survive CMS validation and default for older sites", () => {
@@ -121,4 +122,44 @@ test("service request message lists the chosen services in the visitor's languag
         ),
       error,
     );
+});
+
+test("the company profile defaults for older about pages and is checked", () => {
+  const old = structuredClone(defaultAbout);
+  delete old.company;
+  // Saved before the company profile existed: the default one is added.
+  assert.deepEqual(validateAbout(old).company, defaultCompany);
+  assert.deepEqual(withAbout({ about: old }).about.company, defaultCompany);
+  const page = withAbout({ about: structuredClone(defaultAbout) });
+  assert.equal(page.about.company.portfolio.length, 4);
+  // Owner edits are kept, unnamed fields dropped, limits enforced.
+  const about = structuredClone(defaultAbout);
+  about.company.standing.id = "  Diperhitungkan di Raja Ampat.  ";
+  about.company.portfolio.push({
+    title: { id: "", en: "" },
+    text: { id: "Tanpa nama", en: "" },
+  });
+  const saved = validateAbout(about);
+  assert.equal(saved.company.standing.id, "Diperhitungkan di Raja Ampat.");
+  assert.equal(saved.company.portfolio.length, 4);
+  assert.throws(
+    () =>
+      validateAbout({
+        ...about,
+        company: {
+          ...about.company,
+          portfolio: Array(7).fill(about.company.portfolio[0]),
+        },
+      }),
+    { message: /maksimal 6/ },
+  );
+  assert.throws(() =>
+    validateAbout({
+      ...about,
+      company: { ...about.company, partners: { id: "x".repeat(601), en: "" } },
+    }),
+  );
+  // The default text follows the owner's writing rules.
+  const text = JSON.stringify(defaultCompany);
+  assert.ok(!/[:;—]/.test(text.replace(/"[a-z]+":/g, "")), text);
 });

@@ -41,7 +41,7 @@ export async function POST(request) {
         { error: "Terlalu banyak percobaan. Coba lagi dalam 15 menit." },
         { status: 429, headers: { "Retry-After": "900" } },
       );
-    const account = passwordMatches(data.email, data.password);
+    const account = await passwordMatches(data.email, data.password);
     if (!account) {
       await failLogin();
       return Response.json(

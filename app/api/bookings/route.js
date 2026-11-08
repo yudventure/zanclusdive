@@ -14,6 +14,7 @@ import {
   allowBookingRequest,
   bookingFingerprint,
 } from "../../../src/server/public-booking.js";
+import { notifyTeam } from "../../../src/server/team-mail.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -90,6 +91,9 @@ export async function POST(request) {
       requestId,
       bookingFingerprint(booking),
     );
+    // The team hears of a new request once, not of a repeated send.
+    if (result.created)
+      notifyTeam({ ...booking, reference: result.receipt.reference }, "new");
     return Response.json(result.receipt, {
       status: result.created ? 201 : 200,
       headers,

@@ -79,6 +79,7 @@ export default function ServiceEditor({
         <div className="admin-photo-row">
           <PhotoField
             label="Foto sampul servis"
+            guide="service"
             value={image}
             media={media}
             onChange={setImage}

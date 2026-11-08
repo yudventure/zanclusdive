@@ -2,6 +2,19 @@
 import { useState } from "react";
 import { demoAccount } from "../demo-data.js";
 import FormField from "../components/FormField.jsx";
+import { PasswordForm } from "./PasswordEditor.jsx";
+
+// JSON request for the forgotten-password form.
+async function call(url, method, body) {
+  const response = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Permintaan gagal.");
+  return result;
+}
 export default function Login({
   configured,
   issues = [],
@@ -9,6 +22,7 @@ export default function Login({
   database = false,
 }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [forgot, setForgot] = useState(false);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [diagnostic, setDiagnostic] = useState(null);
@@ -111,7 +125,39 @@ export default function Login({
           <p className="admin-eyebrow">OPERATOR SIGN IN</p>
           <h1>Selamat datang kembali.</h1>
           <p>Masuk dengan akun operator untuk mengelola website Zanclus.</p>
-          {configured ? (
+          {configured && forgot ? (
+            <div className="admin-forgot">
+              <h2>Lupa password</h2>
+              <p>
+                Isi email operator, minta kode OTP, lalu buat password baru.
+                Kode dikirim ke email pemulihan akun.
+              </p>
+              <FormField id="forgot-email" label="Email operator" icon="email">
+                <input
+                  id="forgot-email"
+                  type="email"
+                  autoComplete="username"
+                  placeholder="operator@zanclusdive.com"
+                  required
+                />
+              </FormField>
+              <PasswordForm
+                forgot
+                request={call}
+                email={() =>
+                  document.getElementById("forgot-email").value.trim()
+                }
+                onDone={() => window.location.assign("/admin")}
+              />
+              <button
+                type="button"
+                className="admin-inline"
+                onClick={() => setForgot(false)}
+              >
+                ← Kembali ke login
+              </button>
+            </div>
+          ) : configured ? (
             <form onSubmit={login}>
               <FormField id="login-email" label="Email operator" icon="email">
                 <input
@@ -272,9 +318,16 @@ export default function Login({
               </a>
             </div>
           )}
-          <small>
-            Area khusus tim Zanclus. Lupa password? Hubungi pengelola website.
-          </small>
+          {configured && !forgot && (
+            <button
+              type="button"
+              className="admin-inline admin-forgot-link"
+              onClick={() => setForgot(true)}
+            >
+              Lupa password? Reset dengan kode OTP email
+            </button>
+          )}
+          <small>Area khusus tim Zanclus.</small>
         </section>
       </main>
     </div>

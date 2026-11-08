@@ -1,0 +1,26 @@
+# Dependabot opens a pull request as soon as a package used by the site
+# has a security fix, and once a day for other patch and minor releases,
+# so hPanel's Vulnerabilities list stays empty. Security pull requests
+# need Dependabot security updates switched on under the repository's
+# Settings, Code security.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      time: "07:00"
+      timezone: Asia/Jayapura
+    open-pull-requests-limit: 10
+    groups:
+      keamanan:
+        applies-to: security-updates
+        patterns: ["*"]
+      pembaruan-kecil:
+        applies-to: version-updates
+        update-types: [minor, patch]
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

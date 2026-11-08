@@ -29,7 +29,7 @@ export default function DiveSiteMap({ locale }) {
         tanda={diveSites}
         judul={false}
         teks={t.map}
-        tautan={() => localeHref(locale, "/diving#inquiry")}
+        tautan={() => localeHref(locale, "/diving#prices")}
         className="peta-zanclus"
       />
     </section>
