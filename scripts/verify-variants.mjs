@@ -344,6 +344,11 @@ try {
     await a.locator(".admin-shop-item.selected strong").textContent(),
     "Masker Line Merah",
   );
+  // The new choice is a draft: the note says it is not on the website yet.
+  assert.match(
+    await section.locator(".admin-variant-note").textContent(),
+    /Pembeli bisa memilih Merah, Hitam, Putih di website\. Biru belum tampil\./,
+  );
   // Price and stock of every variant on one table.
   await section.getByLabel("Harga Biru").fill("700000");
   for (const [colour, count] of [

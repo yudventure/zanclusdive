@@ -116,7 +116,7 @@ export function OptionValues({
       <small className="admin-subtle">
         {names.some(Boolean)
           ? "Pilihan baru langsung jadi varian baru di tabel bawah, dengan harga dan ukuran yang sama. Klik pilihan untuk membuka variannya."
-          : "Pilihan pertama menjadi nama varian produk ini, berikutnya jadi varian baru."}
+          : "Isi semua warna atau tipe yang ada, misalnya Merah, Hitam, Putih. Pilihan pertama menjadi nama varian produk ini, berikutnya jadi varian baru. Pembeli bisa memilihnya di website setelah dua pilihan atau lebih dicentang Tampil."}
       </small>
     </div>
   );

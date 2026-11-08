@@ -4664,3 +4664,17 @@ strong.admin-overdue {
     width: 44px;
   }
 }
+
+/* Which choices a guest can pick on the website. */
+.admin-variant-note {
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #eef7f4;
+  color: #245a4f;
+  font-size: 15px;
+}
+.admin-variant-note.is-warn {
+  background: #fff6e5;
+  color: #7a5200;
+}

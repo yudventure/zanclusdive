@@ -5,6 +5,7 @@ import ProductVisual from "../shop/ProductVisual.jsx";
 import {
   availabilityLabels,
   productAs,
+  productImages,
   rupiah,
   sizeLimit,
 } from "../shop-model.js";
@@ -112,6 +113,38 @@ function heldNote(item, mode) {
 // variant, its own product with its own photos and price), the sizes, and
 // one stock table that splits by variant and size as soon as there are
 // any. Then how the website follows the stock.
+// What the guest can pick on the website: only the choices ticked Tampil
+// show there, and the choice only appears with two or more of them. A
+// choice without its own photo shows a plain mark in the product window.
+function ShownChoices({ family, name }) {
+  const shown = family.filter((p) => p.enabled);
+  const hidden = family.filter((p) => !p.enabled);
+  const bare = shown.filter((p) => !productImages(p, modeOf(p)).length);
+  const list = (items) => items.map(name).join(", ");
+  if (shown.length < 2)
+    return (
+      <p className="admin-variant-note is-warn">
+        {shown.length
+          ? `Baru ${list(shown)} yang tampil, jadi pembeli belum bisa memilih di website.`
+          : "Belum ada pilihan yang tampil di website."}{" "}
+        Centang Tampil pada pilihan lain, minimal dua, supaya pilihannya muncul
+        di jendela produk.
+      </p>
+    );
+  return (
+    <p
+      className={
+        "admin-variant-note" + (hidden.length || bare.length ? " is-warn" : "")
+      }
+    >
+      Pembeli bisa memilih {list(shown)} di website.
+      {hidden.length > 0 && ` ${list(hidden)} belum tampil.`}
+      {bare.length > 0 &&
+        ` ${list(bare)} belum punya foto sendiri. Buka variannya lewat fotonya di tabel untuk mengisi foto.`}
+    </p>
+  );
+}
+
 export default function OptionsStock({
   mode,
   product,
@@ -335,6 +368,7 @@ export default function OptionsStock({
               </span>
             </div>
           )}
+          {many && <ShownChoices family={family} name={name} />}
           <p className="admin-variant-total">
             Total stok {total} {unitForProduct(lead)}
             {many
