@@ -264,7 +264,11 @@ try {
   // to the middle of the window, clear of the sticky header.
   await shopList
     .locator(".admin-shop-row", { hasText: "BCD jacket" })
-    .evaluate((row) => row.scrollIntoView({ block: "center" }));
+    .evaluate((row) =>
+      row.scrollIntoView({ block: "center", behavior: "instant" }),
+    );
+  // The page scrolls smoothly: let it settle before the mouse goes down.
+  await a.waitForTimeout(300);
   await shopList
     .locator(".admin-shop-row", { hasText: "Regulator set" })
     .dragTo(
